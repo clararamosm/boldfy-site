@@ -123,7 +123,7 @@ export function Footer() {
     <footer className="bg-accent-foreground text-white">
       {/* ---- Main footer content ---- */}
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
           {/* Brand block - spans 2 cols on large screens */}
           <div className="lg:col-span-2">
             <LogoFullWhite height={32} />
@@ -145,7 +145,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Navigation columns - 4 cols share remaining 4 grid cols on lg */}
+          {/* Navigation columns */}
           {columns.map((col) => (
             <FooterColumnBlock
               key={col.title}
