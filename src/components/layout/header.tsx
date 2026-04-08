@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 
 import { useT } from '@/lib/i18n/context';
 import { cn } from '@/lib/utils';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -126,6 +127,7 @@ function MobileMenu({
   ctaLabel: string;
   open: boolean;
   onClose: () => void;
+  onOpenDemo: () => void;
 }) {
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
@@ -247,11 +249,9 @@ function MobileMenu({
 
         {/* Footer CTA */}
         <div className="border-t border-border/50 p-4 space-y-3">
-          <Button asChild className="w-full gap-2">
-            <Link href="/demo" onClick={onClose}>
-              {ctaLabel}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <Button onClick={() => { onClose(); onOpenDemo(); }} className="w-full gap-2">
+            {ctaLabel}
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </nav>
@@ -267,6 +267,7 @@ export function Header() {
   const t = useT();
   const scrolled = useScrolled();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openPopup } = useDemoPopup();
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -340,11 +341,9 @@ export function Header() {
           <div className="flex items-center gap-2">
             {/* CTA — desktop only */}
             <div className="hidden lg:block">
-              <Button asChild size="sm" className="gap-1.5">
-                <Link href="/demo">
-                  {t.nav.agendarDemo}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+              <Button onClick={openPopup} size="sm" className="gap-1.5">
+                {t.nav.agendarDemo}
+                <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </div>
 
@@ -371,6 +370,7 @@ export function Header() {
         ctaLabel={t.nav.agendarDemo}
         open={mobileOpen}
         onClose={closeMobile}
+        onOpenDemo={openPopup}
       />
 
       {/* Spacer so content is not hidden behind the fixed header */}

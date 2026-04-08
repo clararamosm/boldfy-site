@@ -4,9 +4,11 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 
 export function CtaFinalSection() {
   const t = useT();
+  const { openPopup } = useDemoPopup();
 
   return (
     <section className="py-20 md:py-28 bg-primary/5">
@@ -29,12 +31,12 @@ export function CtaFinalSection() {
             </Link>
           </Button>
           <Button
-            asChild
             variant="outline"
             size="lg"
+            onClick={openPopup}
             className="w-full sm:w-auto"
           >
-            <Link href="/demo">{t.home.ctaCta2}</Link>
+            {t.home.ctaCta2}
           </Button>
         </div>
 

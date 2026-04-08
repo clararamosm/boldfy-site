@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useT } from '@/lib/i18n/context';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 
 /* ------------------------------------------------------------------ */
 /*  White variant of the logo for the dark footer background          */
@@ -52,7 +53,7 @@ function LinkedInIcon({ className }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 interface FooterColumn {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href?: string; onClick?: () => void }[];
 }
 
 function FooterColumnBlock({ title, links }: FooterColumn) {
@@ -63,13 +64,22 @@ function FooterColumnBlock({ title, links }: FooterColumn) {
       </h3>
       <ul className="space-y-3">
         {links.map((link) => (
-          <li key={link.href}>
-            <Link
-              href={link.href}
-              className="text-sm text-white/80 hover:text-white transition-colors"
-            >
-              {link.label}
-            </Link>
+          <li key={link.href || link.label}>
+            {link.href ? (
+              <Link
+                href={link.href}
+                className="text-sm text-white/80 hover:text-white transition-colors"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <button
+                onClick={link.onClick}
+                className="text-sm text-white/80 hover:text-white transition-colors"
+              >
+                {link.label}
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -82,6 +92,7 @@ function FooterColumnBlock({ title, links }: FooterColumn) {
 /* ------------------------------------------------------------------ */
 export function Footer() {
   const t = useT();
+  const { openPopup } = useDemoPopup();
 
   const columns: FooterColumn[] = [
     {
@@ -90,7 +101,7 @@ export function Footer() {
         { label: t.nav.plataforma, href: '/solucoes/software-as-a-service' },
         { label: t.nav.servico, href: '/solucoes/content-as-a-service' },
         { label: t.nav.precos, href: '/precos' },
-        { label: t.nav.agendarDemo, href: '/demo' },
+        { label: t.nav.agendarDemo, onClick: openPopup },
       ],
     },
     {

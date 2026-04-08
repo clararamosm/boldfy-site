@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Monitor } from 'lucide-react';
 import Link from 'next/link';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 
 export function HeroSection() {
   const t = useT();
+  const { openPopup } = useDemoPopup();
 
   return (
     <section className="py-20 md:py-28">
@@ -47,10 +49,8 @@ export function HeroSection() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-            <Link href="/demo">
-              {t.home.heroCta2}
-            </Link>
+          <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
+            {t.home.heroCta2}
           </Button>
         </div>
 
