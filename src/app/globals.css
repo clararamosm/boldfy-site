@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 270 100% 99%;
+    --foreground: 279 33% 28%;
+    --card: 0 0% 100%;
+    --card-foreground: 279 33% 28%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 279 33% 28%;
+    --primary: 279 71% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 279 71% 96%;
+    --secondary-foreground: 279 71% 40%;
+    --muted: 279 33% 95%;
+    --muted-foreground: 279 33% 55%;
+    --accent: 279 71% 94%;
+    --accent-foreground: 279 71% 30%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 279 33% 90%;
+    --input: 279 33% 92%;
+    --ring: 279 71% 63%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 279 33% 10%;
+    --foreground: 279 33% 95%;
+    --card: 279 33% 15%;
+    --card-foreground: 279 33% 95%;
+    --popover: 279 33% 15%;
+    --popover-foreground: 279 33% 95%;
+    --primary: 279 71% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 279 71% 25%;
+    --secondary-foreground: 279 71% 90%;
+    --muted: 279 33% 20%;
+    --muted-foreground: 279 33% 75%;
+    --accent: 279 71% 22%;
+    --accent-foreground: 279 71% 80%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 279 33% 30%;
+    --input: 279 33% 32%;
+    --ring: 279 71% 63%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+*:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
