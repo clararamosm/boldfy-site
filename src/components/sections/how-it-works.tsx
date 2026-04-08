@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/context';
 import { Settings, Sparkles, Target, Trophy, TrendingUp } from 'lucide-react';
 
@@ -21,11 +22,6 @@ function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps)
         <Icon className="h-6 w-6 text-primary" />
       </div>
 
-      {/* Connector line (horizontal, desktop only) */}
-      {!isLast && (
-        <div className="hidden md:block absolute top-7 left-[calc(50%+28px)] w-[calc(100%-56px)] h-0.5 bg-primary/20" />
-      )}
-
       {/* Step number */}
       <span className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">
         {stepNumber}
@@ -46,6 +42,26 @@ function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps)
 
 export function HowItWorksSection() {
   const t = useT();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
 
   const steps = [
     { label: t.home.step1Label, description: t.home.step1Desc },
@@ -56,7 +72,7 @@ export function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-20">
+    <section ref={sectionRef} className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         {/* Tag */}
         <span className="block text-center text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
@@ -64,7 +80,53 @@ export function HowItWorksSection() {
         </span>
 
         {/* Steps */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-4 mt-10">
+        <div className="relative flex flex-col md:flex-row gap-8 md:gap-4 mt-10">
+          {/* SVG connector — desktop only */}
+          <svg
+            className="hidden md:block absolute top-7 left-0 w-full h-[2px] pointer-events-none overflow-visible"
+            preserveAspectRatio="none"
+          >
+            <line
+              x1="10%"
+              y1="0"
+              x2="90%"
+              y2="0"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2"
+              strokeDasharray="400"
+              strokeDashoffset={isVisible ? '0' : '400'}
+              strokeLinecap="round"
+              opacity="0.25"
+              style={{
+                transition: 'stroke-dashoffset 1.5s ease-out',
+              }}
+            />
+            {/* Animated progress line */}
+            <line
+              x1="10%"
+              y1="0"
+              x2="90%"
+              y2="0"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2"
+              strokeDasharray="400"
+              strokeDashoffset={isVisible ? '0' : '400'}
+              strokeLinecap="round"
+              opacity="0.6"
+              style={{
+                transition: 'stroke-dashoffset 2s ease-out 0.3s',
+              }}
+            />
+          </svg>
+
+          {/* Mobile vertical connector */}
+          <div className="md:hidden absolute left-[50%] top-0 bottom-0 w-0.5 -translate-x-1/2">
+            <div
+              className="w-full bg-primary/20 rounded-full transition-all duration-[2s] ease-out"
+              style={{ height: isVisible ? '100%' : '0%' }}
+            />
+          </div>
+
           {steps.map((step, idx) => (
             <Step
               key={step.label}

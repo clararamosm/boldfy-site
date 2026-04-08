@@ -16,41 +16,93 @@ export function ChartSection() {
           {t.home.chartSubtitle}
         </p>
 
-        {/* SVG Chart */}
+        {/* SVG Chart — styled like beta-test */}
         <div className="relative w-full max-w-3xl mx-auto">
           <svg
-            viewBox="0 0 800 400"
-            className="w-full h-auto"
+            viewBox="0 0 680 200"
+            className="w-full h-auto block"
             aria-label="Gráfico comparando Ads vs Employee Advocacy ao longo do tempo"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            {/* Grid lines */}
-            {[100, 150, 200, 250, 300, 350].map((y) => (
-              <line
-                key={y}
-                x1={80}
-                y1={y}
-                x2={750}
-                y2={y}
-                stroke="hsl(var(--border))"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-              />
-            ))}
+            <defs>
+              <linearGradient id="homeEgcFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#CD50F1" stopOpacity="0" />
+              </linearGradient>
+              <clipPath id="homeChartClip">
+                <rect x="60" y="5" width="580" height="160" />
+              </clipPath>
+            </defs>
 
-            {/* X Axis */}
-            <line x1={80} y1={350} x2={750} y2={350} stroke="hsl(var(--border))" strokeWidth="1" />
+            {/* Grid */}
+            <line x1="60" y1="10" x2="60" y2="165" stroke="hsl(var(--border))" strokeWidth="1" />
+            <line x1="60" y1="165" x2="640" y2="165" stroke="hsl(var(--border))" strokeWidth="1" />
+            <line x1="60" y1="125" x2="640" y2="125" stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4" />
+            <line x1="60" y1="85" x2="640" y2="85" stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4" />
+            <line x1="60" y1="45" x2="640" y2="45" stroke="hsl(var(--border))" strokeWidth="0.5" strokeDasharray="4" />
 
-            {/* Y Axis */}
-            <line x1={80} y1={100} x2={80} y2={350} stroke="hsl(var(--border))" strokeWidth="1" />
+            {/* Ads stopped annotation line */}
+            <line x1="390" y1="15" x2="390" y2="165" stroke="#D4A0B8" strokeWidth="1" strokeDasharray="4,3" opacity="0.5" />
+            <text x="390" y="12" fontFamily="Inter, sans-serif" fontSize="8" fill="hsl(var(--muted-foreground))" textAnchor="middle" fontWeight="600">
+              {t.home.adsStoppedLabel}
+            </text>
 
-            {/* X Labels */}
+            {/* Ads line — solid before stop, dashed after */}
+            <path
+              d="M60,120 C130,112 200,105 270,100 C320,97 350,95 390,92"
+              fill="none"
+              stroke="#B8A4CC"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              clipPath="url(#homeChartClip)"
+            />
+            <path
+              d="M390,92 C410,105 440,130 470,148 C490,155 510,160 540,162"
+              fill="none"
+              stroke="#B8A4CC"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeDasharray="5,4"
+              opacity="0.5"
+              clipPath="url(#homeChartClip)"
+            />
+
+            {/* "No reach" annotation */}
+            <text x="555" y="157" fontFamily="Inter, sans-serif" fontSize="8" fill="hsl(var(--destructive))" opacity="0.7" fontWeight="500">
+              {t.home.noReachLabel}
+            </text>
+
+            {/* EGC area fill */}
+            <path
+              d="M60,160 C130,158 200,152 270,138 C340,118 380,96 420,75 C470,52 530,32 580,20 L640,12 L640,165 L60,165 Z"
+              fill="url(#homeEgcFill)"
+              clipPath="url(#homeChartClip)"
+            />
+
+            {/* EGC line */}
+            <path
+              d="M60,160 C130,158 200,152 270,138 C340,118 380,96 420,75 C470,52 530,32 580,20 L640,12"
+              fill="none"
+              stroke="#CD50F1"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              clipPath="url(#homeChartClip)"
+            />
+
+            {/* Labels */}
+            <text x="620" y="88" fontFamily="Inter, sans-serif" fontSize="9" fill="#B8A4CC" fontWeight="600">Ads</text>
+            <text x="620" y="10" fontFamily="Inter, sans-serif" fontSize="9" fill="#CD50F1" fontWeight="700">EGC</text>
+
+            {/* X labels */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
               <text
                 key={month}
-                x={80 + (month * 670) / 13}
-                y={370}
+                x={60 + (month * 580) / 13}
+                y={182}
                 textAnchor="middle"
-                className="fill-muted-foreground text-[11px]"
+                fontFamily="Inter, sans-serif"
+                fontSize="9"
+                fill="hsl(var(--muted-foreground))"
               >
                 {t.home.chartMonthLabel} {month}
               </text>
@@ -58,53 +110,15 @@ export function ChartSection() {
 
             {/* Y Label */}
             <text
-              x={30}
-              y={225}
+              x={25}
+              y={90}
               textAnchor="middle"
-              transform="rotate(-90 30 225)"
-              className="fill-muted-foreground text-[11px]"
+              transform="rotate(-90 25 90)"
+              fontFamily="Inter, sans-serif"
+              fontSize="9"
+              fill="hsl(var(--muted-foreground))"
             >
               Alcance
-            </text>
-
-            {/* Ads line — plateau then decline */}
-            <path
-              d="M 80 280 C 140 220, 200 195, 260 190 C 320 185, 380 185, 440 188 C 480 190, 500 190, 520 195 C 560 205, 620 240, 700 290"
-              fill="none"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth="2.5"
-              strokeDasharray="8,4"
-              opacity="0.6"
-            />
-            <text x={705} y={295} className="fill-muted-foreground text-[11px] font-medium">Ads</text>
-
-            {/* EGC line — exponential growth */}
-            <path
-              d="M 80 330 C 140 325, 200 318, 260 308 C 320 296, 380 278, 440 250 C 500 215, 560 170, 620 130 C 660 108, 700 100, 750 88"
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth="3"
-            />
-
-            {/* EGC area fill */}
-            <path
-              d="M 80 330 C 140 325, 200 318, 260 308 C 320 296, 380 278, 440 250 C 500 215, 560 170, 620 130 C 660 108, 700 100, 750 88 L 750 350 L 80 350 Z"
-              fill="hsl(var(--primary))"
-              opacity="0.06"
-            />
-            <text x={700} y={80} className="fill-primary text-[12px] font-bold">EGC</text>
-
-            {/* Annotation: ads stopped */}
-            <line x1={440} y1={188} x2={440} y2={120} stroke="hsl(var(--muted-foreground))" strokeWidth="0.5" strokeDasharray="3,3" />
-            <rect x={345} y={100} width={190} height={24} rx={4} fill="hsl(var(--secondary))" />
-            <text x={440} y={116} textAnchor="middle" className="fill-muted-foreground text-[10px]">
-              {t.home.adsStoppedLabel}
-            </text>
-
-            {/* Annotation: no budget */}
-            <rect x={580} y={255} width={160} height={22} rx={4} fill="hsl(var(--destructive))" opacity="0.1" />
-            <text x={660} y={270} textAnchor="middle" className="fill-destructive text-[10px] font-medium">
-              {t.home.noReachLabel}
             </text>
           </svg>
         </div>

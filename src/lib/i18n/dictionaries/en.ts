@@ -52,6 +52,19 @@ const en: Dictionary = {
     socialProofStat2Label: 'more engagement',
     socialProofStat3Label: 'more clicks',
 
+    // Advocacy Wall
+    advocacyWallTag: 'WHY EMPLOYEE ADVOCACY?',
+    advocacyWallTitle: 'Personal profiles generate up to 10x more reach than company pages',
+    advocacyWallSubtitle: 'When employees share authentic content, the brand gains credibility, organic reach and real connections.',
+    advocacyDashboardTitle: 'Team results',
+    advocacyDashboardPeriod: 'Last 30 days',
+    advocacyMetricImpressions: 'Impressions',
+    advocacyMetricMediaValue: 'Media value',
+    advocacyMetricActive: 'Active',
+    advocacyMetricAdoption: '89% adoption',
+    advocacyMetricEngagement: 'Engagement',
+    advocacyRoiLabel: 'Program ROI',
+
     marketingTitle: 'Marketing & Branding',
     marketingPain: 'Dead Company Page · Rising CAC',
     marketingSolution: 'Personal profiles with 10x more reach become brand channels. AI aligns everything with Brand Context.',

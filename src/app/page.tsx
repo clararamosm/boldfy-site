@@ -1,6 +1,6 @@
 import { HeroSection } from '@/components/sections/hero';
 import { QuotesSection } from '@/components/sections/quotes';
-import { SocialProofSection } from '@/components/sections/social-proof';
+import { AdvocacyWallSection } from '@/components/sections/advocacy-wall';
 import { UseCasesSection } from '@/components/sections/use-cases';
 import { TwoJourneysSection } from '@/components/sections/two-journeys';
 import { ChartSection } from '@/components/sections/chart-section';
@@ -16,7 +16,7 @@ export default function Home() {
     <>
       <HeroSection />
       <QuotesSection />
-      <SocialProofSection />
+      <AdvocacyWallSection />
       <UseCasesSection />
       <TwoJourneysSection />
       <ChartSection />

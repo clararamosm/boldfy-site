@@ -55,6 +55,19 @@ const ptBR = {
     socialProofStat2Label: 'mais engajamento',
     socialProofStat3Label: 'mais cliques',
 
+    // Advocacy Wall
+    advocacyWallTag: 'POR QUE EMPLOYEE ADVOCACY?',
+    advocacyWallTitle: 'Perfis pessoais geram até 10x mais alcance que páginas corporativas',
+    advocacyWallSubtitle: 'Quando colaboradores compartilham conteúdo autêntico, a marca ganha credibilidade, alcance orgânico e conexões reais.',
+    advocacyDashboardTitle: 'Resultados do time',
+    advocacyDashboardPeriod: 'Últimos 30 dias',
+    advocacyMetricImpressions: 'Impressões',
+    advocacyMetricMediaValue: 'Valor de mídia',
+    advocacyMetricActive: 'Ativos',
+    advocacyMetricAdoption: '89% adesão',
+    advocacyMetricEngagement: 'Engajamento',
+    advocacyRoiLabel: 'ROI do programa',
+
     // Use Cases section
     marketingTitle: 'Marketing & Branding',
     marketingPain: 'Company Page morta · CAC subindo',
