@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
 import { LogoFull } from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import { LanguageToggle } from '@/components/language-toggle';
+
 import { useT } from '@/lib/i18n/context';
 import { cn } from '@/lib/utils';
 
@@ -247,9 +247,8 @@ function MobileMenu({
 
         {/* Footer CTA */}
         <div className="border-t border-border/50 p-4 space-y-3">
-          <LanguageToggle className="w-full justify-center" />
           <Button asChild className="w-full gap-2">
-            <Link href="/contato" onClick={onClose}>
+            <Link href="/demo" onClick={onClose}>
               {ctaLabel}
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -273,20 +272,33 @@ export function Header() {
 
   // Build nav items from i18n dictionary
   const navItems: NavItem[] = [
-    { label: t.nav.plataforma, href: '/plataforma' },
+    {
+      label: t.nav.solucoes,
+      href: '/solucoes',
+      children: [
+        { label: t.nav.plataforma, href: '/solucoes/software-as-a-service' },
+        { label: t.nav.servico, href: '/solucoes/content-as-a-service' },
+      ],
+    },
     {
       label: t.nav.casosDeUso,
-      href: '/casos-de-uso',
+      href: '/para',
       children: [
-        { label: t.nav.marketing, href: '/casos-de-uso/marketing' },
-        { label: t.nav.socialSelling, href: '/casos-de-uso/social-selling' },
-        { label: t.nav.employerBranding, href: '/casos-de-uso/employer-branding' },
+        { label: t.nav.marketing, href: '/para/marketing' },
+        { label: t.nav.vendas, href: '/para/vendas' },
+        { label: t.nav.rh, href: '/para/rh' },
+      ],
+    },
+    {
+      label: t.nav.recursos,
+      href: '/recursos',
+      children: [
+        { label: t.nav.blog, href: '/blog' },
+        { label: t.nav.materiais, href: '/materiais' },
+        { label: t.nav.ferramentas, href: '/ferramentas' },
       ],
     },
     { label: t.nav.precos, href: '/precos' },
-    { label: t.nav.servico, href: '/servico' },
-    { label: t.nav.blog, href: '/blog' },
-    { label: t.nav.sobre, href: '/sobre' },
   ];
 
   return (
@@ -324,17 +336,12 @@ export function Header() {
             )}
           </nav>
 
-          {/* Right side: language toggle + CTA (desktop) + hamburger (mobile) */}
+          {/* Right side: CTA (desktop) + hamburger (mobile) */}
           <div className="flex items-center gap-2">
-            {/* Language toggle — desktop only */}
-            <div className="hidden lg:block">
-              <LanguageToggle />
-            </div>
-
             {/* CTA — desktop only */}
             <div className="hidden lg:block">
               <Button asChild size="sm" className="gap-1.5">
-                <Link href="/contato">
+                <Link href="/demo">
                   {t.nav.agendarDemo}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>

@@ -4,25 +4,16 @@ import { getPublishedPosts } from '@/lib/notion';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://boldfy.com.br';
 
-  // Static pages
-  const staticPages = [
-    '',
-    '/plataforma',
-    '/casos-de-uso/marketing',
-    '/casos-de-uso/social-selling',
-    '/casos-de-uso/employer-branding',
-    '/precos',
-    '/servico',
-    '/blog',
-    '/sobre',
-    '/contato',
-    '/privacidade',
-    '/termos',
-  ].map((route) => ({
+  // Static pages — all public routes
+  const highPriority = ['', '/solucoes/software-as-a-service', '/solucoes/content-as-a-service', '/precos'];
+  const medPriority = ['/para/marketing', '/para/vendas', '/para/rh', '/plataforma', '/servico'];
+  const lowPriority = ['/blog', '/sobre', '/contato', '/demo', '/privacidade', '/termos'];
+
+  const staticPages = [...highPriority, ...medPriority, ...lowPriority].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route === '' ? 'weekly' as const : 'monthly' as const,
-    priority: route === '' ? 1 : route === '/plataforma' || route === '/precos' ? 0.9 : 0.7,
+    priority: highPriority.includes(route) ? (route === '' ? 1 : 0.9) : medPriority.includes(route) ? 0.8 : 0.6,
   }));
 
   // Dynamic blog posts

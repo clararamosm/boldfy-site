@@ -2,19 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/context';
-import { Settings, Sparkles, Target, Trophy, TrendingUp } from 'lucide-react';
+import { Settings, PenTool, Trophy, BarChart3 } from 'lucide-react';
 
-const stepIcons = [Settings, Sparkles, Target, Trophy, TrendingUp];
+const stepIcons = [Settings, PenTool, Trophy, BarChart3];
 
 interface StepProps {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   description: string;
   stepNumber: number;
-  isLast: boolean;
 }
 
-function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps) {
+function Step({ icon: Icon, label, description, stepNumber }: StepProps) {
   return (
     <div className="flex flex-col items-center text-center relative flex-1">
       {/* Step circle */}
@@ -24,7 +23,7 @@ function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps)
 
       {/* Step number */}
       <span className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">
-        {stepNumber}
+        {String(stepNumber).padStart(2, '0')}
       </span>
 
       {/* Label */}
@@ -39,6 +38,51 @@ function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps)
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Mobile step — vertical layout with connector on the left          */
+/* ------------------------------------------------------------------ */
+
+interface MobileStepProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  description: string;
+  stepNumber: number;
+  isLast: boolean;
+}
+
+function MobileStep({ icon: Icon, label, description, stepNumber, isLast }: MobileStepProps) {
+  return (
+    <div className="flex gap-5">
+      {/* Left rail: circle + connector line */}
+      <div className="flex flex-col items-center">
+        <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 border-2 border-primary/30">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        {!isLast && (
+          <div className="w-0.5 flex-1 bg-primary/15 my-1" />
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="pb-8">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+          {String(stepNumber).padStart(2, '0')}
+        </span>
+        <h3 className="font-headline text-sm font-bold text-foreground mt-0.5 mb-1">
+          {label}
+        </h3>
+        <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main section                                                      */
+/* ------------------------------------------------------------------ */
 
 export function HowItWorksSection() {
   const t = useT();
@@ -64,71 +108,83 @@ export function HowItWorksSection() {
   }, []);
 
   const steps = [
-    { label: t.home.step1Label, description: t.home.step1Desc },
-    { label: t.home.step2Label, description: t.home.step2Desc },
-    { label: t.home.step3Label, description: t.home.step3Desc },
-    { label: t.home.step4Label, description: t.home.step4Desc },
-    { label: t.home.step5Label, description: t.home.step5Desc },
+    { label: t.home.howStep1Label, description: t.home.howStep1Desc },
+    { label: t.home.howStep2Label, description: t.home.howStep2Desc },
+    { label: t.home.howStep3Label, description: t.home.howStep3Desc },
+    { label: t.home.howStep4Label, description: t.home.howStep4Desc },
   ];
 
   return (
-    <section ref={sectionRef} className="py-20">
+    <section ref={sectionRef} className="py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-6">
-        {/* Tag */}
-        <span className="block text-center text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
-          {t.home.howItWorks}
-        </span>
+        {/* Section header */}
+        <div className="mx-auto max-w-2xl text-center mb-14">
+          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            {t.home.howTitle}{' '}
+            <span className="text-primary">{t.home.howTitleHighlight}</span>
+          </h2>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            {t.home.howSubtitle}
+          </p>
+        </div>
 
-        {/* Steps */}
-        <div className="relative flex flex-col md:flex-row gap-8 md:gap-4 mt-10">
-          {/* SVG connector — desktop only */}
-          <svg
-            className="hidden md:block absolute top-7 left-0 w-full h-[2px] pointer-events-none overflow-visible"
-            preserveAspectRatio="none"
-          >
-            <line
-              x1="10%"
-              y1="0"
-              x2="90%"
-              y2="0"
-              stroke="hsl(var(--primary))"
-              strokeWidth="2"
-              strokeDasharray="400"
-              strokeDashoffset={isVisible ? '0' : '400'}
-              strokeLinecap="round"
-              opacity="0.25"
-              style={{
-                transition: 'stroke-dashoffset 1.5s ease-out',
-              }}
-            />
-            {/* Animated progress line */}
-            <line
-              x1="10%"
-              y1="0"
-              x2="90%"
-              y2="0"
-              stroke="hsl(var(--primary))"
-              strokeWidth="2"
-              strokeDasharray="400"
-              strokeDashoffset={isVisible ? '0' : '400'}
-              strokeLinecap="round"
-              opacity="0.6"
-              style={{
-                transition: 'stroke-dashoffset 2s ease-out 0.3s',
-              }}
-            />
-          </svg>
+        {/* ---- Desktop: horizontal steps with animated SVG connector ---- */}
+        <div className="hidden md:block">
+          <div className="relative flex gap-4">
+            {/* SVG connector — background track */}
+            <svg
+              className="absolute top-7 left-0 w-full h-[2px] pointer-events-none overflow-visible"
+              preserveAspectRatio="none"
+            >
+              <line
+                x1="12%"
+                y1="0"
+                x2="88%"
+                y2="0"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2"
+                strokeDasharray="600"
+                strokeDashoffset={isVisible ? '0' : '600'}
+                strokeLinecap="round"
+                opacity="0.15"
+                style={{
+                  transition: 'stroke-dashoffset 1.5s ease-out',
+                }}
+              />
+              {/* Animated progress line */}
+              <line
+                x1="12%"
+                y1="0"
+                x2="88%"
+                y2="0"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2"
+                strokeDasharray="600"
+                strokeDashoffset={isVisible ? '0' : '600'}
+                strokeLinecap="round"
+                opacity="0.5"
+                style={{
+                  transition: 'stroke-dashoffset 2s ease-out 0.3s',
+                }}
+              />
+            </svg>
 
-          {/* Mobile vertical connector */}
-          <div className="md:hidden absolute left-[50%] top-0 bottom-0 w-0.5 -translate-x-1/2">
-            <div
-              className="w-full bg-primary/20 rounded-full transition-all duration-[2s] ease-out"
-              style={{ height: isVisible ? '100%' : '0%' }}
-            />
+            {steps.map((step, idx) => (
+              <Step
+                key={step.label}
+                icon={stepIcons[idx]}
+                label={step.label}
+                description={step.description}
+                stepNumber={idx + 1}
+              />
+            ))}
           </div>
+        </div>
 
+        {/* ---- Mobile: vertical layout with left-side connector ---- */}
+        <div className="md:hidden">
           {steps.map((step, idx) => (
-            <Step
+            <MobileStep
               key={step.label}
               icon={stepIcons[idx]}
               label={step.label}

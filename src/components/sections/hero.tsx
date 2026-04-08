@@ -4,7 +4,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Monitor } from 'lucide-react';
-import Image from 'next/image';
+import Link from 'next/link';
 
 export function HeroSection() {
   const t = useT();
@@ -18,7 +18,7 @@ export function HeroSection() {
             variant="secondary"
             className="px-4 py-1.5 text-xs font-semibold tracking-wide"
           >
-            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             {t.home.heroBadge}
           </Badge>
         </div>
@@ -40,15 +40,24 @@ export function HeroSection() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button size="lg" className="font-bold w-full sm:w-auto">
-            {t.home.heroCta1}
-            <ArrowRight className="w-4 h-4 ml-2" />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+          <Button asChild size="lg" className="font-bold w-full sm:w-auto">
+            <Link href="/precos">
+              {t.home.heroCta1}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
-          <Button variant="outline" size="lg" className="w-full sm:w-auto">
-            {t.home.heroCta2}
+          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+            <Link href="/demo">
+              {t.home.heroCta2}
+            </Link>
           </Button>
         </div>
+
+        {/* Honesty line */}
+        <p className="text-xs text-muted-foreground">
+          {t.home.heroHonesty}
+        </p>
 
         {/* Platform mockup */}
         <div className="mt-16 mx-auto max-w-4xl">
@@ -69,7 +78,9 @@ export function HeroSection() {
               <div className="relative aspect-[16/9] flex items-center justify-center bg-secondary/20">
                 <div className="text-center">
                   <Monitor className="h-12 w-12 text-primary/25 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-muted-foreground/50">Screenshot da plataforma</p>
+                  <p className="text-sm font-medium text-muted-foreground/50">
+                    Screenshot da plataforma
+                  </p>
                 </div>
               </div>
             </div>

@@ -85,29 +85,43 @@ export function Footer() {
 
   const columns: FooterColumn[] = [
     {
-      title: t.footer.platformTitle,
+      title: t.footer.solucoesTitle,
       links: [
-        { label: t.nav.plataforma, href: '/plataforma' },
+        { label: t.nav.plataforma, href: '/solucoes/software-as-a-service' },
+        { label: t.nav.servico, href: '/solucoes/content-as-a-service' },
         { label: t.nav.precos, href: '/precos' },
-        { label: t.nav.servico, href: '/servico' },
+        { label: t.nav.agendarDemo, href: '/demo' },
       ],
     },
     {
-      title: t.footer.resourcesTitle,
+      title: t.footer.casosDeUsoTitle,
+      links: [
+        { label: t.nav.marketing, href: '/para/marketing' },
+        { label: t.nav.vendas, href: '/para/vendas' },
+        { label: t.nav.rh, href: '/para/rh' },
+      ],
+    },
+    {
+      title: t.footer.recursosTitle,
       links: [
         { label: t.nav.blog, href: '/blog' },
-        { label: t.nav.contato, href: '/contato' },
+        { label: t.nav.materiais, href: '/materiais' },
+        { label: t.nav.ferramentas, href: '/ferramentas' },
       ],
     },
     {
-      title: t.footer.companyTitle,
-      links: [{ label: t.nav.sobre, href: '/sobre' }],
+      title: t.footer.boldfyTitle,
+      links: [
+        { label: t.footer.newsletter, href: '/newsletter' },
+        { label: t.footer.contato, href: '#contato' },
+      ],
     },
     {
       title: t.footer.legalTitle,
       links: [
         { label: t.footer.privacidade, href: '/privacidade' },
         { label: t.footer.termos, href: '/termos' },
+        { label: t.footer.cookies, href: '/cookies' },
       ],
     },
   ];
@@ -116,7 +130,7 @@ export function Footer() {
     <footer className="bg-accent-foreground text-white">
       {/* ---- Main footer content ---- */}
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-12 lg:gap-8">
           {/* Brand block - spans 2 cols on large screens */}
           <div className="lg:col-span-2">
             <LogoFullWhite height={32} />

@@ -69,7 +69,8 @@ const nextConfig: NextConfig = {
       { source: '/produto/:slug*', destination: '/', permanent: false },
 
       // Outras páginas Wix
-      { source: '/recursos', destination: '/blog', permanent: false },
+      // /recursos agora é página própria (não mais redirect)
+      // { source: '/recursos', destination: '/blog', permanent: false },
       { source: '/café-virtual-branding', destination: '/contato', permanent: false },
       { source: '/brandgpt-chat-arquetipo-de-marca', destination: '/plataforma', permanent: false },
       { source: '/conteudo-estrategico', destination: '/servico', permanent: false },
@@ -81,6 +82,11 @@ const nextConfig: NextConfig = {
       { source: '/category/:slug*', destination: '/blog', permanent: false },
       { source: '/blog/categories/:slug*', destination: '/blog', permanent: false },
       { source: '/members-area/:path*', destination: '/', permanent: false },
+
+      // Casos de uso → páginas "Para" (novo IA)
+      { source: '/casos-de-uso/marketing', destination: '/para/marketing', permanent: true },
+      { source: '/casos-de-uso/social-selling', destination: '/para/vendas', permanent: true },
+      { source: '/casos-de-uso/employer-branding', destination: '/para/rh', permanent: true },
     ];
   },
 };
