@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Providers } from './providers';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
   title: {
@@ -53,7 +56,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <Providers>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </Providers>
+      </body>
     </html>
   );
 }
