@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, MessageSquare, CalendarDays, Send, CheckCircle } from 'lucide-react';
+import { sendContactLeadToNotion } from '@/app/actions/contact-leads';
+import { Mail, MessageSquare, CalendarDays, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 function LinkedInIcon({ className }: { className?: string }) {
   return (
@@ -20,17 +21,42 @@ export default function ContatoPage() {
   const t = useT();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const [collaboratorRange, setCollaboratorRange] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
 
-    // Simulate form submission (replace with actual API call later)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // Honeypot check — bots fill hidden fields
+    const honeypot = formData.get('website') as string;
+    if (honeypot) {
+      // Silently "succeed" to not alert the bot
+      setSubmitting(false);
+      setSubmitted(true);
+      return;
+    }
+
+    const result = await sendContactLeadToNotion({
+      nome: formData.get('name') as string,
+      email: formData.get('email') as string,
+      telefone: (formData.get('phone') as string) || undefined,
+      empresa: formData.get('company') as string,
+      colaboradores: collaboratorRange || undefined,
+      mensagem: (formData.get('message') as string) || undefined,
+    });
 
     setSubmitting(false);
-    setSubmitted(true);
+
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      setError(result.error || 'Erro ao enviar. Tente novamente.');
+    }
   };
 
   return (
@@ -100,6 +126,18 @@ export default function ContatoPage() {
                     <Textarea id="message" name="message" rows={4} className="mt-1.5" />
                   </div>
 
+                  {/* Honeypot — hidden from real users, catches bots */}
+                  <div className="hidden" aria-hidden="true">
+                    <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
                   <Button type="submit" size="lg" className="w-full font-bold" disabled={submitting}>
                     {submitting ? (
                       t.contato.formSubmitting
@@ -133,15 +171,15 @@ export default function ContatoPage() {
               <div className="rounded-xl border border-border bg-card p-6">
                 <h3 className="text-base font-bold text-foreground mb-4">{t.contato.otherChannelsTitle}</h3>
                 <div className="space-y-4">
-                  <a href="mailto:contato@boldfy.com.br" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="mailto:clara@boldfy.com.br" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <Mail className="h-4 w-4 text-primary" />
-                    <span>{t.contato.emailLabel}: contato@boldfy.com.br</span>
+                    <span>{t.contato.emailLabel}: clara@boldfy.com.br</span>
                   </a>
-                  <a href="https://linkedin.com/company/boldfy" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="https://linkedin.com/company/boldfy-branding" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <LinkedInIcon className="h-4 w-4 text-primary" />
-                    <span>{t.contato.linkedinLabel}: /company/boldfy</span>
+                    <span>{t.contato.linkedinLabel}: /company/boldfy-branding</span>
                   </a>
-                  <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a href="https://wa.me/5511913688100" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <MessageSquare className="h-4 w-4 text-primary" />
                     <span>{t.contato.whatsappLabel}</span>
                   </a>

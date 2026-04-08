@@ -127,7 +127,7 @@ export function Footer() {
             {/* Social links */}
             <div className="mt-6 flex items-center gap-4">
               <a
-                href="https://www.linkedin.com/company/boldfy"
+                href="https://www.linkedin.com/company/boldfy-branding"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
