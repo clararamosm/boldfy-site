@@ -4,7 +4,6 @@ import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
-import { cn } from '@/lib/utils'; // Assuming this exists based on common set up
 
 type DemoPopupContextType = {
   isOpen: boolean;

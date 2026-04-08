@@ -122,6 +122,7 @@ function MobileMenu({
   ctaLabel,
   open,
   onClose,
+  onOpenDemo,
 }: {
   items: NavItem[];
   ctaLabel: string;
