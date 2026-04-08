@@ -110,13 +110,6 @@ export function Footer() {
       ],
     },
     {
-      title: t.footer.boldfyTitle,
-      links: [
-        { label: t.footer.newsletter, href: '/newsletter' },
-        { label: t.footer.contato, href: '#contato' },
-      ],
-    },
-    {
       title: t.footer.legalTitle,
       links: [
         { label: t.footer.privacidade, href: '/privacidade' },
