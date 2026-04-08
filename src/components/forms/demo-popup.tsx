@@ -146,8 +146,8 @@ function DemoPopupModal({
 
                 <div className="col-span-2 space-y-1">
                   <label htmlFor="funcionarios" className="text-sm font-medium text-gray-700">Tamanho da empresa</label>
-                  <select required id="funcionarios" name="funcionarios" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white">
-                    <option value="" disabled selected>Selecione...</option>
+                  <select required id="funcionarios" name="funcionarios" defaultValue="" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white">
+                    <option value="" disabled>Selecione...</option>
                     <option value="1 a 10 funcionários">1 a 10 funcionários</option>
                     <option value="11 a 50 funcionários">11 a 50 funcionários</option>
                     <option value="51 a 200 funcionários">51 a 200 funcionários</option>
