@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { sendBetaLeadToNotion } from '@/app/actions/beta-leads';
-import { Loader2, CheckCircle2, Calendar, ArrowRight, Megaphone, Target, Heart, Rocket, Skull, Calculator, Users, Eye, TrendingUp } from 'lucide-react';
+import { Loader2, CheckCircle2, Calendar, ArrowRight, Megaphone, Target, Heart, Rocket, Skull, Calculator, Users, Eye, TrendingUp, Monitor } from 'lucide-react';
 import { useT, useLocale } from '@/lib/i18n/context';
 
 const CALENDAR_URL = 'https://calendar.app.google/5Q1HDD2jZSkWa1DH6';
@@ -186,6 +186,29 @@ export default function BetaTestPage() {
         <Button onClick={scrollToForm} size="sm" className="mt-6 text-[11px] font-bold h-8 relative z-10">
           {t.betaTest.betaTesterButton} <ArrowRight className="w-3 h-3 ml-1" />
         </Button>
+        {/* Platform mockup */}
+        <div className="mt-10 mx-auto max-w-3xl relative z-10">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-1 shadow-lg">
+            <div className="rounded-xl bg-white/10 backdrop-blur overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+                <div className="flex gap-1.5">
+                  <div className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                </div>
+                <div className="mx-auto rounded-md bg-white/10 px-4 py-1 text-[10px] text-white/40">
+                  app.boldfy.com.br
+                </div>
+              </div>
+              <div className="aspect-[16/9] flex items-center justify-center">
+                <div className="text-center">
+                  <Monitor className="h-12 w-12 text-white/15 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-white/30">Screenshot da plataforma</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* QUOTES */}

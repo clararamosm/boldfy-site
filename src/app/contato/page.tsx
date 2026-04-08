@@ -39,7 +39,7 @@ export default function ContatoPage() {
       <section className="py-20 md:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4">
+            <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4">
               {t.contato.heroTitle}
             </h1>
             <p className="text-base text-muted-foreground max-w-lg mx-auto">

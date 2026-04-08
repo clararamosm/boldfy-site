@@ -47,6 +47,14 @@ const ptBR = {
     marceloRole: 'CEO',
     marceloQuote: 'A autoridade da marca depende só de mim. Se eu parar de postar, a marca some.',
 
+    // Social Proof
+    socialProofTag: 'POR QUE EMPLOYEE ADVOCACY?',
+    socialProofTitle: 'Perfis pessoais geram até 10x mais alcance que páginas corporativas',
+    socialProofText: 'Quando colaboradores compartilham conteúdo autêntico, a marca ganha credibilidade, alcance orgânico e conexões reais. Sem investir em mídia paga.',
+    socialProofStat1Label: 'mais alcance orgânico',
+    socialProofStat2Label: 'mais engajamento',
+    socialProofStat3Label: 'mais cliques',
+
     // Use Cases section
     marketingTitle: 'Marketing & Branding',
     marketingPain: 'Company Page morta · CAC subindo',

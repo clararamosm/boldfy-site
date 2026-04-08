@@ -19,7 +19,7 @@ function UseCaseCard({ title, pain, antidoteLabel, solution, tags, href }: UseCa
     <Link href={href} className="group block">
       <div className="rounded-xl border border-border bg-card p-6 md:p-8 h-full transition-shadow hover:shadow-md hover:border-primary/30">
         {/* Title */}
-        <h3 className="text-lg md:text-xl font-bold text-foreground mb-3">
+        <h3 className="font-headline text-lg md:text-xl font-bold text-foreground mb-3">
           {title}
         </h3>
 

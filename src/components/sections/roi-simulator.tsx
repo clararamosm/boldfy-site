@@ -43,7 +43,7 @@ export function RoiSimulatorSection() {
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-2">
+        <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-2">
           {t.home.simulatorTitle}
         </h2>
         <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">

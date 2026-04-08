@@ -3,7 +3,8 @@
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Monitor } from 'lucide-react';
+import Image from 'next/image';
 
 export function HeroSection() {
   const t = useT();
@@ -47,6 +48,32 @@ export function HeroSection() {
           <Button variant="outline" size="lg" className="w-full sm:w-auto">
             {t.home.heroCta2}
           </Button>
+        </div>
+
+        {/* Platform mockup */}
+        <div className="mt-16 mx-auto max-w-4xl">
+          <div className="rounded-2xl border border-border/50 bg-gradient-to-br from-primary/10 to-primary/5 p-1 shadow-lg shadow-primary/5">
+            <div className="rounded-xl bg-white/80 backdrop-blur overflow-hidden">
+              {/* Browser top bar */}
+              <div className="flex items-center gap-2 border-b border-border/30 px-4 py-3">
+                <div className="flex gap-1.5">
+                  <div className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-400/60" />
+                </div>
+                <div className="mx-auto rounded-md bg-secondary/50 px-4 py-1 text-[10px] text-muted-foreground">
+                  app.boldfy.com.br
+                </div>
+              </div>
+              {/* Screenshot placeholder */}
+              <div className="relative aspect-[16/9] flex items-center justify-center bg-secondary/20">
+                <div className="text-center">
+                  <Monitor className="h-12 w-12 text-primary/25 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-muted-foreground/50">Screenshot da plataforma</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -3,6 +3,7 @@
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Bot, Gamepad2, GraduationCap, Gift, BarChart3, FolderOpen, Shield, Lock, Server, ArrowRightLeft } from 'lucide-react';
 
 const moduleIcons = [Bot, Gamepad2, GraduationCap, Gift, BarChart3, FolderOpen];
@@ -21,6 +22,10 @@ function ModuleCard({ icon: Icon, title, description }: ModuleCardProps) {
       </div>
       <h3 className="text-lg font-bold text-foreground mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+              {/* Screenshot placeholder */}
+              <div className="mt-4 rounded-lg border border-dashed border-border bg-secondary/20 aspect-video flex items-center justify-center">
+                <p className="text-[10px] text-muted-foreground/40">Screenshot</p>
+              </div>
     </div>
   );
 }
@@ -45,7 +50,7 @@ export default function PlataformaPage() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
             {t.plataforma.heroTag}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
             {t.plataforma.heroTitle}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -74,7 +79,7 @@ export default function PlataformaPage() {
       {/* Admin vs Collaborator */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-12">
+          <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-12">
             {t.plataforma.adminVsColabTitle}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -109,7 +114,7 @@ export default function PlataformaPage() {
               <Server className="h-6 w-6 text-primary" />
               <ArrowRightLeft className="h-6 w-6 text-primary" />
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-3">
+            <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-3">
               {t.plataforma.securityTitle}
             </h2>
             <p className="text-sm text-muted-foreground max-w-lg mx-auto">
@@ -122,7 +127,7 @@ export default function PlataformaPage() {
       {/* CTA */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-accent-foreground mb-3">
+          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-3">
             {t.plataforma.ctaTitle}
           </h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">

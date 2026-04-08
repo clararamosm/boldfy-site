@@ -30,7 +30,7 @@ export function UseCasePageLayout(props: UseCasePageProps) {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
             {props.heroTag}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
             {props.heroTitle}{' '}
             <span className="text-primary">{props.heroTitleHighlight}</span>
           </h1>
@@ -52,7 +52,7 @@ export function UseCasePageLayout(props: UseCasePageProps) {
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex items-center gap-3 mb-6">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <h2 className="text-xl md:text-2xl font-bold text-accent-foreground">
+            <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground">
               {props.problemTitle}
             </h2>
           </div>
@@ -72,7 +72,7 @@ export function UseCasePageLayout(props: UseCasePageProps) {
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex items-center gap-3 mb-6">
             <Lightbulb className="h-5 w-5 text-primary" />
-            <h2 className="text-xl md:text-2xl font-bold text-accent-foreground">
+            <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground">
               {props.solutionTitle}
             </h2>
           </div>
@@ -92,7 +92,7 @@ export function UseCasePageLayout(props: UseCasePageProps) {
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex items-center gap-3 mb-6">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <h2 className="text-xl md:text-2xl font-bold text-accent-foreground">
+            <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground">
               {props.metricsTitle}
             </h2>
           </div>
@@ -113,7 +113,7 @@ export function UseCasePageLayout(props: UseCasePageProps) {
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-8">
             <div className="flex items-start gap-3 mb-4">
               <MessageSquareQuote className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <h3 className="text-lg font-bold text-accent-foreground">{props.objectionTitle}</h3>
+              <h3 className="font-headline text-lg font-bold text-accent-foreground">{props.objectionTitle}</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed pl-8">
               {props.objectionAnswer}

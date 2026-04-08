@@ -4,8 +4,12 @@ import { useState } from 'react';
 import { useT } from '@/lib/i18n/context';
 import { cn } from '@/lib/utils';
 import { BarChart3, Bot, Trophy, CalendarDays, GraduationCap } from 'lucide-react';
+import Image from 'next/image';
 
 const tabIcons = [BarChart3, Bot, Trophy, CalendarDays, GraduationCap];
+
+// Quando tiver os screenshots, substitua null pelo path: '/images/showcase-dashboard.webp'
+const tabImages: (string | null)[] = [null, null, null, null, null];
 
 const tabColors = [
   'from-primary/20 to-primary/5',
@@ -36,7 +40,7 @@ export function ShowcaseSection() {
         </span>
 
         {/* Title */}
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-2">
+        <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-2">
           {t.home.showcaseTitle}
         </h2>
         <p className="text-center text-muted-foreground mb-10 max-w-xl mx-auto">
@@ -87,20 +91,31 @@ export function ShowcaseSection() {
                 </div>
               </div>
 
-              {/* Placeholder content */}
-              <div className="aspect-[16/9] flex items-center justify-center p-8">
-                <div className="text-center">
-                  {(() => {
-                    const Icon = tabs[activeTab].icon;
-                    return <Icon className="h-16 w-16 text-primary/30 mx-auto mb-4" />;
-                  })()}
-                  <p className="text-lg font-semibold text-foreground/40">
-                    {tabs[activeTab].label}
-                  </p>
-                  <p className="text-sm text-muted-foreground/60 mt-1">
-                    Screenshot em breve
-                  </p>
-                </div>
+              {/* Screenshot or placeholder */}
+              <div className="aspect-[16/9] relative">
+                {tabImages[activeTab] ? (
+                  <Image
+                    src={tabImages[activeTab]!}
+                    alt={tabs[activeTab].label}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-secondary/20">
+                    <div className="text-center">
+                      {(() => {
+                        const Icon = tabs[activeTab].icon;
+                        return <Icon className="h-16 w-16 text-primary/25 mx-auto mb-4" />;
+                      })()}
+                      <p className="text-lg font-semibold text-foreground/40">
+                        {tabs[activeTab].label}
+                      </p>
+                      <p className="text-sm text-muted-foreground/50 mt-1">
+                        Screenshot em breve
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

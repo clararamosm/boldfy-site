@@ -3,7 +3,8 @@
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Crosshair, Eye, Rocket, Swords, Heart, Award, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, Crosshair, Eye, Rocket, Swords, Heart, Award, BarChart3, Sparkles, UserCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function SobrePage() {
   const t = useT();
@@ -28,7 +29,7 @@ export default function SobrePage() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-6">
             {t.sobre.manifestoTag}
           </span>
-          <h1 className="text-2xl md:text-4xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
+          <h1 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
             {t.sobre.manifestoText}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -83,7 +84,7 @@ export default function SobrePage() {
       {/* Brand Attributes */}
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-10 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-10 text-center">
             {t.sobre.attributesTitle}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -104,15 +105,16 @@ export default function SobrePage() {
       {/* Team */}
       <section className="py-16">
         <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-6">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-6">
             {t.sobre.teamTitle}
           </h2>
           <p className="text-sm text-muted-foreground mb-4">{t.sobre.foundedBy}</p>
           <div className="inline-flex flex-col items-center">
-            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold mb-3">
-              CR
+            <div className="relative h-32 w-32 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center mb-4 ring-4 ring-primary/20">
+              {/* Substituir por: <Image src="/images/founder.webp" alt="Clara Ramos" fill className="object-cover" /> */}
+              <UserCircle className="h-16 w-16 text-primary/25" />
             </div>
-            <p className="text-base font-bold text-foreground">Clara Ramos</p>
+            <p className="text-lg font-bold text-foreground">Clara Ramos</p>
             <p className="text-sm text-muted-foreground">Founder & CEO</p>
           </div>
         </div>
@@ -121,7 +123,7 @@ export default function SobrePage() {
       {/* CTA */}
       <section className="py-20 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
             {t.sobre.ctaTitle} <span className="text-primary">{t.sobre.ctaTitleHighlight}</span>
           </h2>
           <Button asChild size="lg" className="font-bold">

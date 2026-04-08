@@ -32,7 +32,7 @@ function Step({ icon: Icon, label, description, stepNumber, isLast }: StepProps)
       </span>
 
       {/* Label */}
-      <h3 className="text-sm font-bold text-foreground mb-1">
+      <h3 className="font-headline text-sm font-bold text-foreground mb-1">
         {label}
       </h3>
 

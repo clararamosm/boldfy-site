@@ -12,7 +12,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        headline: ['Inter', 'system-ui', 'sans-serif'],
+        headline: ['"Nunito Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

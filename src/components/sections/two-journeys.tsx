@@ -64,7 +64,7 @@ export function TwoJourneysSection() {
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6">
         {/* Section title */}
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-12">
+        <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-12">
           {t.home.twoJourneysTitle}
         </h2>
 

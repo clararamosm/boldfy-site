@@ -44,6 +44,14 @@ const en: Dictionary = {
     marceloRole: 'CEO',
     marceloQuote: 'Brand authority depends only on me. If I stop posting, the brand disappears.',
 
+    // Social Proof
+    socialProofTag: 'WHY EMPLOYEE ADVOCACY?',
+    socialProofTitle: 'Personal profiles generate up to 10x more reach than company pages',
+    socialProofText: 'When employees share authentic content, the brand gains credibility, organic reach and real connections. Without paid media spend.',
+    socialProofStat1Label: 'more organic reach',
+    socialProofStat2Label: 'more engagement',
+    socialProofStat3Label: 'more clicks',
+
     marketingTitle: 'Marketing & Branding',
     marketingPain: 'Dead Company Page · Rising CAC',
     marketingSolution: 'Personal profiles with 10x more reach become brand channels. AI aligns everything with Brand Context.',

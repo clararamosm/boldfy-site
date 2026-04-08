@@ -11,7 +11,7 @@ export function CtaFinalSection() {
   return (
     <section className="py-20 md:py-28 bg-primary/5">
       <div className="mx-auto max-w-6xl px-6 text-center">
-        <h2 className="text-2xl md:text-4xl font-bold text-accent-foreground mb-4 max-w-2xl mx-auto">
+        <h2 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground mb-4 max-w-2xl mx-auto">
           {t.home.ctaTitle}{' '}
           <span className="text-primary">{t.home.ctaTitleHighlight}</span>
         </h2>

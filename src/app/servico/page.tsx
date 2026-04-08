@@ -32,7 +32,7 @@ export default function ServicoPage() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
             {t.servico.heroTag}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
             {t.servico.heroTitle}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
@@ -50,7 +50,7 @@ export default function ServicoPage() {
       {/* For who */}
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
             {t.servico.forWhoTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -67,7 +67,7 @@ export default function ServicoPage() {
       {/* Included */}
       <section className="py-16">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
             {t.servico.includedTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -84,7 +84,7 @@ export default function ServicoPage() {
       {/* Comparison table */}
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
             {t.servico.comparisonTitle}
           </h2>
           <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -125,7 +125,7 @@ export default function ServicoPage() {
       {/* CTA */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="text-xl md:text-2xl font-bold text-accent-foreground mb-3">
+          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-3">
             {t.servico.ctaTitle}
           </h2>
           <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">
