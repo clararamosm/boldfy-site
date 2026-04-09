@@ -4,9 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useT } from '@/lib/i18n/context';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowRight, Clock, Send } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import type { BlogPost } from '@/lib/notion';
 
 interface BlogPageClientProps {
@@ -42,7 +40,7 @@ function PostCard({ post }: { post: BlogPost }) {
             {post.title}
           </h2>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-            {post.summary}
+            {post.metaDescription || post.summary}
           </p>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -126,35 +124,13 @@ export function BlogPageClient({ posts }: BlogPageClientProps) {
           ) : (
             <div className="text-center py-16">
               <p className="text-lg text-muted-foreground">
-                Em breve novos conteúdos aqui! Enquanto isso, assine a newsletter.
+                Em breve novos conteúdos aqui!
               </p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="py-16 bg-primary/5">
-        <div className="mx-auto max-w-lg px-6 text-center">
-          <h2 className="font-headline text-xl font-black text-accent-foreground mb-2">
-            {t.blog.newsletter.title}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            {t.blog.newsletter.subtitle}
-          </p>
-          <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-            <Input
-              type="email"
-              placeholder={t.blog.newsletter.placeholder}
-              className="flex-1"
-            />
-            <Button type="submit">
-              {t.blog.newsletter.cta}
-              <Send className="h-4 w-4 ml-1.5" />
-            </Button>
-          </form>
-        </div>
-      </section>
     </>
   );
 }

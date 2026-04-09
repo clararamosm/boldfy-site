@@ -29,6 +29,7 @@ export interface BlogPost {
   author: string;
   authorBio: string;
   authorLinkedIn: string;
+  authorPhoto: string | null;
   tags: string[];
   /* SEO fields */
   metaTitle: string;
@@ -68,6 +69,14 @@ function extractPlainText(richTextArr: any[]): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractFileUrl(files: any[]): string | null {
+  if (!files || files.length === 0) return null;
+  const file = files[0];
+  // Notion Files & media: pode ser "file" (upload) ou "external" (URL)
+  return file?.file?.url ?? file?.external?.url ?? null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function pageToPost(page: any): BlogPost {
   const props = page.properties;
 
@@ -89,6 +98,7 @@ function pageToPost(page: any): BlogPost {
     author: extractPlainText(props.Autor?.rich_text) || 'Boldfy',
     authorBio: extractPlainText(props['Bio do Autor']?.rich_text) || '',
     authorLinkedIn: props['LinkedIn do Autor']?.url ?? '',
+    authorPhoto: extractFileUrl(props['Foto Autor']?.files),
     tags: (props.Tags?.multi_select ?? []).map((t: { name: string }) => t.name),
     /* SEO fields */
     metaTitle: extractPlainText(props['Meta Title']?.rich_text) || '',

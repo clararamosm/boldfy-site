@@ -79,9 +79,18 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
           {post.author && (
             <div className="mt-12 rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5">
               {/* Avatar */}
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">
-                {post.author.charAt(0)}
-              </div>
+              {post.authorPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={post.authorPhoto}
+                  alt={post.author}
+                  className="h-16 w-16 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+                  {post.author.charAt(0)}
+                </div>
+              )}
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <h3 className="text-base font-bold text-foreground">{post.author}</h3>
