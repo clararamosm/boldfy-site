@@ -6,9 +6,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static pages — all public routes
   const highPriority = ['', '/solucoes/software-as-a-service', '/solucoes/content-as-a-service', '/precos'];
-  const medPriority = ['/para/marketing', '/para/vendas', '/para/rh', '/plataforma', '/servico'];
-  const lowPriority = ['/blog', '/sobre', '/contato', '/demo', '/privacidade', '/termos'];
-
+  const medPriority = ['/para/marketing', '/para/vendas', '/para/rh'];
+  const lowPriority = ['/blog', '/privacidade', '/termos'];
+  
   const staticPages = [...highPriority, ...medPriority, ...lowPriority].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
