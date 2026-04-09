@@ -125,7 +125,6 @@ export function Footer() {
       links: [
         { label: t.footer.privacidade, href: '/privacidade' },
         { label: t.footer.termos, href: '/termos' },
-        { label: t.footer.cookies, href: '/cookies' },
       ],
     },
   ];
