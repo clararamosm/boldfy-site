@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -20,7 +21,9 @@ import {
 
 export function MarketingClient() {
   const t = useT();
-  const c = t.paraMarketing;
+  const { openPopup } = useDemoPopup();
+  const c = t
+  const { openPopup } = useDemoPopup();.paraMarketing;
 
   const solutions = [
     { label: c.sol1Label, desc: c.sol1Desc, icon: Compass },
@@ -54,14 +57,14 @@ export function MarketingClient() {
             {c.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.heroCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.heroCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.heroCta2}
             </Button>
           </div>
         </div>
@@ -162,9 +165,9 @@ export function MarketingClient() {
             </div>
           </div>
 
-          <Button asChild variant="outline" size="lg">
-            <Link href="/precos">{c.numbersCta}</Link>
-          </Button>
+          <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.numbersCta}
+            </Button>
         </div>
       </section>
 
@@ -249,14 +252,14 @@ export function MarketingClient() {
             {c.ctaTitle}
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.ctaCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.ctaCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.ctaCta2}
             </Button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import Link from 'next/link';
 import { ArrowRight, Check, AlertTriangle, Lightbulb, BarChart3, MessageSquareQuote } from 'lucide-react';
 
@@ -38,12 +39,12 @@ export function UseCasePageLayout(props: UseCasePageProps) {
             {props.heroSubtitle}
           </p>
           <p className="text-sm font-medium text-primary/80 mb-8">{props.persona}</p>
-          <Button asChild size="lg" className="font-bold">
-            <Link href="/contato">
+          <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
               {props.ctaButton}
               <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
+            
+            </Button>
         </div>
       </section>
 
@@ -125,12 +126,12 @@ export function UseCasePageLayout(props: UseCasePageProps) {
       {/* CTA Final */}
       <section className="py-20 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <Button asChild size="lg" className="font-bold">
-            <Link href="/contato">
+          <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
               {props.ctaButton}
               <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
+            
+            </Button>
         </div>
       </section>
     </>

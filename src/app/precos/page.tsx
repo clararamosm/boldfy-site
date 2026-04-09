@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ArrowRight, Check, Sparkles, Shield, MessageCircle } from 'lucide-react';
@@ -28,6 +29,7 @@ function PricingCard({ range, price, betaPrice, seatMonth, highlighted }: Pricin
 
 export default function PrecosPage() {
   const t = useT();
+  const { openPopup } = useDemoPopup();
 
   const tiers: PricingCardProps[] = [
     { range: t.precos.tier1Range, price: t.precos.tier1Price, betaPrice: t.precos.tier1Beta, seatMonth: t.precos.seatMonth },
@@ -79,8 +81,8 @@ export default function PrecosPage() {
           <div className="mt-4 rounded-xl border border-border bg-card p-6 text-center">
             <p className="text-sm font-semibold text-foreground mb-1">{t.precos.tier5Range}</p>
             <p className="text-xl font-bold text-primary mb-3">{t.precos.enterprisePrice}</p>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/contato">{t.precos.enterpriseCta}</Link>
+            <Button  variant="outline" size="sm" onClick={openPopup}>
+              {t.precos.enterpriseCta}
             </Button>
           </div>
         </div>
@@ -134,12 +136,12 @@ export default function PrecosPage() {
           <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
             {t.precos.tier2PreviewDesc}
           </p>
-          <Button asChild variant="outline">
-            <Link href="/servico">
+          <Button  variant="outline" onClick={openPopup}>
+              
               {t.precos.tier2PreviewCta}
               <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
+            
+            </Button>
         </div>
       </section>
 
@@ -169,12 +171,12 @@ export default function PrecosPage() {
           <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">
             {t.precos.ctaSubtitle}
           </p>
-          <Button asChild size="lg" className="font-bold">
-            <Link href="/contato">
+          <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
               {t.precos.ctaButton}
               <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </Button>
+            
+            </Button>
         </div>
       </section>
     </>

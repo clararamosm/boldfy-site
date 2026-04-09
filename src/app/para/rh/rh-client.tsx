@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -16,7 +17,9 @@ import {
 
 export function RhClient() {
   const t = useT();
-  const c = t.paraRh;
+  const { openPopup } = useDemoPopup();
+  const c = t
+  const { openPopup } = useDemoPopup();.paraRh;
 
   const solutions = [
     { label: c.sol1Label, desc: c.sol1Desc, icon: Heart },
@@ -49,14 +52,14 @@ export function RhClient() {
             {c.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.heroCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.heroCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.heroCta2}
             </Button>
           </div>
         </div>
@@ -206,14 +209,14 @@ export function RhClient() {
             {c.ctaTitle}
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.ctaCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.ctaCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.ctaCta2}
             </Button>
           </div>
         </div>

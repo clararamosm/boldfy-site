@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -21,7 +22,9 @@ import {
 
 export function CaasClient() {
   const t = useT();
-  const c = t.solucoesCaas;
+  const { openPopup } = useDemoPopup();
+  const c = t
+  const { openPopup } = useDemoPopup();.solucoesCaas;
 
   const designItems = [
     { icon: LayoutGrid, text: c.designItem1 },
@@ -54,14 +57,14 @@ export function CaasClient() {
             {c.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.heroCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.heroCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.heroCta2}
             </Button>
           </div>
         </div>
@@ -211,14 +214,14 @@ export function CaasClient() {
             {c.ctaBody}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/precos">
+            <Button  size="lg" className="font-bold" onClick={openPopup}>
+              
                 {c.ctaCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
+              
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/contato">{c.ctaCta2}</Link>
+            <Button  variant="outline" size="lg" onClick={openPopup}>
+              {c.ctaCta2}
             </Button>
           </div>
         </div>

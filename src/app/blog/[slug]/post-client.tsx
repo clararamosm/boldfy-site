@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import { Badge } from '@/components/ui/badge';
 import { NotionRenderer } from '@/components/notion-renderer';
 import Link from 'next/link';
@@ -15,6 +16,7 @@ interface BlogPostClientProps {
 
 export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
   const t = useT();
+  const { openPopup } = useDemoPopup();
 
   return (
     <>
@@ -111,11 +113,11 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
             <p className="text-lg font-bold text-accent-foreground mb-4">
               {t.blog.postCta}
             </p>
-            <Button asChild className="font-bold">
-              <Link href="/contato">
+            <Button  className="font-bold" onClick={openPopup}>
+              
                 {t.blog.postCtaButton}
                 <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
+              
             </Button>
           </div>
         </div>
