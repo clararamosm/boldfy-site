@@ -25,15 +25,9 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Redirects 301 do site antigo (Wix) → site novo
-  // Preserva SEO juice dos artigos que já rankeiam no Google
   async redirects() {
     return [
-      // Artigos da newsletter que rankeiam bem — serão recriados no blog Notion
-      // Quando recriar um artigo no Notion, REMOVER o redirect correspondente
-      // e criar a página em /blog/[slug] com o mesmo slug
-
-      // Top 15 artigos por clicks+impressões (Search Console)
+      // Top artigos Wix → /blog
       { source: '/post/personalidade-de-marca-no-branding', destination: '/blog', permanent: false },
       { source: '/post/marcas-cores-e-case-nubank', destination: '/blog', permanent: false },
       { source: '/post/mulheres-no-branding-e-case-always', destination: '/blog', permanent: false },
@@ -59,31 +53,29 @@ const nextConfig: NextConfig = {
       { source: '/post/diferença-entre-marketing-e-branding', destination: '/blog', permanent: false },
       { source: '/post/o-que-é-branding-percepção-de-valor-de-marca', destination: '/blog', permanent: false },
 
-      // Catch-all: qualquer /post/* que não tem redirect específico → /blog
+      // Catch-all: qualquer /post/* → /blog
       { source: '/post/:slug*', destination: '/blog', permanent: false },
 
-      // Páginas de produto Wix → páginas relevantes no site novo
-      { source: '/produto/planejamento-de-conteudo-template-notion', destination: '/plataforma', permanent: false },
-      { source: '/produto/kit-mentoria-de-marca-pessoal', destination: '/servico', permanent: false },
-      { source: '/produto/plano-de-acoes-notion', destination: '/plataforma', permanent: false },
+      // Páginas de produto Wix → rotas existentes
+      { source: '/produto/planejamento-de-conteudo-template-notion', destination: '/solucoes/software-as-a-service', permanent: false },
+      { source: '/produto/kit-mentoria-de-marca-pessoal', destination: '/solucoes/content-as-a-service', permanent: false },
+      { source: '/produto/plano-de-acoes-notion', destination: '/solucoes/software-as-a-service', permanent: false },
       { source: '/produto/:slug*', destination: '/', permanent: false },
 
-      // Outras páginas Wix
-      // /recursos agora é página própria (não mais redirect)
-      // { source: '/recursos', destination: '/blog', permanent: false },
-      { source: '/café-virtual-branding', destination: '/contato', permanent: false },
-      { source: '/brandgpt-chat-arquetipo-de-marca', destination: '/plataforma', permanent: false },
-      { source: '/conteudo-estrategico', destination: '/servico', permanent: false },
-      { source: '/branding-e-construcao-de-marca', destination: '/servico', permanent: false },
-      { source: '/mentoria-marca-pessoal', destination: '/servico', permanent: false },
+      // Outras páginas Wix → rotas existentes
+      { source: '/café-virtual-branding', destination: '/', permanent: false },
+      { source: '/brandgpt-chat-arquetipo-de-marca', destination: '/solucoes/software-as-a-service', permanent: false },
+      { source: '/conteudo-estrategico', destination: '/solucoes/content-as-a-service', permanent: false },
+      { source: '/branding-e-construcao-de-marca', destination: '/solucoes/content-as-a-service', permanent: false },
+      { source: '/mentoria-marca-pessoal', destination: '/solucoes/content-as-a-service', permanent: false },
       { source: '/guia-proposta-de-valor', destination: '/blog', permanent: false },
       { source: '/pesquisa-panorama-de-branding-b2b-brasil', destination: '/blog', permanent: false },
-      { source: '/diagnostico-de-branding-b2b', destination: '/contato', permanent: false },
+      { source: '/diagnostico-de-branding-b2b', destination: '/', permanent: false },
       { source: '/category/:slug*', destination: '/blog', permanent: false },
       { source: '/blog/categories/:slug*', destination: '/blog', permanent: false },
       { source: '/members-area/:path*', destination: '/', permanent: false },
 
-      // Casos de uso → páginas "Para" (novo IA)
+      // Casos de uso → páginas "Para"
       { source: '/casos-de-uso/marketing', destination: '/para/marketing', permanent: true },
       { source: '/casos-de-uso/social-selling', destination: '/para/vendas', permanent: true },
       { source: '/casos-de-uso/employer-branding', destination: '/para/rh', permanent: true },
