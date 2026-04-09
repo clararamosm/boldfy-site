@@ -31,11 +31,11 @@ const ptBR = {
     heroBadge: 'Programa Beta aberto — 5 vagas',
     heroTag: 'Content Intelligence para Employee-Led Growth',
     heroTitle: 'O maior canal de aquisição da sua empresa',
-    heroTitleHighlight: 'já bate ponto todo dia.',
-    heroSubtitle: 'A Boldfy é o sistema de inteligência de conteúdo que transforma o time das empresas B2B nos principais criadores de conteúdo da marca no LinkedIn. Sem template, sem fachada, sem depender só do fundador.',
+    heroTitleHighlight: 'já bate ponto todo dia',
+    heroSubtitle: 'A Boldfy é o sistema de inteligência de conteúdo que transforma o time das empresas B2B nos principais criadores de conteúdo da marca no LinkedIn.',
     heroCta1: 'Montar meu pacote',
     heroCta2: 'Agendar demo',
-    heroHonesty: 'Sem contrato anual. Sem letra miúda. Você contrata o nível que faz sentido pro seu time.',
+    heroHonesty: '',
 
     // Section 2 — Problem
     problemTitle: 'Seu marketing tá gritando mais alto',
