@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useT } from '@/lib/i18n/context';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 
@@ -8,26 +9,15 @@ import { useDemoPopup } from '@/components/forms/demo-popup';
 /*  White variant of the logo for the dark footer background          */
 /* ------------------------------------------------------------------ */
 function LogoFullWhite({ height = 28 }: { height?: number }) {
+  const width = Math.round(height * 2.586);
   return (
     <Link href="/" aria-label="Boldfy - Home">
-      <svg
+      <Image
+        src="/images/boldfy-logo-white.svg"
+        alt="Boldfy"
+        width={width}
         height={height}
-        viewBox="0 0 120 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <text
-          x="0"
-          y="26"
-          fontFamily="Inter, system-ui, sans-serif"
-          fontSize="28"
-          fontWeight="800"
-          letterSpacing="-0.02em"
-        >
-          <tspan fill="white">bold</tspan>
-          <tspan fill="hsl(279 71% 75%)">fy</tspan>
-        </text>
-      </svg>
+      />
     </Link>
   );
 }
