@@ -244,46 +244,69 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* ════════════ RIGHT COLUMN: Visual ════════════ */}
+        {/* ════════════ RIGHT COLUMN: Visual (4-layer depth) ════════════ */}
+        {/*
+          Layers (back → front):
+          z-2  → Photo WITH background (hero-person-bg.png)
+          z-5  → Cards: Pontos + Trilha (behind person)
+          z-8  → Photo WITHOUT background (hero-person.png) — covers the cards
+          z-15 → Card IA (in front of everything)
+        */}
         <div
           ref={visualRef}
           className="relative hidden h-[680px] lg:block"
         >
-          {/* Halo behind photo */}
-          <div className="pointer-events-none absolute left-1/2 top-[5%] z-[1] h-[80%] w-[70%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,hsl(var(--primary)/0.18)_0%,transparent_65%)] blur-[60px]" />
+          {/* Halo behind everything */}
+          <div className="pointer-events-none absolute left-[40%] top-[5%] z-[1] h-[80%] w-[70%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,hsl(var(--primary)/0.18)_0%,transparent_65%)] blur-[60px]" />
 
-          {/* ── Cards BEHIND photo (z-3) ── */}
-          <div
-            className="absolute -left-2 top-[2%] z-[3] animate-hero-float"
-            data-parallax="0.15"
-          >
-            <CardPontos />
-          </div>
-
-          <div
-            className="absolute -left-10 bottom-[12%] z-[3] animate-hero-float-slow"
-            data-parallax="0.25"
-          >
-            <CardTrilha />
-          </div>
-
-          {/* ── Photo (as a styled card, same border/shadow as floating cards) ── */}
-          <div className="absolute inset-x-0 top-0 bottom-[4%] z-[5] flex items-start justify-center pl-6">
-            <div className="relative h-full w-[380px] overflow-hidden rounded-2xl border border-border/40 bg-card shadow-lg shadow-primary/10">
+          {/* ── LAYER 1: Photo WITH background (z-2) ── */}
+          <div className="absolute inset-x-0 top-0 bottom-[2%] z-[2] flex items-start justify-center">
+            <div className="relative h-full w-[420px] overflow-hidden rounded-2xl border border-border/40 bg-card shadow-lg shadow-primary/10">
               <Image
                 src="/images/hero-person-bg.png"
                 alt="Profissional criando conteúdo no LinkedIn com a plataforma Boldfy"
                 fill
                 className="object-cover object-top"
                 priority
-                sizes="380px"
+                sizes="420px"
               />
             </div>
           </div>
 
-          {/* ── Card IN FRONT of photo (z-20) ── */}
+          {/* ── LAYER 2: Cards BEHIND person (z-5) ── */}
+          {/* Pontos — top area, overlapping the photo near her head */}
           <div
-            className="absolute right-[-40px] top-[calc(50%-160px)] z-[20] animate-hero-float-reverse"
+            className="absolute left-[2%] top-[-2%] z-[5] animate-hero-float"
+            data-parallax="0.2"
+          >
+            <CardPontos />
+          </div>
+
+          {/* Trilha — lower left, partially behind the person */}
+          <div
+            className="absolute left-[-6%] bottom-[10%] z-[5] animate-hero-float-slow"
+            data-parallax="0.3"
+          >
+            <CardTrilha />
+          </div>
+
+          {/* ── LAYER 3: Photo WITHOUT background (z-8) — person covers the cards ── */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 bottom-[2%] z-[8] flex items-start justify-center">
+            <div className="relative h-full w-[420px]">
+              <Image
+                src="/images/hero-person.png"
+                alt="Colaboradora usando a plataforma Boldfy"
+                fill
+                className="object-contain object-top"
+                priority
+                sizes="420px"
+              />
+            </div>
+          </div>
+
+          {/* ── LAYER 4: Card IA IN FRONT of person (z-15) — positioned lower to not cover face ── */}
+          <div
+            className="absolute right-[-40px] bottom-[12%] z-[15] animate-hero-float-reverse"
             data-parallax="-0.18"
           >
             <CardIA />
