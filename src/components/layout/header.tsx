@@ -276,7 +276,7 @@ export function Header() {
   const navItems: NavItem[] = [
     {
       label: t.nav.solucoes,
-      href: '/solucoes',
+      href: '#',
       children: [
         { label: t.nav.plataforma, href: '/solucoes/software-as-a-service' },
         { label: t.nav.servico, href: '/solucoes/content-as-a-service' },
@@ -284,7 +284,7 @@ export function Header() {
     },
     {
       label: t.nav.casosDeUso,
-      href: '/para',
+      href: '#',
       children: [
         { label: t.nav.marketing, href: '/para/marketing' },
         { label: t.nav.vendas, href: '/para/vendas' },
@@ -293,7 +293,7 @@ export function Header() {
     },
     {
       label: t.nav.recursos,
-      href: '/recursos',
+      href: '#',
       children: [
         { label: t.nav.blog, href: '/blog' },
         { label: t.nav.materiais, href: '/materiais' },
