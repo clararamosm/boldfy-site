@@ -128,3 +128,52 @@ html {
   0% { --glow-angle: 0deg; }
   100% { --glow-angle: 360deg; }
 }
+
+/* ============ Problem section animations ============ */
+
+/* Timeline steps — hidden by default, animate in */
+.timeline-step {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.timeline-step.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.timeline-step.visible .mb-4 {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+/* Virada chips — hidden by default, slide in from sides */
+.virada-chip {
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.virada-chip-left {
+  transform: translateX(-30px);
+}
+.virada-chip-right {
+  transform: translateX(30px);
+}
+.virada-chip.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Virada center — pulse ring */
+.virada-center::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid hsl(var(--primary));
+  opacity: 0;
+  animation: virada-ring-pulse 3s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes virada-ring-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}

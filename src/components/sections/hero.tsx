@@ -180,7 +180,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background px-6 pb-24 pt-20 md:px-12 md:pb-28 md:pt-20">
+    <section className="relative min-h-screen bg-background px-6 pb-10 pt-20 md:px-12 md:pb-12 md:pt-20">
       {/* ── Ambient glows ── */}
       <div className="pointer-events-none absolute -right-[150px] -top-[10%] h-[700px] w-[700px] rounded-full bg-primary opacity-[0.14] blur-[120px]" />
       <div className="pointer-events-none absolute -bottom-[100px] -left-[50px] h-[500px] w-[500px] rounded-full bg-[#E875FF] opacity-[0.10] blur-[120px]" />
