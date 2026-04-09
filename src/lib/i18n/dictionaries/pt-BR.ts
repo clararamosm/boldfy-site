@@ -75,18 +75,37 @@ const ptBR = {
     viradaSolution4: 'Marca descentralizada',
     viradaSolution5: 'Sistema que se sustenta sozinho',
 
-    // Section 3 — Bento Use Cases
-    useCasesTitle: 'Cada time da sua empresa tem uma dor diferente.',
-    useCasesTitleHighlight: 'A gente resolve cada uma.',
-    useCasesSubtitle: 'Escolha por qual dor você entra. A solução é a mesma, o ponto de partida é o seu.',
+    // Section 3 — Personas
+    personasTag: 'Por onde você entra',
+    personasTitle: 'Cada time da sua empresa tem uma dor diferente.',
+    personasTitleHighlight: 'A gente resolve cada uma.',
+    personasSubtitle: 'Escolha por qual dor você entra. A solução é a mesma, o ponto de partida é o seu.',
+
+    // Persona: Marketing
     ucMarketingTitle: 'Para Marketing',
-    ucMarketingDesc: 'Geração de demanda orgânica que não cobra por impressão. Awareness real, listas de remarketing qualificadas, CAC que não sobe junto com o Ads.',
+    ucMarketingHeadline: 'Geração de demanda orgânica que não cobra por impressão',
+    ucMarketingDesc: 'Awareness real, listas de remarketing qualificadas, CAC que não sobe junto com o Ads.',
+    ucMarketingBenefit1: 'Impressões orgânicas em escala, sem CPM',
+    ucMarketingBenefit2: 'Listas de remarketing qualificadas',
+    ucMarketingBenefit3: 'Dashboard com valor equivalente em mídia paga',
     ucMarketingCta: 'Ver como a Boldfy resolve',
+
+    // Persona: Vendas
     ucVendasTitle: 'Para Vendas',
-    ucVendasDesc: 'Vendedores com autoridade digital antes da primeira abordagem. O prospect já conhece quem vai falar com ele. Ciclo encurta, ghosting cai.',
+    ucVendasHeadline: 'Vendedores com autoridade digital antes da primeira abordagem',
+    ucVendasDesc: 'O prospect já conhece quem vai falar com ele. Ciclo encurta, ghosting cai.',
+    ucVendasBenefit1: 'Social selling estruturado com gamificação',
+    ucVendasBenefit2: 'Posts de autoridade técnica automatizados',
+    ucVendasBenefit3: 'Taxa de resposta maior em cold outreach',
     ucVendasCta: 'Ver como a Boldfy resolve',
+
+    // Persona: RH
     ucRhTitle: 'Para RH',
-    ucRhDesc: 'Marca empregadora contada pelo próprio time. Candidatura inbound qualificada que chega porque a pessoa já sabe como é trabalhar aí.',
+    ucRhHeadline: 'Marca empregadora contada pelo próprio time',
+    ucRhDesc: 'Candidatura inbound qualificada que chega porque a pessoa já sabe como é trabalhar aí.',
+    ucRhBenefit1: 'Employer branding autêntico via EGC',
+    ucRhBenefit2: 'Cultura mostrada por quem vive ela',
+    ucRhBenefit3: 'Redução de custo por contratação',
     ucRhCta: 'Ver como a Boldfy resolve',
 
     // Section 4 — Product Motion

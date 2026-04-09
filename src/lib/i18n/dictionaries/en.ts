@@ -77,19 +77,35 @@ const en = {
     viradaSolution4: 'Marca descentralizada',
     viradaSolution5: 'Sistema que se sustenta sozinho',
 
-    // Section 3 — Bento Use Cases
-    useCasesTitle: 'Each team in your company has a different pain.',
-    useCasesTitleHighlight: 'We solve each one.',
-    useCasesSubtitle: 'Choose which pain you enter from. The solution is the same, the starting point is yours.',
-    ucMarketingTitle: 'For Marketing',
-    ucMarketingDesc: 'Organic demand generation that doesn\'t charge per impression. Real awareness, qualified remarketing lists, CAC that doesn\'t rise with Ads.',
-    ucMarketingCta: 'See how Boldfy solves it',
-    ucVendasTitle: 'For Sales',
-    ucVendasDesc: 'Salespeople with digital authority before the first approach. The prospect already knows who\'s going to talk to them. Cycle shortens, ghosting drops.',
-    ucVendasCta: 'See how Boldfy solves it',
-    ucRhTitle: 'For HR',
-    ucRhDesc: 'Employer brand told by the team itself. Qualified inbound applications that arrive because the person already knows what it\'s like to work there.',
-    ucRhCta: 'See how Boldfy solves it',
+    // Section 3 — Personas
+    personasTag: 'Por onde você entra',
+    personasTitle: 'Cada time da sua empresa tem uma dor diferente.',
+    personasTitleHighlight: 'A gente resolve cada uma.',
+    personasSubtitle: 'Escolha por qual dor você entra. A solução é a mesma, o ponto de partida é o seu.',
+
+    ucMarketingTitle: 'Para Marketing',
+    ucMarketingHeadline: 'Geração de demanda orgânica que não cobra por impressão',
+    ucMarketingDesc: 'Awareness real, listas de remarketing qualificadas, CAC que não sobe junto com o Ads.',
+    ucMarketingBenefit1: 'Impressões orgânicas em escala, sem CPM',
+    ucMarketingBenefit2: 'Listas de remarketing qualificadas',
+    ucMarketingBenefit3: 'Dashboard com valor equivalente em mídia paga',
+    ucMarketingCta: 'Ver como a Boldfy resolve',
+
+    ucVendasTitle: 'Para Vendas',
+    ucVendasHeadline: 'Vendedores com autoridade digital antes da primeira abordagem',
+    ucVendasDesc: 'O prospect já conhece quem vai falar com ele. Ciclo encurta, ghosting cai.',
+    ucVendasBenefit1: 'Social selling estruturado com gamificação',
+    ucVendasBenefit2: 'Posts de autoridade técnica automatizados',
+    ucVendasBenefit3: 'Taxa de resposta maior em cold outreach',
+    ucVendasCta: 'Ver como a Boldfy resolve',
+
+    ucRhTitle: 'Para RH',
+    ucRhHeadline: 'Marca empregadora contada pelo próprio time',
+    ucRhDesc: 'Candidatura inbound qualificada que chega porque a pessoa já sabe como é trabalhar aí.',
+    ucRhBenefit1: 'Employer branding autêntico via EGC',
+    ucRhBenefit2: 'Cultura mostrada por quem vive ela',
+    ucRhBenefit3: 'Redução de custo por contratação',
+    ucRhCta: 'Ver como a Boldfy resolve',
 
     // Section 4 — Product Motion
     productTitle: 'Artisanal system',
