@@ -23,6 +23,7 @@ interface UseCasePageProps {
 }
 
 export function UseCasePageLayout(props: UseCasePageProps) {
+  const { openPopup } = useDemoPopup();
   return (
     <>
       {/* Hero */}
