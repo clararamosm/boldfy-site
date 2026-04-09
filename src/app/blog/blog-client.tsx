@@ -33,9 +33,23 @@ function PostCard({ post }: { post: BlogPost }) {
         )}
 
         <div className="p-5">
-          <Badge variant="secondary" className="mb-3 text-[10px]">
-            {post.category}
-          </Badge>
+          <div className="flex items-center gap-2 mb-3">
+            <Badge variant="secondary" className="text-[10px]">
+              {post.category}
+            </Badge>
+            {post.authorPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.authorPhoto}
+                alt={post.author}
+                className="h-6 w-6 rounded-full object-cover ring-2 ring-white"
+              />
+            ) : (
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold ring-2 ring-white">
+                {post.author.charAt(0)}
+              </div>
+            )}
+          </div>
           <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
             {post.title}
           </h2>
