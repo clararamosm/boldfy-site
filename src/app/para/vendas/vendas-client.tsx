@@ -20,7 +20,6 @@ export function VendasClient() {
   const t = useT();
   const { openPopup } = useDemoPopup();
   const c = t.paraVendas;
-  const { openPopup } = useDemoPopup();
 
   const solutions = [
     { label: c.sol1Label, desc: c.sol1Desc, icon: MessageSquare },

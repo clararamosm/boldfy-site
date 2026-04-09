@@ -24,7 +24,6 @@ export function CaasClient() {
   const t = useT();
   const { openPopup } = useDemoPopup();
   const c = t.solucoesCaas;
-  const { openPopup } = useDemoPopup();
 
   const designItems = [
     { icon: LayoutGrid, text: c.designItem1 },
