@@ -3,6 +3,7 @@
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
+import { useProposalBuilder } from '@/components/proposal-builder';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -19,6 +20,7 @@ import {
 export default function SaasPageClient() {
   const t = useT();
   const { openPopup } = useDemoPopup();
+  const { openBuilder } = useProposalBuilder();
 
   const features = [
     {
@@ -81,11 +83,11 @@ export default function SaasPageClient() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openPopup}>
-              
+            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+
                 {t.solucoesSaas.heroCta1}
                 <ArrowRight className="ml-2 h-4 w-4" />
-              
+
             </Button>
             <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
               {t.solucoesSaas.heroCta2}
@@ -255,11 +257,11 @@ export default function SaasPageClient() {
           </h2>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openPopup}>
-              
+            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+
                 {t.solucoesSaas.ctaCta1}
                 <ArrowRight className="ml-2 h-4 w-4" />
-              
+
             </Button>
             <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
               {t.solucoesSaas.ctaCta2}

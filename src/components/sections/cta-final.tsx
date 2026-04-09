@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useDemoPopup } from '@/components/forms/demo-popup';
+import { useProposalBuilder } from '@/components/proposal-builder';
 
 export function CtaFinalSection() {
   const t = useT();
   const { openPopup } = useDemoPopup();
+  const { openBuilder } = useProposalBuilder();
 
   return (
     <section className="py-20 md:py-28 bg-primary/5">
@@ -24,11 +26,9 @@ export function CtaFinalSection() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <Button asChild size="lg" className="font-bold w-full sm:w-auto">
-            <Link href="/precos">
-              {t.home.ctaCta1}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          <Button size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+            {t.home.ctaCta1}
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <Button
             variant="outline"

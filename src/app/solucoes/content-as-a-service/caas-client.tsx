@@ -3,6 +3,7 @@
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
+import { useProposalBuilder } from '@/components/proposal-builder';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -23,6 +24,7 @@ import {
 export function CaasClient() {
   const t = useT();
   const { openPopup } = useDemoPopup();
+  const { openBuilder } = useProposalBuilder();
   const c = t.solucoesCaas;
 
   const designItems = [
@@ -56,11 +58,11 @@ export function CaasClient() {
             {c.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold" onClick={openPopup}>
-              
+            <Button  size="lg" className="font-bold" onClick={openBuilder}>
+
                 {c.heroCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              
+
             </Button>
             <Button  variant="outline" size="lg" onClick={openPopup}>
               {c.heroCta2}
@@ -213,11 +215,11 @@ export function CaasClient() {
             {c.ctaBody}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold" onClick={openPopup}>
-              
+            <Button  size="lg" className="font-bold" onClick={openBuilder}>
+
                 {c.ctaCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
-              
+
             </Button>
             <Button  variant="outline" size="lg" onClick={openPopup}>
               {c.ctaCta2}

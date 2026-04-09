@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { useDemoPopup } from '@/components/forms/demo-popup';
+import { useProposalBuilder } from '@/components/proposal-builder';
 
 export function HeroSection() {
   const t = useT();
   const { openPopup } = useDemoPopup();
+  const { openBuilder } = useProposalBuilder();
 
   return (
     <section className="py-20 md:py-28">
@@ -43,11 +45,9 @@ export function HeroSection() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-          <Button asChild size="lg" className="font-bold w-full sm:w-auto">
-            <Link href="/precos">
-              {t.home.heroCta1}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+          <Button size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+            {t.home.heroCta1}
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
             {t.home.heroCta2}
