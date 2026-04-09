@@ -6,7 +6,7 @@
  *  - NOTION_BLOG_DATABASE_ID: Database ID for blog posts
  */
 
-const NOTION_TOKEN = process.env.NOTION_TOKEN ?? '';
+const NOTION_TOKEN = process.env.NOTION_API_KEY ?? process.env.NOTION_TOKEN ?? '';
 const NOTION_DATABASE_ID = process.env.NOTION_BLOG_DATABASE_ID ?? '';
 
 const NOTION_API = 'https://api.notion.com/v1';
@@ -30,6 +30,16 @@ export interface BlogPost {
   authorBio: string;
   authorLinkedIn: string;
   tags: string[];
+  /* SEO fields */
+  metaTitle: string;
+  metaDescription: string;
+  ogTitle: string;
+  ogDescription: string;
+  canonicalUrl: string;
+  keywordPrincipal: string;
+  keywordsSecundarias: string;
+  schemaType: string;
+  indexar: boolean;
 }
 
 export interface NotionBlock {
@@ -60,10 +70,16 @@ function extractPlainText(richTextArr: any[]): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function pageToPost(page: any): BlogPost {
   const props = page.properties;
+
+  // Campo "Indexar" vem como checkbox (__YES__ / vazio) ou checkbox real
+  const indexarRaw = props.Indexar?.checkbox ?? props.Indexar?.select?.name;
+  const indexar =
+    indexarRaw === true || indexarRaw === '__YES__' || indexarRaw === 'Yes';
+
   return {
     id: page.id,
     slug: extractPlainText(props.Slug?.rich_text) || page.id,
-    title: extractPlainText(props.Title?.title ?? props.Name?.title),
+    title: extractPlainText(props.Title?.title ?? props.Name?.title ?? props.Nome?.title),
     summary: extractPlainText(props.Resumo?.rich_text),
     category: props.Categoria?.select?.name ?? '',
     status: props.Status?.select?.name ?? 'Rascunho',
@@ -74,6 +90,16 @@ function pageToPost(page: any): BlogPost {
     authorBio: extractPlainText(props['Bio do Autor']?.rich_text) || '',
     authorLinkedIn: props['LinkedIn do Autor']?.url ?? '',
     tags: (props.Tags?.multi_select ?? []).map((t: { name: string }) => t.name),
+    /* SEO fields */
+    metaTitle: extractPlainText(props['Meta Title']?.rich_text) || '',
+    metaDescription: extractPlainText(props['Meta Description']?.rich_text) || '',
+    ogTitle: extractPlainText(props['OG Title']?.rich_text) || '',
+    ogDescription: extractPlainText(props['OG Description']?.rich_text) || '',
+    canonicalUrl: props['Canonical URL']?.url ?? (extractPlainText(props['Canonical URL']?.rich_text) || ''),
+    keywordPrincipal: extractPlainText(props['Keyword Principal']?.rich_text) || '',
+    keywordsSecundarias: extractPlainText(props['Keywords Secundárias']?.rich_text) || '',
+    schemaType: props['Schema Type']?.select?.name ?? 'Article',
+    indexar,
   };
 }
 
