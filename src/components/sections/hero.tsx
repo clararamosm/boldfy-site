@@ -31,7 +31,7 @@ export function HeroSection() {
         </span>
 
         {/* Main title */}
-        <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-accent-foreground leading-tight mb-6 max-w-4xl mx-auto">
+        <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-accent-foreground leading-tight mb-6 max-w-4xl mx-auto">
           {t.home.heroTitle}{' '}
           <span className="text-primary">{t.home.heroTitleHighlight}</span>
         </h1>

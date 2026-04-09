@@ -9,7 +9,7 @@ export function ChartSection() {
     <section className="py-20 bg-secondary/30">
       <div className="mx-auto max-w-6xl px-6">
         {/* Title */}
-        <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-3">
+        <h2 className="font-headline text-2xl md:text-3xl font-black text-center text-accent-foreground mb-3">
           {t.home.chartTitle}
         </h2>
         <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">

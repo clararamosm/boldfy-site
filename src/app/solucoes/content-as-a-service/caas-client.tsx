@@ -47,7 +47,7 @@ export function CaasClient() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-orange-500 mb-4">
             {c.heroTag}
           </span>
-          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-black text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
             {c.heroTitle}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
@@ -71,7 +71,7 @@ export function CaasClient() {
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-12">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-3">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-3">
               {c.modesTitle}
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto">
@@ -119,7 +119,7 @@ export function CaasClient() {
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
               {c.designDetailTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-10">
@@ -147,7 +147,7 @@ export function CaasClient() {
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-3xl mb-12">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
               {c.execDetailTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed">
@@ -185,7 +185,7 @@ export function CaasClient() {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-500/10 mb-6">
               <Quote className="h-6 w-6 text-orange-500" />
             </div>
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
               {c.authenticityTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -204,7 +204,7 @@ export function CaasClient() {
       {/* Section 6 — CTA Final */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {c.ctaTitle}
           </h2>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">

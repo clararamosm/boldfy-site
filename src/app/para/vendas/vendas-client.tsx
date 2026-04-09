@@ -42,7 +42,7 @@ export function VendasClient() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-blue-600 mb-4">
             {c.heroTag}
           </span>
-          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-2 max-w-4xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-black text-accent-foreground leading-tight mb-2 max-w-4xl mx-auto">
             {c.heroTitle}{' '}
             <span className="text-primary">{c.heroTitleHighlight}</span>
           </h1>
@@ -67,7 +67,7 @@ export function VendasClient() {
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-6">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-6">
               {c.painTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -83,7 +83,7 @@ export function VendasClient() {
       {/* Section 3 — Como resolve */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {c.solutionTitle}
           </h2>
           <p className="text-base text-muted-foreground max-w-3xl mb-10 leading-relaxed">
@@ -116,7 +116,7 @@ export function VendasClient() {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10 mb-6">
               <Trophy className="h-6 w-6 text-blue-600" />
             </div>
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
               {c.gamTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed">
@@ -129,7 +129,7 @@ export function VendasClient() {
       {/* Section 5 — Caso ilustrativo */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-10">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-10">
             Como seria no seu time comercial.
           </h2>
 
@@ -156,7 +156,7 @@ export function VendasClient() {
       {/* Section 6 — Qual solução */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {c.pathTitle}
           </h2>
           <p className="text-base text-muted-foreground max-w-3xl mb-10 leading-relaxed">
@@ -200,7 +200,7 @@ export function VendasClient() {
       {/* Section 7 — CTA Final */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-8">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-8">
             {c.ctaTitle}
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

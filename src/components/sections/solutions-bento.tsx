@@ -39,7 +39,7 @@ function SolutionCard({
         </span>
 
         {/* Title */}
-        <h3 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-3">
+        <h3 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-3">
           {title}
         </h3>
 
@@ -71,7 +71,7 @@ export function SolutionsBentoSection() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Section header */}
         <div className="mx-auto max-w-2xl text-center mb-14">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {t.home.solutionsTitle}{' '}
             <span className="text-primary">{t.home.solutionsTitleHighlight}</span>
           </h2>

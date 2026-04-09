@@ -70,7 +70,7 @@ export default function SaasPageClient() {
             {t.solucoesSaas.heroTag}
           </span>
 
-          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-accent-foreground leading-tight mb-6 max-w-4xl mx-auto">
+          <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-accent-foreground leading-tight mb-6 max-w-4xl mx-auto">
             {t.solucoesSaas.heroTitle}
           </h1>
 
@@ -95,7 +95,7 @@ export default function SaasPageClient() {
       {/* ── Section 2: Para quem e ── */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="font-headline text-xl md:text-2xl lg:text-3xl font-bold text-accent-foreground leading-tight mb-8 text-center">
+          <h2 className="font-headline text-xl md:text-2xl lg:text-3xl font-black text-accent-foreground leading-tight mb-8 text-center">
             {t.solucoesSaas.forWhoTitle}
           </h2>
 
@@ -112,7 +112,7 @@ export default function SaasPageClient() {
       {/* ── Section 3: Features ── */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-accent-foreground mb-16 text-center">
+          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-black text-accent-foreground mb-16 text-center">
             {t.solucoesSaas.featuresTitle}
           </h2>
 
@@ -132,7 +132,7 @@ export default function SaasPageClient() {
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                         <Icon className="h-5 w-5 text-primary" />
                       </div>
-                      <h3 className="font-headline text-lg md:text-xl font-bold text-accent-foreground">
+                      <h3 className="font-headline text-lg md:text-xl font-black text-accent-foreground">
                         {feat.title}
                       </h3>
                     </div>
@@ -166,7 +166,7 @@ export default function SaasPageClient() {
       {/* ── Section 4: Como funciona ── */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-accent-foreground mb-16 text-center">
+          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-black text-accent-foreground mb-16 text-center">
             {t.solucoesSaas.dailyTitle}
           </h2>
 
@@ -183,7 +183,7 @@ export default function SaasPageClient() {
                   <div className="hidden lg:block absolute top-5 left-10 w-[calc(100%-2.5rem)] h-px bg-border" />
                 )}
 
-                <h3 className="font-headline text-base font-bold text-accent-foreground mb-2">
+                <h3 className="font-headline text-base font-black text-accent-foreground mb-2">
                   {step.label}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -200,7 +200,7 @@ export default function SaasPageClient() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex items-center gap-3 justify-center mb-6">
             <Shield className="h-6 w-6 text-primary" />
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground">
               {t.solucoesSaas.securityTitle}
             </h2>
           </div>
@@ -226,7 +226,7 @@ export default function SaasPageClient() {
       {/* ── Section 6: Comparacao ── */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-6">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-6">
             {t.solucoesSaas.comparisonTitle}
           </h2>
 
@@ -248,7 +248,7 @@ export default function SaasPageClient() {
       {/* ── Section 7: CTA Final ── */}
       <section className="py-20 md:py-28 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-bold text-accent-foreground mb-10">
+          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl font-black text-accent-foreground mb-10">
             {t.solucoesSaas.ctaTitle}
           </h2>
 

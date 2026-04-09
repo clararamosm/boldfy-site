@@ -23,7 +23,7 @@ export function BenefitsSection() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-headline text-lg font-bold text-accent-foreground">
+              <h3 className="font-headline text-lg font-black text-accent-foreground">
                 {t.home.forCompany}
               </h3>
             </div>
@@ -43,7 +43,7 @@ export function BenefitsSection() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <User className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-headline text-lg font-bold text-accent-foreground">
+              <h3 className="font-headline text-lg font-black text-accent-foreground">
                 {t.home.forCollaborator}
               </h3>
             </div>

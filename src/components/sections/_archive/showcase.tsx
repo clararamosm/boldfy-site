@@ -374,7 +374,7 @@ export function ShowcaseSection() {
         </span>
 
         {/* Title */}
-        <h2 className="font-headline text-2xl md:text-3xl font-bold text-center text-accent-foreground mb-2">
+        <h2 className="font-headline text-2xl md:text-3xl font-black text-center text-accent-foreground mb-2">
           {t.home.showcaseTitle}
         </h2>
         <p className="text-center text-muted-foreground mb-10 max-w-xl mx-auto">

@@ -176,7 +176,7 @@ export default function BetaTestPage() {
         <p className="text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-3 relative z-10">
           {t.betaTest.heroTag}
         </p>
-        <h1 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight mb-4 relative z-10">
+        <h1 className="font-headline text-2xl md:text-3xl font-black text-white leading-tight mb-4 relative z-10">
           {t.betaTest.heroTitle}<br />
           <span className="text-primary">{t.betaTest.heroTitleHighlight}</span>
         </h1>
@@ -253,7 +253,7 @@ export default function BetaTestPage() {
       {/* TWO JOURNEYS */}
       <section className="border rounded-xl overflow-hidden mb-6">
         <div className="bg-[#5E2A67] px-6 py-3 flex items-center justify-between">
-          <h3 className="font-headline text-sm font-bold text-white">{t.betaTest.twoJourneysTitle}</h3>
+          <h3 className="font-headline text-sm font-black text-white">{t.betaTest.twoJourneysTitle}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 bg-card">
           {/* Without Boldfy */}
@@ -329,7 +329,7 @@ export default function BetaTestPage() {
       {/* ROI CHART */}
       <section className="bg-card border rounded-xl p-5 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-          <h3 className="font-headline text-sm font-bold text-accent-foreground">{t.betaTest.chartTitle}</h3>
+          <h3 className="font-headline text-sm font-black text-accent-foreground">{t.betaTest.chartTitle}</h3>
           <p className="text-[10px] text-muted-foreground">{t.betaTest.chartSubtitle}</p>
         </div>
         <svg viewBox="0 0 680 170" className="w-full h-auto block" xmlns="http://www.w3.org/2000/svg">
@@ -367,7 +367,7 @@ export default function BetaTestPage() {
         <div className="bg-gradient-to-br from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-6 py-4 flex items-center gap-3">
           <Calculator className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-headline text-sm font-bold text-white">{t.betaTest.simulatorTitle}</h3>
+            <h3 className="font-headline text-sm font-black text-white">{t.betaTest.simulatorTitle}</h3>
             <p className="text-[10px] text-white/40">{t.betaTest.simulatorSubtitle}</p>
           </div>
         </div>
@@ -405,16 +405,16 @@ export default function BetaTestPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             <div className="bg-secondary rounded-xl p-4 text-center">
               <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t.betaTest.totalImpressionsMonth}</p>
-              <p className="font-headline text-lg font-bold text-accent-foreground">{simResults.totalImpressions.toLocaleString('pt-BR')}</p>
+              <p className="font-headline text-lg font-black text-accent-foreground">{simResults.totalImpressions.toLocaleString('pt-BR')}</p>
             </div>
             <div className="bg-secondary rounded-xl p-4 text-center border-2 border-primary">
               <p className="text-[9px] font-semibold text-primary uppercase tracking-wide mb-1">{t.betaTest.mediaEquivalentValue}</p>
-              <p className="font-headline text-lg font-bold text-primary">R$ {simResults.valorBoldfy.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+              <p className="font-headline text-lg font-black text-primary">R$ {simResults.valorBoldfy.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
               <p className="text-[8px] text-muted-foreground">{t.betaTest.perImpression}</p>
             </div>
             <div className="bg-secondary rounded-xl p-4 text-center">
               <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t.betaTest.sameReachViaAds}</p>
-              <p className="font-headline text-lg font-bold text-accent-foreground">
+              <p className="font-headline text-lg font-black text-accent-foreground">
                 R$ {simResults.custoAdsLow.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 <span className="text-xs font-normal text-muted-foreground"> a </span>
                 R$ {simResults.custoAdsHigh.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -424,7 +424,7 @@ export default function BetaTestPage() {
             <div className="bg-secondary rounded-xl p-4 text-center border-2 border-primary/30">
               <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t.betaTest.boldfyCostMonth}</p>
               <p className="text-[10px] text-muted-foreground line-through">R$ {simResults.custoMensal.toLocaleString('pt-BR')}</p>
-              <p className="font-headline text-lg font-bold text-primary">R$ {simResults.custoMensalBeta.toLocaleString('pt-BR')}</p>
+              <p className="font-headline text-lg font-black text-primary">R$ {simResults.custoMensalBeta.toLocaleString('pt-BR')}</p>
               <p className="text-[8px] text-muted-foreground">R$ {simResults.custoBetaSeat}{t.betaTest.perSeat}</p>
               <span className="inline-flex text-[7px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-2 py-0.5 rounded-full mt-1">{t.betaTest.betaPriceLabel}</span>
             </div>
@@ -438,7 +438,7 @@ export default function BetaTestPage() {
                   <p className="text-[10px] text-muted-foreground">{t.betaTest.roiSubtitle}</p>
                 </div>
               </div>
-              <span className="font-headline text-2xl font-bold text-primary">
+              <span className="font-headline text-2xl font-black text-primary">
                 {simResults.roi > 0 ? '+' : ''}{simResults.roi.toFixed(0)}%
               </span>
             </div>
@@ -497,7 +497,7 @@ export default function BetaTestPage() {
       <section className="bg-gradient-to-br from-[#1A0E2E] to-[#0F0A18] rounded-xl px-6 py-5 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-primary relative overflow-hidden">
         <div className="absolute top-3 right-[-28px] bg-primary text-white text-[8px] font-extrabold tracking-widest px-8 py-[3px] rotate-45">BETA</div>
         <div>
-          <h3 className="font-headline text-lg font-bold text-white mb-1">
+          <h3 className="font-headline text-lg font-black text-white mb-1">
             <span className="text-primary">{t.betaTest.betaBannerTitle}</span> {t.betaTest.betaBannerTitleSuffix}
           </h3>
           <p className="text-[11px] text-white/50">{t.betaTest.betaBannerSubtitle}</p>
@@ -517,7 +517,7 @@ export default function BetaTestPage() {
             <p className={`text-[10px] font-semibold mb-1 ${p.enterprise ? 'text-primary' : 'text-primary/70'}`}>{p.range}</p>
             {p.enterprise ? (
               <>
-                <p className="font-headline text-sm font-bold text-white mt-2">{t.betaTest.enterprisePrice}</p>
+                <p className="font-headline text-sm font-black text-white mt-2">{t.betaTest.enterprisePrice}</p>
                 <button onClick={scrollToForm} className="mt-2 text-[9px] font-bold text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
                   {t.betaTest.enterpriseCta}
                 </button>
@@ -525,7 +525,7 @@ export default function BetaTestPage() {
             ) : (
               <>
                 <p className="text-[10px] text-muted-foreground line-through mb-0.5">{p.price}</p>
-                <p className="font-headline text-xl font-bold text-accent-foreground">{p.betaPrice}</p>
+                <p className="font-headline text-xl font-black text-accent-foreground">{p.betaPrice}</p>
                 <p className="text-[9px] text-muted-foreground">{t.betaTest.seatMonth}</p>
                 <span className="inline-flex text-[8px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-2 py-0.5 rounded-full mt-1.5">{t.betaTest.betaPriceLabel}</span>
               </>
@@ -537,7 +537,7 @@ export default function BetaTestPage() {
       {/* CTA */}
       <section className="bg-gradient-to-br from-[#0F0A18] to-[#1A0E2E] rounded-xl px-6 py-5 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="font-headline text-base md:text-lg font-bold text-white mb-1">
+          <h2 className="font-headline text-base md:text-lg font-black text-white mb-1">
             {t.betaTest.ctaTitle} <span className="text-primary">{t.betaTest.ctaTitleHighlight}</span> {t.betaTest.ctaTitleSuffix}
           </h2>
           <p className="text-[11px] text-white/40">{t.betaTest.ctaSubtitle}</p>
@@ -552,7 +552,7 @@ export default function BetaTestPage() {
         {sent ? (
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h3 className="font-headline text-xl font-bold text-accent-foreground mb-2">{t.betaTest.formSuccessTitle}</h3>
+            <h3 className="font-headline text-xl font-black text-accent-foreground mb-2">{t.betaTest.formSuccessTitle}</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">{t.betaTest.formSuccessMessage}</p>
             <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="text-sm font-bold gap-2">
@@ -565,7 +565,7 @@ export default function BetaTestPage() {
           <>
             <div className="text-center mb-6">
               <span className="inline-flex text-[10px] font-bold uppercase tracking-wide bg-primary text-white px-3 py-1 rounded-full mb-3">{t.betaTest.formTag}</span>
-              <h3 className="font-headline text-lg font-bold text-accent-foreground mb-1">{t.betaTest.formTitle}</h3>
+              <h3 className="font-headline text-lg font-black text-accent-foreground mb-1">{t.betaTest.formTitle}</h3>
               <p className="text-sm text-muted-foreground">{t.betaTest.formSubtitle}</p>
             </div>
             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">

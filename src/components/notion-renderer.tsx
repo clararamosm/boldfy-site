@@ -33,13 +33,13 @@ function Block({ block }: { block: NotionBlock }) {
       );
     case 'heading_1':
       return (
-        <h2 className="font-headline text-2xl font-bold text-accent-foreground mt-8 mb-4">
+        <h2 className="font-headline text-2xl font-black text-accent-foreground mt-8 mb-4">
           {renderRichText(block.heading_1.rich_text)}
         </h2>
       );
     case 'heading_2':
       return (
-        <h3 className="font-headline text-xl font-bold text-accent-foreground mt-6 mb-3">
+        <h3 className="font-headline text-xl font-black text-accent-foreground mt-6 mb-3">
           {renderRichText(block.heading_2.rich_text)}
         </h3>
       );

@@ -83,7 +83,7 @@ export function BlogPageClient({ posts }: BlogPageClientProps) {
       {/* Hero */}
       <section className="py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h1 className="font-headline text-3xl md:text-4xl font-bold text-accent-foreground mb-3">
+          <h1 className="font-headline text-3xl md:text-4xl font-black text-accent-foreground mb-3">
             {t.blog.title}
           </h1>
           <p className="text-base text-muted-foreground max-w-lg mx-auto">
@@ -136,7 +136,7 @@ export function BlogPageClient({ posts }: BlogPageClientProps) {
       {/* Newsletter */}
       <section className="py-16 bg-primary/5">
         <div className="mx-auto max-w-lg px-6 text-center">
-          <h2 className="font-headline text-xl font-bold text-accent-foreground mb-2">
+          <h2 className="font-headline text-xl font-black text-accent-foreground mb-2">
             {t.blog.newsletter.title}
           </h2>
           <p className="text-sm text-muted-foreground mb-6">

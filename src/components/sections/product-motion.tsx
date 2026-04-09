@@ -15,7 +15,7 @@ function Pillar({ icon: Icon, title, description }: PillarProps) {
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-5">
         <Icon className="h-7 w-7 text-primary" />
       </div>
-      <h3 className="font-headline text-lg font-bold text-accent-foreground mb-2">
+      <h3 className="font-headline text-lg font-black text-accent-foreground mb-2">
         {title}
       </h3>
       <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
@@ -51,7 +51,7 @@ export function ProductMotionSection() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Section header */}
         <div className="text-center mb-14">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {t.home.productTitle}{' '}
             <span className="text-primary">{t.home.productTitleHighlight}</span>
           </h2>

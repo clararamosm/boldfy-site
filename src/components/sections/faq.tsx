@@ -87,7 +87,7 @@ export function FaqSection() {
           dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
 
-        <h2 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground text-center mb-12 max-w-2xl mx-auto">
+        <h2 className="font-headline text-2xl md:text-4xl font-black text-accent-foreground text-center mb-12 max-w-2xl mx-auto">
           {t.home.faqTitle}
         </h2>
 

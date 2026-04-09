@@ -13,7 +13,7 @@ export function ManifestoSection() {
       {/* Part A — Manifesto */}
       <section id="manifesto" className="py-20 md:py-28 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground text-center mb-10 max-w-2xl mx-auto">
+          <h2 className="font-headline text-2xl md:text-4xl font-black text-accent-foreground text-center mb-10 max-w-2xl mx-auto">
             {t.home.manifestoTitle}
           </h2>
 
@@ -27,7 +27,7 @@ export function ManifestoSection() {
             </p>
 
             {/* Pull-quote / emphasis */}
-            <p className="font-headline text-xl md:text-2xl font-bold text-primary text-center leading-snug pt-4">
+            <p className="font-headline text-xl md:text-2xl font-black text-primary text-center leading-snug pt-4">
               {t.home.manifestoBody3}
             </p>
           </div>
@@ -47,7 +47,7 @@ export function ManifestoSection() {
 
             {/* Text */}
             <div className="text-center md:text-left">
-              <h3 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-1">
+              <h3 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-1">
                 {t.home.founderName}
               </h3>
 

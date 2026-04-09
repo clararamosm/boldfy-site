@@ -15,7 +15,7 @@ export default function DemoPage() {
     <section className="py-20 md:py-28">
       <div className="mx-auto max-w-2xl px-6 text-center">
         <Calendar className="h-12 w-12 text-primary mx-auto mb-6" />
-        <h1 className="font-headline text-3xl md:text-4xl font-bold text-accent-foreground mb-4">
+        <h1 className="font-headline text-3xl md:text-4xl font-black text-accent-foreground mb-4">
           Agende uma demo
         </h1>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto">

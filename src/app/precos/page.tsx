@@ -58,7 +58,7 @@ export default function PrecosPage() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
             {t.precos.heroTag}
           </span>
-          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-black text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
             {t.precos.heroTitle}
           </h1>
           <p className="text-base text-muted-foreground max-w-lg mx-auto">
@@ -91,7 +91,7 @@ export default function PrecosPage() {
         <div className="mx-auto max-w-4xl px-6 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground">
+            <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground">
               {t.precos.betaBannerTitle} <span className="text-primary">{t.precos.betaBannerTitleSuffix}</span>
             </h2>
           </div>
@@ -108,7 +108,7 @@ export default function PrecosPage() {
       {/* Included */}
       <section className="py-16">
         <div className="mx-auto max-w-4xl px-6">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-8 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-8 text-center">
             {t.precos.includedTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -128,7 +128,7 @@ export default function PrecosPage() {
       {/* Tier 2 preview */}
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-3">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-3">
             {t.precos.tier2PreviewTitle}
           </h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
@@ -146,7 +146,7 @@ export default function PrecosPage() {
       {/* FAQ */}
       <section className="py-20">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-10 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-10 text-center">
             {t.precos.faqTitle}
           </h2>
           <div className="space-y-6">
@@ -163,7 +163,7 @@ export default function PrecosPage() {
       {/* CTA */}
       <section className="py-20 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-3">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-3">
             {t.precos.ctaTitle}
           </h2>
           <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">

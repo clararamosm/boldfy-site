@@ -18,7 +18,7 @@ export function ProblemSection() {
     <section className="py-20 md:py-28 bg-secondary/30">
       <div className="mx-auto max-w-6xl px-6">
         {/* Title */}
-        <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl">
+        <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl font-black text-accent-foreground leading-tight mb-6 max-w-3xl">
           {t.home.problemTitle}{' '}
           <span className="text-primary">{t.home.problemTitleHighlight}</span>
         </h2>

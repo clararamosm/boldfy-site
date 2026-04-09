@@ -37,7 +37,7 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
           <Badge variant="secondary" className="mb-4">
             {post.category}
           </Badge>
-          <h1 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground leading-tight mb-4">
+          <h1 className="font-headline text-2xl md:text-4xl font-black text-accent-foreground leading-tight mb-4">
             {post.title}
           </h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8">

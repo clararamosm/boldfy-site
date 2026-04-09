@@ -41,7 +41,7 @@ function UseCaseCard({
         </div>
 
         {/* Title */}
-        <h3 className="font-headline text-lg md:text-xl font-bold text-accent-foreground mb-3">
+        <h3 className="font-headline text-lg md:text-xl font-black text-accent-foreground mb-3">
           {title}
         </h3>
 
@@ -101,7 +101,7 @@ export function UseCasesSection() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Section header */}
         <div className="text-center mb-12">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {t.home.useCasesTitle}{' '}
             <span className="text-primary">{t.home.useCasesTitleHighlight}</span>
           </h2>

@@ -19,7 +19,7 @@ export function SocialProofSection() {
             <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
               {t.home.socialProofTag || 'Por que Employee Advocacy?'}
             </span>
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground leading-tight mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground leading-tight mb-4">
               {t.home.socialProofTitle || 'Perfis pessoais geram até 10x mais alcance que páginas corporativas'}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -27,15 +27,15 @@ export function SocialProofSection() {
             </p>
             <div className="flex gap-8">
               <div>
-                <p className="font-headline text-3xl font-bold text-primary">10x</p>
+                <p className="font-headline text-3xl font-black text-primary">10x</p>
                 <p className="text-xs text-muted-foreground mt-1">{t.home.socialProofStat1Label || 'mais alcance orgânico'}</p>
               </div>
               <div>
-                <p className="font-headline text-3xl font-bold text-primary">8x</p>
+                <p className="font-headline text-3xl font-black text-primary">8x</p>
                 <p className="text-xs text-muted-foreground mt-1">{t.home.socialProofStat2Label || 'mais engajamento'}</p>
               </div>
               <div>
-                <p className="font-headline text-3xl font-bold text-primary">5x</p>
+                <p className="font-headline text-3xl font-black text-primary">5x</p>
                 <p className="text-xs text-muted-foreground mt-1">{t.home.socialProofStat3Label || 'mais cliques'}</p>
               </div>
             </div>

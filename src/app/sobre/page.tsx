@@ -29,7 +29,7 @@ export default function SobrePage() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-6">
             {t.sobre.manifestoTag}
           </span>
-          <h1 className="font-headline text-2xl md:text-4xl font-bold text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
+          <h1 className="font-headline text-2xl md:text-4xl font-black text-accent-foreground leading-tight mb-6 max-w-3xl mx-auto">
             {t.sobre.manifestoText}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -84,7 +84,7 @@ export default function SobrePage() {
       {/* Brand Attributes */}
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-10 text-center">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-10 text-center">
             {t.sobre.attributesTitle}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -105,7 +105,7 @@ export default function SobrePage() {
       {/* Team */}
       <section className="py-16">
         <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="font-headline text-xl md:text-2xl font-bold text-accent-foreground mb-6">
+          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-6">
             {t.sobre.teamTitle}
           </h2>
           <p className="text-sm text-muted-foreground mb-4">{t.sobre.foundedBy}</p>
@@ -123,7 +123,7 @@ export default function SobrePage() {
       {/* CTA */}
       <section className="py-20 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {t.sobre.ctaTitle} <span className="text-primary">{t.sobre.ctaTitleHighlight}</span>
           </h2>
           <Button asChild size="lg" className="font-bold">

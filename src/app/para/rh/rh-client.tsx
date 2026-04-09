@@ -41,7 +41,7 @@ export function RhClient() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-pink-600 mb-4">
             {c.heroTag}
           </span>
-          <h1 className="font-headline text-3xl md:text-5xl font-bold text-accent-foreground leading-tight mb-2 max-w-4xl mx-auto">
+          <h1 className="font-headline text-3xl md:text-5xl font-black text-accent-foreground leading-tight mb-2 max-w-4xl mx-auto">
             {c.heroTitle}{' '}
             <span className="text-primary">{c.heroTitleHighlight}</span>
           </h1>
@@ -66,7 +66,7 @@ export function RhClient() {
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-3xl">
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-6">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-6">
               {c.painTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -82,7 +82,7 @@ export function RhClient() {
       {/* Section 3 — Como resolve */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {c.solutionTitle}
           </h2>
           <p className="text-base text-muted-foreground max-w-3xl mb-10 leading-relaxed">
@@ -115,7 +115,7 @@ export function RhClient() {
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-pink-500/10 mb-6">
               <ShieldAlert className="h-6 w-6 text-pink-600" />
             </div>
-            <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+            <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
               {c.diffTitle}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -131,7 +131,7 @@ export function RhClient() {
       {/* Section 5 — Caso ilustrativo */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-10">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-10">
             Como seria no seu time de People.
           </h2>
 
@@ -158,7 +158,7 @@ export function RhClient() {
       {/* Section 6 — Qual solução */}
       <section className="py-20 md:py-28 bg-secondary/30">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {c.pathTitle}
           </h2>
           <p className="text-base text-muted-foreground max-w-3xl mb-10 leading-relaxed">
@@ -202,7 +202,7 @@ export function RhClient() {
       {/* Section 7 — CTA Final */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-8">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-8">
             {c.ctaTitle}
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

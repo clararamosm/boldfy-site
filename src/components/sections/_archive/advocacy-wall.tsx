@@ -156,7 +156,7 @@ function DashboardCard({ t }: { t: ReturnType<typeof useT> }) {
               {t.home.advocacyMetricImpressions || 'Impressões'}
             </span>
           </div>
-          <p className="font-headline text-2xl font-bold text-foreground">247.8K</p>
+          <p className="font-headline text-2xl font-black text-foreground">247.8K</p>
           <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
             <TrendingUp className="h-3 w-3 inline mr-0.5" />+32%
           </p>
@@ -169,7 +169,7 @@ function DashboardCard({ t }: { t: ReturnType<typeof useT> }) {
               {t.home.advocacyMetricMediaValue || 'Valor de mídia'}
             </span>
           </div>
-          <p className="font-headline text-2xl font-bold text-foreground">R$ 14.8K</p>
+          <p className="font-headline text-2xl font-black text-foreground">R$ 14.8K</p>
           <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
             <TrendingUp className="h-3 w-3 inline mr-0.5" />+28%
           </p>
@@ -182,7 +182,7 @@ function DashboardCard({ t }: { t: ReturnType<typeof useT> }) {
               {t.home.advocacyMetricActive || 'Ativos'}
             </span>
           </div>
-          <p className="font-headline text-2xl font-bold text-foreground">32</p>
+          <p className="font-headline text-2xl font-black text-foreground">32</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             {t.home.advocacyMetricAdoption || '89% adesão'}
           </p>
@@ -195,7 +195,7 @@ function DashboardCard({ t }: { t: ReturnType<typeof useT> }) {
               {t.home.advocacyMetricEngagement || 'Engajamento'}
             </span>
           </div>
-          <p className="font-headline text-2xl font-bold text-foreground">4.7%</p>
+          <p className="font-headline text-2xl font-black text-foreground">4.7%</p>
           <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
             <TrendingUp className="h-3 w-3 inline mr-0.5" />+15%
           </p>
@@ -258,7 +258,7 @@ export function AdvocacyWallSection() {
           <span className="inline-flex text-[11px] font-bold uppercase tracking-[.14em] text-primary mb-4">
             {t.home.advocacyWallTag || 'POR QUE EMPLOYEE ADVOCACY?'}
           </span>
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground leading-tight mb-3 max-w-3xl mx-auto">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground leading-tight mb-3 max-w-3xl mx-auto">
             {t.home.advocacyWallTitle || 'Perfis pessoais geram até 10x mais alcance que páginas corporativas'}
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -303,19 +303,19 @@ export function AdvocacyWallSection() {
         {/* Stats row */}
         <div className="flex flex-wrap justify-center gap-8 md:gap-12 mt-12">
           <div className="text-center">
-            <p className="font-headline text-3xl font-bold text-primary">10x</p>
+            <p className="font-headline text-3xl font-black text-primary">10x</p>
             <p className="text-xs text-muted-foreground mt-1">
               {t.home.socialProofStat1Label || 'mais alcance orgânico'}
             </p>
           </div>
           <div className="text-center">
-            <p className="font-headline text-3xl font-bold text-primary">8x</p>
+            <p className="font-headline text-3xl font-black text-primary">8x</p>
             <p className="text-xs text-muted-foreground mt-1">
               {t.home.socialProofStat2Label || 'mais engajamento'}
             </p>
           </div>
           <div className="text-center">
-            <p className="font-headline text-3xl font-bold text-primary">5x</p>
+            <p className="font-headline text-3xl font-black text-primary">5x</p>
             <p className="text-xs text-muted-foreground mt-1">
               {t.home.socialProofStat3Label || 'mais cliques'}
             </p>

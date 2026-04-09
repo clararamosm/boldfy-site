@@ -27,7 +27,7 @@ function Step({ icon: Icon, label, description, stepNumber }: StepProps) {
       </span>
 
       {/* Label */}
-      <h3 className="font-headline text-sm font-bold text-foreground mb-1">
+      <h3 className="font-headline text-sm font-black text-foreground mb-1">
         {label}
       </h3>
 
@@ -69,7 +69,7 @@ function MobileStep({ icon: Icon, label, description, stepNumber, isLast }: Mobi
         <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
           {String(stepNumber).padStart(2, '0')}
         </span>
-        <h3 className="font-headline text-sm font-bold text-foreground mt-0.5 mb-1">
+        <h3 className="font-headline text-sm font-black text-foreground mt-0.5 mb-1">
           {label}
         </h3>
         <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
@@ -119,7 +119,7 @@ export function HowItWorksSection() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Section header */}
         <div className="mx-auto max-w-2xl text-center mb-14">
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-accent-foreground mb-4">
+          <h2 className="font-headline text-2xl md:text-3xl font-black text-accent-foreground mb-4">
             {t.home.howTitle}{' '}
             <span className="text-primary">{t.home.howTitleHighlight}</span>
           </h2>
