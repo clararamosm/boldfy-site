@@ -216,13 +216,12 @@ const ptBR = {
     roiSubtitle: 'retorno sobre investimento',
     simulatorNote: '[FÓRMULA A DEFINIR] — Os valores apresentados são estimativas baseadas em médias de mercado. O valor real depende de variáveis como qualidade do conteúdo, frequência de publicação e engajamento do time.',
 
-    // Section 10 — CTA Final
-    ctaTitle: 'Começar é mais simples',
-    ctaTitleHighlight: 'do que parece.',
-    ctaSubtitle: 'Dois caminhos. Um leva direto pro seu pacote personalizado. O outro leva pra uma conversa de 30 minutos com a gente pra entender se faz sentido.',
+    // Section 10 — CTA Final (pre-footer)
+    ctaTag: 'Última parada',
+    ctaTitle: 'Pronto pra deixar',
+    ctaTitleHighlight: 'o time falar?',
+    ctaSubtitle: 'Monta seu pacote no simulador em 2 minutos. Sem reunião pra saber quanto custa.',
     ctaCta1: 'Montar meu pacote',
-    ctaCta2: 'Agendar demo',
-    ctaClosing: 'Sem contrato anual. Sem letra miúda. Só método que funciona.',
   },
 
   // Plataforma page

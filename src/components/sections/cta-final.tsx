@@ -1,49 +1,54 @@
 'use client';
 
 import { useT } from '@/lib/i18n/context';
-import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { useDemoPopup } from '@/components/forms/demo-popup';
-import { useProposalBuilder } from '@/components/proposal-builder';
 
 export function CtaFinalSection() {
   const t = useT();
-  const { openPopup } = useDemoPopup();
-  const { openBuilder } = useProposalBuilder();
 
   return (
-    <section className="py-20 md:py-28 bg-primary/5">
-      <div className="mx-auto max-w-6xl px-6 text-center">
-        <h2 className="font-headline text-2xl md:text-4xl font-black text-accent-foreground mb-4 max-w-2xl mx-auto">
+    <section className="relative overflow-hidden bg-background px-6 py-[100px] text-center md:px-12">
+      {/* Centered glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.10] blur-[140px]" />
+
+      {/* Grid pattern */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(205,80,241,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(205,80,241,0.055) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+          maskImage:
+            'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-[760px]">
+        <span className="mb-6 inline-block rounded-full border border-primary/[0.22] bg-primary/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+          {t.home.ctaTag}
+        </span>
+
+        <h2 className="mb-4 font-headline text-[clamp(30px,4vw,46px)] font-black leading-[1.08] tracking-[-0.025em] text-accent-foreground">
           {t.home.ctaTitle}{' '}
-          <span className="text-primary">{t.home.ctaTitleHighlight}</span>
+          <span className="bg-gradient-to-br from-primary to-[#E875FF] bg-clip-text text-transparent">
+            {t.home.ctaTitleHighlight}
+          </span>
         </h2>
 
-        <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-10">
+        <p className="mb-9 text-base leading-[1.55] text-muted-foreground">
           {t.home.ctaSubtitle}
         </p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <Button size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
-            {t.home.ctaCta1}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={openPopup}
-            className="w-full sm:w-auto"
-          >
-            {t.home.ctaCta2}
-          </Button>
-        </div>
-
-        {/* Closing line */}
-        <p className="text-xs md:text-sm text-muted-foreground">
-          {t.home.ctaClosing}
-        </p>
+        <Link
+          href="/precos"
+          className="inline-flex items-center gap-2.5 rounded-xl bg-primary px-8 py-4 text-[15px] font-bold text-white shadow-[0_10px_28px_rgba(205,80,241,0.32)] transition-all duration-250 hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_14px_36px_rgba(205,80,241,0.42)]"
+        >
+          {t.home.ctaCta1}
+          <ArrowRight className="h-[18px] w-[18px]" />
+        </Link>
       </div>
     </section>
   );
