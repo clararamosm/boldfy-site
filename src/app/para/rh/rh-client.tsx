@@ -325,8 +325,14 @@ export function RhClient() {
                 <div className="mb-2 text-[9px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
                   {c.diagVsYouLabel}
                 </div>
-                <div className="mb-3 flex justify-center">
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-border to-muted-foreground/30 shadow-[0_2px_6px_rgba(0,0,0,0.08)]" />
+                <div className="mb-3 flex h-9 items-center justify-center">
+                  <Image
+                    src="/images/avatar-1.jpeg"
+                    alt="Colaborador da empresa"
+                    width={28}
+                    height={28}
+                    className="rounded-full border-2 border-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
+                  />
                 </div>
                 <div className="mb-1 font-headline text-2xl font-black text-accent-foreground">
                   {c.diagVsYouValue}
@@ -346,11 +352,15 @@ export function RhClient() {
                 <div className="mb-2 text-[9px] font-bold uppercase tracking-[0.1em] text-blue-700">
                   {c.diagVsThemLabel}
                 </div>
-                <div className="mb-3 flex justify-center">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="-ml-2 first:ml-0 h-7 w-7 rounded-full bg-gradient-to-br from-blue-300 to-blue-500 border-2 border-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
+                <div className="mb-3 flex h-9 items-center justify-center">
+                  {[2, 3, 4, 5, 6].map((n, i) => (
+                    <Image
+                      key={n}
+                      src={`/images/avatar-${n}.jpeg`}
+                      alt={`Colaborador do concorrente ${i + 1}`}
+                      width={28}
+                      height={28}
+                      className="-ml-2 first:ml-0 rounded-full border-2 border-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
                     />
                   ))}
                 </div>
