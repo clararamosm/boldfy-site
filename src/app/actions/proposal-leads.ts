@@ -8,9 +8,6 @@
  * 2. Search Company DB by name — if found, reuse; if not, create.
  * 3. Link person ↔ company.
  * 4. Add proposal summary as blocks on the person's page.
- *
- * Handles deduplication so the same person can fill out multiple forms
- * without creating duplicate pages.
  */
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
@@ -35,19 +32,23 @@ export type ProposalLeadInput = {
   nome: string;
   email: string;
   empresa: string;
-  // Proposal details
+  cargo: string;
+  // Config
+  betaActive: boolean;
   plataformaEnabled: boolean;
   plataformaSeats: number;
+  plataformaEnterprise: boolean;
   plataformaPriceFull: number;
   plataformaPriceBeta: number;
   designPlan: string | null; // 'starter' | 'growth' | 'scale' | null
   designPrice: number;
-  executiveProfiles: number;
-  executiveFrequency: string | null; // '2x' | '3x' | '4x' | null
-  executivePrice: number;
+  fsTls: number;   // 0 = off, 1–5 = TLs
+  fsFreq: number;  // 0 = off, 2/3/4 = posts per week
+  fsPrice: number;
+  totalCurrent: number;
   totalFull: number;
-  totalBeta: number;
-  origem: string; // 'Simulador de Proposta'
+  savings: number;
+  origem: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -59,14 +60,10 @@ async function findPersonByEmail(email: string): Promise<string | null> {
     method: 'POST',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
-      filter: {
-        property: 'Email',
-        email: { equals: email },
-      },
+      filter: { property: 'Email', email: { equals: email } },
       page_size: 1,
     }),
   });
-
   if (!res.ok) return null;
   const data = await res.json();
   return data.results.length > 0 ? data.results[0].id : null;
@@ -77,87 +74,77 @@ async function findCompanyByName(name: string): Promise<string | null> {
     method: 'POST',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
-      filter: {
-        property: 'Nome',
-        title: { equals: name },
-      },
+      filter: { property: 'Nome', title: { equals: name } },
       page_size: 1,
     }),
   });
-
   if (!res.ok) return null;
   const data = await res.json();
   return data.results.length > 0 ? data.results[0].id : null;
 }
 
-async function createCompany(
-  input: ProposalLeadInput,
-): Promise<string | null> {
+async function createCompany(input: ProposalLeadInput): Promise<string | null> {
   const res = await fetch(`${NOTION_API}/pages`, {
     method: 'POST',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
       parent: { database_id: NOTION_COMPANY_DB_ID },
       properties: {
-        Nome: {
-          title: [{ text: { content: input.empresa } }],
-        },
-        'Botão gatilho do formulário': {
-          select: { name: 'Simulador de Proposta' },
-        },
+        Nome: { title: [{ text: { content: input.empresa } }] },
+        'Botão gatilho do formulário': { select: { name: 'Simulador de Proposta' } },
       },
     }),
   });
-
   if (!res.ok) {
     console.error('[proposal-leads] Error creating company:', res.status);
     return null;
   }
-
-  const data = await res.json();
-  return data.id;
+  return (await res.json()).id;
 }
 
-async function createPerson(
-  input: ProposalLeadInput,
-  companyId: string,
-): Promise<string | null> {
+async function createPerson(input: ProposalLeadInput, companyId: string | null): Promise<string | null> {
+  const properties: Record<string, unknown> = {
+    Nome: { title: [{ text: { content: input.nome } }] },
+    Email: { email: input.email },
+  };
+  if (input.cargo && input.cargo !== '—') {
+    properties['Cargo'] = { rich_text: [{ text: { content: input.cargo } }] };
+  }
+  if (companyId) {
+    properties['Empresa'] = { relation: [{ id: companyId }] };
+  }
+
   const res = await fetch(`${NOTION_API}/pages`, {
     method: 'POST',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
       parent: { database_id: NOTION_PERSON_DB_ID },
-      properties: {
-        Nome: {
-          title: [{ text: { content: input.nome } }],
-        },
-        Email: {
-          email: input.email,
-        },
-        Empresa: {
-          relation: [{ id: companyId }],
-        },
-      },
+      properties,
     }),
   });
-
   if (!res.ok) {
     console.error('[proposal-leads] Error creating person:', res.status);
     return null;
   }
-
-  const data = await res.json();
-  return data.id;
+  return (await res.json()).id;
 }
+
+const fmt = (n: number) => n.toLocaleString('pt-BR');
 
 function buildProposalSummary(input: ProposalLeadInput): string {
   const lines: string[] = [];
   lines.push(`Proposta montada via Simulador`);
+  lines.push(`Beta ativo: ${input.betaActive ? 'Sim (30% off plataforma)' : 'Não'}`);
 
   if (input.plataformaEnabled) {
-    lines.push(
-      `Software as a Service: ${input.plataformaSeats} seats × R$ ${input.plataformaPriceBeta}/seat (beta) = R$ ${(input.plataformaSeats * input.plataformaPriceBeta).toLocaleString('pt-BR')}/mês (preço cheio: R$ ${(input.plataformaSeats * input.plataformaPriceFull).toLocaleString('pt-BR')}/mês)`,
-    );
+    if (input.plataformaEnterprise) {
+      lines.push(`Plataforma: ${input.plataformaSeats} seats — Enterprise (sob medida)`);
+    } else {
+      const perSeat = input.betaActive ? input.plataformaPriceBeta : input.plataformaPriceFull;
+      const total = input.plataformaSeats * perSeat;
+      const totalFull = input.plataformaSeats * input.plataformaPriceFull;
+      lines.push(`Plataforma: ${input.plataformaSeats} seats × R$ ${perSeat}/seat = R$ ${fmt(total)}/mês${input.betaActive ? ` (cheio: R$ ${fmt(totalFull)}/mês)` : ''}`);
+    }
   }
 
   if (input.designPlan) {
@@ -166,20 +153,14 @@ function buildProposalSummary(input: ProposalLeadInput): string {
       growth: 'Growth (8 peças)',
       scale: 'Scale (12 peças)',
     };
-    lines.push(`Design on Demand: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${input.designPrice.toLocaleString('pt-BR')}/mês`);
+    lines.push(`Design as a Service: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${fmt(input.designPrice)}/mês`);
   }
 
-  if (input.executiveProfiles > 0 && input.executiveFrequency) {
-    const freqLabels: Record<string, string> = {
-      '2x': '2x/semana',
-      '3x': '3x/semana',
-      '4x': '4x/semana',
-    };
-    lines.push(`Content Full-Service: ${input.executiveProfiles} perfil(is) × ${freqLabels[input.executiveFrequency] ?? input.executiveFrequency} = R$ ${input.executivePrice.toLocaleString('pt-BR')}/mês`);
+  if (input.fsTls > 0 && input.fsFreq > 0) {
+    lines.push(`Content Full-Service: ${input.fsTls} executivo(s) × ${input.fsFreq}x/semana = R$ ${fmt(input.fsPrice)}/mês`);
   }
 
-  lines.push(`Total mensal (beta): R$ ${input.totalBeta.toLocaleString('pt-BR')}`);
-  lines.push(`Total mensal (preço cheio): R$ ${input.totalFull.toLocaleString('pt-BR')}`);
+  lines.push(`Total mensal: R$ ${fmt(input.totalCurrent)}${input.savings > 0 ? ` (economia beta: R$ ${fmt(input.savings)}/mês)` : ''}`);
   return lines.join('\n');
 }
 
@@ -196,48 +177,18 @@ export async function sendProposalLeadToNotion(
   }
 
   try {
-    // 1. Find or create company (skip if empresa is empty/placeholder)
+    // 1. Find or create company
     let companyId: string | null = null;
     if (input.empresa && input.empresa !== '—') {
       companyId = await findCompanyByName(input.empresa);
-      if (!companyId) {
-        companyId = await createCompany(input);
-      }
+      if (!companyId) companyId = await createCompany(input);
     }
 
     // 2. Find or create person (dedup by email)
     let personId = await findPersonByEmail(input.email);
     if (!personId) {
-      if (companyId) {
-        personId = await createPerson(input, companyId);
-      } else {
-        // Create person without company relation
-        const res = await fetch(`${NOTION_API}/pages`, {
-          method: 'POST',
-          headers: NOTION_HEADERS(),
-          body: JSON.stringify({
-            parent: { database_id: NOTION_PERSON_DB_ID },
-            properties: {
-              Nome: {
-                title: [{ text: { content: input.nome } }],
-              },
-              Email: {
-                email: input.email,
-              },
-            },
-          }),
-        });
-
-        if (!res.ok) {
-          console.error('[proposal-leads] Error creating person:', res.status);
-          return { success: false, error: 'Erro ao criar contato no Notion.' };
-        }
-
-        const data = await res.json();
-        personId = data.id;
-      }
+      personId = await createPerson(input, companyId);
     }
-
     if (!personId) {
       return { success: false, error: 'Erro ao criar contato no Notion.' };
     }
@@ -249,35 +200,17 @@ export async function sendProposalLeadToNotion(
       headers: NOTION_HEADERS(),
       body: JSON.stringify({
         children: [
+          { object: 'block', type: 'divider', divider: {} },
           {
-            object: 'block',
-            type: 'divider',
-            divider: {},
-          },
-          {
-            object: 'block',
-            type: 'heading_3',
+            object: 'block', type: 'heading_3',
             heading_3: {
-              rich_text: [
-                {
-                  type: 'text',
-                  text: {
-                    content: `Proposta — ${new Date().toLocaleDateString('pt-BR')}`,
-                  },
-                },
-              ],
+              rich_text: [{ type: 'text', text: { content: `Proposta — ${new Date().toLocaleDateString('pt-BR')}` } }],
             },
           },
           {
-            object: 'block',
-            type: 'paragraph',
+            object: 'block', type: 'paragraph',
             paragraph: {
-              rich_text: [
-                {
-                  type: 'text',
-                  text: { content: summary },
-                },
-              ],
+              rich_text: [{ type: 'text', text: { content: summary } }],
             },
           },
         ],
