@@ -2,10 +2,11 @@
 
 import { useT } from '@/lib/i18n/context';
 import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { useProposalBuilder } from '@/components/proposal-builder';
 
 export function CtaFinalSection() {
   const t = useT();
+  const { openBuilder } = useProposalBuilder();
 
   return (
     <section className="relative overflow-hidden bg-background px-6 pb-[100px] pt-16 text-center md:px-12">
@@ -42,13 +43,14 @@ export function CtaFinalSection() {
           {t.home.ctaSubtitle}
         </p>
 
-        <Link
-          href="/precos"
+        <button
+          type="button"
+          onClick={openBuilder}
           className="inline-flex items-center gap-2.5 rounded-xl bg-primary px-8 py-4 text-[15px] font-bold text-white shadow-[0_10px_28px_rgba(205,80,241,0.32)] transition-all duration-250 hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_14px_36px_rgba(205,80,241,0.42)]"
         >
           {t.home.ctaCta1}
           <ArrowRight className="h-[18px] w-[18px]" />
-        </Link>
+        </button>
       </div>
     </section>
   );
