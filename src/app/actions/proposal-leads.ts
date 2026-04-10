@@ -59,6 +59,12 @@ export type ProposalLeadInput = {
   totalFull: number;
   savings: number;
   origem: string;
+  // UTM tracking
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
   // Team (computed in frontend)
   teamItems: { text: string; dedicated: boolean }[];
 };
@@ -415,6 +421,9 @@ export async function sendProposalLeadToNotion(
     if (input.designPlan) acTags.push('Design on Demand');
     if (input.fsTls > 0) acTags.push('Content Full-Service');
     if (input.betaActive) acTags.push('Beta Tester');
+    if (input.utm_source) acTags.push(`utm:${input.utm_source}`);
+    if (input.utm_medium) acTags.push(`meio:${input.utm_medium}`);
+    if (input.utm_campaign) acTags.push(`campanha:${input.utm_campaign}`);
 
     const nameParts = input.nome.trim().split(/\s+/);
     const firstName = nameParts[0] ?? input.nome;

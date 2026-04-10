@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { sendProposalLeadToNotion, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
+import { useUtmParams } from '@/hooks/use-utm-params';
 
 /* -------------------------------------------------------------------------- */
 /*  Pricing data (synced with official Boldfy pricing 2026-04-08)              */
@@ -125,6 +126,7 @@ function ProposalBuilderModal({
   onOpenChange: (open: boolean) => void;
   source: string;
 }) {
+  const utms = useUtmParams();
   const [step, setStep] = useState<Step>('builder');
 
   // Beta toggle
@@ -206,6 +208,7 @@ function ProposalBuilderModal({
       totalFull,
       savings,
       origem: source || 'Simulador de Proposta',
+      ...utms,
       teamItems,
     };
 

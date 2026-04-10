@@ -33,6 +33,12 @@ export type DemoLeadInput = {
   empresa: string;
   funcionarios: string;
   origem?: string;
+  // UTM tracking
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -185,6 +191,9 @@ export async function sendDemoLeadToNotion(
     const acTags: string[] = ['Demo Agendada'];
     if (input.origem) acTags.push(input.origem);
     if (input.funcionarios) acTags.push(`porte:${input.funcionarios}`);
+    if (input.utm_source) acTags.push(`utm:${input.utm_source}`);
+    if (input.utm_medium) acTags.push(`meio:${input.utm_medium}`);
+    if (input.utm_campaign) acTags.push(`campanha:${input.utm_campaign}`);
 
     syncContact({
       email: input.email,

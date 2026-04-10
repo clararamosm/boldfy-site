@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
+import { useUtmParams } from '@/hooks/use-utm-params';
 
 type DemoPopupContextType = {
   isOpen: boolean;
@@ -49,6 +50,7 @@ function DemoPopupModal({
   onOpenChange: (open: boolean) => void;
   source: string;
 }) {
+  const utms = useUtmParams();
   const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState('');
 
@@ -78,6 +80,7 @@ function DemoPopupModal({
       empresa: formData.get('empresa') as string,
       funcionarios: formData.get('funcionarios') as string,
       origem: source,
+      ...utms,
     };
 
     const res = await sendDemoLeadToNotion(data);
