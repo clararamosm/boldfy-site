@@ -107,12 +107,12 @@ async function createCompany(input: ProposalLeadInput): Promise<string | null> {
       parent: { database_id: NOTION_COMPANY_DB_ID },
       properties: {
         Nome: { title: [{ text: { content: input.empresa } }] },
-        'Botão gatilho do formulário': { select: { name: 'Simulador de Proposta' } },
       },
     }),
   });
   if (!res.ok) {
-    console.error('[proposal-leads] Error creating company:', res.status);
+    const errText = await res.text().catch(() => '');
+    console.error('[proposal-leads] Error creating company:', res.status, errText);
     return null;
   }
   return (await res.json()).id;
@@ -230,19 +230,13 @@ async function createInteracao(
   const title = `Simulador de Proposta — ${input.nome}`;
   const summary = buildProposalSummary(input);
 
+  // Step 1: Create with minimal properties (title + date + summary)
+  // to avoid failures from non-existent select options or property names.
   const properties: Record<string, unknown> = {
     'Interação': { title: [{ text: { content: title } }] },
-    Tipo: { select: { name: 'Simulador de Proposta' } },
-    'Direção': { select: { name: 'Inbound' } },
     Data: { date: { start: today } },
-    Canal: { select: { name: 'Site' } },
     'Conteúdo (resumo)': { rich_text: [{ text: { content: summary } }] },
-    Sentimento: { select: { name: 'Positivo' } },
   };
-
-  if (input.origem) {
-    properties['Origem no site'] = { select: { name: input.origem } };
-  }
 
   if (personId) {
     properties['Pessoa'] = { relation: [{ id: personId }] };
@@ -263,10 +257,58 @@ async function createInteracao(
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     console.error('[proposal-leads] Error creating interação:', res.status, errText);
-    return null;
+
+    // Step 2: Fallback — try with title only if the full payload failed
+    console.log('[proposal-leads] Retrying interação with title only...');
+    const fallbackRes = await fetch(`${NOTION_API}/pages`, {
+      method: 'POST',
+      headers: NOTION_HEADERS(),
+      body: JSON.stringify({
+        parent: { database_id: NOTION_INTERACAO_DB_ID },
+        properties: {
+          'Interação': { title: [{ text: { content: title } }] },
+        },
+      }),
+    });
+    if (!fallbackRes.ok) {
+      const fallbackErr = await fallbackRes.text().catch(() => '');
+      console.error('[proposal-leads] Fallback interação also failed:', fallbackRes.status, fallbackErr);
+      return null;
+    }
+    return (await fallbackRes.json()).id;
   }
 
   return (await res.json()).id;
+}
+
+/**
+ * After creating the Interação page, try to set the select properties
+ * (Tipo, Direção, Canal, Sentimento, Origem). These are done in a
+ * separate PATCH so a wrong option name doesn't block the page creation.
+ */
+async function enrichInteracao(
+  interacaoId: string,
+  input: ProposalLeadInput,
+): Promise<void> {
+  const properties: Record<string, unknown> = {
+    Tipo: { select: { name: 'Simulador de Proposta' } },
+    'Direção': { select: { name: 'Inbound' } },
+    Canal: { select: { name: 'Site' } },
+    Sentimento: { select: { name: 'Positivo' } },
+  };
+  if (input.origem) {
+    properties['Origem no site'] = { select: { name: input.origem } };
+  }
+
+  const res = await fetch(`${NOTION_API}/pages/${interacaoId}`, {
+    method: 'PATCH',
+    headers: NOTION_HEADERS(),
+    body: JSON.stringify({ properties }),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('[proposal-leads] Error enriching interação (non-blocking):', res.status, errText);
+  }
 }
 
 /**
@@ -343,23 +385,26 @@ export async function sendProposalLeadToNotion(
     // 3. Create Interação linked to Person + Company
     const interacaoId = await createInteracao(input, personId, companyId);
     if (!interacaoId) {
-      // Non-blocking: still return success even if interação fails
-      console.error('[proposal-leads] Interação creation failed, continuing...');
+      console.error('[proposal-leads] Interação creation failed');
+      return { success: true, error: undefined };
     }
+
+    // 3b. Enrich with select fields (non-blocking — won't break if options don't exist)
+    await enrichInteracao(interacaoId, input).catch((err) => {
+      console.error('[proposal-leads] Error enriching interação:', err);
+    });
 
     // 4. Build proposal JSON and URL
     const proposalJSON = buildProposalJSON(input);
 
     // Notion IDs come as UUIDs with dashes; the URL uses the raw ID
-    const cleanId = interacaoId?.replace(/-/g, '') ?? '';
-    const proposalUrl = interacaoId ? `${SITE_URL}/proposta/${cleanId}` : undefined;
+    const cleanId = interacaoId.replace(/-/g, '');
+    const proposalUrl = `${SITE_URL}/proposta/${cleanId}`;
 
     // 5. Append proposal data blocks to the Interação page
-    if (interacaoId && proposalUrl) {
-      await appendProposalBlocks(interacaoId, proposalJSON, proposalUrl).catch((err) => {
-        console.error('[proposal-leads] Error appending blocks:', err);
-      });
-    }
+    await appendProposalBlocks(interacaoId, proposalJSON, proposalUrl).catch((err) => {
+      console.error('[proposal-leads] Error appending blocks:', err);
+    });
 
     return {
       success: true,
