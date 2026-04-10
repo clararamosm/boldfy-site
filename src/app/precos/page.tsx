@@ -5,7 +5,68 @@ import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check, Shield, MessageCircle, Sparkles, Users, Palette, Mic } from 'lucide-react';
+import { ArrowRight, Check, Shield, MessageCircle, Sparkles, Users, Palette, Mic, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+
+/* -------------------------------------------------------------------------- */
+/*  FAQ Accordion (card-style, matching home design)                            */
+/* -------------------------------------------------------------------------- */
+
+function PrecosFaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  return (
+    <div className="flex flex-col gap-3">
+      {faqs.map((faq, idx) => (
+        <div
+          key={faq.q}
+          className={`overflow-hidden rounded-[14px] border bg-card transition-all duration-250 ${
+            openIndex === idx
+              ? 'border-primary shadow-[0_8px_24px_rgba(205,80,241,0.12)]'
+              : 'border-border hover:border-primary/35'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() =>
+              setOpenIndex((prev) => (prev === idx ? null : idx))
+            }
+            className="flex w-full items-center justify-between gap-4 px-6 py-[22px] text-left transition-colors hover:text-primary"
+            aria-expanded={openIndex === idx}
+          >
+            <span className="text-[15px] font-bold leading-[1.35] text-accent-foreground">
+              {faq.q}
+            </span>
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-primary transition-transform duration-350 ${
+                openIndex === idx ? 'rotate-180' : ''
+              }`}
+              style={{
+                transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)',
+              }}
+            />
+          </button>
+          <div
+            className={`grid transition-all duration-400 ${
+              openIndex === idx
+                ? 'grid-rows-[1fr] opacity-100'
+                : 'grid-rows-[0fr] opacity-0'
+            }`}
+            style={{
+              transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)',
+            }}
+          >
+            <div className="overflow-hidden">
+              <p className="px-6 pb-[22px] text-sm leading-[1.65] text-muted-foreground">
+                {faq.a}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Platform pricing card                                                      */
@@ -241,23 +302,36 @@ export default function PrecosPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-20">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-10 text-center">
-            {t.precos.faqTitle}
-          </h2>
-          <div className="space-y-6">
-            {faqs.map((faq) => (
-              <div key={faq.q} className="border-b border-border pb-6">
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  {faq.q}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {faq.a}
-                </p>
-              </div>
-            ))}
+      <section className="relative overflow-hidden bg-background px-6 py-[80px] md:px-12">
+        {/* Ambient glows */}
+        <div className="pointer-events-none absolute right-[-100px] top-[10%] h-[600px] w-[600px] rounded-full bg-primary opacity-[0.08] blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-0 left-[-50px] h-[500px] w-[500px] rounded-full bg-[#E875FF] opacity-[0.06] blur-[120px]" />
+
+        {/* Grid pattern */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(205,80,241,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(205,80,241,0.055) 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage:
+              'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          }}
+        />
+
+        <div className="relative z-10 mx-auto max-w-[900px]">
+          <div className="mb-14 text-center">
+            <span className="mb-6 inline-block rounded-full border border-primary/[0.22] bg-primary/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+              Dúvidas frequentes
+            </span>
+            <h2 className="font-headline text-[clamp(28px,3.6vw,42px)] font-black leading-[1.1] tracking-[-0.025em] text-accent-foreground">
+              {t.precos.faqTitle}
+            </h2>
           </div>
+
+          <PrecosFaqAccordion faqs={faqs} />
         </div>
       </section>
 
