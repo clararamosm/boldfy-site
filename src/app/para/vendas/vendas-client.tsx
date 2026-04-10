@@ -54,13 +54,13 @@ export function VendasClient() {
             {c.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold" onClick={openBuilder}>
+            <Button  size="lg" className="font-bold" onClick={() => openBuilder('vendas:hero')}>
 
                 {c.heroCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
 
             </Button>
-            <Button  variant="outline" size="lg" onClick={openPopup}>
+            <Button  variant="outline" size="lg" onClick={() => openPopup('vendas:hero')}>
               {c.heroCta2}
             </Button>
           </div>
@@ -208,13 +208,13 @@ export function VendasClient() {
             {c.ctaTitle}
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold" onClick={openBuilder}>
+            <Button  size="lg" className="font-bold" onClick={() => openBuilder('vendas:cta-final')}>
 
                 {c.ctaCta1}
                 <ArrowRight className="w-4 h-4 ml-2" />
 
             </Button>
-            <Button  variant="outline" size="lg" onClick={openPopup}>
+            <Button  variant="outline" size="lg" onClick={() => openPopup('vendas:cta-final')}>
               {c.ctaCta2}
             </Button>
           </div>

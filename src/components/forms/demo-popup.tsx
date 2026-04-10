@@ -7,8 +7,9 @@ import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
 
 type DemoPopupContextType = {
   isOpen: boolean;
-  openPopup: () => void;
+  openPopup: (source?: string) => void;
   closePopup: () => void;
+  source: string;
 };
 
 const DemoPopupContext = React.createContext<DemoPopupContextType | undefined>(undefined);
@@ -23,14 +24,18 @@ export function useDemoPopup() {
 
 export function DemoPopupProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [source, setSource] = React.useState('direto');
 
-  const openPopup = React.useCallback(() => setIsOpen(true), []);
+  const openPopup = React.useCallback((src?: string) => {
+    setSource(src ?? 'direto');
+    setIsOpen(true);
+  }, []);
   const closePopup = React.useCallback(() => setIsOpen(false), []);
 
   return (
-    <DemoPopupContext.Provider value={{ isOpen, openPopup, closePopup }}>
+    <DemoPopupContext.Provider value={{ isOpen, openPopup, closePopup, source }}>
       {children}
-      <DemoPopupModal isOpen={isOpen} onOpenChange={setIsOpen} />
+      <DemoPopupModal isOpen={isOpen} onOpenChange={setIsOpen} source={source} />
     </DemoPopupContext.Provider>
   );
 }
@@ -38,9 +43,11 @@ export function DemoPopupProvider({ children }: { children: React.ReactNode }) {
 function DemoPopupModal({
   isOpen,
   onOpenChange,
+  source,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  source: string;
 }) {
   const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState('');
@@ -70,6 +77,7 @@ function DemoPopupModal({
       cargo: formData.get('cargo') as string,
       empresa: formData.get('empresa') as string,
       funcionarios: formData.get('funcionarios') as string,
+      origem: source,
     };
 
     const res = await sendDemoLeadToNotion(data);

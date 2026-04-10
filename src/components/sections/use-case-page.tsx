@@ -40,11 +40,11 @@ export function UseCasePageLayout(props: UseCasePageProps) {
             {props.heroSubtitle}
           </p>
           <p className="text-sm font-medium text-primary/80 mb-8">{props.persona}</p>
-          <Button  size="lg" className="font-bold" onClick={openPopup}>
-              
+          <Button  size="lg" className="font-bold" onClick={() => openPopup('caso-de-uso:hero')}>
+
               {props.ctaButton}
               <ArrowRight className="w-4 h-4 ml-2" />
-            
+
             </Button>
         </div>
       </section>
@@ -127,11 +127,11 @@ export function UseCasePageLayout(props: UseCasePageProps) {
       {/* CTA Final */}
       <section className="py-20 bg-primary/5">
         <div className="mx-auto max-w-6xl px-6 text-center">
-          <Button  size="lg" className="font-bold" onClick={openPopup}>
-              
+          <Button  size="lg" className="font-bold" onClick={() => openPopup('caso-de-uso:cta-final')}>
+
               {props.ctaButton}
               <ArrowRight className="w-4 h-4 ml-2" />
-            
+
             </Button>
         </div>
       </section>

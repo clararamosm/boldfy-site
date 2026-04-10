@@ -191,12 +191,12 @@ export function MarketingClient() {
               <Button
                 size="lg"
                 className="font-bold shadow-[0_8px_24px_rgba(205,80,241,0.28)]"
-                onClick={openBuilder}
+                onClick={() => openBuilder('marketing:hero')}
               >
                 {c.heroCta1}
                 <ArrowRight className="ml-2 h-[18px] w-[18px]" />
               </Button>
-              <Button variant="outline" size="lg" onClick={openPopup}>
+              <Button variant="outline" size="lg" onClick={() => openPopup('marketing:hero')}>
                 {c.heroCta2}
               </Button>
             </div>

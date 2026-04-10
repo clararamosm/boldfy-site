@@ -75,8 +75,9 @@ function getPlatformTier(seats: number) {
 
 type ProposalBuilderContextType = {
   isOpen: boolean;
-  openBuilder: () => void;
+  openBuilder: (source?: string) => void;
   closeBuilder: () => void;
+  source: string;
 };
 
 const ProposalBuilderContext = React.createContext<ProposalBuilderContextType | undefined>(
@@ -93,14 +94,18 @@ export function useProposalBuilder() {
 
 export function ProposalBuilderProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [source, setSource] = useState('direto');
 
-  const openBuilder = useCallback(() => setIsOpen(true), []);
+  const openBuilder = useCallback((src?: string) => {
+    setSource(src ?? 'direto');
+    setIsOpen(true);
+  }, []);
   const closeBuilder = useCallback(() => setIsOpen(false), []);
 
   return (
-    <ProposalBuilderContext.Provider value={{ isOpen, openBuilder, closeBuilder }}>
+    <ProposalBuilderContext.Provider value={{ isOpen, openBuilder, closeBuilder, source }}>
       {children}
-      <ProposalBuilderModal isOpen={isOpen} onOpenChange={setIsOpen} />
+      <ProposalBuilderModal isOpen={isOpen} onOpenChange={setIsOpen} source={source} />
     </ProposalBuilderContext.Provider>
   );
 }
@@ -114,9 +119,11 @@ type Step = 'builder' | 'result';
 function ProposalBuilderModal({
   isOpen,
   onOpenChange,
+  source,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  source: string;
 }) {
   const [step, setStep] = useState<Step>('builder');
 
@@ -198,7 +205,7 @@ function ProposalBuilderModal({
       totalCurrent,
       totalFull,
       savings,
-      origem: 'Simulador de Proposta',
+      origem: source || 'Simulador de Proposta',
       teamItems,
     };
 

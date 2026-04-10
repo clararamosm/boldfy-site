@@ -228,7 +228,7 @@ export function HeroSection() {
             <Button
               size="lg"
               className="gap-2.5 rounded-xl px-7 py-4 text-[15px] font-bold shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/35"
-              onClick={openBuilder}
+              onClick={() => openBuilder('home:hero')}
             >
               {t.home.heroCta1}
               <ArrowRight className="h-[18px] w-[18px]" />
@@ -237,7 +237,7 @@ export function HeroSection() {
               variant="outline"
               size="lg"
               className="rounded-xl border-border bg-card px-7 py-4 text-[15px] font-bold transition-all hover:border-primary hover:text-primary"
-              onClick={openPopup}
+              onClick={() => openPopup('home:hero')}
             >
               {t.home.heroCta2}
             </Button>

@@ -122,7 +122,7 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
             <p className="text-lg font-bold text-accent-foreground mb-4">
               {t.blog.postCta}
             </p>
-            <Button  className="font-bold" onClick={openPopup}>
+            <Button  className="font-bold" onClick={() => openPopup('blog:artigo')}>
               
                 {t.blog.postCtaButton}
                 <ArrowRight className="h-4 w-4 ml-2" />

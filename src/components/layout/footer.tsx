@@ -227,7 +227,7 @@ export function Footer() {
             {/* Agendar demo button */}
             <button
               type="button"
-              onClick={openPopup}
+              onClick={() => openPopup('footer')}
               className="mt-6 inline-flex items-center gap-[7px] rounded-[10px] border border-primary/40 bg-primary/[0.15] px-3.5 py-[9px] text-xs font-bold text-white transition-all duration-250 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:shadow-[0_6px_16px_rgba(205,80,241,0.35)]"
             >
               <CalendarDays className="h-[13px] w-[13px]" />

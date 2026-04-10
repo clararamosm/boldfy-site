@@ -45,7 +45,7 @@ export function CtaFinalSection() {
 
         <button
           type="button"
-          onClick={openBuilder}
+          onClick={() => openBuilder('home:cta-final')}
           className="inline-flex items-center gap-2.5 rounded-xl bg-primary px-8 py-4 text-[15px] font-bold text-white shadow-[0_10px_28px_rgba(205,80,241,0.32)] transition-all duration-250 hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_14px_36px_rgba(205,80,241,0.42)]"
         >
           {t.home.ctaCta1}

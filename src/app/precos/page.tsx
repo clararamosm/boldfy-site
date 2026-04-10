@@ -186,7 +186,7 @@ export default function PrecosPage() {
             <p className="text-xl font-bold text-primary mb-3">
               {t.precos.enterprisePrice}
             </p>
-            <Button variant="outline" size="sm" onClick={openPopup}>
+            <Button variant="outline" size="sm" onClick={() => openPopup('precos:enterprise')}>
               {t.precos.enterpriseCta}
             </Button>
           </div>
@@ -276,7 +276,7 @@ export default function PrecosPage() {
           <p className="text-sm text-muted-foreground mb-8 max-w-md mx-auto">
             Configure o pacote ideal para sua empresa em menos de 2 minutos. Sem reunião para saber o preço.
           </p>
-          <Button size="lg" className="font-bold gap-2" onClick={openBuilder}>
+          <Button size="lg" className="font-bold gap-2" onClick={() => openBuilder('precos:simulador')}>
             Montar meu pacote
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -345,11 +345,11 @@ export default function PrecosPage() {
             {t.precos.ctaSubtitle}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Button size="lg" className="font-bold gap-2" onClick={openBuilder}>
+            <Button size="lg" className="font-bold gap-2" onClick={() => openBuilder('precos:cta-final')}>
               Montar meu pacote
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" className="font-bold" onClick={openPopup}>
+            <Button size="lg" variant="outline" className="font-bold" onClick={() => openPopup('precos:cta-final')}>
               {t.precos.ctaButton}
             </Button>
           </div>

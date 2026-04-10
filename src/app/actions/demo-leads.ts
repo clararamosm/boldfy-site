@@ -1,13 +1,15 @@
 'use server';
 
 /**
- * Server action to send Demo leads to Notion CRM.
+ * Server action to send Demo leads to Notion CRM + ActiveCampaign.
  *
  * Deduplication:
  * - Searches Person DB by email first. If found, appends interaction.
  * - Searches Company DB by name first. If found, reuses.
  * - Creates new entries only when needed.
  */
+
+import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 
@@ -30,6 +32,7 @@ export type DemoLeadInput = {
   cargo: string;
   empresa: string;
   funcionarios: string;
+  origem?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -85,7 +88,7 @@ export async function sendDemoLeadToNotion(
   }
 
   try {
-    // 1. Find or create Company
+    // 1. Find or create Company (minimal — only title)
     let companyId = await findCompanyByName(input.empresa);
     if (!companyId) {
       const companyResponse = await fetch(`${NOTION_API}/pages`, {
@@ -97,59 +100,51 @@ export async function sendDemoLeadToNotion(
             Nome: {
               title: [{ text: { content: input.empresa } }],
             },
-            'Porte (funcionários)': {
-              select: { name: input.funcionarios },
-            },
-            'Botão gatilho do formulário': {
-              select: { name: 'Popup Demo' },
-            },
           },
         }),
       });
 
       if (!companyResponse.ok) {
-        const errorData = await companyResponse.json().catch(() => ({}));
-        console.error('Error creating Company in Notion:', companyResponse.status, errorData);
-        return { success: false, error: 'Erro ao criar a empresa no Notion.' };
+        const errText = await companyResponse.text().catch(() => '');
+        console.error('[demo-leads] Error creating Company:', companyResponse.status, errText);
+        // Continue without company — don't block the whole flow
+        companyId = null;
+      } else {
+        const companyData = await companyResponse.json();
+        companyId = companyData.id;
       }
-
-      const companyData = await companyResponse.json();
-      companyId = companyData.id;
     }
 
     // 2. Find or create Person (dedup by email)
     let personId = await findPersonByEmail(input.email);
 
     if (!personId) {
-      // Create new person
+      const properties: Record<string, unknown> = {
+        Nome: { title: [{ text: { content: input.nome } }] },
+        Email: { email: input.email },
+      };
+      if (input.telefone) {
+        properties['WhatsApp'] = { phone_number: input.telefone };
+      }
+      if (input.cargo) {
+        properties['Cargo'] = { rich_text: [{ text: { content: input.cargo } }] };
+      }
+      if (companyId) {
+        properties['Empresa'] = { relation: [{ id: companyId }] };
+      }
+
       const personResponse = await fetch(`${NOTION_API}/pages`, {
         method: 'POST',
         headers: NOTION_HEADERS(),
         body: JSON.stringify({
           parent: { database_id: NOTION_PERSON_DB_ID },
-          properties: {
-            Nome: {
-              title: [{ text: { content: input.nome } }],
-            },
-            Email: {
-              email: input.email,
-            },
-            WhatsApp: {
-              phone_number: input.telefone,
-            },
-            Cargo: {
-              rich_text: [{ text: { content: input.cargo } }],
-            },
-            Empresa: {
-              relation: [{ id: companyId }],
-            },
-          },
+          properties,
         }),
       });
 
       if (!personResponse.ok) {
-        const errorData = await personResponse.json().catch(() => ({}));
-        console.error('Error creating Person in Notion:', personResponse.status, errorData);
+        const errText = await personResponse.text().catch(() => '');
+        console.error('[demo-leads] Error creating Person:', personResponse.status, errText);
         return { success: false, error: 'Erro ao criar o contato no Notion.' };
       }
 
@@ -158,6 +153,7 @@ export async function sendDemoLeadToNotion(
     }
 
     // 3. Log interaction as content block on person's page
+    const origemLabel = input.origem || 'Popup Demo';
     await fetch(`${NOTION_API}/blocks/${personId}/children`, {
       method: 'PATCH',
       headers: NOTION_HEADERS(),
@@ -171,7 +167,7 @@ export async function sendDemoLeadToNotion(
                 {
                   type: 'text',
                   text: {
-                    content: `Popup Demo — ${new Date().toLocaleDateString('pt-BR')} — ${input.nome} (${input.email})`,
+                    content: `${origemLabel} — ${new Date().toLocaleDateString('pt-BR')} — ${input.nome} (${input.email})`,
                   },
                 },
               ],
@@ -181,9 +177,46 @@ export async function sendDemoLeadToNotion(
       }),
     });
 
+    // 4. Sync to ActiveCampaign (non-blocking)
+    const nameParts = input.nome.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? input.nome;
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+    const acTags: string[] = ['Demo Agendada'];
+    if (input.origem) acTags.push(input.origem);
+    if (input.funcionarios) acTags.push(`porte:${input.funcionarios}`);
+
+    syncContact({
+      email: input.email,
+      firstName,
+      lastName,
+      phone: input.telefone,
+      empresa: input.empresa,
+      cargo: input.cargo,
+      origem: origemLabel,
+      tags: acTags,
+    })
+      .then((acContactId) => {
+        if (acContactId) {
+          const note = [
+            `📅 Demo agendada via ${origemLabel}`,
+            `Nome: ${input.nome}`,
+            `Email: ${input.email}`,
+            `WhatsApp: ${input.telefone}`,
+            `Cargo: ${input.cargo}`,
+            `Empresa: ${input.empresa}`,
+            `Porte: ${input.funcionarios}`,
+          ].join('\n');
+          addNoteToContact(acContactId, note);
+        }
+      })
+      .catch((err) => {
+        console.error('[demo-leads] ActiveCampaign sync error:', err);
+      });
+
     return { success: true };
   } catch (error) {
-    console.error('Error sending demo lead to Notion:', error);
+    console.error('[demo-leads] Error:', error);
     return { success: false, error: 'Erro de conexão com o Notion.' };
   }
 }

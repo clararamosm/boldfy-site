@@ -83,13 +83,13 @@ export default function SaasPageClient() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={() => openBuilder('saas:hero')}>
 
                 {t.solucoesSaas.heroCta1}
                 <ArrowRight className="ml-2 h-4 w-4" />
 
             </Button>
-            <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
+            <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => openPopup('saas:hero')}>
               {t.solucoesSaas.heroCta2}
             </Button>
           </div>
@@ -257,13 +257,13 @@ export default function SaasPageClient() {
           </h2>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={openBuilder}>
+            <Button  size="lg" className="font-bold w-full sm:w-auto" onClick={() => openBuilder('saas:cta-final')}>
 
                 {t.solucoesSaas.ctaCta1}
                 <ArrowRight className="ml-2 h-4 w-4" />
 
             </Button>
-            <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={openPopup}>
+            <Button  variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => openPopup('saas:cta-final')}>
               {t.solucoesSaas.ctaCta2}
             </Button>
           </div>

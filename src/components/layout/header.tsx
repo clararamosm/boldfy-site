@@ -342,7 +342,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             {/* CTA — desktop only */}
             <div className="hidden lg:block">
-              <Button onClick={openPopup} size="sm" className="gap-1.5">
+              <Button onClick={() => openPopup('header:desktop')} size="sm" className="gap-1.5">
                 {t.nav.agendarDemo}
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
@@ -371,7 +371,7 @@ export function Header() {
         ctaLabel={t.nav.agendarDemo}
         open={mobileOpen}
         onClose={closeMobile}
-        onOpenDemo={openPopup}
+        onOpenDemo={() => openPopup('header:mobile')}
       />
 
       {/* Spacer so content is not hidden behind the fixed header */}
