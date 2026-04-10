@@ -205,18 +205,15 @@ export function RhClient() {
 
           {/* Visual — hero image placeholder + floating mini-card */}
           <div className="relative h-[420px] lg:h-[500px]">
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border-2 border-dashed border-blue-500/35 bg-[repeating-linear-gradient(45deg,rgba(59,130,246,0.08),rgba(59,130,246,0.08)_14px,rgba(59,130,246,0.14)_14px,rgba(59,130,246,0.14)_28px)] text-blue-700">
-              <svg className="h-14 w-14 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
-              <span className="font-headline text-[13px] font-black uppercase tracking-[0.1em]">
-                Imagem horizontal · RH
-              </span>
-              <span className="max-w-[280px] px-6 text-center text-[11px] leading-[1.4] text-muted-foreground">
-                Foto/ilustração horizontal será inserida diretamente no código.
-              </span>
+            <div className="absolute inset-0 overflow-hidden rounded-3xl">
+              <Image
+                src="/images/para-rh-hero.jpeg"
+                alt="Time de RH usando Employee Advocacy para employer branding autêntico com a Boldfy"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
             </div>
 
             {/* Mini floating card — Candidaturas Inbound */}
@@ -456,19 +453,15 @@ export function RhClient() {
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-stretch gap-14 lg:grid-cols-[0.85fr_1.15fr]">
-          {/* Photo placeholder (left) */}
-          <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border-2 border-dashed border-blue-500/35 bg-[repeating-linear-gradient(45deg,rgba(59,130,246,0.08),rgba(59,130,246,0.08)_14px,rgba(59,130,246,0.14)_14px,rgba(59,130,246,0.14)_28px)] text-blue-700 lg:min-h-[600px]">
-            <svg className="h-14 w-14 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="9" cy="9" r="2" />
-              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-            </svg>
-            <span className="font-headline text-[13px] font-black uppercase tracking-[0.1em]">
-              Imagem vertical · RH
-            </span>
-            <span className="max-w-[240px] px-6 text-center text-[11px] leading-[1.4] text-muted-foreground">
-              Foto/ilustração vertical será inserida diretamente no código.
-            </span>
+          {/* Photo (left) */}
+          <div className="relative min-h-[400px] overflow-hidden rounded-3xl lg:min-h-[600px]">
+            <Image
+              src="/images/para-rh-virada.jpeg"
+              alt="Profissional de RH ativando programa de employer branding com colaboradores pela Boldfy"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 40vw"
+            />
           </div>
 
           {/* Content (right) */}
