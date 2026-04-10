@@ -1,17 +1,20 @@
 'use server';
 
 /**
- * Server action to capture proposal builder leads into Notion CRM.
+ * Server action to capture proposal builder leads into Notion CRM
+ * and ActiveCampaign (email marketing / automation).
  *
  * Flow:
  * 1. Search Person DB by email — if found, reuse; if not, create.
  * 2. Search Company DB by name — if found, reuse; if not, create.
  * 3. Create Interação linked to Person + Company.
  * 4. Store proposal JSON as code block inside the Interação page.
- * 5. Return proposalUrl so the frontend can show / share it.
+ * 5. Sync contact to ActiveCampaign with tags + proposal note.
+ * 6. Return proposalUrl so the frontend can show / share it.
  */
 
 import type { ProposalData } from '@/lib/notion-crm';
+import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 
@@ -405,6 +408,36 @@ export async function sendProposalLeadToNotion(
     await appendProposalBlocks(interacaoId, proposalJSON, proposalUrl).catch((err) => {
       console.error('[proposal-leads] Error appending blocks:', err);
     });
+
+    // 6. Sync to ActiveCampaign (non-blocking — Notion is the source of truth)
+    const acTags: string[] = ['Simulador de Proposta'];
+    if (input.plataformaEnabled) acTags.push('SaaS');
+    if (input.designPlan) acTags.push('Design on Demand');
+    if (input.fsTls > 0) acTags.push('Content Full-Service');
+    if (input.betaActive) acTags.push('Beta Tester');
+
+    const nameParts = input.nome.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? input.nome;
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+    syncContact({
+      email: input.email,
+      firstName,
+      lastName,
+      empresa: input.empresa,
+      cargo: input.cargo,
+      origem: input.origem,
+      tags: acTags,
+    })
+      .then((acContactId) => {
+        if (acContactId) {
+          const summary = buildProposalSummary(input);
+          addNoteToContact(acContactId, `📋 Proposta gerada:\n\n${summary}\n\n🔗 ${proposalUrl}`);
+        }
+      })
+      .catch((err) => {
+        console.error('[proposal-leads] ActiveCampaign sync error:', err);
+      });
 
     return {
       success: true,
