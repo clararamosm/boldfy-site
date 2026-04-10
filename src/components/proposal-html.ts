@@ -62,6 +62,14 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
     year: 'numeric',
   });
 
+  // Countdown logic: proposals valid for 15 days
+  const VALIDITY_DAYS = 15;
+  const createdDate = new Date(data.createdAt);
+  const expiresDate = new Date(createdDate.getTime() + VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const daysRemaining = Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = daysRemaining <= 0;
+
   const perSeat = data.betaActive ? data.platform.perSeatBeta : data.platform.perSeatFull;
   const platformTotal = data.platform.seats * perSeat;
   const platformTotalFull = data.platform.seats * data.platform.perSeatFull;
@@ -122,6 +130,28 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       <p style="margin:0 0 24px;font-size:13px;color:${C.textMuted};">
         Preparada para <strong style="color:${C.text};">${data.lead.nome}</strong>${data.lead.empresa && data.lead.empresa !== '—' ? ` · ${data.lead.empresa}` : ''}
       </p>
+
+      <!-- Countdown / Expiration banner -->
+      ${isExpired ? `
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px 16px;margin-bottom:20px;text-align:center;">
+        <span style="font-size:14px;font-weight:700;color:#DC2626;">⏰ Esta proposta expirou</span>
+        <p style="margin:6px 0 0;font-size:12px;color:#737373;">Essa proposta era válida por ${VALIDITY_DAYS} dias. Entre em contato ou gere uma nova proposta.</p>
+        <a href="https://boldfy.com.br/#simulador" style="display:inline-block;margin-top:12px;background:${C.primary};color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">Gerar nova proposta</a>
+      </div>
+      ` : `
+      <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td>
+              <span style="font-size:12px;font-weight:700;color:#EA580C;">⏳ Válida por mais ${daysRemaining} dia${daysRemaining !== 1 ? 's' : ''}</span>
+            </td>
+            <td align="right">
+              <span style="font-size:11px;color:#9A3412;">Expira em ${expiresDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+      `}
 
       ${data.betaActive ? `
       <div style="background:${C.emeraldBg};border:1px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
@@ -242,8 +272,9 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       </p>
       ` : ''}
       <p style="margin:0;font-size:10px;color:${C.textLight};line-height:1.6;">
-        Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente à Plataforma.<br>
-        Contrato mínimo de 6 meses. Executivos do Content Full-Service não consomem seats da Plataforma.<br><br>
+        Proposta válida por ${VALIDITY_DAYS} dias a partir de ${dateStr}. Pricing vigente Boldfy (2026).<br>
+        Desconto Beta Tester (30% off) aplica-se somente à Plataforma. Contrato mínimo de 6 meses.<br>
+        Executivos do Content Full-Service não consomem seats da Plataforma.<br><br>
         <a href="https://boldfy.com.br" style="color:${C.primary};font-weight:600;">boldfy.com.br</a>
       </p>
     </div>

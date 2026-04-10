@@ -240,6 +240,10 @@ async function createInteracao(
     Sentimento: { select: { name: 'Positivo' } },
   };
 
+  if (input.origem) {
+    properties['Origem no site'] = { select: { name: input.origem } };
+  }
+
   if (personId) {
     properties['Pessoa'] = { relation: [{ id: personId }] };
   }
