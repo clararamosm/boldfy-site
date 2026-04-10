@@ -35,7 +35,7 @@ function MiniMarketing() {
         {[35, 50, 42, 68, 78, 100].map((h, i) => (
           <div
             key={i}
-            className="w-[4px] rounded-t-sm bg-gradient-to-t from-primary to-[#E875FF]"
+            className="w-[4px] rounded-t-sm bg-gradient-to-t from-emerald-600 to-emerald-400"
             style={{ height: `${h}%` }}
           />
         ))}
@@ -67,30 +67,19 @@ function MiniVendas() {
 
 function MiniRh() {
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-[4] rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
-      <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-pink-500/10 text-pink-500">
-          <UserPlus className="h-3 w-3" />
-        </div>
-        <div>
-          <p className="font-headline text-[10px] font-black leading-tight text-accent-foreground">
-            Candidaturas Inbound
-          </p>
-          <p className="text-[8px] text-muted-foreground">
-            Product Designer · 30 dias
-          </p>
-        </div>
+    <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-500/10 text-pink-500">
+        <UserPlus className="h-4 w-4" />
       </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <div>
-          <p className="font-headline text-xl font-black leading-none tracking-tight text-pink-500">
-            12
-          </p>
-          <span className="mt-0.5 inline-block rounded-full bg-pink-500/10 px-1.5 py-0.5 text-[8px] font-bold text-pink-500">
-            qualificadas
-          </span>
-        </div>
-        <p className="flex-1 text-[9px] leading-snug text-muted-foreground">
+      <div className="min-w-0 flex-1">
+        <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+          Candidaturas inbound
+        </p>
+        <p className="font-headline text-base font-black leading-none tracking-tight text-accent-foreground">
+          12{' '}
+          <span className="text-[9px] font-bold text-pink-500">qualificadas</span>
+        </p>
+        <p className="text-[9px] text-muted-foreground">
           Todas de posts de colaboradores
         </p>
       </div>
@@ -112,7 +101,6 @@ interface PersonaCardProps {
   cta: string;
   href: string;
   photo: string;
-  dotColor: string;
   tagColor: string;
   tagBg: string;
   miniCard: React.ReactNode;
@@ -126,7 +114,6 @@ function PersonaCard({
   cta,
   href,
   photo,
-  dotColor,
   tagColor,
   tagBg,
   miniCard,
@@ -135,10 +122,6 @@ function PersonaCard({
     <div className="group flex flex-col transition-all duration-300 hover:-translate-y-1.5">
       {/* ─── Top box: Photo (transparent, no borders, no bg) ─── */}
       <div className="relative h-[280px]">
-        {/* Colored dot */}
-        <span
-          className={`absolute right-3 top-3 z-[5] h-2.5 w-2.5 rounded-full shadow-[0_0_0_3px_rgba(255,255,255,0.5)] ${dotColor}`}
-        />
         <Image
           src={photo}
           alt={tag}
@@ -218,7 +201,6 @@ export function UseCasesSection() {
       cta: t.home.ucMarketingCta,
       href: '/para/marketing',
       photo: '/images/persona-marketing.png',
-      dotColor: 'bg-emerald-500',
       tagColor: 'text-emerald-600',
       tagBg: 'bg-emerald-500/10',
       miniCard: <MiniMarketing />,
@@ -235,7 +217,6 @@ export function UseCasesSection() {
       cta: t.home.ucVendasCta,
       href: '/para/vendas',
       photo: '/images/persona-comercial.png',
-      dotColor: 'bg-blue-500',
       tagColor: 'text-blue-600',
       tagBg: 'bg-blue-500/10',
       miniCard: <MiniVendas />,
@@ -252,7 +233,6 @@ export function UseCasesSection() {
       cta: t.home.ucRhCta,
       href: '/para/rh',
       photo: '/images/persona-rh.png',
-      dotColor: 'bg-pink-500',
       tagColor: 'text-pink-600',
       tagBg: 'bg-pink-500/10',
       miniCard: <MiniRh />,
