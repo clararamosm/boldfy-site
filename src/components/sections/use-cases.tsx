@@ -46,12 +46,12 @@ function MiniMarketing() {
 
 function MiniVendas() {
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2 rounded-lg border-l-[3px] border-l-blue-500 bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-[11px] font-bold text-white">
+    <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2 rounded-lg border-l-[3px] border-l-amber-500 bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-[11px] font-bold text-white">
         JS
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[8px] font-bold uppercase tracking-wider text-blue-500">
+        <p className="text-[8px] font-bold uppercase tracking-wider text-amber-500">
           Lead engajou
         </p>
         <p className="text-[10px] font-semibold leading-snug text-accent-foreground">
@@ -68,7 +68,7 @@ function MiniVendas() {
 function MiniRh() {
   return (
     <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-500/10 text-pink-500">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
         <UserPlus className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
@@ -77,7 +77,7 @@ function MiniRh() {
         </p>
         <p className="font-headline text-base font-black leading-none tracking-tight text-accent-foreground">
           12{' '}
-          <span className="text-[9px] font-bold text-pink-500">qualificadas</span>
+          <span className="text-[9px] font-bold text-blue-500">qualificadas</span>
         </p>
         <p className="text-[9px] text-muted-foreground">
           Todas de posts de colaboradores
@@ -217,8 +217,8 @@ export function UseCasesSection() {
       cta: t.home.ucVendasCta,
       href: '/para/vendas',
       photo: '/images/persona-comercial.png',
-      tagColor: 'text-blue-600',
-      tagBg: 'bg-blue-500/10',
+      tagColor: 'text-amber-600',
+      tagBg: 'bg-amber-500/10',
       miniCard: <MiniVendas />,
     },
     {
@@ -233,8 +233,8 @@ export function UseCasesSection() {
       cta: t.home.ucRhCta,
       href: '/para/rh',
       photo: '/images/persona-rh.png',
-      tagColor: 'text-pink-600',
-      tagBg: 'bg-pink-500/10',
+      tagColor: 'text-blue-600',
+      tagBg: 'bg-blue-500/10',
       miniCard: <MiniRh />,
     },
   ];
