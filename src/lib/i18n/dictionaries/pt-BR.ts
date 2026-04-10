@@ -167,15 +167,16 @@ const ptBR = {
     howStep4Label: 'Dados',
     howStep4Desc: 'Dashboard com impressões, alcance, valor equivalente em R$ e listas de remarketing qualificadas. Honesto sobre o que a gente pode medir — e transparente sobre o que não pode.',
 
-    // Section 7 — Manifesto + Founder
-    manifestoTitle: 'Quem tá por trás disso.',
-    manifestoBody1: 'A gente acredita que marcas são feitas de pessoas, não de logotipos. Que o melhor conteúdo de uma empresa não sai do time de marketing — sai das reuniões, dos bastidores, dos cafés entre projetos. Que cada colaborador carrega uma inteligência que o mercado precisa ver.',
-    manifestoBody2: 'A gente também acredita que talento não é o bastante. Ter gente boa no time e pedir pra "postar mais no LinkedIn" nunca funcionou — porque conteúdo não nasce de boa vontade. Nasce de método, de contexto, de ferramentas que respeitam o tempo de quem produz e celebram quem entrega.',
-    manifestoBody3: 'Por isso a Boldfy existe. Conteúdo corporativo morreu. Quem fala agora são as pessoas.',
+    // Section 7 — Manifesto + Fundadora
+    manifestoTag: 'Por que a gente existe',
+    manifestoBody1: 'O marketing corporativo ficou frio. Conteúdo de fachada não convence ninguém, e o feed já decidiu que quem ele escuta são as pessoas.',
+    manifestoBody2: 'A gente acredita que as melhores marcas B2B do futuro vão ser construídas pelas pessoas que trabalham nelas, não pelo departamento de marketing.',
+    manifestoBody3: 'A Boldfy existe pra fazer isso acontecer em escala, sem perder a alma.',
     founderName: 'Clara Ramos',
-    founderRole: 'Fundadora da Boldfy',
-    founderBio: 'Top Voice no LinkedIn, estrategista de conteúdo há mais de uma década e obcecada com a ideia de que marca forte nasce de gente que tem algo pra dizer. Construiu a Boldfy porque cansou de ver empresas boas presas em conteúdo ruim — e porque sabe, por experiência, que o time inteiro pode ser o maior canal de aquisição da empresa quando recebe ferramentas e método certo.',
-    founderLinkedin: 'Conectar no LinkedIn',
+    founderRole: 'Founder da Boldfy',
+    founderBio: 'Brand & Content Strategy Lead na ContentPath. Mais de uma década construindo marca via conteúdo autoral pra empresas B2B no LinkedIn.',
+    founderFollowers: '33k+',
+    founderYears: '10+',
 
     // Section 8 — Social Proof
     socialProofTitle: 'Quem já tá dentro.',
