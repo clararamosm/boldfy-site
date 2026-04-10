@@ -25,10 +25,10 @@ import { sendProposalLeadToNotion, type ProposalLeadInput } from '@/app/actions/
 /* -------------------------------------------------------------------------- */
 
 const PLATFORM_TIERS = [
-  { min: 5, max: 10, price: 499, label: '5 – 10 seats' },
-  { min: 11, max: 20, price: 449, label: '11 – 20 seats' },
-  { min: 21, max: 40, price: 399, label: '21 – 40 seats' },
-  { min: 41, max: 70, price: 349, label: '41 – 70 seats' },
+  { min: 5, max: 10, price: 499, beta: 349, label: '5 – 10 seats' },
+  { min: 11, max: 20, price: 449, beta: 315, label: '11 – 20 seats' },
+  { min: 21, max: 40, price: 399, beta: 279, label: '21 – 40 seats' },
+  { min: 41, max: 70, price: 349, beta: 245, label: '41 – 70 seats' },
 ];
 
 const DESIGN_PLANS = [
@@ -59,11 +59,11 @@ function formatBRL(value: number): string {
   });
 }
 
-function getPlatformPrice(seats: number): number {
+function getPlatformTier(seats: number) {
   for (const tier of PLATFORM_TIERS) {
-    if (seats >= tier.min && seats <= tier.max) return tier.price;
+    if (seats >= tier.min && seats <= tier.max) return tier;
   }
-  return 349; // fallback
+  return PLATFORM_TIERS[PLATFORM_TIERS.length - 1];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,7 +166,7 @@ export function ProposalBuilderProvider({ children }: { children: React.ReactNod
 /*  Centered Modal                                                             */
 /* -------------------------------------------------------------------------- */
 
-type Step = 'builder' | 'contact' | 'success';
+type Step = 'builder' | 'result';
 
 function ProposalBuilderModal({
   isOpen,
@@ -177,17 +177,23 @@ function ProposalBuilderModal({
 }) {
   const [step, setStep] = useState<Step>('builder');
 
-  // Tier 1: Platform
+  // Tier 1: Platform (always on, toggle for visual consistency)
+  const [platformEnabled, setPlatformEnabled] = useState(true);
   const [seats, setSeats] = useState(10);
-  const platformPrice = getPlatformPrice(seats);
-  const platformTotal = seats * platformPrice;
+  const tier = getPlatformTier(seats);
+  const platformPriceFull = tier.price;
+  const platformPriceBeta = tier.beta;
+  const platformTotalFull = seats * platformPriceFull;
+  const platformTotalBeta = seats * platformPriceBeta;
 
-  // Tier 2: Design as a Service
+  // Tier 2: Design on Demand
   const [designEnabled, setDesignEnabled] = useState(false);
   const [designPlan, setDesignPlan] = useState<string | null>('starter');
-  const designPrice = designEnabled ? (DESIGN_PLANS.find((p) => p.key === designPlan)?.price ?? 0) : 0;
+  const designPrice = designEnabled
+    ? (DESIGN_PLANS.find((p) => p.key === designPlan)?.price ?? 0)
+    : 0;
 
-  // Tier 3: Full-Service
+  // Tier 3: Content Full-Service
   const [execEnabled, setExecEnabled] = useState(false);
   const [execProfiles, setExecProfiles] = useState(1);
   const [execFrequency, setExecFrequency] = useState<string>('2x');
@@ -197,11 +203,20 @@ function ProposalBuilderModal({
       : 0;
 
   // Totals
-  const totalMensal = platformTotal + designPrice + execPrice;
+  const totalFull = (platformEnabled ? platformTotalFull : 0) + designPrice + execPrice;
+  const totalBeta = (platformEnabled ? platformTotalBeta : 0) + designPrice + execPrice;
 
-  // Form state
+  // Lead form
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [empresa, setEmpresa] = useState('');
+
+  // Submit state
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Can submit?
+  const leadFilled = nome.trim().length > 0 && email.trim().length > 2 && email.includes('@');
 
   // Reset on close
   const handleOpenChange = (open: boolean) => {
@@ -215,27 +230,26 @@ function ProposalBuilderModal({
     onOpenChange(open);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!leadFilled) return;
     setStatus('loading');
     setErrorMessage('');
 
-    const formData = new FormData(e.currentTarget);
     const input: ProposalLeadInput = {
-      nome: formData.get('nome') as string,
-      email: formData.get('email') as string,
-      telefone: formData.get('telefone') as string,
-      cargo: formData.get('cargo') as string,
-      empresa: formData.get('empresa') as string,
-      funcionarios: formData.get('funcionarios') as string,
+      nome: nome.trim(),
+      email: email.trim(),
+      empresa: empresa.trim() || '—',
+      plataformaEnabled: platformEnabled,
       plataformaSeats: seats,
-      plataformaPrice: platformPrice,
+      plataformaPriceFull: platformPriceFull,
+      plataformaPriceBeta: platformPriceBeta,
       designPlan: designEnabled ? designPlan : null,
       designPrice,
       executiveProfiles: execEnabled ? execProfiles : 0,
       executiveFrequency: execEnabled ? execFrequency : null,
       executivePrice: execPrice,
-      totalMensal,
+      totalFull,
+      totalBeta,
       origem: 'Simulador de Proposta',
     };
 
@@ -243,7 +257,7 @@ function ProposalBuilderModal({
 
     if (res.success) {
       setStatus('success');
-      setStep('success');
+      setStep('result');
     } else {
       setStatus('error');
       setErrorMessage(res.error || 'Algo deu errado. Tente novamente.');
@@ -262,16 +276,11 @@ function ProposalBuilderModal({
           <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
             <div>
               <Dialog.Title className="text-lg font-bold text-accent-foreground">
-                {step === 'success' ? 'Sua proposta' : step === 'contact' ? 'Seus dados' : 'Monte sua proposta'}
+                {step === 'result' ? 'Sua proposta' : 'Monte sua proposta'}
               </Dialog.Title>
               {step === 'builder' && (
                 <p className="text-xs text-muted-foreground">
                   Configure o pacote ideal para sua empresa
-                </p>
-              )}
-              {step === 'contact' && (
-                <p className="text-xs text-muted-foreground">
-                  Preencha seus dados para desbloquear o preço
                 </p>
               )}
             </div>
@@ -285,10 +294,14 @@ function ProposalBuilderModal({
           <div className="max-h-[calc(100dvh-12rem)] overflow-y-auto">
             {step === 'builder' && (
               <BuilderStep
+                platformEnabled={platformEnabled}
+                setPlatformEnabled={setPlatformEnabled}
                 seats={seats}
                 setSeats={setSeats}
-                platformPrice={platformPrice}
-                platformTotal={platformTotal}
+                platformPriceFull={platformPriceFull}
+                platformPriceBeta={platformPriceBeta}
+                platformTotalFull={platformTotalFull}
+                platformTotalBeta={platformTotalBeta}
                 designEnabled={designEnabled}
                 setDesignEnabled={setDesignEnabled}
                 designPlan={designPlan}
@@ -301,29 +314,29 @@ function ProposalBuilderModal({
                 execFrequency={execFrequency}
                 setExecFrequency={setExecFrequency}
                 execPrice={execPrice}
-                totalMensal={totalMensal}
-                onContinue={() => setStep('contact')}
-              />
-            )}
-
-            {step === 'contact' && (
-              <ContactStep
+                totalFull={totalFull}
+                totalBeta={totalBeta}
+                nome={nome}
+                setNome={setNome}
+                email={email}
+                setEmail={setEmail}
+                empresa={empresa}
+                setEmpresa={setEmpresa}
+                leadFilled={leadFilled}
                 status={status}
                 errorMessage={errorMessage}
                 onSubmit={handleSubmit}
-                onBack={() => {
-                  setStep('builder');
-                  setStatus('idle');
-                  setErrorMessage('');
-                }}
               />
             )}
 
-            {step === 'success' && (
-              <SuccessStep
+            {step === 'result' && (
+              <ResultStep
+                platformEnabled={platformEnabled}
                 seats={seats}
-                platformPrice={platformPrice}
-                platformTotal={platformTotal}
+                platformPriceFull={platformPriceFull}
+                platformPriceBeta={platformPriceBeta}
+                platformTotalFull={platformTotalFull}
+                platformTotalBeta={platformTotalBeta}
                 designEnabled={designEnabled}
                 designPlan={designPlan}
                 designPrice={designPrice}
@@ -331,7 +344,8 @@ function ProposalBuilderModal({
                 execProfiles={execProfiles}
                 execFrequency={execFrequency}
                 execPrice={execPrice}
-                totalMensal={totalMensal}
+                totalFull={totalFull}
+                totalBeta={totalBeta}
                 onClose={() => handleOpenChange(false)}
               />
             )}
@@ -343,14 +357,18 @@ function ProposalBuilderModal({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Step 1: Builder                                                            */
+/*  Single-page Builder (config + lead form + blurred summary)                 */
 /* -------------------------------------------------------------------------- */
 
 function BuilderStep({
+  platformEnabled,
+  setPlatformEnabled,
   seats,
   setSeats,
-  platformPrice,
-  platformTotal,
+  platformPriceFull,
+  platformPriceBeta,
+  platformTotalFull,
+  platformTotalBeta,
   designEnabled,
   setDesignEnabled,
   designPlan,
@@ -363,13 +381,27 @@ function BuilderStep({
   execFrequency,
   setExecFrequency,
   execPrice,
-  totalMensal,
-  onContinue,
+  totalFull,
+  totalBeta,
+  nome,
+  setNome,
+  email,
+  setEmail,
+  empresa,
+  setEmpresa,
+  leadFilled,
+  status,
+  errorMessage,
+  onSubmit,
 }: {
+  platformEnabled: boolean;
+  setPlatformEnabled: (v: boolean) => void;
   seats: number;
   setSeats: (v: number) => void;
-  platformPrice: number;
-  platformTotal: number;
+  platformPriceFull: number;
+  platformPriceBeta: number;
+  platformTotalFull: number;
+  platformTotalBeta: number;
   designEnabled: boolean;
   setDesignEnabled: (v: boolean) => void;
   designPlan: string | null;
@@ -382,61 +414,89 @@ function BuilderStep({
   execFrequency: string;
   setExecFrequency: (v: string) => void;
   execPrice: number;
-  totalMensal: number;
-  onContinue: () => void;
+  totalFull: number;
+  totalBeta: number;
+  nome: string;
+  setNome: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  empresa: string;
+  setEmpresa: (v: string) => void;
+  leadFilled: boolean;
+  status: string;
+  errorMessage: string;
+  onSubmit: () => void;
 }) {
   return (
     <div className="px-6 py-6 space-y-6">
-      {/* ── Tier 1: Platform (always active) ── */}
+      {/* ── Tier 1: Software as a Service (toggle) ── */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
-            <Users className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-accent-foreground">Plataforma SaaS</h3>
-            <p className="text-[11px] text-muted-foreground">Base do programa — obrigatório</p>
-          </div>
-        </div>
+        <Toggle
+          checked={platformEnabled}
+          onChange={setPlatformEnabled}
+          label="Software as a Service"
+          description="Plataforma de Content Intelligence"
+          icon={<Users className="h-4 w-4 text-primary" />}
+          iconColor="bg-primary/10"
+        />
 
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-foreground">Colaboradores</label>
-            <div className="text-right">
-              <span className="text-lg font-bold text-primary">{seats}</span>
-              <span className="text-xs text-muted-foreground ml-1">seats</span>
+        <div
+          className={cn(
+            'grid transition-all duration-300',
+            platformEnabled ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0',
+          )}
+          style={{ transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)' }}
+        >
+          <div className="overflow-hidden">
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-foreground">Colaboradores</label>
+                <div className="text-right">
+                  <span className="text-lg font-bold text-primary">{seats}</span>
+                  <span className="text-xs text-muted-foreground ml-1">seats</span>
+                </div>
+              </div>
+              <Slider
+                min={5}
+                max={70}
+                step={1}
+                value={[seats]}
+                onValueChange={(v) => setSeats(v[0])}
+              />
+              <div className="flex justify-between mt-1 mb-3">
+                <span className="text-[10px] text-muted-foreground">5</span>
+                <span className="text-[10px] text-muted-foreground">70</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground line-through text-xs">
+                    {formatBRL(platformPriceFull)}/seat
+                  </span>
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                    BETA
+                  </span>
+                  <span className="font-bold text-emerald-600">
+                    {formatBRL(platformPriceBeta)}/seat
+                  </span>
+                </div>
+                <span className="font-bold text-foreground">{formatBRL(platformTotalBeta)}/mês</span>
+              </div>
             </div>
-          </div>
-          <Slider
-            min={5}
-            max={70}
-            step={1}
-            value={[seats]}
-            onValueChange={(v) => setSeats(v[0])}
-          />
-          <div className="flex justify-between mt-1 mb-3">
-            <span className="text-[10px] text-muted-foreground">5</span>
-            <span className="text-[10px] text-muted-foreground">70</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{formatBRL(platformPrice)}/seat</span>
-            <span className="font-bold text-foreground">{formatBRL(platformTotal)}/mês</span>
           </div>
         </div>
       </div>
 
-      {/* ── Tier 2: Design as a Service (toggle) ── */}
+      {/* ── Tier 2: Design on Demand (toggle) ── */}
       <div>
         <Toggle
           checked={designEnabled}
           onChange={setDesignEnabled}
-          label="Design as a Service"
+          label="Design on Demand"
           description="Peças gráficas para o time"
           icon={<Palette className="h-4 w-4 text-violet-500" />}
           iconColor="bg-violet-500/10"
         />
 
-        {/* Collapsible content */}
         <div
           className={cn(
             'grid transition-all duration-300',
@@ -479,7 +539,6 @@ function BuilderStep({
           iconColor="bg-amber-500/10"
         />
 
-        {/* Collapsible content */}
         <div
           className={cn(
             'grid transition-all duration-300',
@@ -546,20 +605,35 @@ function BuilderStep({
         </div>
       </div>
 
-      {/* ── Summary (total hidden / blurred) ── */}
+      {/* ── Summary (blurred) ── */}
       <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
         <h4 className="text-sm font-bold text-accent-foreground mb-3">Resumo da proposta</h4>
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Plataforma ({seats} seats)</span>
-            <span className="font-medium">{formatBRL(platformTotal)}</span>
-          </div>
+          {platformEnabled && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Plataforma ({seats} seats)</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground/60 line-through blur-[3px] select-none" aria-hidden="true">
+                  {formatBRL(platformTotalFull)}
+                </span>
+                <span className="font-medium blur-[4px] select-none" aria-hidden="true">
+                  {formatBRL(platformTotalBeta)}
+                </span>
+                <Lock className="h-3 w-3 text-muted-foreground" />
+              </div>
+            </div>
+          )}
           {designEnabled && designPlan && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 Design ({DESIGN_PLANS.find((p) => p.key === designPlan)?.label})
               </span>
-              <span className="font-medium">{formatBRL(designPrice)}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium blur-[4px] select-none" aria-hidden="true">
+                  {formatBRL(designPrice)}
+                </span>
+                <Lock className="h-3 w-3 text-muted-foreground" />
+              </div>
             </div>
           )}
           {execEnabled && execPrice > 0 && (
@@ -567,16 +641,20 @@ function BuilderStep({
               <span className="text-muted-foreground">
                 Full-Service ({execProfiles}p × {execFrequency}/sem)
               </span>
-              <span className="font-medium">{formatBRL(execPrice)}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium blur-[4px] select-none" aria-hidden="true">
+                  {formatBRL(execPrice)}
+                </span>
+                <Lock className="h-3 w-3 text-muted-foreground" />
+              </div>
             </div>
           )}
 
-          {/* Blurred total */}
           <div className="flex items-center justify-between pt-3 border-t border-primary/20">
             <span className="font-bold text-accent-foreground text-sm">Total mensal</span>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-primary blur-[6px] select-none" aria-hidden="true">
-                {formatBRL(totalMensal)}
+                {formatBRL(totalBeta)}
               </span>
               <Lock className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
@@ -584,145 +662,56 @@ function BuilderStep({
         </div>
       </div>
 
-      {/* CTA */}
-      <Button onClick={onContinue} className="w-full gap-2">
-        Ver minha proposta
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Step 2: Contact form (lead capture)                                        */
-/* -------------------------------------------------------------------------- */
-
-function ContactStep({
-  status,
-  errorMessage,
-  onSubmit,
-  onBack,
-}: {
-  status: string;
-  errorMessage: string;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  onBack: () => void;
-}) {
-  return (
-    <div className="px-6 py-6">
-      <div className="mb-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/[0.04] p-4">
-        <Lock className="h-5 w-5 shrink-0 text-primary" />
-        <div>
+      {/* ── Inline lead form ── */}
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <Lock className="h-4 w-4 text-primary" />
           <p className="text-sm font-semibold text-accent-foreground">
-            Desbloqueie sua proposta completa
-          </p>
-          <p className="text-[11px] text-muted-foreground">
-            Preencha os dados abaixo para ver o preço final e exportar sua proposta.
+            Desbloqueie sua proposta
           </p>
         </div>
-      </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-4 text-xs text-primary hover:underline"
-      >
-        ← Voltar e ajustar
-      </button>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label htmlFor="prop-nome" className="text-xs font-medium text-foreground">
+              Nome
+            </label>
+            <input
+              id="prop-nome"
+              type="text"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              placeholder="Seu nome"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="prop-email" className="text-xs font-medium text-foreground">
+              E-mail
+            </label>
+            <input
+              id="prop-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+              placeholder="seu@email.com"
+            />
+          </div>
+        </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="prop-nome" className="text-sm font-medium text-foreground">
-            Nome completo
+          <label htmlFor="prop-empresa" className="text-xs font-medium text-foreground">
+            Empresa <span className="text-muted-foreground font-normal">(opcional)</span>
           </label>
           <input
-            required
-            id="prop-nome"
-            name="nome"
+            id="prop-empresa"
             type="text"
-            className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-            placeholder="João Silva"
+            value={empresa}
+            onChange={(e) => setEmpresa(e.target.value)}
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            placeholder="Sua empresa"
           />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="prop-email" className="text-sm font-medium text-foreground">
-              E-mail corporativo
-            </label>
-            <input
-              required
-              id="prop-email"
-              name="email"
-              type="email"
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              placeholder="joao@empresa.com"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="prop-telefone" className="text-sm font-medium text-foreground">
-              WhatsApp
-            </label>
-            <input
-              required
-              id="prop-telefone"
-              name="telefone"
-              type="tel"
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="prop-cargo" className="text-sm font-medium text-foreground">
-              Cargo
-            </label>
-            <input
-              required
-              id="prop-cargo"
-              name="cargo"
-              type="text"
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              placeholder="CMO / Head de Marketing"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="prop-empresa" className="text-sm font-medium text-foreground">
-              Empresa
-            </label>
-            <input
-              required
-              id="prop-empresa"
-              name="empresa"
-              type="text"
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-              placeholder="Sua Empresa"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="prop-funcionarios" className="text-sm font-medium text-foreground">
-            Tamanho da empresa
-          </label>
-          <select
-            required
-            id="prop-funcionarios"
-            name="funcionarios"
-            defaultValue=""
-            className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-          >
-            <option value="" disabled>
-              Selecione...
-            </option>
-            <option value="1 a 10 funcionários">1 a 10 funcionários</option>
-            <option value="11 a 50 funcionários">11 a 50 funcionários</option>
-            <option value="51 a 200 funcionários">51 a 200 funcionários</option>
-            <option value="201 a 1000 funcionários">201 a 1000 funcionários</option>
-            <option value="Mais de 1000 funcionários">Mais de 1000 funcionários</option>
-          </select>
         </div>
 
         {status === 'error' && (
@@ -731,7 +720,11 @@ function ContactStep({
           </div>
         )}
 
-        <Button type="submit" disabled={status === 'loading'} className="w-full gap-2">
+        <Button
+          onClick={onSubmit}
+          disabled={!leadFilled || status === 'loading'}
+          className="w-full gap-2"
+        >
           {status === 'loading' ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -739,24 +732,27 @@ function ContactStep({
             </>
           ) : (
             <>
-              Desbloquear proposta
+              Ver proposta completa
               <ArrowRight className="h-4 w-4" />
             </>
           )}
         </Button>
-      </form>
+      </div>
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Step 3: Success / Proposal revealed + export                               */
+/*  Result: full proposal revealed + export                                    */
 /* -------------------------------------------------------------------------- */
 
-function SuccessStep({
+function ResultStep({
+  platformEnabled,
   seats,
-  platformPrice,
-  platformTotal,
+  platformPriceFull,
+  platformPriceBeta,
+  platformTotalFull,
+  platformTotalBeta,
   designEnabled,
   designPlan,
   designPrice,
@@ -764,12 +760,16 @@ function SuccessStep({
   execProfiles,
   execFrequency,
   execPrice,
-  totalMensal,
+  totalFull,
+  totalBeta,
   onClose,
 }: {
+  platformEnabled: boolean;
   seats: number;
-  platformPrice: number;
-  platformTotal: number;
+  platformPriceFull: number;
+  platformPriceBeta: number;
+  platformTotalFull: number;
+  platformTotalBeta: number;
   designEnabled: boolean;
   designPlan: string | null;
   designPrice: number;
@@ -777,7 +777,8 @@ function SuccessStep({
   execProfiles: number;
   execFrequency: string | null;
   execPrice: number;
-  totalMensal: number;
+  totalFull: number;
+  totalBeta: number;
   onClose: () => void;
 }) {
   const proposalRef = useRef<HTMLDivElement>(null);
@@ -808,10 +809,27 @@ function SuccessStep({
     }
   };
 
+  // Collect team members based on activated services
+  const teamMembers: string[] = [];
+  if (platformEnabled) {
+    teamMembers.push('Estrategista');
+    teamMembers.push('Suporte');
+  }
+  if (designEnabled && designPlan) {
+    teamMembers.push('Designer');
+  }
+  if (execEnabled && execPrice > 0) {
+    teamMembers.push('Estrategista Sr.');
+    teamMembers.push('Redator');
+    teamMembers.push('Designer');
+  }
+  // Dedupe
+  const uniqueTeam = [...new Set(teamMembers)];
+
   return (
     <div className="px-6 py-6">
       {/* Success banner */}
-      <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+      <div className="mb-5 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
         <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" />
         <div>
           <p className="text-sm font-bold text-accent-foreground">Proposta desbloqueada!</p>
@@ -841,45 +859,52 @@ function SuccessStep({
         </div>
 
         {/* Platform */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Plataforma SaaS</span>
-          </div>
-          <div className="ml-6 space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {seats} seats × {formatBRL(platformPrice)}/seat
-              </span>
-              <span className="font-medium">{formatBRL(platformTotal)}/mês</span>
+        {platformEnabled && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Software as a Service</span>
             </div>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {[
-                'IA Contextual',
-                'Gamificação',
-                'Trilhas LXP',
-                'Dashboard',
-                'Biblioteca de Marca',
-                'Setup assistido',
-              ].map((feat) => (
-                <span
-                  key={feat}
-                  className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2 py-0.5 text-[10px] text-primary font-medium"
-                >
-                  <Check className="h-2.5 w-2.5" />
-                  {feat}
+            <div className="ml-6 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {seats} seats × {formatBRL(platformPriceBeta)}/seat
                 </span>
-              ))}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground/60 line-through">
+                    {formatBRL(platformTotalFull)}
+                  </span>
+                  <span className="font-medium text-emerald-600">{formatBRL(platformTotalBeta)}/mês</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {[
+                  'IA Contextual',
+                  'Gamificação',
+                  'Trilhas LXP',
+                  'Dashboard',
+                  'Biblioteca de Marca',
+                  'Setup assistido',
+                ].map((feat) => (
+                  <span
+                    key={feat}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2 py-0.5 text-[10px] text-primary font-medium"
+                  >
+                    <Check className="h-2.5 w-2.5" />
+                    {feat}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Design */}
+        {/* Design on Demand */}
         {designEnabled && designPlan && (
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-violet-500" />
-              <span className="text-sm font-semibold text-foreground">Design as a Service</span>
+              <span className="text-sm font-semibold text-foreground">Design on Demand</span>
             </div>
             <div className="ml-6 space-y-1">
               <div className="flex justify-between text-sm">
@@ -906,7 +931,7 @@ function SuccessStep({
           </div>
         )}
 
-        {/* Full-Service */}
+        {/* Content Full-Service */}
         {execEnabled && execPrice > 0 && (
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
@@ -938,28 +963,32 @@ function SuccessStep({
         )}
 
         {/* Team included */}
-        <div className="pt-3 border-t border-border/50">
-          <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Time dedicado
-          </h5>
-          <div className="flex flex-wrap gap-3">
-            <TeamMember label="Estrategista" />
-            <TeamMember label="Suporte" />
-            {designEnabled && designPlan && <TeamMember label="Designer" />}
-            {execEnabled && execPrice > 0 && (
-              <>
-                <TeamMember label="Redator" />
-                <TeamMember label="Estrategista Sr." />
-              </>
-            )}
+        {uniqueTeam.length > 0 && (
+          <div className="pt-3 border-t border-border/50">
+            <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Time dedicado
+            </h5>
+            <div className="flex flex-wrap gap-3">
+              {uniqueTeam.map((label) => (
+                <TeamMember key={label} label={label} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Total — now visible! */}
+        {/* Total — VISIBLE */}
         <div className="flex items-center justify-between pt-4 border-t border-primary/20">
           <span className="text-sm font-bold text-accent-foreground">Investimento mensal</span>
-          <span className="text-xl font-bold text-primary">{formatBRL(totalMensal)}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground/60 line-through">
+              {formatBRL(totalFull)}
+            </span>
+            <span className="text-xl font-bold text-primary">{formatBRL(totalBeta)}</span>
+          </div>
         </div>
+        <p className="text-[10px] text-center text-muted-foreground">
+          Preço beta · 2 meses grátis + 4 meses com 30% off · renovação a preço cheio
+        </p>
       </div>
 
       {/* Actions */}

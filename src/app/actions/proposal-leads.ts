@@ -7,7 +7,7 @@
  * 1. Search Person DB by email — if found, reuse; if not, create.
  * 2. Search Company DB by name — if found, reuse; if not, create.
  * 3. Link person ↔ company.
- * 4. Create an Interaction entry to log this specific event.
+ * 4. Add proposal summary as blocks on the person's page.
  *
  * Handles deduplication so the same person can fill out multiple forms
  * without creating duplicate pages.
@@ -34,19 +34,19 @@ const NOTION_HEADERS = () => ({
 export type ProposalLeadInput = {
   nome: string;
   email: string;
-  telefone: string;
-  cargo: string;
   empresa: string;
-  funcionarios: string;
   // Proposal details
+  plataformaEnabled: boolean;
   plataformaSeats: number;
-  plataformaPrice: number;
+  plataformaPriceFull: number;
+  plataformaPriceBeta: number;
   designPlan: string | null; // 'starter' | 'growth' | 'scale' | null
   designPrice: number;
   executiveProfiles: number;
   executiveFrequency: string | null; // '2x' | '3x' | '4x' | null
   executivePrice: number;
-  totalMensal: number;
+  totalFull: number;
+  totalBeta: number;
   origem: string; // 'Simulador de Proposta'
 };
 
@@ -102,9 +102,6 @@ async function createCompany(
         Nome: {
           title: [{ text: { content: input.empresa } }],
         },
-        'Porte (funcionários)': {
-          select: { name: input.funcionarios },
-        },
         'Botão gatilho do formulário': {
           select: { name: 'Simulador de Proposta' },
         },
@@ -137,12 +134,6 @@ async function createPerson(
         Email: {
           email: input.email,
         },
-        WhatsApp: {
-          phone_number: input.telefone,
-        },
-        Cargo: {
-          rich_text: [{ text: { content: input.cargo } }],
-        },
         Empresa: {
           relation: [{ id: companyId }],
         },
@@ -162,7 +153,12 @@ async function createPerson(
 function buildProposalSummary(input: ProposalLeadInput): string {
   const lines: string[] = [];
   lines.push(`Proposta montada via Simulador`);
-  lines.push(`Plataforma SaaS: ${input.plataformaSeats} seats × R$ ${input.plataformaPrice}/seat = R$ ${(input.plataformaSeats * input.plataformaPrice).toLocaleString('pt-BR')}/mês`);
+
+  if (input.plataformaEnabled) {
+    lines.push(
+      `Software as a Service: ${input.plataformaSeats} seats × R$ ${input.plataformaPriceBeta}/seat (beta) = R$ ${(input.plataformaSeats * input.plataformaPriceBeta).toLocaleString('pt-BR')}/mês (preço cheio: R$ ${(input.plataformaSeats * input.plataformaPriceFull).toLocaleString('pt-BR')}/mês)`,
+    );
+  }
 
   if (input.designPlan) {
     const planLabels: Record<string, string> = {
@@ -170,7 +166,7 @@ function buildProposalSummary(input: ProposalLeadInput): string {
       growth: 'Growth (8 peças)',
       scale: 'Scale (12 peças)',
     };
-    lines.push(`Design as a Service: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${input.designPrice.toLocaleString('pt-BR')}/mês`);
+    lines.push(`Design on Demand: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${input.designPrice.toLocaleString('pt-BR')}/mês`);
   }
 
   if (input.executiveProfiles > 0 && input.executiveFrequency) {
@@ -179,10 +175,11 @@ function buildProposalSummary(input: ProposalLeadInput): string {
       '3x': '3x/semana',
       '4x': '4x/semana',
     };
-    lines.push(`Full-Service: ${input.executiveProfiles} perfil(is) × ${freqLabels[input.executiveFrequency] ?? input.executiveFrequency} = R$ ${input.executivePrice.toLocaleString('pt-BR')}/mês`);
+    lines.push(`Content Full-Service: ${input.executiveProfiles} perfil(is) × ${freqLabels[input.executiveFrequency] ?? input.executiveFrequency} = R$ ${input.executivePrice.toLocaleString('pt-BR')}/mês`);
   }
 
-  lines.push(`Total mensal: R$ ${input.totalMensal.toLocaleString('pt-BR')}`);
+  lines.push(`Total mensal (beta): R$ ${input.totalBeta.toLocaleString('pt-BR')}`);
+  lines.push(`Total mensal (preço cheio): R$ ${input.totalFull.toLocaleString('pt-BR')}`);
   return lines.join('\n');
 }
 
@@ -199,25 +196,53 @@ export async function sendProposalLeadToNotion(
   }
 
   try {
-    // 1. Find or create company
-    let companyId = await findCompanyByName(input.empresa);
-    if (!companyId) {
-      companyId = await createCompany(input);
-    }
-    if (!companyId) {
-      return { success: false, error: 'Erro ao criar empresa no Notion.' };
+    // 1. Find or create company (skip if empresa is empty/placeholder)
+    let companyId: string | null = null;
+    if (input.empresa && input.empresa !== '—') {
+      companyId = await findCompanyByName(input.empresa);
+      if (!companyId) {
+        companyId = await createCompany(input);
+      }
     }
 
     // 2. Find or create person (dedup by email)
     let personId = await findPersonByEmail(input.email);
     if (!personId) {
-      personId = await createPerson(input, companyId);
+      if (companyId) {
+        personId = await createPerson(input, companyId);
+      } else {
+        // Create person without company relation
+        const res = await fetch(`${NOTION_API}/pages`, {
+          method: 'POST',
+          headers: NOTION_HEADERS(),
+          body: JSON.stringify({
+            parent: { database_id: NOTION_PERSON_DB_ID },
+            properties: {
+              Nome: {
+                title: [{ text: { content: input.nome } }],
+              },
+              Email: {
+                email: input.email,
+              },
+            },
+          }),
+        });
+
+        if (!res.ok) {
+          console.error('[proposal-leads] Error creating person:', res.status);
+          return { success: false, error: 'Erro ao criar contato no Notion.' };
+        }
+
+        const data = await res.json();
+        personId = data.id;
+      }
     }
+
     if (!personId) {
       return { success: false, error: 'Erro ao criar contato no Notion.' };
     }
 
-    // 3. Add proposal summary as a comment/block on the person's page
+    // 3. Add proposal summary as blocks on the person's page
     const summary = buildProposalSummary(input);
     await fetch(`${NOTION_API}/blocks/${personId}/children`, {
       method: 'PATCH',
