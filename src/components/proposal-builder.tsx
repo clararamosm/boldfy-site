@@ -14,11 +14,13 @@ import {
   Mic,
   Lock,
   Download,
+  Link2,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { sendProposalLeadToNotion, type ProposalLeadInput } from '@/app/actions/proposal-leads';
+import { sendProposalLeadToNotion, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
 
 /* -------------------------------------------------------------------------- */
 /*  Pricing data (synced with official Boldfy pricing 2026-04-08)              */
@@ -215,6 +217,7 @@ function ProposalBuilderModal({
   // Submit state
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [proposalUrl, setProposalUrl] = useState<string | undefined>();
 
   const leadFilled = nome.trim().length > 0 && email.trim().length > 2 && email.includes('@');
 
@@ -255,12 +258,14 @@ function ProposalBuilderModal({
       totalFull,
       savings,
       origem: 'Simulador de Proposta',
+      teamItems,
     };
 
-    const res = await sendProposalLeadToNotion(input);
+    const res: ProposalLeadResult = await sendProposalLeadToNotion(input);
 
     if (res.success) {
       setStatus('success');
+      setProposalUrl(res.proposalUrl);
       setStep('result');
     } else {
       setStatus('error');
@@ -765,6 +770,7 @@ function ProposalBuilderModal({
                 totalFull={totalFull}
                 savings={savings}
                 teamItems={teamItems}
+                proposalUrl={proposalUrl}
                 onClose={() => handleOpenChange(false)}
               />
             )}
@@ -798,6 +804,7 @@ function ResultStep({
   totalFull,
   savings,
   teamItems,
+  proposalUrl,
   onClose,
 }: {
   betaActive: boolean;
@@ -818,10 +825,24 @@ function ResultStep({
   totalFull: number;
   savings: number;
   teamItems: { text: string; dedicated: boolean }[];
+  proposalUrl?: string;
   onClose: () => void;
 }) {
   const proposalRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    if (!proposalUrl) return;
+    try {
+      await navigator.clipboard.writeText(proposalUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    } catch {
+      // Fallback: open in new tab
+      window.open(proposalUrl, '_blank');
+    }
+  };
 
   const handleExport = async () => {
     if (!proposalRef.current) return;
@@ -992,6 +1013,34 @@ function ResultStep({
           )}
         </div>
       </div>
+
+      {/* Shareable link */}
+      {proposalUrl && (
+        <div className="mt-4 rounded-lg border border-primary/20 bg-primary/[0.03] p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Link2 className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[11px] font-bold text-accent-foreground">Link da proposta</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              readOnly
+              value={proposalUrl}
+              className="flex-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs text-muted-foreground select-all"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <Button onClick={handleCopyLink} size="sm" variant="outline" className="shrink-0 gap-1.5 text-xs h-8">
+              {linkCopied ? (
+                <>
+                  <ClipboardCheck className="h-3 w-3 text-emerald-500" />
+                  Copiado!
+                </>
+              ) : (
+                'Copiar'
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="mt-4 flex gap-3">

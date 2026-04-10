@@ -6,9 +6,12 @@
  * Flow:
  * 1. Search Person DB by email — if found, reuse; if not, create.
  * 2. Search Company DB by name — if found, reuse; if not, create.
- * 3. Link person ↔ company.
- * 4. Add proposal summary as blocks on the person's page.
+ * 3. Create Interação linked to Person + Company.
+ * 4. Store proposal JSON as code block inside the Interação page.
+ * 5. Return proposalUrl so the frontend can show / share it.
  */
+
+import type { ProposalData } from '@/lib/notion-crm';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 
@@ -16,6 +19,10 @@ const NOTION_PERSON_DB_ID =
   process.env.NOTION_PERSON_DB_ID || 'e3841003fdc34b9e9d973bd62d39f5bb';
 const NOTION_COMPANY_DB_ID =
   process.env.NOTION_COMPANY_DB_ID || '696f9f291beb40919f9d93a2de939c45';
+const NOTION_INTERACAO_DB_ID =
+  process.env.NOTION_INTERACAO_DB_ID || '288357bca57246689b8cf3685ee731f0';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boldfy.com.br';
 
 const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_HEADERS = () => ({
@@ -49,6 +56,15 @@ export type ProposalLeadInput = {
   totalFull: number;
   savings: number;
   origem: string;
+  // Team (computed in frontend)
+  teamItems: { text: string; dedicated: boolean }[];
+};
+
+export type ProposalLeadResult = {
+  success: boolean;
+  error?: string;
+  proposalUrl?: string;
+  interacaoId?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -129,6 +145,47 @@ async function createPerson(input: ProposalLeadInput, companyId: string | null):
   return (await res.json()).id;
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Build proposal JSON for storage in Notion                                  */
+/* -------------------------------------------------------------------------- */
+
+function buildProposalJSON(input: ProposalLeadInput): ProposalData {
+  return {
+    version: 1,
+    createdAt: new Date().toISOString(),
+    lead: {
+      nome: input.nome,
+      email: input.email,
+      empresa: input.empresa,
+      cargo: input.cargo,
+    },
+    betaActive: input.betaActive,
+    platform: {
+      enabled: input.plataformaEnabled,
+      seats: input.plataformaSeats,
+      perSeatFull: input.plataformaPriceFull,
+      perSeatBeta: input.plataformaPriceBeta,
+    },
+    design: {
+      enabled: !!input.designPlan,
+      pack: input.designPlan ?? '',
+      price: input.designPrice,
+    },
+    fullService: {
+      enabled: input.fsTls > 0 && input.fsFreq > 0,
+      tls: input.fsTls,
+      freq: input.fsFreq,
+      price: input.fsPrice,
+    },
+    totals: {
+      current: input.totalCurrent,
+      full: input.totalFull,
+      savings: input.savings,
+    },
+    team: input.teamItems,
+  };
+}
+
 const fmt = (n: number) => n.toLocaleString('pt-BR');
 
 function buildProposalSummary(input: ProposalLeadInput): string {
@@ -137,14 +194,10 @@ function buildProposalSummary(input: ProposalLeadInput): string {
   lines.push(`Beta ativo: ${input.betaActive ? 'Sim (30% off plataforma)' : 'Não'}`);
 
   if (input.plataformaEnabled) {
-    if (input.plataformaEnterprise) {
-      lines.push(`Plataforma: ${input.plataformaSeats} seats — Enterprise (sob medida)`);
-    } else {
-      const perSeat = input.betaActive ? input.plataformaPriceBeta : input.plataformaPriceFull;
-      const total = input.plataformaSeats * perSeat;
-      const totalFull = input.plataformaSeats * input.plataformaPriceFull;
-      lines.push(`Plataforma: ${input.plataformaSeats} seats × R$ ${perSeat}/seat = R$ ${fmt(total)}/mês${input.betaActive ? ` (cheio: R$ ${fmt(totalFull)}/mês)` : ''}`);
-    }
+    const perSeat = input.betaActive ? input.plataformaPriceBeta : input.plataformaPriceFull;
+    const total = input.plataformaSeats * perSeat;
+    const totalFull = input.plataformaSeats * input.plataformaPriceFull;
+    lines.push(`Plataforma: ${input.plataformaSeats} seats × R$ ${perSeat}/seat = R$ ${fmt(total)}/mês${input.betaActive ? ` (cheio: R$ ${fmt(totalFull)}/mês)` : ''}`);
   }
 
   if (input.designPlan) {
@@ -153,7 +206,7 @@ function buildProposalSummary(input: ProposalLeadInput): string {
       growth: 'Growth (8 peças)',
       scale: 'Scale (12 peças)',
     };
-    lines.push(`Design as a Service: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${fmt(input.designPrice)}/mês`);
+    lines.push(`Design on Demand: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${fmt(input.designPrice)}/mês`);
   }
 
   if (input.fsTls > 0 && input.fsFreq > 0) {
@@ -165,12 +218,102 @@ function buildProposalSummary(input: ProposalLeadInput): string {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Create Interação in Notion                                                 */
+/* -------------------------------------------------------------------------- */
+
+async function createInteracao(
+  input: ProposalLeadInput,
+  personId: string | null,
+  companyId: string | null,
+): Promise<string | null> {
+  const today = new Date().toISOString().slice(0, 10);
+  const title = `Simulador de Proposta — ${input.nome}`;
+  const summary = buildProposalSummary(input);
+
+  const properties: Record<string, unknown> = {
+    'Interação': { title: [{ text: { content: title } }] },
+    Tipo: { select: { name: 'Simulador de Proposta' } },
+    'Direção': { select: { name: 'Inbound' } },
+    Data: { date: { start: today } },
+    Canal: { select: { name: 'Site' } },
+    'Conteúdo (resumo)': { rich_text: [{ text: { content: summary } }] },
+    Sentimento: { select: { name: 'Positivo' } },
+  };
+
+  if (personId) {
+    properties['Pessoa'] = { relation: [{ id: personId }] };
+  }
+  if (companyId) {
+    properties['Empresa'] = { relation: [{ id: companyId }] };
+  }
+
+  const res = await fetch(`${NOTION_API}/pages`, {
+    method: 'POST',
+    headers: NOTION_HEADERS(),
+    body: JSON.stringify({
+      parent: { database_id: NOTION_INTERACAO_DB_ID },
+      properties,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error('[proposal-leads] Error creating interação:', res.status, errText);
+    return null;
+  }
+
+  return (await res.json()).id;
+}
+
+/**
+ * Append blocks to the Interação page:
+ * 1. A code block with the proposal JSON (for the /proposta/[id] route to parse)
+ * 2. A bookmark block with the proposal URL
+ */
+async function appendProposalBlocks(
+  interacaoId: string,
+  proposalJSON: ProposalData,
+  proposalUrl: string,
+): Promise<void> {
+  await fetch(`${NOTION_API}/blocks/${interacaoId}/children`, {
+    method: 'PATCH',
+    headers: NOTION_HEADERS(),
+    body: JSON.stringify({
+      children: [
+        {
+          object: 'block',
+          type: 'heading_3',
+          heading_3: {
+            rich_text: [{ type: 'text', text: { content: 'Dados da proposta' } }],
+          },
+        },
+        {
+          object: 'block',
+          type: 'code',
+          code: {
+            language: 'json',
+            rich_text: [{ type: 'text', text: { content: JSON.stringify(proposalJSON, null, 2) } }],
+          },
+        },
+        {
+          object: 'block',
+          type: 'bookmark',
+          bookmark: {
+            url: proposalUrl,
+          },
+        },
+      ],
+    }),
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Main export                                                                */
 /* -------------------------------------------------------------------------- */
 
 export async function sendProposalLeadToNotion(
   input: ProposalLeadInput,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<ProposalLeadResult> {
   if (!NOTION_API_KEY) {
     console.error('[proposal-leads] NOTION_API_KEY not configured');
     return { success: false, error: 'Integração com Notion não configurada.' };
@@ -193,31 +336,32 @@ export async function sendProposalLeadToNotion(
       return { success: false, error: 'Erro ao criar contato no Notion.' };
     }
 
-    // 3. Add proposal summary as blocks on the person's page
-    const summary = buildProposalSummary(input);
-    await fetch(`${NOTION_API}/blocks/${personId}/children`, {
-      method: 'PATCH',
-      headers: NOTION_HEADERS(),
-      body: JSON.stringify({
-        children: [
-          { object: 'block', type: 'divider', divider: {} },
-          {
-            object: 'block', type: 'heading_3',
-            heading_3: {
-              rich_text: [{ type: 'text', text: { content: `Proposta — ${new Date().toLocaleDateString('pt-BR')}` } }],
-            },
-          },
-          {
-            object: 'block', type: 'paragraph',
-            paragraph: {
-              rich_text: [{ type: 'text', text: { content: summary } }],
-            },
-          },
-        ],
-      }),
-    });
+    // 3. Create Interação linked to Person + Company
+    const interacaoId = await createInteracao(input, personId, companyId);
+    if (!interacaoId) {
+      // Non-blocking: still return success even if interação fails
+      console.error('[proposal-leads] Interação creation failed, continuing...');
+    }
 
-    return { success: true };
+    // 4. Build proposal JSON and URL
+    const proposalJSON = buildProposalJSON(input);
+
+    // Notion IDs come as UUIDs with dashes; the URL uses the raw ID
+    const cleanId = interacaoId?.replace(/-/g, '') ?? '';
+    const proposalUrl = interacaoId ? `${SITE_URL}/proposta/${cleanId}` : undefined;
+
+    // 5. Append proposal data blocks to the Interação page
+    if (interacaoId && proposalUrl) {
+      await appendProposalBlocks(interacaoId, proposalJSON, proposalUrl).catch((err) => {
+        console.error('[proposal-leads] Error appending blocks:', err);
+      });
+    }
+
+    return {
+      success: true,
+      proposalUrl,
+      interacaoId: interacaoId ?? undefined,
+    };
   } catch (error) {
     console.error('[proposal-leads] Error:', error);
     return { success: false, error: 'Erro de conexão com o Notion.' };

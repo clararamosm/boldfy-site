@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/members-area/'],
+        disallow: ['/api/', '/members-area/', '/proposta/'],
       },
     ],
     sitemap: 'https://boldfy.com.br/sitemap.xml',
