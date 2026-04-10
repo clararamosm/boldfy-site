@@ -8,13 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { sendBetaLeadToNotion } from '@/app/actions/beta-leads';
 import { Loader2, CheckCircle2, Calendar, ArrowRight, Megaphone, Target, Heart, Rocket, Skull, Calculator, Users, Eye, TrendingUp, Monitor } from 'lucide-react';
-import { useT, useLocale } from '@/lib/i18n/context';
+import { useT } from '@/lib/i18n/context';
 
 const CALENDAR_URL = 'https://calendar.app.google/5Q1HDD2jZSkWa1DH6';
 
 export default function BetaTestPage() {
   const t = useT();
-  const locale = useLocale();
 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -40,64 +39,36 @@ export default function BetaTestPage() {
     return { totalImpressions, valorBoldfy, custoAdsLow, custoAdsHigh, custoMensal, custoBoldfySeat, custoMensalBeta, custoBetaSeat, roi };
   }, [simColabs, simImpressions]);
 
-  // Locale-aware data arrays
-  const quotes = locale === 'en' ? [
-    { initial: 'R', name: 'Renata', role: 'CMO', quote: 'I spend money on Ads and the lead arrives cold. The Company Page is dead. I need reach that doesn\'t depend on budget.', gradient: 'from-primary to-primary/70' },
-    { initial: 'F', name: 'Fernando', role: 'Head of Sales', quote: '100 outreach attempts, 99 silences. Nobody answers someone with no reputation in the feed.', gradient: 'from-primary/70 to-[#5E2A67]' },
-    { initial: 'C', name: 'Camila', role: 'Head of People', quote: 'We lose candidates to competitors because they look more innovative. Our talent is silent.', gradient: 'from-[#7E22CE] to-primary' },
-    { initial: 'M', name: 'Marcelo', role: 'CEO', quote: 'Brand authority depends only on me. If I stop posting, the brand disappears.', gradient: 'from-[#0F0A18] to-[#2D1445]' },
-  ] : [
+  const quotes = [
     { initial: 'R', name: 'Renata', role: 'CMO', quote: 'Coloco dinheiro em Ads e o lead chega frio. A Company Page tá morta. Preciso de alcance que não dependa de budget.', gradient: 'from-primary to-primary/70' },
     { initial: 'F', name: 'Fernando', role: 'Head de Vendas', quote: '100 abordagens, 99 silêncios. Ninguém atende quem não tem reputação no feed.', gradient: 'from-primary/70 to-[#5E2A67]' },
     { initial: 'C', name: 'Camila', role: 'Head de People', quote: 'Perdemos candidatos pra concorrência porque eles parecem mais inovadores. Nossos talentos tão calados.', gradient: 'from-[#7E22CE] to-primary' },
     { initial: 'M', name: 'Marcelo', role: 'CEO', quote: 'A autoridade da marca depende só de mim. Se eu parar de postar, a marca some.', gradient: 'from-[#0F0A18] to-[#2D1445]' },
   ];
 
-  const useCases = locale === 'en' ? [
-    { icon: <Megaphone className="w-4 h-4 text-primary" />, title: 'Marketing & Branding', pain: 'Dead Company Page · Rising CAC', solution: 'Personal profiles with 10x more reach become brand channels. AI aligns everything with Brand Context.', tags: ['Organic amplification', 'Remarketing', '-CAC'], border: 'border-l-primary' },
-    { icon: <Target className="w-4 h-4 text-primary/70" />, title: 'Sales & Social Selling', pain: 'Cold ignored · No digital authority', solution: 'Seller builds technical authority in the feed. Prospect already "knows" them before the call.', tags: ['Ice-breaker', 'Shorter cycle', 'Authority'], border: 'border-l-primary/70' },
-    { icon: <Heart className="w-4 h-4 text-[#5E2A67]" />, title: 'HR & Employer Branding', pain: 'Talent going to visible competitors', solution: 'Employees show how they really work. Trails teach how to document technical challenges.', tags: ['Talent attraction', 'Real culture', 'EGC'], border: 'border-l-[#5E2A67]' },
-  ] : [
+  const useCases = [
     { icon: <Megaphone className="w-4 h-4 text-primary" />, title: 'Marketing & Branding', pain: 'Company Page morta · CAC subindo', solution: 'Perfis pessoais com 10x mais alcance viram canais da marca. IA alinha tudo com o Brand Context.', tags: ['Amplificação orgânica', 'Remarketing', '-CAC'], border: 'border-l-primary' },
     { icon: <Target className="w-4 h-4 text-primary/70" />, title: 'Vendas & Social Selling', pain: 'Cold ignorado · Sem autoridade digital', solution: 'Vendedor constrói autoridade técnica no feed. Prospect já "conhece" antes da call.', tags: ['Quebra-gelo', 'Ciclo menor', 'Autoridade'], border: 'border-l-primary/70' },
     { icon: <Heart className="w-4 h-4 text-[#5E2A67]" />, title: 'RH & Employer Branding', pain: 'Talentos indo pra concorrência visível', solution: 'Colaboradores mostram como trabalham de verdade. Trilhas ensinam a documentar desafios técnicos.', tags: ['Atração de talentos', 'Cultura real', 'EGC'], border: 'border-l-[#5E2A67]' },
   ];
 
-  const journeyWithout = locale === 'en' ? [
-    { when: 'Week 1', what: 'Initial excitement', how: 'Leader sends "let\'s post on LinkedIn!" in the group. 5 people post.' },
-    { when: 'Month 1', what: 'No direction or development', how: 'Nobody knows what to write. No trail, no teaching, no brand context.' },
-    { when: 'Month 2-3', what: 'No tool, no reason', how: 'No AI to help, no reward, no metrics. Everyone stops.' },
-  ] : [
+  const journeyWithout = [
     { when: 'Semana 1', what: 'Empolgação inicial', how: 'Líder manda "vamos postar no LinkedIn!" no grupo. 5 pessoas postam.' },
     { when: 'Mês 1', what: 'Sem direção nem desenvolvimento', how: 'Ninguém sabe o que escrever. Sem trilha, sem ensino, sem contexto de marca.' },
     { when: 'Mês 2-3', what: 'Sem ferramenta, sem motivo', how: 'Sem IA pra ajudar, sem recompensa, sem métrica. Todo mundo para.' },
   ];
 
-  const journeyWithoutEnd = locale === 'en'
-    ? { when: 'Month 4+', text: 'Program died. Flash in the pan. Back to paid traffic. CAC keeps rising.' }
-    : { when: 'Mês 4+', text: 'Programa morreu. Voo de galinha. Volta pro tráfego pago. CAC continua subindo.' };
+  const journeyWithoutEnd = { when: 'Mês 4+', text: 'Programa morreu. Voo de galinha. Volta pro tráfego pago. CAC continua subindo.' };
 
-  const journeyWith = locale === 'en' ? [
-    { when: 'Week 1', what: 'Assisted setup + onboarding', how: 'Brand Context, active trails, reward store set up, team invited.' },
-    { when: 'Month 1', what: 'Development + first posts', how: 'Trails teach content creation. AI + personal voice eliminates the blank page.' },
-    { when: 'Month 2-3', what: 'Tools + data + game', how: 'Contextual AI, rankings and rewards sustain engagement. Dashboard shows impressions and value in R$.' },
-  ] : [
+  const journeyWith = [
     { when: 'Semana 1', what: 'Setup assistido + onboarding', how: 'Brand Context, trilhas ativas, loja de recompensas montada, time convidado.' },
     { when: 'Mês 1', what: 'Desenvolvimento + primeiros posts', how: 'Trilhas ensinam a criar conteúdo. IA + voz pessoal elimina a página em branco.' },
     { when: 'Mês 2-3', what: 'Ferramentas + dados + jogo', how: 'IA contextual, rankings e recompensas mantêm engajamento. Dashboard mostra impressões e valor em R$.' },
   ];
 
-  const journeyWithEnd = locale === 'en'
-    ? { when: 'Month 4+', text: 'Consistent program. Compound effect. Awareness grows exponentially month by month.' }
-    : { when: 'Mês 4+', text: 'Programa consistente. Efeito composto. Awareness cresce exponencialmente mês a mês.' };
+  const journeyWithEnd = { when: 'Mês 4+', text: 'Programa consistente. Efeito composto. Awareness cresce exponencialmente mês a mês.' };
 
-  const flowSteps = locale === 'en' ? [
-    { n: '1', label: 'Setup', desc: 'Brand Context, trails, rewards, team invited' },
-    { n: '2', label: 'Creation', desc: 'AI + personal voice = authentic content in seconds' },
-    { n: '3', label: 'Habit', desc: 'Missions and trails educate and build routine' },
-    { n: '4', label: 'Game', desc: 'Rankings, points and reward store' },
-    { n: '5', label: 'Return', desc: 'Awareness, remarketing and strong brand' },
-  ] : [
+  const flowSteps = [
     { n: '1', label: 'Setup', desc: 'Brand Context, trilhas, recompensas, time convidado' },
     { n: '2', label: 'Criação', desc: 'IA + voz pessoal = conteúdo autêntico em segundos' },
     { n: '3', label: 'Hábito', desc: 'Missões e trilhas educam e criam rotina' },
@@ -105,20 +76,11 @@ export default function BetaTestPage() {
     { n: '5', label: 'Retorno', desc: 'Awareness, remarketing e marca forte' },
   ];
 
-  const benefitsCompany = locale === 'en'
-    ? ['Measurable awareness', 'More engagement', 'Less turnover', 'Collaboration culture', 'Decentralized authority', 'Warm remarketing']
-    : ['Awareness mensurável', 'Mais engajamento', 'Menos turnover', 'Cultura de colaboração', 'Autoridade descentralizada', 'Remarketing quente'];
+  const benefitsCompany = ['Awareness mensurável', 'Mais engajamento', 'Menos turnover', 'Cultura de colaboração', 'Autoridade descentralizada', 'Remarketing quente'];
 
-  const benefitsCollaborator = locale === 'en'
-    ? ['Personal brand', 'Development', 'Rewards', 'Visibility', 'Educational trails', 'Recognition']
-    : ['Marca pessoal', 'Desenvolvimento', 'Recompensas', 'Visibilidade', 'Trilhas educativas', 'Reconhecimento'];
+  const benefitsCollaborator = ['Marca pessoal', 'Desenvolvimento', 'Recompensas', 'Visibilidade', 'Trilhas educativas', 'Reconhecimento'];
 
-  const timelineItems = locale === 'en' ? [
-    { when: 'Week 1', what: 'Complete setup', detail: 'Brand Context + trails + store + team' },
-    { when: 'Week 2-3', what: 'First posts', detail: 'AI content + first missions' },
-    { when: 'Month 1-2', what: 'Real data', detail: 'Impressions, engagement, value in R$' },
-    { when: 'Month 3+', what: 'Compound effect', detail: 'Positive ROI, self-sustaining program' },
-  ] : [
+  const timelineItems = [
     { when: 'Semana 1', what: 'Setup completo', detail: 'Brand Context + trilhas + loja + time' },
     { when: 'Semana 2-3', what: 'Primeiros posts', detail: 'Conteúdo com IA + primeiras missões' },
     { when: 'Mês 1-2', what: 'Dados reais', detail: 'Impressões, engajamento, valor em R$' },

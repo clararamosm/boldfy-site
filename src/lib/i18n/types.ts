@@ -1,3 +1,2 @@
-export type Locale = 'pt-BR' | 'en';
+export type Locale = 'pt-BR';
 export const defaultLocale: Locale = 'pt-BR';
-export const locales: Locale[] = ['pt-BR', 'en'];
