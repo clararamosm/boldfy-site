@@ -207,7 +207,7 @@ export function MarketingClient() {
             <div className="absolute inset-0 overflow-hidden rounded-3xl">
               <Image
                 src="/images/para-marketing-hero.jpeg"
-                alt="Marketing team collaborating"
+                alt="Time de marketing usando Employee Advocacy para gerar alcance orgânico com a Boldfy"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -363,7 +363,7 @@ export function MarketingClient() {
           <div className="relative min-h-[400px] overflow-hidden rounded-3xl lg:min-h-[600px]">
             <Image
               src="/images/para-marketing-virada.jpeg"
-              alt="Como a Boldfy resolve"
+              alt="Profissional de marketing ativando programa de Employee Advocacy com a Boldfy"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 40vw"
