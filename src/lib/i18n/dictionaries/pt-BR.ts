@@ -108,16 +108,17 @@ const ptBR = {
     ucRhBenefit3: 'Redução de custo por contratação',
     ucRhCta: 'Ver como a Boldfy resolve',
 
-    // Section 4 — Product Motion
+    // Section 4 — Product Motion (Sistema)
+    productTag: 'A tese Boldfy',
     productTitle: 'Sistema artesanal',
     productTitleHighlight: 'com escala de plataforma.',
-    productSubtitle: 'A tensão criativa no coração da Boldfy: produção de conteúdo autoral, com alma, com ponto de vista único — acontecendo em escala que antes só era possível industrializando. A gente achou como fazer os dois ao mesmo tempo.',
-    productPillar1Title: 'IA que conhece sua marca.',
-    productPillar1Desc: 'Não é template. É assistente treinado no Brand Context da sua empresa e na voz pessoal de cada colaborador.',
-    productPillar2Title: 'Gamificação que vira hábito.',
+    productSubtitle: 'Produção de conteúdo autoral, com alma, acontecendo em escala. A tensão criativa no coração da Boldfy.',
+    productPillar1Title: 'IA que conhece sua marca',
+    productPillar1Desc: 'Não é template. É assistente treinado no Brand Context que você preenche e na voz de cada colaborador.',
+    productPillar2Title: 'Gamificação que vira hábito',
     productPillar2Desc: 'Missões, ranking, recompensas. O motivo pelo qual programas de advocacy tradicionais morrem no terceiro mês e a Boldfy não.',
-    productPillar3Title: 'Trilhas que desenvolvem mindset.',
-    productPillar3Desc: 'Não ensinam só "como postar". Ensinam a enxergar a própria rotina como fonte de conteúdo. Sua rotina é a melhor pauta do seu perfil.',
+    productPillar3Title: 'Trilhas que desenvolvem mindset',
+    productPillar3Desc: 'Não ensinam só "como postar". Ensinam a enxergar a própria rotina como fonte de conteúdo.',
 
     // Section 5 — Bento Solutions
     solutionsTitle: 'Dois modelos.',
