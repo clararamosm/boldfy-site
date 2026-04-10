@@ -10,23 +10,17 @@ import {
   MessageSquare,
   Link2,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 /* ================================================================== */
 /*  Visual 1 — Plataforma: avatars + stats                            */
 /* ================================================================== */
 
-const avatars = [
-  { initials: 'MC', gradient: 'from-primary to-[#E875FF]' },
-  { initials: 'RS', gradient: 'from-amber-400 to-orange-500' },
-  { initials: 'AL', gradient: 'from-emerald-500 to-emerald-600' },
-  { initials: 'JP', gradient: 'from-blue-500 to-indigo-500' },
-  { initials: 'FT', gradient: 'from-pink-500 to-pink-400' },
-  { initials: 'BN', gradient: 'from-[#9840AD] to-primary' },
-  { initials: 'DM', gradient: 'from-cyan-500 to-cyan-600' },
-  { initials: 'GK', gradient: 'from-violet-500 to-violet-400' },
-  { initials: 'VL', gradient: 'from-rose-500 to-rose-400' },
-];
+const avatars = Array.from({ length: 10 }, (_, i) => ({
+  src: `/images/avatar-${i + 1}.jpeg`,
+  alt: `Colaborador ${i + 1}`,
+}));
 
 function VisualPlataforma() {
   return (
@@ -37,7 +31,7 @@ function VisualPlataforma() {
           Seu time na plataforma
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
-          9 colaboradores
+          10 colaboradores
         </span>
       </div>
 
@@ -45,11 +39,17 @@ function VisualPlataforma() {
       <div className="mb-3 flex items-center pl-3">
         {avatars.map((a, i) => (
           <div
-            key={a.initials}
-            className={`-ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-card bg-gradient-to-br font-headline text-[11px] font-extrabold text-white shadow-sm transition-transform hover:-translate-y-1 hover:z-10 ${a.gradient}`}
+            key={a.src}
+            className="-ml-3 h-9 w-9 shrink-0 overflow-hidden rounded-full border-2 border-card shadow-sm transition-transform hover:-translate-y-1 hover:z-10"
             style={{ zIndex: i }}
           >
-            {a.initials}
+            <Image
+              src={a.src}
+              alt={a.alt}
+              width={36}
+              height={36}
+              className="h-full w-full object-cover"
+            />
           </div>
         ))}
       </div>
