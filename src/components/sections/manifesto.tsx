@@ -1,7 +1,7 @@
 'use client';
 
 import { useT } from '@/lib/i18n/context';
-import { User } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export function ManifestoSection() {
@@ -66,15 +66,15 @@ export function ManifestoSection() {
           <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-[20px]">
             {/* Header */}
             <div className="mb-3.5 flex items-center gap-3.5">
-              {/* Photo placeholder */}
-              <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-dashed border-primary/50 text-white/60"
-                style={{
-                  background:
-                    'repeating-linear-gradient(45deg, rgba(205,80,241,.25), rgba(205,80,241,.25) 6px, rgba(205,80,241,.35) 6px, rgba(205,80,241,.35) 12px)',
-                }}
-              >
-                <User className="h-[22px] w-[22px]" />
+              {/* Photo */}
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/20">
+                <Image
+                  src="/images/founder.jpeg"
+                  alt="Clara Ramos"
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
               </div>
 
               <div className="min-w-0 flex-1">
@@ -111,7 +111,7 @@ export function ManifestoSection() {
                 </span>
               </div>
               <Link
-                href="https://www.linkedin.com/in/clararamos"
+                href="https://www.linkedin.com/in/clararamosm/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
