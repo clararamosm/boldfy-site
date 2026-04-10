@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -201,28 +202,17 @@ export function MarketingClient() {
             </div>
           </div>
 
-          {/* Visual — image placeholder + floating mini-card */}
+          {/* Visual — hero image + floating mini-card */}
           <div className="relative h-[420px] lg:h-[500px]">
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border-2 border-dashed border-green-500/35 bg-[repeating-linear-gradient(45deg,rgba(16,185,129,0.08),rgba(16,185,129,0.08)_14px,rgba(16,185,129,0.14)_14px,rgba(16,185,129,0.14)_28px)] text-green-700">
-              <svg
-                className="h-14 w-14 opacity-50"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
-              <span className="font-headline text-[13px] font-black uppercase tracking-[0.1em]">
-                Imagem horizontal · Marketing
-              </span>
-              <span className="max-w-[280px] px-6 text-center text-[11px] leading-[1.4] text-muted-foreground">
-                Foto/ilustração horizontal será inserida diretamente no código.
-              </span>
+            <div className="absolute inset-0 overflow-hidden rounded-3xl">
+              <Image
+                src="/images/para-marketing-hero.jpeg"
+                alt="Marketing team collaborating"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
             </div>
 
             {/* Mini floating card */}
@@ -369,27 +359,15 @@ export function MarketingClient() {
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-stretch gap-14 lg:grid-cols-[0.85fr_1.15fr]">
-          {/* Photo placeholder (left) */}
-          <div className="flex min-h-[400px] flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border-2 border-dashed border-green-500/35 bg-[repeating-linear-gradient(45deg,rgba(16,185,129,0.08),rgba(16,185,129,0.08)_14px,rgba(16,185,129,0.14)_14px,rgba(16,185,129,0.14)_28px)] text-green-700 lg:min-h-[600px]">
-            <svg
-              className="h-14 w-14 opacity-50"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="9" cy="9" r="2" />
-              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-            </svg>
-            <span className="font-headline text-[13px] font-black uppercase tracking-[0.1em]">
-              Imagem vertical · Marketing
-            </span>
-            <span className="max-w-[240px] px-6 text-center text-[11px] leading-[1.4] text-muted-foreground">
-              Foto/ilustração vertical será inserida diretamente no código.
-            </span>
+          {/* Photo (left) */}
+          <div className="relative min-h-[400px] overflow-hidden rounded-3xl lg:min-h-[600px]">
+            <Image
+              src="/images/para-marketing-virada.jpeg"
+              alt="Como a Boldfy resolve"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 40vw"
+            />
           </div>
 
           {/* Content (right) */}
