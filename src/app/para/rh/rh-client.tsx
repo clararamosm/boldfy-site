@@ -326,13 +326,12 @@ export function RhClient() {
                   {c.diagVsYouLabel}
                 </div>
                 <div className="mb-3 flex h-9 items-center justify-center">
-                  <Image
-                    src="/images/avatar-1.jpeg"
-                    alt="Colaborador da empresa"
-                    width={28}
-                    height={28}
-                    className="rounded-full border-2 border-white shadow-[0_2px_6px_rgba(0,0,0,0.08)]"
-                  />
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-muted-foreground/20 to-muted-foreground/40 shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
+                    <svg className="h-3.5 w-3.5 text-muted-foreground/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                    </svg>
+                  </div>
                 </div>
                 <div className="mb-1 font-headline text-2xl font-black text-accent-foreground">
                   {c.diagVsYouValue}
