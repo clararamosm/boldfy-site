@@ -8,7 +8,7 @@ export function CtaFinalSection() {
   const t = useT();
 
   return (
-    <section className="relative overflow-hidden bg-background px-6 py-[100px] text-center md:px-12">
+    <section className="relative overflow-hidden bg-background px-6 pb-[100px] pt-16 text-center md:px-12">
       {/* Centered glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-[0.10] blur-[140px]" />
 

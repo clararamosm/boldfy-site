@@ -109,7 +109,7 @@ export function FaqSection() {
   return (
     <section
       id="faq"
-      className="relative overflow-hidden bg-background px-6 py-[100px] md:px-12"
+      className="relative overflow-hidden bg-background px-6 pb-10 pt-[100px] md:px-12"
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute right-[-100px] top-[10%] h-[600px] w-[600px] rounded-full bg-primary opacity-[0.08] blur-[120px]" />

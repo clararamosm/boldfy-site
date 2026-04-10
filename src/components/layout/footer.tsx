@@ -69,17 +69,17 @@ export function Footer() {
         {/* ── Main grid: brand + 3 columns ── */}
         <div className="mb-16 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-[2.2fr_0.9fr_0.9fr_0.9fr] lg:gap-10">
           {/* ── Brand column ── */}
-          <div>
-            <Link href="/" aria-label="Boldfy - Home" className="mb-[18px] inline-block">
+          <div className="flex flex-col items-start">
+            <Link href="/" aria-label="Boldfy - Home" className="mb-4">
               <Image
                 src="/images/boldfy-logo-white.svg"
                 alt="Boldfy"
-                width={90}
-                height={35}
+                width={130}
+                height={44}
               />
             </Link>
 
-            <span className="mb-4 inline-block rounded-full border border-primary/25 bg-primary/[0.12] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
+            <span className="mb-4 rounded-full border border-primary/25 bg-primary/[0.12] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
               Content Intelligence para Employee-Led Growth
             </span>
 
