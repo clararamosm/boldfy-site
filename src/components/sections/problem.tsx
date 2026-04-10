@@ -186,7 +186,7 @@ export function ProblemSection() {
   }, []);
 
   return (
-    <section className="relative bg-background px-6 pb-28 pt-8 md:px-12 md:pb-36 md:pt-12">
+    <section className="relative bg-background px-6 pb-12 pt-8 md:px-12 md:pb-16 md:pt-12">
       {/* ── Ambient glows (continuation from hero) ── */}
       <div className="pointer-events-none absolute -left-[200px] top-[30%] h-[700px] w-[700px] rounded-full bg-primary opacity-[0.08] blur-[120px]" />
       <div className="pointer-events-none absolute -right-[100px] bottom-[5%] h-[500px] w-[500px] rounded-full bg-[#E875FF] opacity-[0.06] blur-[120px]" />

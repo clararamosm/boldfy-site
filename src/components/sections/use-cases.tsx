@@ -11,12 +11,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 /* ------------------------------------------------------------------ */
-/*  Mini-cards (floating over the photo area)                          */
+/*  Mini-cards (floating over the photo)                               */
 /* ------------------------------------------------------------------ */
 
 function MiniMarketing() {
   return (
-    <div className="absolute inset-x-3 bottom-3 z-[4] flex items-center gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
+    <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2.5 rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
         <TrendingUp className="h-4 w-4" />
       </div>
@@ -46,7 +46,7 @@ function MiniMarketing() {
 
 function MiniVendas() {
   return (
-    <div className="absolute inset-x-3 bottom-3 z-[4] flex items-center gap-2 rounded-lg border-l-[3px] border-l-blue-500 bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
+    <div className="absolute bottom-4 left-4 right-4 z-[4] flex items-center gap-2 rounded-lg border-l-[3px] border-l-blue-500 bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-[11px] font-bold text-white">
         JS
       </div>
@@ -67,7 +67,7 @@ function MiniVendas() {
 
 function MiniRh() {
   return (
-    <div className="absolute inset-x-3 bottom-3 z-[4] rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
+    <div className="absolute bottom-4 left-4 right-4 z-[4] rounded-lg bg-card p-2.5 shadow-[0_8px_24px_rgba(15,10,24,0.25),0_0_0_1px_rgba(205,80,241,0.12)]">
       <div className="flex items-center gap-2">
         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-pink-500/10 text-pink-500">
           <UserPlus className="h-3 w-3" />
@@ -81,7 +81,7 @@ function MiniRh() {
           </p>
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-1.5 flex items-center gap-2">
         <div>
           <p className="font-headline text-xl font-black leading-none tracking-tight text-pink-500">
             12
@@ -99,7 +99,9 @@ function MiniRh() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Persona Card                                                       */
+/*  Persona Card — 2-box structure                                     */
+/*  Top: photo (transparent PNG, no border, no bg)                     */
+/*  Bottom: white box (flat top, rounded bottom) with text             */
 /* ------------------------------------------------------------------ */
 
 interface PersonaCardProps {
@@ -130,41 +132,43 @@ function PersonaCard({
   miniCard,
 }: PersonaCardProps) {
   return (
-    <div className="group relative flex flex-col rounded-2xl bg-card shadow-[0_16px_48px_rgba(15,10,24,0.3),0_0_0_1px_rgba(205,80,241,0.1)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_64px_rgba(15,10,24,0.45),0_0_0_1px_rgba(205,80,241,0.2)]">
-      {/* Colored dot */}
-      <span
-        className={`absolute right-4 top-4 z-[5] h-2.5 w-2.5 rounded-full shadow-[0_0_0_3px_rgba(255,255,255,0.5)] ${dotColor}`}
-      />
-
-      {/* Photo area — overflow visible so head extends above card edge */}
-      <div className="relative h-[220px] overflow-hidden rounded-t-2xl bg-gradient-to-b from-[#1A0E2E] to-[#2D1445]">
+    <div className="group flex flex-col transition-all duration-300 hover:-translate-y-1.5">
+      {/* ─── Top box: Photo (transparent, no borders, no bg) ─── */}
+      <div className="relative h-[280px]">
+        {/* Colored dot */}
+        <span
+          className={`absolute right-3 top-3 z-[5] h-2.5 w-2.5 rounded-full shadow-[0_0_0_3px_rgba(255,255,255,0.5)] ${dotColor}`}
+        />
         <Image
           src={photo}
           alt={tag}
           fill
-          className="object-cover object-top"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 360px"
+          className="object-contain object-bottom"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 340px"
         />
-        {/* Mini-card floating */}
+        {/* Mini-card floating on the photo */}
         {miniCard}
       </div>
 
-      {/* Body */}
-      <div className="flex flex-1 flex-col px-5 pb-5 pt-5">
+      {/* ─── Bottom box: White card (flat top, rounded bottom) ─── */}
+      <div className="relative flex flex-1 flex-col rounded-b-2xl border border-t-0 border-border bg-card px-5 pb-5 pt-5 shadow-[0_12px_40px_rgba(15,10,24,0.15)]">
+        {/* Top edge line for visual separation */}
+        <div className="absolute inset-x-0 top-0 h-px bg-border" />
+
         {/* Tag */}
         <span
-          className={`mb-3 inline-block self-start rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${tagColor} ${tagBg}`}
+          className={`mb-2.5 inline-block self-start rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] ${tagColor} ${tagBg}`}
         >
           {tag}
         </span>
 
         {/* Headline */}
-        <h3 className="mb-2 font-headline text-lg font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground lg:text-xl">
+        <h3 className="mb-1.5 font-headline text-[17px] font-black leading-[1.2] tracking-[-0.02em] text-accent-foreground lg:text-lg">
           {headline}
         </h3>
 
         {/* Description */}
-        <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+        <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">
           {description}
         </p>
 
@@ -256,9 +260,9 @@ export function UseCasesSection() {
   ];
 
   return (
-    <section className="relative px-4 py-16 md:px-6 md:py-24">
+    <section className="relative px-4 py-10 md:px-6 md:py-14">
       {/* Dark container */}
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-b from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-5 py-16 shadow-[0_20px_80px_rgba(45,20,69,0.25),0_0_0_1px_rgba(205,80,241,0.08)] md:px-10 md:py-20">
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-b from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-5 py-14 shadow-[0_20px_80px_rgba(45,20,69,0.25),0_0_0_1px_rgba(205,80,241,0.08)] md:px-10 md:py-16">
         {/* Ambient glows */}
         <div className="pointer-events-none absolute left-[20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-primary opacity-[0.18] blur-[120px]" />
         <div className="pointer-events-none absolute bottom-[10%] right-[-80px] h-[400px] w-[400px] rounded-full bg-[#E875FF] opacity-[0.12] blur-[120px]" />
@@ -279,23 +283,23 @@ export function UseCasesSection() {
 
         <div className="relative z-10">
           {/* Header */}
-          <div className="mx-auto mb-12 max-w-[680px] text-center md:mb-14">
-            <span className="mb-5 inline-block rounded-full border border-primary/25 bg-primary/[0.12] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+          <div className="mx-auto mb-10 max-w-[720px] text-center md:mb-12">
+            <span className="mb-4 inline-block rounded-full border border-primary/25 bg-primary/[0.12] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
               {t.home.personasTag}
             </span>
-            <h2 className="mb-3 font-headline text-[clamp(26px,3.5vw,40px)] font-black leading-[1.1] tracking-[-0.025em] text-white">
+            <h2 className="mb-2 font-headline text-[clamp(22px,3vw,34px)] font-black leading-[1.1] tracking-[-0.025em] text-white">
               {t.home.personasTitle}{' '}
               <span className="bg-gradient-to-br from-primary to-[#E875FF] bg-clip-text text-transparent">
                 {t.home.personasTitleHighlight}
               </span>
             </h2>
-            <p className="mx-auto max-w-[540px] text-sm leading-relaxed text-white/55">
+            <p className="text-[13px] leading-normal text-white/55">
               {t.home.personasSubtitle}
             </p>
           </div>
 
           {/* Cards grid */}
-          <div className="mx-auto grid max-w-[1080px] grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-[1020px] grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {personas.map((p) => (
               <PersonaCard key={p.href} {...p} />
             ))}
