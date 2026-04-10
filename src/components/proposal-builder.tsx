@@ -70,65 +70,6 @@ function getPlatformTier(seats: number) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Toggle Switch component                                                    */
-/* -------------------------------------------------------------------------- */
-
-function Toggle({
-  checked,
-  onChange,
-  label,
-  description,
-  icon,
-  iconColor,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-  iconColor: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all duration-200',
-        checked
-          ? 'border-primary/40 bg-primary/[0.04]'
-          : 'border-border bg-card hover:border-primary/20',
-      )}
-    >
-      <div
-        className={cn(
-          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-          iconColor,
-        )}
-      >
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold text-accent-foreground">{label}</p>
-        <p className="text-[11px] text-muted-foreground">{description}</p>
-      </div>
-      <div
-        className={cn(
-          'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
-          checked ? 'bg-primary' : 'bg-border',
-        )}
-      >
-        <div
-          className={cn(
-            'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-            checked ? 'translate-x-[22px]' : 'translate-x-0.5',
-          )}
-        />
-      </div>
-    </button>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Context                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -276,16 +217,17 @@ function ProposalBuilderModal({
   // Build team list
   const teamItems: { text: string; dedicated: boolean }[] = [];
   if (fsEnabled) {
-    teamItems.push({ text: '1 Strategist dedicado', dedicated: true });
+    teamItems.push({ text: '1 Estrategista dedicado', dedicated: true });
     teamItems.push({ text: '1 Designer dedicado', dedicated: true });
     teamItems.push({ text: 'Lead Magnet mensal', dedicated: false });
-    teamItems.push({ text: 'Operação da jornada', dedicated: false });
+    teamItems.push({ text: 'Operação de jornada', dedicated: false });
+    teamItems.push({ text: 'Dashboard de métricas', dedicated: false });
   } else {
     if (platformEnabled || designEnabled) {
-      teamItems.push({ text: '1 Strategist compartilhado', dedicated: false });
+      teamItems.push({ text: '1 Estrategista global da conta', dedicated: false });
     }
     if (designEnabled) {
-      teamItems.push({ text: '1 Designer compartilhado', dedicated: false });
+      teamItems.push({ text: '1 Designer', dedicated: false });
     }
   }
 
@@ -342,26 +284,51 @@ function ProposalBuilderModal({
                 </div>
 
                 {/* ── Tier 1: Software as a Service ── */}
-                <div>
-                  <Toggle
-                    checked={platformEnabled}
-                    onChange={setPlatformEnabled}
-                    label="Software as a Service"
-                    description="Plataforma de Content Intelligence"
-                    icon={<Users className="h-4 w-4 text-primary" />}
-                    iconColor="bg-primary/10"
-                  />
+                <div
+                  className={cn(
+                    'rounded-xl border transition-all duration-200',
+                    platformEnabled
+                      ? 'border-primary/40 bg-primary/[0.04]'
+                      : 'border-border bg-card hover:border-primary/20',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setPlatformEnabled(!platformEnabled)}
+                    className="flex w-full items-center gap-3 p-4 text-left"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-accent-foreground">Software as a Service</p>
+                      <p className="text-[11px] text-muted-foreground">Plataforma de Content Intelligence</p>
+                    </div>
+                    <div
+                      className={cn(
+                        'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
+                        platformEnabled ? 'bg-primary' : 'bg-border',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
+                          platformEnabled ? 'translate-x-[22px]' : 'translate-x-0.5',
+                        )}
+                      />
+                    </div>
+                  </button>
 
                   <div
                     className={cn(
                       'grid transition-all duration-300',
-                      platformEnabled ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0',
+                      platformEnabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
                     )}
                     style={{ transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)' }}
                   >
                     <div className="overflow-hidden">
-                      <div className="rounded-xl border border-border bg-card p-4">
-                        <div className="flex items-center justify-between mb-3">
+                      <div className="border-t border-border/50 px-4 pb-4 pt-4 space-y-3">
+                        <div className="flex items-center justify-between">
                           <label className="text-sm font-medium text-foreground">Quantos colaboradores?</label>
                           <div className="text-right">
                             <span className="text-lg font-bold text-primary">{seats}</span>
@@ -375,7 +342,7 @@ function ProposalBuilderModal({
                           value={[seats]}
                           onValueChange={(v) => setSeats(v[0])}
                         />
-                        <div className="flex justify-between mt-1 mb-3">
+                        <div className="flex justify-between -mt-1 mb-1">
                           <span className="text-[10px] text-muted-foreground">5</span>
                           <span className="text-[10px] text-muted-foreground">20</span>
                           <span className="text-[10px] text-muted-foreground">40</span>
@@ -383,10 +350,10 @@ function ProposalBuilderModal({
                         </div>
 
                         {/* Team badges */}
-                        <div className="flex flex-wrap gap-1.5 mb-3">
+                        <div className="flex flex-wrap gap-1.5">
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                            1 Strategist compartilhado
+                            1 Estrategista global da conta
                           </span>
                         </div>
 
@@ -411,25 +378,50 @@ function ProposalBuilderModal({
                 </div>
 
                 {/* ── Tier 2: Design on Demand ── */}
-                <div>
-                  <Toggle
-                    checked={designEnabled}
-                    onChange={setDesignEnabled}
-                    label="Design on Demand"
-                    description="Peças gráficas para a biblioteca do time"
-                    icon={<Palette className="h-4 w-4 text-violet-500" />}
-                    iconColor="bg-violet-500/10"
-                  />
+                <div
+                  className={cn(
+                    'rounded-xl border transition-all duration-200',
+                    designEnabled
+                      ? 'border-violet-400/40 bg-violet-500/[0.04]'
+                      : 'border-border bg-card hover:border-violet-400/20',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setDesignEnabled(!designEnabled)}
+                    className="flex w-full items-center gap-3 p-4 text-left"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
+                      <Palette className="h-4 w-4 text-violet-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-accent-foreground">Design on Demand</p>
+                      <p className="text-[11px] text-muted-foreground">Peças gráficas para a biblioteca do time</p>
+                    </div>
+                    <div
+                      className={cn(
+                        'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
+                        designEnabled ? 'bg-violet-500' : 'bg-border',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
+                          designEnabled ? 'translate-x-[22px]' : 'translate-x-0.5',
+                        )}
+                      />
+                    </div>
+                  </button>
 
                   <div
                     className={cn(
                       'grid transition-all duration-300',
-                      designEnabled ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0',
+                      designEnabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
                     )}
                     style={{ transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)' }}
                   >
                     <div className="overflow-hidden">
-                      <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                      <div className="border-t border-border/50 px-4 pb-4 pt-4 space-y-4">
                         <div className="grid grid-cols-3 gap-2 rounded-[10px] bg-secondary p-1">
                           {(Object.entries(DESIGN_PACKS) as [DesignPackKey, (typeof DESIGN_PACKS)[DesignPackKey]][]).map(
                             ([key, pack]) => (
@@ -440,7 +432,7 @@ function ProposalBuilderModal({
                                 className={cn(
                                   'rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
                                   designPack === key
-                                    ? 'bg-white text-primary shadow-sm'
+                                    ? 'bg-white text-violet-600 shadow-sm'
                                     : 'text-muted-foreground hover:text-foreground',
                                 )}
                               >
@@ -457,11 +449,11 @@ function ProposalBuilderModal({
                         <div className="flex flex-wrap gap-1.5">
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                            1 Strategist compartilhado
+                            1 Designer
                           </span>
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                            1 Designer compartilhado
+                            1 Estrategista global da conta
                           </span>
                         </div>
 
@@ -479,32 +471,57 @@ function ProposalBuilderModal({
                 </div>
 
                 {/* ── Tier 3: Content Full-Service ── */}
-                <div>
-                  <Toggle
-                    checked={fsEnabled}
-                    onChange={setFsEnabled}
-                    label="Content Full-Service"
-                    description="Gestão ponta a ponta do LinkedIn de executivos"
-                    icon={<Mic className="h-4 w-4 text-amber-500" />}
-                    iconColor="bg-amber-500/10"
-                  />
+                <div
+                  className={cn(
+                    'rounded-xl border transition-all duration-200',
+                    fsEnabled
+                      ? 'border-amber-400/40 bg-amber-500/[0.04]'
+                      : 'border-border bg-card hover:border-amber-400/20',
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setFsEnabled(!fsEnabled)}
+                    className="flex w-full items-center gap-3 p-4 text-left"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                      <Mic className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-accent-foreground">Content Full-Service</p>
+                      <p className="text-[11px] text-muted-foreground">Gestão ponta a ponta do LinkedIn de executivos</p>
+                    </div>
+                    <div
+                      className={cn(
+                        'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
+                        fsEnabled ? 'bg-amber-500' : 'bg-border',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
+                          fsEnabled ? 'translate-x-[22px]' : 'translate-x-0.5',
+                        )}
+                      />
+                    </div>
+                  </button>
 
                   <div
                     className={cn(
                       'grid transition-all duration-300',
-                      fsEnabled ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0',
+                      fsEnabled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
                     )}
                     style={{ transitionTimingFunction: 'cubic-bezier(.2,.9,.3,1)' }}
                   >
                     <div className="overflow-hidden">
-                      <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+                      <div className="border-t border-border/50 px-4 pb-4 pt-4 space-y-4">
                         {/* TLs slider */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <label className="text-sm font-medium text-foreground">
                               Quantos executivos serão gerenciados?
                             </label>
-                            <span className="text-lg font-bold text-primary">{fsTls} TLs</span>
+                            <span className="text-lg font-bold text-amber-600">{fsTls} TLs</span>
                           </div>
                           <Slider
                             min={1}
@@ -540,7 +557,7 @@ function ProposalBuilderModal({
                                 className={cn(
                                   'rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
                                   fsFreq === opt.freq
-                                    ? 'bg-white text-primary shadow-sm'
+                                    ? 'bg-white text-amber-600 shadow-sm'
                                     : 'text-muted-foreground hover:text-foreground',
                                 )}
                               >
@@ -553,23 +570,31 @@ function ProposalBuilderModal({
                           </div>
                         </div>
 
-                        {/* Team badges */}
+                        {/* Team badges — dedicated */}
                         <div className="flex flex-wrap gap-1.5">
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary text-white px-2.5 py-1 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-2.5 py-1 text-[10px] font-semibold">
                             <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                            1 Strategist dedicado
+                            1 Estrategista dedicado
                           </span>
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary text-white px-2.5 py-1 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-2.5 py-1 text-[10px] font-semibold">
                             <span className="h-1.5 w-1.5 rounded-full bg-white" />
                             1 Designer dedicado
                           </span>
+                        </div>
+
+                        {/* Extra tags */}
+                        <div className="flex flex-wrap gap-1.5">
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
                             Lead Magnet mensal
                           </span>
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
                             <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                            Operação da jornada
+                            Operação de jornada
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold text-secondary-foreground">
+                            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                            Dashboard de métricas
                           </span>
                         </div>
 

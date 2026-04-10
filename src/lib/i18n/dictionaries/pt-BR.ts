@@ -67,12 +67,12 @@ const ptBR = {
     viradaProblem1: 'Company Page invisível',
     viradaProblem2: 'Conteúdo de fachada',
     viradaProblem3: 'Time que não posta',
-    viradaProblem4: 'Dependência só do CEO',
+    viradaProblem4: 'Dependência só de Ads',
     viradaProblem5: 'Programas que morrem',
     viradaSolution1: 'Awareness orgânico mensurável',
     viradaSolution2: 'Conteúdo autoral em escala',
     viradaSolution3: 'Time engajado por gamificação',
-    viradaSolution4: 'Marca descentralizada',
+    viradaSolution4: 'Alcance orgânico previsível',
     viradaSolution5: 'Sistema que se sustenta sozinho',
 
     // Section 3 — Personas
