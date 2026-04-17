@@ -1373,6 +1373,46 @@ const ptBR = {
     section7Text: 'Para dúvidas sobre estes termos, entre em contato pelo email: contato@boldfy.com.br',
   },
 
+  // Battle Card (SaaS × CaaS comparison popup)
+  battleCard: {
+    triggerLabel: 'Entenda a diferença',
+    closeLabel: 'Fechar',
+    title: 'Software as a Service × Content as a Service',
+    subtitle: 'Mesma plataforma, dois jeitos de operar. Você pode contratar um, o outro ou combinar os dois.',
+    // Column headers
+    colSaasTag: 'Software as a Service',
+    colSaasSub: 'Self-service pro time inteiro',
+    colCaasTag: 'Content as a Service',
+    colCaasSub: 'A gente opera dentro da plataforma',
+    // Row labels
+    rowWhoOperates: 'Quem opera',
+    rowWhoOperatesSaas: 'Colaboradores da sua empresa',
+    rowWhoOperatesCaas: 'Estrategista Boldfy, dentro da plataforma',
+    rowWhoBenefits: 'Quem usa',
+    rowWhoBenefitsSaas: 'Time inteiro vira criador de conteúdo',
+    rowWhoBenefitsCaas: 'Design pra biblioteca ou ativação executiva (TLs)',
+    rowEffort: 'Esforço do cliente',
+    rowEffortSaas: 'Colaborador escreve com apoio de IA e publica',
+    rowEffortCaas: 'Executivo só aprova e conecta LinkedIn',
+    rowGamification: 'Gamificação',
+    rowGamificationSaas: 'Missões, ranking, Prêmio do Mês, shop de recompensas',
+    rowGamificationCaas: 'Não se aplica — fluxo guiado pelo estrategista',
+    rowReports: 'Relatórios',
+    rowReportsSaas: 'Dashboard em tempo real (impressões, CPM em R$, LinkedIn Leads)',
+    rowReportsCaas: 'Dashboard + Report trimestral exclusivo',
+    rowIdealFor: 'Ideal pra',
+    rowIdealForSaas: 'Times B2B de 5 a 500 que querem escalar conteúdo autoral',
+    rowIdealForCaas: 'C-levels, founders, ou marketings enxutos sem designer',
+    // Universal benefit
+    universalTitle: 'Em todos os casos',
+    universalBody: 'Todo cliente ganha um Estrategista de conta Boldfy, mesmo no plano self-service. Ele conduz o onboarding, ajuda no Brand Context, treina o time e fica de suporte contínuo.',
+    // CTAs
+    ctaPrimary: 'Montar meu pacote',
+    ctaSecondary: 'Agendar conversa',
+    ctaLearnSaas: 'Ver página da Plataforma',
+    ctaLearnCaas: 'Ver página do Serviço',
+  },
+
   // Common
   common: {
     learnMore: 'Saiba mais',

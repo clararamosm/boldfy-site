@@ -4,8 +4,8 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check, Shield, MessageCircle, Sparkles, Users, Palette, Mic, ChevronDown } from 'lucide-react';
+import { BattleCardTrigger } from '@/components/battle-card';
+import { ArrowRight, Check, Sparkles, Users, Palette, Mic, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
 /* -------------------------------------------------------------------------- */
@@ -157,9 +157,10 @@ export default function PrecosPage() {
           <h1 className="font-headline text-3xl md:text-5xl font-black text-accent-foreground leading-tight mb-4 max-w-3xl mx-auto">
             {t.precos.heroTitle}
           </h1>
-          <p className="text-base text-muted-foreground max-w-lg mx-auto">
+          <p className="text-base text-muted-foreground max-w-lg mx-auto mb-6">
             {t.precos.heroSubtitle}
           </p>
+          <BattleCardTrigger source="precos:hero" variant="pill" />
         </div>
       </section>
 
@@ -169,7 +170,7 @@ export default function PrecosPage() {
           <div className="flex items-center gap-2 justify-center mb-6">
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-accent-foreground">
-              Plataforma SaaS
+              Software as a Service
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -214,51 +215,54 @@ export default function PrecosPage() {
       <section className="py-16 bg-secondary/30">
         <div className="mx-auto max-w-4xl px-6">
           <h2 className="font-headline text-xl md:text-2xl font-black text-accent-foreground mb-3 text-center">
-            Combine com serviços sob medida
+            Content as a Service
           </h2>
-          <p className="text-sm text-muted-foreground mb-8 max-w-lg mx-auto text-center">
-            Monte o pacote que faz sentido pro seu time. A plataforma é a base — os serviços expandem a capacidade.
+          <p className="text-sm text-muted-foreground mb-2 max-w-lg mx-auto text-center">
+            Dois modos que vivem dentro da mesma plataforma, operados pelo estrategista Boldfy. Combine com o SaaS ou contrate separado.
           </p>
+          <div className="mb-8 flex justify-center">
+            <BattleCardTrigger source="precos:caas-intro" variant="ghost" />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Design as a Service */}
+            {/* Modo Design */}
             <div className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-violet-500/10">
-                  <Palette className="h-5 w-5 text-violet-500" />
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ backgroundColor: 'rgba(94,42,103,0.12)' }}>
+                  <Palette className="h-5 w-5" style={{ color: '#5E2A67' }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-accent-foreground">Design as a Service</h3>
-                  <p className="text-[11px] text-muted-foreground">Peças gráficas para o time</p>
+                  <h3 className="text-sm font-bold text-accent-foreground">Content as a Service · Modo Design</h3>
+                  <p className="text-[11px] text-muted-foreground">Peças gráficas pra biblioteca da empresa</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Carrosséis, infográficos e templates de marca alinhados com o Brand Context da sua empresa.
+                Carrosséis, infográficos e templates de marca alinhados com o Brand Context. O estrategista produz, o time usa.
               </p>
               <div className="flex items-baseline gap-1">
                 <span className="text-xs text-muted-foreground">A partir de</span>
-                <span className="text-lg font-bold text-violet-600">R$ 1.600</span>
+                <span className="text-lg font-bold" style={{ color: '#5E2A67' }}>R$ 1.600</span>
                 <span className="text-xs text-muted-foreground">/mês</span>
               </div>
             </div>
 
-            {/* Content Full-Service */}
-            <div className="rounded-xl border border-border bg-card p-6">
+            {/* Modo Executivo */}
+            <div className="rounded-xl border bg-card p-6" style={{ borderColor: 'rgba(94,42,103,0.3)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-amber-500/10">
-                  <Mic className="h-5 w-5 text-amber-500" />
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg" style={{ backgroundColor: 'rgba(94,42,103,0.12)' }}>
+                  <Mic className="h-5 w-5" style={{ color: '#5E2A67' }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-accent-foreground">Content Full-Service</h3>
-                  <p className="text-[11px] text-muted-foreground">Ativação executiva completa</p>
+                  <h3 className="text-sm font-bold text-accent-foreground">Content as a Service · Modo Executivo</h3>
+                  <p className="text-[11px] text-muted-foreground">Ativação completa de thought leaders</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Produção de conteúdo autoral para executivos, preservando a voz de quem assina.
+                Estratégia de posicionamento, produção autoral e publicação. O executivo só aprova e conecta o LinkedIn.
               </p>
               <div className="flex items-baseline gap-1">
                 <span className="text-xs text-muted-foreground">A partir de</span>
-                <span className="text-lg font-bold text-amber-600">R$ 3.500</span>
+                <span className="text-lg font-bold" style={{ color: '#5E2A67' }}>R$ 3.500</span>
                 <span className="text-xs text-muted-foreground">/mês</span>
               </div>
             </div>

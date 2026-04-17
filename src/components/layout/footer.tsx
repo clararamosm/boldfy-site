@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useT } from '@/lib/i18n/context';
 import { useDemoPopup } from '@/components/forms/demo-popup';
+import { useBattleCard } from '@/components/battle-card';
 import { CalendarDays } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -37,8 +37,8 @@ function ColTitle({ children }: { children: React.ReactNode }) {
 /*  Footer                                                             */
 /* ------------------------------------------------------------------ */
 export function Footer() {
-  const t = useT();
   const { openPopup } = useDemoPopup();
+  const { openBattleCard } = useBattleCard();
 
   return (
     <footer
@@ -118,16 +118,17 @@ export function Footer() {
                   href="/solucoes/content-as-a-service"
                   className="text-[13px] text-white/55 transition-colors hover:text-white"
                 >
-                  Design on Demand
+                  Content as a Service
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/solucoes/content-as-a-service"
-                  className="text-[13px] text-white/55 transition-colors hover:text-white"
+                <button
+                  type="button"
+                  onClick={() => openBattleCard('footer')}
+                  className="text-left text-[13px] text-white/55 transition-colors hover:text-white"
                 >
-                  Content Full-Service
-                </Link>
+                  Comparação
+                </button>
               </li>
               <li>
                 <Link
