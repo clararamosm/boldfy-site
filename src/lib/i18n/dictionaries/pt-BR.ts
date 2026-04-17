@@ -151,8 +151,12 @@ const ptBR = {
     solCaasSub1Price: 'R$ 1.600',
     solCaasSub2Title: 'Content Full-Service',
     solCaasSub2Price: 'R$ 5.500',
-    // Connection hint
-    solutionsHint: 'Os dois caminhos rodam dentro da mesma plataforma. Você pode começar por um e expandir pro outro quando fizer sentido.',
+    // Compare trigger (below subtitle)
+    solutionsCompareLabel: 'Compare as duas soluções',
+    // Account manager card (replaces the old "mesma plataforma" hint)
+    solutionsAmTitle: 'Os dois caminhos ganham um',
+    solutionsAmHighlight: 'estrategista de conta',
+    solutionsAmBody: 'Mesmo no plano self-service, você não fica sozinho. Um estrategista de conteúdo da Boldfy faz o onboarding, ajuda no Brand Context, treina o time e fica de suporte contínuo — independente do caminho escolhido.',
 
     // Section 6 — How It Works
     howTitle: 'Quatro engrenagens.',
@@ -932,7 +936,7 @@ const ptBR = {
     execTag: 'Modo Executivo em detalhe',
     execTitle: 'O executivo só precisa',
     execTitleHighlight: 'aprovar e conectar LinkedIn.',
-    execBody: 'Esse é o modelo premium da Boldfy, feito pra C-levels, founders e líderes que entendem que precisam estar no LinkedIn mas não têm tempo de planejar, escrever, desenhar, publicar e acompanhar. O estrategista Boldfy faz tudo isso em parceria com o executivo, dentro da plataforma. É o que fazemos pra Omie hoje.',
+    execBody: 'Esse é o modelo premium da Boldfy, feito pra C-levels, founders e líderes que entendem que precisam estar no LinkedIn mas não têm tempo de planejar, escrever, desenhar, publicar e acompanhar. O estrategista Boldfy faz tudo isso em parceria com o executivo, dentro da plataforma — preservando a voz de quem assina e operando no ritmo do mês.',
     execMiniCard1: 'Descoberta · 90 min',
     execMiniCard2: 'Posicionamento · 4 pilares',
     execMiniCard3: 'Ritmo · 2 posts/semana',

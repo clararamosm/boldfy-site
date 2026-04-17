@@ -1,6 +1,7 @@
 'use client';
 
 import { useT } from '@/lib/i18n/context';
+import { BattleCardTrigger } from '@/components/battle-card';
 import {
   ArrowRight,
   Monitor,
@@ -8,7 +9,7 @@ import {
   Clock,
   Palette,
   MessageSquare,
-  Link2,
+  UserCheck,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -204,6 +205,11 @@ export function SolutionsBentoSection() {
           <p className="mx-auto max-w-[1100px] text-base leading-relaxed text-muted-foreground">
             {t.home.solutionsSubtitle}
           </p>
+          <div className="mt-6 flex justify-center">
+            <BattleCardTrigger source="home:solutions" variant="pill">
+              {t.home.solutionsCompareLabel}
+            </BattleCardTrigger>
+          </div>
         </div>
 
         {/* 2-card grid */}
@@ -342,16 +348,25 @@ export function SolutionsBentoSection() {
           </div>
         </div>
 
-        {/* Connection hint */}
-        <div className="mx-auto mt-10 flex max-w-[720px] items-center justify-center gap-2.5 rounded-[14px] border border-dashed border-primary/30 bg-primary/[0.05] px-6 py-4 text-[13px] text-primary/80">
-          <Link2 className="h-4 w-4 shrink-0 text-primary" />
-          <span>
-            {t.home.solutionsHint.split('mesma plataforma')[0]}
-            <strong className="font-extrabold text-accent-foreground">
-              mesma plataforma
-            </strong>
-            {t.home.solutionsHint.split('mesma plataforma')[1]}
-          </span>
+        {/* Account manager card — shared by both paths */}
+        <div className="mx-auto mt-10 max-w-[860px] rounded-[18px] border border-primary/25 bg-card p-5 shadow-[0_10px_28px_rgba(205,80,241,0.08)] md:p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[12px] bg-primary/[0.12] text-primary">
+              <UserCheck className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1.5 font-headline text-[17px] font-black leading-tight tracking-[-0.015em] text-accent-foreground md:text-[19px]">
+                {t.home.solutionsAmTitle}{' '}
+                <span className="bg-gradient-to-br from-primary to-[#E875FF] bg-clip-text text-transparent">
+                  {t.home.solutionsAmHighlight}
+                </span>
+                .
+              </h3>
+              <p className="text-[13px] leading-[1.6] text-muted-foreground md:text-sm">
+                {t.home.solutionsAmBody}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
