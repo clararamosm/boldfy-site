@@ -220,7 +220,7 @@ export default function SaasPageClient() {
             </div>
 
             {/* Mockup Dashboard — flutuando no canto superior esquerdo */}
-            <div className="absolute -left-[18px] top-[24px] z-20 w-[250px] rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.18)] lg:-left-[24px] lg:w-[270px]">
+            <div className="absolute -left-[18px] top-[24px] z-20 w-[250px] animate-hero-float rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.18)] lg:-left-[24px] lg:w-[270px]">
               <div className="mb-3 flex items-center gap-2.5 border-b border-border pb-2.5">
                 <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary to-[#E875FF]" />
                 <div className="min-w-0 flex-1">
@@ -269,7 +269,7 @@ export default function SaasPageClient() {
             </div>
 
             {/* Mini-card Missão Concluída — canto superior direito */}
-            <div className="absolute -right-[14px] -top-[18px] z-30 w-[220px] rounded-[12px] bg-card p-3 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(205,80,241,0.2)]">
+            <div className="absolute -right-[14px] -top-[18px] z-30 w-[220px] animate-hero-float-reverse rounded-[12px] bg-card p-3 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(205,80,241,0.2)]">
               <div className="flex items-center gap-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-white">
                   <CheckCircle2 className="h-4 w-4" />
@@ -286,7 +286,7 @@ export default function SaasPageClient() {
             </div>
 
             {/* Mockup Assistente IA — flutuando no canto inferior direito */}
-            <div className="absolute -bottom-[22px] -right-[18px] z-20 w-[230px] rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.22)] lg:-right-[24px] lg:w-[250px]">
+            <div className="absolute -bottom-[22px] -right-[18px] z-20 w-[230px] animate-hero-float-slow rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.22)] lg:-right-[24px] lg:w-[250px]">
               <div className="mb-2.5 flex items-center justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-1.5">
                   <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/[0.12] text-primary">
