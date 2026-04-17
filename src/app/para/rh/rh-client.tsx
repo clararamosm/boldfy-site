@@ -9,7 +9,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
-  Check,
   Heart,
   UserCheck,
   DollarSign,
@@ -626,66 +625,7 @@ export function RhClient() {
       </section>
 
       {/* ============================================================ */}
-      {/*  S6 — CASO DE USO                                             */}
-      {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
-        <Glow className="bottom-0 left-[-100px] h-[600px] w-[600px] opacity-[0.07]" />
-
-        <div className="relative z-10 mx-auto max-w-[1200px]">
-          <div className="mb-8 max-w-[760px]">
-            <PreTag>{c.casoTag}</PreTag>
-            <SectionHeading
-              title={c.casoTitle}
-              highlight={c.casoTitleHighlight}
-              className="mb-3.5"
-            />
-            <p className="text-xs italic text-muted-foreground">
-              {c.casoNota}
-            </p>
-          </div>
-
-          {/* Timeline cards */}
-          <div className="relative grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
-            {/* Connecting line (desktop only) */}
-            <div className="pointer-events-none absolute left-[60px] right-[60px] top-[28px] hidden h-[2px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent lg:block" />
-
-            {[
-              { month: c.caso1Month, stat: c.caso1Stat, label: c.caso1Label, tags: [c.caso1Tag1, c.caso1Tag2, c.caso1Tag3] },
-              { month: c.caso2Month, stat: c.caso2Stat, label: c.caso2Label, tags: [c.caso2Tag1, c.caso2Tag2, c.caso2Tag3] },
-              { month: c.caso3Month, stat: c.caso3Stat, label: c.caso3Label, tags: [c.caso3Tag1, c.caso3Tag2, c.caso3Tag3] },
-              { month: c.caso4Month, stat: c.caso4Stat, label: c.caso4Label, tags: [c.caso4Tag1, c.caso4Tag2, c.caso4Tag3] },
-            ].map((marco) => (
-              <div
-                key={marco.month}
-                className="relative z-[1] rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-[0_16px_40px_rgba(59,130,246,0.12)]"
-              >
-                <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-[7px] font-headline text-xs font-black text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]">
-                  {marco.month}
-                </span>
-                <div className="mb-1.5 font-headline text-[22px] font-black leading-none tracking-[-0.02em] text-accent-foreground">
-                  {marco.stat}
-                </div>
-                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-                  {marco.label}
-                </div>
-                <div className="flex flex-wrap gap-[5px]">
-                  {marco.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-block rounded-full border border-blue-500/30 bg-blue-500/[0.12] px-2.5 py-1 text-[10px] font-semibold leading-[1.3] text-blue-700"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/*  S7 — CAMINHOS                                                */}
+      {/*  S6 — CAMINHOS                                                */}
       {/* ============================================================ */}
       <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
         <Glow
@@ -753,7 +693,7 @@ export function RhClient() {
       </section>
 
       {/* ============================================================ */}
-      {/*  S8 — FAQ                                                     */}
+      {/*  S7 — FAQ                                                     */}
       {/* ============================================================ */}
       <section className="relative overflow-hidden bg-background px-6 pb-10 pt-24 md:px-12">
         <Glow
