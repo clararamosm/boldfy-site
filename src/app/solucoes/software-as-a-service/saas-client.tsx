@@ -219,10 +219,18 @@ export default function SaasPageClient() {
               />
             </div>
 
-            {/* Mockup Dashboard — flutuando no canto superior esquerdo */}
-            <div className="absolute -left-[18px] top-[24px] z-20 w-[250px] animate-hero-float rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.18)] lg:-left-[24px] lg:w-[270px]">
+            {/* Mockup Dashboard — flutuando no canto inferior esquerdo (pra não cobrir rosto) */}
+            <div className="absolute -left-[18px] bottom-[60px] z-20 w-[250px] animate-hero-float rounded-[16px] border border-border bg-card p-3.5 shadow-[0_20px_50px_rgba(93,42,103,0.18)] lg:-left-[24px] lg:bottom-[80px] lg:w-[270px]">
               <div className="mb-3 flex items-center gap-2.5 border-b border-border pb-2.5">
-                <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary to-[#E875FF]" />
+                <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full border border-border">
+                  <Image
+                    src="/images/avatar-8.jpeg"
+                    alt="Avatar de Mariana Oliveira"
+                    fill
+                    sizes="28px"
+                    className="object-cover"
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-headline text-[11px] font-black leading-tight text-accent-foreground">
                     {c.heroMockupTitle}
@@ -344,9 +352,9 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          {/* Wide-frame workflow: problemas (esquerda) → Boldfy (centro) → soluções (direita) */}
+          {/* Wide-frame workflow: problemas (esquerda) → soluções (direita) com linhas animadas */}
           <div className="relative">
-            {/* SVG de linhas conectoras (desktop) */}
+            {/* SVG de linhas conectoras diretas (desktop) com bolinhas viajando */}
             <svg
               className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
               viewBox="0 0 1200 520"
@@ -354,74 +362,69 @@ export default function SaasPageClient() {
               aria-hidden="true"
             >
               <defs>
-                <linearGradient id="line-in" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.5" />
-                </linearGradient>
-                <linearGradient id="line-out" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.15" />
+                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.2" />
+                  <stop offset="50%" stopColor="#CD50F1" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.2" />
                 </linearGradient>
               </defs>
-              {/* Problemas → Hub (3 linhas convergindo) */}
+
+              {/* Linha 1: Problema 01 → Solução 01 */}
               <path
-                d="M 320 80 C 440 80, 500 240, 600 240"
-                stroke="url(#line-in)"
+                id="line-1"
+                d="M 400 85 C 600 85, 600 85, 800 85"
+                stroke="url(#line-grad)"
                 strokeWidth="2"
                 fill="none"
-                strokeDasharray="6 4"
+                strokeDasharray="5 5"
               >
                 <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.2s" repeatCount="indefinite" />
               </path>
+              <circle r="4" fill="#CD50F1">
+                <animateMotion dur="3s" repeatCount="indefinite" rotate="auto">
+                  <mpath href="#line-1" />
+                </animateMotion>
+                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Linha 2: Problema 02 → Solução 02 (reta central) */}
               <path
-                d="M 320 260 L 600 260"
-                stroke="url(#line-in)"
+                id="line-2"
+                d="M 400 260 L 800 260"
+                stroke="url(#line-grad)"
                 strokeWidth="2"
                 fill="none"
-                strokeDasharray="6 4"
+                strokeDasharray="5 5"
               >
                 <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.5s" repeatCount="indefinite" />
               </path>
+              <circle r="4" fill="#CD50F1">
+                <animateMotion dur="3.5s" begin="0.5s" repeatCount="indefinite" rotate="auto">
+                  <mpath href="#line-2" />
+                </animateMotion>
+                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3.5s" begin="0.5s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Linha 3: Problema 03 → Solução 03 */}
               <path
-                d="M 320 440 C 440 440, 500 280, 600 280"
-                stroke="url(#line-in)"
+                id="line-3"
+                d="M 400 435 C 600 435, 600 435, 800 435"
+                stroke="url(#line-grad)"
                 strokeWidth="2"
                 fill="none"
-                strokeDasharray="6 4"
+                strokeDasharray="5 5"
               >
                 <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.8s" repeatCount="indefinite" />
               </path>
-              {/* Hub → Soluções (3 linhas divergindo) */}
-              <path
-                d="M 700 240 C 760 240, 820 80, 880 80"
-                stroke="url(#line-out)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="6 4"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.3s" repeatCount="indefinite" />
-              </path>
-              <path
-                d="M 700 260 L 880 260"
-                stroke="url(#line-out)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="6 4"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.6s" repeatCount="indefinite" />
-              </path>
-              <path
-                d="M 700 280 C 760 280, 820 440, 880 440"
-                stroke="url(#line-out)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="6 4"
-              >
-                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.9s" repeatCount="indefinite" />
-              </path>
+              <circle r="4" fill="#CD50F1">
+                <animateMotion dur="4s" begin="1s" repeatCount="indefinite" rotate="auto">
+                  <mpath href="#line-3" />
+                </animateMotion>
+                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="4s" begin="1s" repeatCount="indefinite" />
+              </circle>
             </svg>
 
-            <div className="relative grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-0">
+            <div className="relative grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_140px_1fr] lg:gap-0">
               {/* Coluna esquerda: Problemas */}
               <div className="flex flex-col gap-5 lg:pr-6">
                 {[
@@ -455,29 +458,10 @@ export default function SaasPageClient() {
                 ))}
               </div>
 
-              {/* Hub central: Boldfy */}
-              <div className="mx-auto flex w-full max-w-[200px] flex-col items-center gap-2 lg:max-w-none lg:px-4">
-                {/* Mobile: mostra seta pra baixo no lugar da conexão lateral */}
-                <div className="flex items-center justify-center lg:hidden">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                </div>
-                <div className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-primary/30 bg-gradient-to-br from-primary/[0.12] to-[#E875FF]/[0.08] shadow-[0_8px_32px_rgba(205,80,241,0.2)] lg:h-40 lg:w-40">
-                  <div className="absolute inset-3 rounded-full border border-primary/20" />
-                  <div className="text-center">
-                    <div className="font-headline text-[22px] font-black tracking-[-0.02em] text-primary lg:text-[28px]">
-                      Boldfy
-                    </div>
-                    <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted-foreground lg:text-[10px]">
-                      resolve
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center lg:hidden">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
+              {/* Espaço central (mobile: chevron; desktop: vazio pra passar linhas do SVG) */}
+              <div className="flex items-center justify-center lg:hidden">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
+                  <ChevronDown className="h-4 w-4" />
                 </div>
               </div>
 
@@ -609,8 +593,8 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* Mini-card Preview LinkedIn — canto inferior direito com avatar da Mariana (avatar-8) */}
-              <div className="absolute bottom-0 right-0 z-20 w-[240px] animate-hero-float rounded-[14px] border border-border bg-card p-3 shadow-[0_16px_40px_rgba(205,80,241,0.14)] lg:w-[260px]">
+              {/* Mini-card Preview LinkedIn — canto inferior direito, na FRENTE da Mariana (avatar-8) */}
+              <div className="absolute bottom-0 right-0 z-40 w-[240px] animate-hero-float rounded-[14px] border border-border bg-card p-3 shadow-[0_16px_40px_rgba(205,80,241,0.2)] lg:w-[260px]">
                 <div className="mb-2 flex items-center gap-2">
                   <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-border">
                     <Image
@@ -724,11 +708,12 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-5">
-            {/* Bloco 1: Trilha (esquerda) + Missões & Ranking (direita) */}
-            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
-              {/* Mockup Trilha */}
-              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
+          {/* 2 colunas alinhadas: mockups sobrepostos (esq) + 4 feature cards (dir) */}
+          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-8">
+            {/* Coluna esquerda: mockup Trilha (cima) sobreposto ao Ranking (baixo) */}
+            <div className="relative min-h-[520px] lg:min-h-[580px]">
+              {/* Trilha — topo esquerda */}
+              <div className="absolute left-0 top-0 z-10 w-[88%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
                 <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
@@ -775,34 +760,10 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* 2 feature cards: Missões + Ranking */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {[
-                  { icon: Target, title: c.cluster2Card1Title, desc: c.cluster2Card1Desc },
-                  { icon: Trophy, title: c.cluster2Card2Title, desc: c.cluster2Card2Desc },
-                ].map((card) => (
-                  <div
-                    key={card.title}
-                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
-                  >
-                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                      <card.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                      {card.title}
-                    </h3>
-                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bloco 2: Ranking (esquerda) + Recompensas & Trilhas (direita) */}
-            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
-              {/* Mockup Ranking */}
-              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
-                <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
-                  <div className="flex items-center gap-2">
+              {/* Ranking — canto inferior direito, sobreposto */}
+              <div className="absolute bottom-0 right-0 z-20 w-[85%] rounded-[16px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
+                <div className="mb-2.5 flex items-center justify-between border-b border-border pb-2">
+                  <div className="flex items-center gap-1.5">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
                       <Trophy className="h-[15px] w-[15px]" />
                     </div>
@@ -843,32 +804,34 @@ export default function SaasPageClient() {
                   ))}
                 </div>
 
-                <div className="mt-3 flex items-center justify-center gap-1.5 rounded-md bg-amber-500/[0.12] px-2 py-1.5 text-[10px] font-bold text-amber-700">
+                <div className="mt-2.5 flex items-center justify-center gap-1.5 rounded-md bg-amber-500/[0.12] px-2 py-1 text-[10px] font-bold text-amber-700">
                   <Award className="h-3 w-3" />
                   {c.cluster2LbPrizeLabel}
                 </div>
               </div>
+            </div>
 
-              {/* 2 feature cards: Recompensas + Trilhas */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {[
-                  { icon: Gift, title: c.cluster2Card3Title, desc: c.cluster2Card3Desc },
-                  { icon: GraduationCap, title: c.cluster2Card4Title, desc: c.cluster2Card4Desc },
-                ].map((card) => (
-                  <div
-                    key={card.title}
-                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
-                  >
-                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                      <card.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                      {card.title}
-                    </h3>
-                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+            {/* Coluna direita: 4 feature cards empilhados */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { icon: Target, title: c.cluster2Card1Title, desc: c.cluster2Card1Desc },
+                { icon: Trophy, title: c.cluster2Card2Title, desc: c.cluster2Card2Desc },
+                { icon: Gift, title: c.cluster2Card3Title, desc: c.cluster2Card3Desc },
+                { icon: GraduationCap, title: c.cluster2Card4Title, desc: c.cluster2Card4Desc },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                >
+                  <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                    <card.icon className="h-5 w-5" />
                   </div>
-                ))}
-              </div>
+                  <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                    {card.title}
+                  </h3>
+                  <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -889,11 +852,12 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-5">
-            {/* Bloco 1: Stats KPIs (esquerda) + Publicação Direta & LinkedIn Feed (direita) */}
-            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.1fr] lg:p-6">
-              {/* Mini-dashboard KPIs */}
-              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
+          {/* 2 colunas alinhadas: dashboard + leads sobrepostos (esq) + 4 feature cards (dir) */}
+          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-8">
+            {/* Coluna esquerda: KPIs (cima) sobreposto a LinkedIn Leads (baixo) */}
+            <div className="relative min-h-[520px] lg:min-h-[580px]">
+              {/* Mini-dashboard KPIs — topo esquerda */}
+              <div className="absolute left-0 top-0 z-10 w-[88%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
                 <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
@@ -921,7 +885,7 @@ export default function SaasPageClient() {
                       className={`rounded-lg border p-2.5 text-center ${
                         k.highlight
                           ? 'border-primary/30 bg-gradient-to-br from-primary/[0.08] to-[#E875FF]/[0.04]'
-                          : 'border-border bg-card'
+                          : 'border-border bg-background/50'
                       }`}
                     >
                       <div
@@ -939,32 +903,8 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* 2 feature cards: Publicação Direta + LinkedIn Feed */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {[
-                  { icon: Send, title: c.cluster3Card1Title, desc: c.cluster3Card1Desc },
-                  { icon: Rss, title: c.cluster3Card2Title, desc: c.cluster3Card2Desc },
-                ].map((card) => (
-                  <div
-                    key={card.title}
-                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
-                  >
-                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                      <card.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                      {card.title}
-                    </h3>
-                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bloco 2: LinkedIn Leads (esquerda) + Dashboard & LinkedIn Ads (direita) */}
-            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.1fr] lg:p-6">
-              {/* Mockup LinkedIn Leads */}
-              <div className="rounded-[14px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4">
+              {/* LinkedIn Leads — canto inferior direito, sobreposto */}
+              <div className="absolute bottom-0 right-0 z-20 w-[85%] rounded-[16px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                     <Users className="h-[18px] w-[18px]" />
@@ -979,7 +919,6 @@ export default function SaasPageClient() {
                   </div>
                 </div>
 
-                {/* Lista de leads mockada com avatares */}
                 <div className="space-y-1.5">
                   {[
                     { avatar: 1, name: 'Ricardo Mendes', role: 'VP Marketing · Tech Inc.', action: 'curtiu 3 posts' },
@@ -1014,27 +953,29 @@ export default function SaasPageClient() {
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* 2 feature cards: Dashboard + LinkedIn Leads */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {[
-                  { icon: BarChart3, title: c.cluster3Card3Title, desc: c.cluster3Card3Desc },
-                  { icon: MessageSquare, title: c.cluster3Card4Title, desc: c.cluster3Card4Desc },
-                ].map((card) => (
-                  <div
-                    key={card.title}
-                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
-                  >
-                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                      <card.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                      {card.title}
-                    </h3>
-                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+            {/* Coluna direita: 4 feature cards */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { icon: Send, title: c.cluster3Card1Title, desc: c.cluster3Card1Desc },
+                { icon: Rss, title: c.cluster3Card2Title, desc: c.cluster3Card2Desc },
+                { icon: BarChart3, title: c.cluster3Card3Title, desc: c.cluster3Card3Desc },
+                { icon: MessageSquare, title: c.cluster3Card4Title, desc: c.cluster3Card4Desc },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                >
+                  <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                    <card.icon className="h-5 w-5" />
                   </div>
-                ))}
-              </div>
+                  <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                    {card.title}
+                  </h3>
+                  <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
