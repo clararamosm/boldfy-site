@@ -73,7 +73,7 @@ export function Footer() {
             <Link href="/" aria-label="Boldfy - Home" className="mb-4">
               <Image
                 src="/images/boldfy-logo-white.svg"
-                alt="Boldfy — plataforma de Employee Advocacy e Content Intelligence"
+                alt="Boldfy · plataforma de Employee Advocacy e Content Intelligence"
                 width={130}
                 height={44}
               />

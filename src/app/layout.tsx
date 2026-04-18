@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Boldfy — Content Intelligence para Employee-Led Growth',
+    default: 'Boldfy · Content Intelligence para Employee-Led Growth',
     template: '%s | Boldfy',
   },
   description:
@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     locale: 'pt_BR',
     url: 'https://boldfy.com.br',
     siteName: 'Boldfy',
-    title: 'Boldfy — Content Intelligence para Employee-Led Growth',
+    title: 'Boldfy · Content Intelligence para Employee-Led Growth',
     description:
       'O maior canal de aquisição da sua empresa já bate ponto todo dia. A Boldfy transforma colaboradores em criadores de conteúdo autoral no LinkedIn, com estratégia, produção, IA e gamificação.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Boldfy — Content Intelligence para Employee-Led Growth',
+    title: 'Boldfy · Content Intelligence para Employee-Led Growth',
     description:
       'O maior canal de aquisição da sua empresa já bate ponto todo dia. A Boldfy transforma colaboradores em criadores de conteúdo autoral no LinkedIn, com estratégia, produção, IA e gamificação.',
   },

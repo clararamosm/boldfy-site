@@ -205,16 +205,16 @@ export default function SaasPageClient() {
             </div>
           </div>
 
-          {/* Visual: imagem em box arredondado + mockups flutuando sobrepostos */}
-          <div className="relative h-[420px] lg:h-[520px]">
-            {/* Imagem principal em box rounded-3xl (mesmo estilo das páginas /para/*) */}
+          {/* Visual: imagem vertical em box arredondado + mockups flutuando sobrepostos */}
+          <div className="relative mx-auto h-[540px] w-full max-w-[420px] lg:h-[640px] lg:max-w-[460px]">
+            {/* Imagem principal vertical (formato original 2:3) em box rounded-3xl */}
             <div className="absolute inset-0 overflow-hidden rounded-3xl">
               <Image
                 src="/images/solucoes-saas-hero.jpeg"
                 alt="Colaboradora criando conteúdo na plataforma Boldfy"
                 fill
                 className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 420px, 460px"
                 priority
               />
             </div>
@@ -326,15 +326,16 @@ export default function SaasPageClient() {
       </section>
 
       {/* ============================================================ */}
-      {/*  S2 — PROBLEMAS & SOLUÇÕES                                    */}
+      {/*  S2 — PROBLEMAS & SOLUÇÕES (wide-frame workflow)              */}
       {/* ============================================================ */}
       <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
         <Glow
           className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]"
           color="bg-[#E875FF]"
         />
+        <GridPattern />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mx-auto mb-14 max-w-[820px] text-center">
             <PreTag>{c.problemsTag}</PreTag>
             <SectionHeading title={c.problemsTitle} highlight={c.problemsTitleHighlight} />
@@ -343,78 +344,174 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          {/* 3 columns: problem card → arrow → solution card */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {[
-              {
-                num: '01',
-                pIcon: Target,
-                pLabel: c.problem1Label,
-                pDesc: c.problem1Desc,
-                sIcon: Trophy,
-                sLabel: c.problem1SolLabel,
-                sDesc: c.problem1SolDesc,
-              },
-              {
-                num: '02',
-                pIcon: Brain,
-                pLabel: c.problem2Label,
-                pDesc: c.problem2Desc,
-                sIcon: GraduationCap,
-                sLabel: c.problem2SolLabel,
-                sDesc: c.problem2SolDesc,
-              },
-              {
-                num: '03',
-                pIcon: Wrench,
-                pLabel: c.problem3Label,
-                pDesc: c.problem3Desc,
-                sIcon: Sparkles,
-                sLabel: c.problem3SolLabel,
-                sDesc: c.problem3SolDesc,
-              },
-            ].map((item) => (
-              <div key={item.num} className="flex flex-col gap-3">
-                {/* Problem card */}
-                <div className="relative rounded-[18px] border border-border bg-card p-5 shadow-[0_4px_20px_rgba(93,42,103,0.04)]">
-                  <div className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-accent-foreground/[0.08] font-headline text-[11px] font-black text-muted-foreground">
-                    {item.num}
-                  </div>
-                  <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-[10px] bg-accent-foreground/[0.06] text-muted-foreground">
-                    <item.pIcon className="h-[18px] w-[18px]" />
-                  </div>
-                  <h3 className="mb-1.5 font-headline text-[15px] font-black tracking-[-0.015em] text-accent-foreground">
-                    {item.pLabel}
-                  </h3>
-                  <p className="text-[12.5px] leading-[1.5] text-muted-foreground">
-                    {item.pDesc}
-                  </p>
-                </div>
+          {/* Wide-frame workflow: problemas (esquerda) → Boldfy (centro) → soluções (direita) */}
+          <div className="relative">
+            {/* SVG de linhas conectoras (desktop) */}
+            <svg
+              className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
+              viewBox="0 0 1200 520"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="line-in" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.5" />
+                </linearGradient>
+                <linearGradient id="line-out" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.15" />
+                </linearGradient>
+              </defs>
+              {/* Problemas → Hub (3 linhas convergindo) */}
+              <path
+                d="M 320 80 C 440 80, 500 240, 600 240"
+                stroke="url(#line-in)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.2s" repeatCount="indefinite" />
+              </path>
+              <path
+                d="M 320 260 L 600 260"
+                stroke="url(#line-in)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.5s" repeatCount="indefinite" />
+              </path>
+              <path
+                d="M 320 440 C 440 440, 500 280, 600 280"
+                stroke="url(#line-in)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.8s" repeatCount="indefinite" />
+              </path>
+              {/* Hub → Soluções (3 linhas divergindo) */}
+              <path
+                d="M 700 240 C 760 240, 820 80, 880 80"
+                stroke="url(#line-out)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.3s" repeatCount="indefinite" />
+              </path>
+              <path
+                d="M 700 260 L 880 260"
+                stroke="url(#line-out)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.6s" repeatCount="indefinite" />
+              </path>
+              <path
+                d="M 700 280 C 760 280, 820 440, 880 440"
+                stroke="url(#line-out)"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="6 4"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1.9s" repeatCount="indefinite" />
+              </path>
+            </svg>
 
-                {/* Arrow connector */}
-                <div className="flex items-center justify-center">
+            <div className="relative grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-0">
+              {/* Coluna esquerda: Problemas */}
+              <div className="flex flex-col gap-5 lg:pr-6">
+                {[
+                  { num: '01', icon: Target, label: c.problem1Label, desc: c.problem1Desc },
+                  { num: '02', icon: Brain, label: c.problem2Label, desc: c.problem2Desc },
+                  { num: '03', icon: Wrench, label: c.problem3Label, desc: c.problem3Desc },
+                ].map((item) => (
+                  <div
+                    key={item.num}
+                    className="group relative rounded-[16px] border border-border bg-card p-4 shadow-[0_4px_20px_rgba(93,42,103,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-accent-foreground/[0.06] text-muted-foreground">
+                        <item.icon className="h-[18px] w-[18px]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="font-headline text-[10px] font-black text-muted-foreground">
+                            {item.num}
+                          </span>
+                          <h3 className="font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                            {item.label}
+                          </h3>
+                        </div>
+                        <p className="text-[12px] leading-[1.5] text-muted-foreground">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Hub central: Boldfy */}
+              <div className="mx-auto flex w-full max-w-[200px] flex-col items-center gap-2 lg:max-w-none lg:px-4">
+                {/* Mobile: mostra seta pra baixo no lugar da conexão lateral */}
+                <div className="flex items-center justify-center lg:hidden">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
                     <ChevronDown className="h-4 w-4" />
                   </div>
                 </div>
-
-                {/* Solution card */}
-                <div className="rounded-[18px] border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-5 shadow-[0_8px_24px_rgba(205,80,241,0.08)]">
-                  <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-[10px] bg-primary/[0.15] text-primary">
-                    <item.sIcon className="h-[18px] w-[18px]" />
+                <div className="relative flex h-32 w-32 items-center justify-center rounded-full border-2 border-primary/30 bg-gradient-to-br from-primary/[0.12] to-[#E875FF]/[0.08] shadow-[0_8px_32px_rgba(205,80,241,0.2)] lg:h-40 lg:w-40">
+                  <div className="absolute inset-3 rounded-full border border-primary/20" />
+                  <div className="text-center">
+                    <div className="font-headline text-[22px] font-black tracking-[-0.02em] text-primary lg:text-[28px]">
+                      Boldfy
+                    </div>
+                    <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted-foreground lg:text-[10px]">
+                      resolve
+                    </div>
                   </div>
-                  <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
-                    Na Boldfy
+                </div>
+                <div className="flex items-center justify-center lg:hidden">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
+                    <ChevronDown className="h-4 w-4" />
                   </div>
-                  <h3 className="mb-1.5 font-headline text-[15px] font-black tracking-[-0.015em] text-accent-foreground">
-                    {item.sLabel}
-                  </h3>
-                  <p className="text-[12.5px] leading-[1.5] text-muted-foreground">
-                    {item.sDesc}
-                  </p>
                 </div>
               </div>
-            ))}
+
+              {/* Coluna direita: Soluções */}
+              <div className="flex flex-col gap-5 lg:pl-6">
+                {[
+                  { icon: Trophy, label: c.problem1SolLabel, desc: c.problem1SolDesc },
+                  { icon: GraduationCap, label: c.problem2SolLabel, desc: c.problem2SolDesc },
+                  { icon: Sparkles, label: c.problem3SolLabel, desc: c.problem3SolDesc },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="group rounded-[16px] border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_8px_24px_rgba(205,80,241,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_12px_32px_rgba(205,80,241,0.14)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-primary/[0.15] text-primary">
+                        <item.icon className="h-[18px] w-[18px]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-primary">
+                          Na Boldfy
+                        </div>
+                        <h3 className="mb-1 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                          {item.label}
+                        </h3>
+                        <p className="text-[12px] leading-[1.5] text-muted-foreground">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -434,77 +531,123 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1.1fr_1fr]">
-            {/* Mockup Assistente IA + preview LinkedIn */}
-            <div className="rounded-[20px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(205,80,241,0.08)]">
-              <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-primary/[0.12] text-primary">
-                    <Sparkles className="h-[17px] w-[17px]" />
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.25fr_1fr]">
+            {/* Visual composto: Assistente IA (esquerda) + Mariana com celular (frente centro) + Preview LinkedIn (direita/atrás) */}
+            <div className="relative h-[520px] lg:h-[580px]">
+              {/* Mockup Assistente IA — atrás, esquerda */}
+              <div className="absolute left-0 top-[20px] z-10 w-[280px] animate-hero-float-slow rounded-[18px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(205,80,241,0.12)] lg:w-[320px]">
+                <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
+                      <Sparkles className="h-[15px] w-[15px]" />
+                    </div>
+                    <div className="font-headline text-[12px] font-black text-accent-foreground">
+                      {c.cluster1MockupHeader}
+                    </div>
                   </div>
-                  <div className="font-headline text-sm font-black text-accent-foreground">
-                    {c.cluster1MockupHeader}
+                  <div className="rounded-full bg-primary/[0.08] px-2 py-0.5 text-[9px] font-bold text-primary">
+                    48/50
                   </div>
                 </div>
-                <div className="rounded-full bg-primary/[0.08] px-2 py-0.5 text-[10px] font-bold text-primary">
-                  48/50 créditos
+
+                <div className="mb-2 text-[9px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  {c.cluster1MockupTopic}
+                </div>
+                <div className="mb-3 rounded-lg border border-border bg-background/50 p-2 text-[10px] text-muted-foreground">
+                  {c.cluster1MockupPrompt}
+                </div>
+
+                <div className="mb-1.5 flex items-center gap-1 text-[9px] font-semibold text-amber-600">
+                  <Flame className="h-2.5 w-2.5" />
+                  {c.cluster1MockupHot}
+                </div>
+                <div className="space-y-1">
+                  {[c.cluster1MockupHot1, c.cluster1MockupHot2, c.cluster1MockupHot3].map((h) => (
+                    <div
+                      key={h}
+                      className="truncate rounded border border-dashed border-border/70 px-2 py-1 text-[10px] text-accent-foreground"
+                    >
+                      {h}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-2.5 flex items-center justify-center gap-1 rounded-md bg-primary px-2 py-1.5 text-[10px] font-bold text-white">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  {c.cluster1MockupGenerate}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.1fr_1fr]">
-                <div>
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    {c.cluster1MockupTopic}
+              {/* Mini-mockup Calendário pessoal — blocado no canto superior direito do Assistente */}
+              <div className="absolute right-0 top-0 z-20 w-[200px] animate-hero-float-reverse rounded-[14px] border border-border bg-card p-3 shadow-[0_16px_40px_rgba(205,80,241,0.14)] lg:w-[220px]">
+                <div className="mb-2 flex items-center gap-1.5">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/[0.12] text-primary">
+                    <Calendar className="h-3 w-3" />
                   </div>
-                  <div className="mb-3 rounded-lg border border-border bg-background/50 p-2.5 text-[11px] text-muted-foreground">
-                    {c.cluster1MockupPrompt}
-                  </div>
-
-                  <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold text-amber-600">
-                    <Flame className="h-3 w-3" />
-                    {c.cluster1MockupHot}
-                  </div>
-                  <div className="space-y-1.5">
-                    {[c.cluster1MockupHot1, c.cluster1MockupHot2, c.cluster1MockupHot3].map((h) => (
-                      <div
-                        key={h}
-                        className="truncate rounded-md border border-dashed border-border/70 px-2 py-1.5 text-[11px] text-accent-foreground"
-                      >
-                        {h}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[11px] font-bold text-white">
-                    <Sparkles className="h-3 w-3" />
-                    {c.cluster1MockupGenerate}
+                  <div className="font-headline text-[10px] font-black text-accent-foreground">
+                    Calendário pessoal
                   </div>
                 </div>
+                <div className="grid grid-cols-7 gap-0.5">
+                  {Array.from({ length: 14 }).map((_, i) => {
+                    const hasPost = [2, 5, 9, 12].includes(i);
+                    return (
+                      <div
+                        key={i}
+                        className={`aspect-square rounded-[3px] ${
+                          hasPost
+                            ? 'bg-gradient-to-br from-primary to-[#E875FF]'
+                            : 'bg-background/70 border border-border/40'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[9px] text-muted-foreground">
+                  <span>4 posts</span>
+                  <span className="font-semibold text-primary">próximos 14d</span>
+                </div>
+              </div>
 
-                <div className="rounded-xl border border-border bg-background/50 p-3">
-                  <div className="mb-2 flex items-center gap-2">
-                    <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary/40 to-[#E875FF]/40" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[11px] font-bold text-accent-foreground">
-                        Mariana Oliveira
-                      </div>
-                      <div className="truncate text-[9px] text-muted-foreground">
-                        Head of Growth · Empresa
-                      </div>
+              {/* Mini-card Preview LinkedIn — canto inferior direito com avatar da Mariana (avatar-8) */}
+              <div className="absolute bottom-0 right-0 z-20 w-[240px] animate-hero-float rounded-[14px] border border-border bg-card p-3 shadow-[0_16px_40px_rgba(205,80,241,0.14)] lg:w-[260px]">
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-border">
+                    <Image
+                      src="/images/avatar-8.jpeg"
+                      alt="Avatar de Mariana Oliveira"
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[11px] font-bold text-accent-foreground">
+                      Mariana Oliveira
+                    </div>
+                    <div className="truncate text-[9px] text-muted-foreground">
+                      Head of Growth
                     </div>
                   </div>
-                  <div className="mb-2 text-[11px] leading-[1.4] text-accent-foreground">
-                    {c.cluster1MockupPost}
-                  </div>
-                  <div className="mb-2 text-[10px] text-muted-foreground">...ver mais</div>
-                  <div className="flex items-center justify-between border-t border-border pt-2 text-[10px] text-muted-foreground">
-                    <span>👍 ❤️ 💡 124</span>
-                    <span>18 comentários</span>
-                  </div>
-                  <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.05em] text-primary">
-                    {c.cluster1MockupPreviewTitle}
-                  </div>
                 </div>
+                <div className="mb-1.5 text-[10px] leading-[1.4] text-accent-foreground">
+                  {c.cluster1MockupPost}
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-1.5 text-[9px] text-muted-foreground">
+                  <span>👍 ❤️ 💡 124</span>
+                  <span>18 coments</span>
+                </div>
+              </div>
+
+              {/* Mariana com celular — personagem real, por cima dos mockups (frente) */}
+              <div className="pointer-events-none absolute inset-0 z-30 flex items-end justify-center">
+                <Image
+                  src="/images/mariana-oliveira.png"
+                  alt="Mariana Oliveira usando a plataforma Boldfy no celular"
+                  width={380}
+                  height={570}
+                  className="h-full w-auto object-contain object-bottom"
+                />
               </div>
             </div>
 
@@ -581,14 +724,16 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-            {/* Mockups sobrepostos — coluna esquerda */}
-            <div className="relative h-[420px]">
-              {/* Trilha (topo-esquerda) */}
-              <div className="absolute left-0 top-0 z-10 w-[88%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
+          <div className="flex flex-col gap-5">
+            {/* Bloco 1: Trilha (esquerda) + Missões & Ranking (direita) */}
+            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
+              {/* Mockup Trilha */}
+              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
                 <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
                   <div className="flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4 text-primary" />
+                    <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
+                      <GraduationCap className="h-[15px] w-[15px]" />
+                    </div>
                     <div>
                       <div className="font-headline text-[12px] font-black text-accent-foreground">
                         {c.cluster2TrailTitle}
@@ -598,14 +743,14 @@ export default function SaasPageClient() {
                       </div>
                     </div>
                   </div>
-                  <span className="font-headline text-[12px] font-black text-primary">60%</span>
+                  <span className="font-headline text-[13px] font-black text-primary">60%</span>
                 </div>
 
-                <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-border">
+                <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-border">
                   <div className="h-full w-[60%] rounded-full bg-gradient-to-r from-primary to-[#E875FF]" />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {[
                     { label: c.cluster2TrailModule1, done: true },
                     { label: c.cluster2TrailModule2, done: true },
@@ -613,7 +758,7 @@ export default function SaasPageClient() {
                   ].map((m, i) => (
                     <div
                       key={i}
-                      className={`flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[10px] ${
+                      className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px] ${
                         m.done
                           ? 'text-muted-foreground line-through'
                           : 'border border-primary/30 bg-primary/[0.06] text-accent-foreground'
@@ -630,12 +775,37 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* Ranking (canto inferior direito, sobreposto) */}
-              <div className="absolute bottom-0 right-0 z-20 w-[78%] rounded-[16px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(205,80,241,0.18)]">
-                <div className="absolute inset-x-0 top-0 h-[2px] rounded-t-[16px] bg-gradient-to-r from-primary to-[#E875FF]" />
-                <div className="mb-2.5 flex items-center justify-between border-b border-border pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Trophy className="h-3.5 w-3.5 text-primary" />
+              {/* 2 feature cards: Missões + Ranking */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {[
+                  { icon: Target, title: c.cluster2Card1Title, desc: c.cluster2Card1Desc },
+                  { icon: Trophy, title: c.cluster2Card2Title, desc: c.cluster2Card2Desc },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                  >
+                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bloco 2: Ranking (esquerda) + Recompensas & Trilhas (direita) */}
+            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
+              {/* Mockup Ranking */}
+              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
+                <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
+                      <Trophy className="h-[15px] w-[15px]" />
+                    </div>
                     <span className="font-headline text-[12px] font-black text-accent-foreground">
                       Ranking do mês
                     </span>
@@ -673,34 +843,32 @@ export default function SaasPageClient() {
                   ))}
                 </div>
 
-                <div className="mt-2 flex items-center justify-center gap-1.5 rounded-md bg-amber-500/[0.12] px-2 py-1 text-[10px] font-bold text-amber-700">
+                <div className="mt-3 flex items-center justify-center gap-1.5 rounded-md bg-amber-500/[0.12] px-2 py-1.5 text-[10px] font-bold text-amber-700">
                   <Award className="h-3 w-3" />
                   {c.cluster2LbPrizeLabel}
                 </div>
               </div>
-            </div>
 
-            {/* 4 feature cards separados */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[
-                { icon: Target, title: c.cluster2Card1Title, desc: c.cluster2Card1Desc },
-                { icon: Trophy, title: c.cluster2Card2Title, desc: c.cluster2Card2Desc },
-                { icon: Gift, title: c.cluster2Card3Title, desc: c.cluster2Card3Desc },
-                { icon: GraduationCap, title: c.cluster2Card4Title, desc: c.cluster2Card4Desc },
-              ].map((card) => (
-                <div
-                  key={card.title}
-                  className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_12px_32px_rgba(205,80,241,0.1)]"
-                >
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                    <card.icon className="h-5 w-5" />
+              {/* 2 feature cards: Recompensas + Trilhas */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {[
+                  { icon: Gift, title: c.cluster2Card3Title, desc: c.cluster2Card3Desc },
+                  { icon: GraduationCap, title: c.cluster2Card4Title, desc: c.cluster2Card4Desc },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                  >
+                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
                   </div>
-                  <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                    {card.title}
-                  </h3>
-                  <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -721,110 +889,196 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.1fr]">
-            {/* Stats card compacto — sem gráfico grande */}
-            <div className="rounded-[20px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(205,80,241,0.08)]">
-              <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <div>
-                    <div className="font-headline text-sm font-black text-accent-foreground">
-                      {c.cluster3MockupHeader}
+          <div className="flex flex-col gap-5">
+            {/* Bloco 1: Stats KPIs (esquerda) + Publicação Direta & LinkedIn Feed (direita) */}
+            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.1fr] lg:p-6">
+              {/* Mini-dashboard KPIs */}
+              <div className="rounded-[14px] border border-border/70 bg-background/50 p-4">
+                <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
+                      <BarChart3 className="h-[15px] w-[15px]" />
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {c.cluster3MockupPeriod}
+                    <div>
+                      <div className="font-headline text-[12px] font-black text-accent-foreground">
+                        {c.cluster3MockupHeader}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">
+                        {c.cluster3MockupPeriod}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {[
-                  { label: c.cluster3MockupKpi1Label, value: c.cluster3MockupKpi1Value },
-                  { label: c.cluster3MockupKpi2Label, value: c.cluster3MockupKpi2Value },
-                  { label: c.cluster3MockupKpi3Label, value: c.cluster3MockupKpi3Value, highlight: true },
-                ].map((k) => (
-                  <div
-                    key={k.label}
-                    className={`rounded-xl border p-3 text-center ${
-                      k.highlight
-                        ? 'border-primary/30 bg-gradient-to-br from-primary/[0.08] to-[#E875FF]/[0.04]'
-                        : 'border-border bg-background/50'
-                    }`}
-                  >
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: c.cluster3MockupKpi1Label, value: c.cluster3MockupKpi1Value, highlight: false },
+                    { label: c.cluster3MockupKpi2Label, value: c.cluster3MockupKpi2Value, highlight: false },
+                    { label: c.cluster3MockupKpi3Label, value: c.cluster3MockupKpi3Value, highlight: true },
+                  ].map((k) => (
                     <div
-                      className={`font-headline text-[15px] font-black leading-none ${
-                        k.highlight ? 'text-primary' : 'text-accent-foreground'
+                      key={k.label}
+                      className={`rounded-lg border p-2.5 text-center ${
+                        k.highlight
+                          ? 'border-primary/30 bg-gradient-to-br from-primary/[0.08] to-[#E875FF]/[0.04]'
+                          : 'border-border bg-card'
                       }`}
                     >
-                      {k.value}
+                      <div
+                        className={`font-headline text-[15px] font-black leading-none ${
+                          k.highlight ? 'text-primary' : 'text-accent-foreground'
+                        }`}
+                      >
+                        {k.value}
+                      </div>
+                      <div className="mt-1 text-[8px] font-semibold uppercase tracking-[0.04em] text-muted-foreground leading-tight">
+                        {k.label}
+                      </div>
                     </div>
-                    <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-                      {k.label}
+                  ))}
+                </div>
+              </div>
+
+              {/* 2 feature cards: Publicação Direta + LinkedIn Feed */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {[
+                  { icon: Send, title: c.cluster3Card1Title, desc: c.cluster3Card1Desc },
+                  { icon: Rss, title: c.cluster3Card2Title, desc: c.cluster3Card2Desc },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                  >
+                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                      <card.icon className="h-5 w-5" />
                     </div>
+                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
                   </div>
                 ))}
               </div>
+            </div>
 
-              {/* LinkedIn Leads — highlight */}
-              <div className="flex items-center justify-between rounded-xl border border-primary/25 bg-primary/[0.06] p-3">
-                <div className="flex items-center gap-2.5">
+            {/* Bloco 2: LinkedIn Leads (esquerda) + Dashboard & LinkedIn Ads (direita) */}
+            <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.1fr] lg:p-6">
+              {/* Mockup LinkedIn Leads */}
+              <div className="rounded-[14px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4">
+                <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                     <Users className="h-[18px] w-[18px]" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
                       {c.cluster3MockupLeadsLabel}
                     </div>
-                    <div className="font-headline text-[18px] font-black leading-none text-primary">
+                    <div className="font-headline text-[22px] font-black leading-none text-primary">
                       +{c.cluster3MockupLeadsValue}
                     </div>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-primary" />
-              </div>
-            </div>
 
-            {/* 4 feature cards 2x2 */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[
-                { icon: Send, title: c.cluster3Card1Title, desc: c.cluster3Card1Desc },
-                { icon: Rss, title: c.cluster3Card2Title, desc: c.cluster3Card2Desc },
-                { icon: BarChart3, title: c.cluster3Card3Title, desc: c.cluster3Card3Desc },
-                { icon: MessageSquare, title: c.cluster3Card4Title, desc: c.cluster3Card4Desc },
-              ].map((card) => (
-                <div
-                  key={card.title}
-                  className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_12px_32px_rgba(205,80,241,0.1)]"
-                >
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-                    <card.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                    {card.title}
-                  </h3>
-                  <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                {/* Lista de leads mockada com avatares */}
+                <div className="space-y-1.5">
+                  {[
+                    { avatar: 1, name: 'Ricardo Mendes', role: 'VP Marketing · Tech Inc.', action: 'curtiu 3 posts' },
+                    { avatar: 3, name: 'Juliana Torres', role: 'CMO · Startup B2B', action: 'comentou em 2' },
+                    { avatar: 5, name: 'Felipe Araújo', role: 'Head of Sales', action: 'salvou post' },
+                  ].map((lead) => (
+                    <div
+                      key={lead.name}
+                      className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5"
+                    >
+                      <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border">
+                        <Image
+                          src={`/images/avatar-${lead.avatar}.jpeg`}
+                          alt={`Avatar de ${lead.name}`}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[10px] font-bold text-accent-foreground">
+                          {lead.name}
+                        </div>
+                        <div className="truncate text-[9px] text-muted-foreground">
+                          {lead.role}
+                        </div>
+                      </div>
+                      <div className="shrink-0 rounded-full bg-primary/[0.1] px-2 py-0.5 text-[9px] font-semibold text-primary">
+                        {lead.action}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* 2 feature cards: Dashboard + LinkedIn Leads */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {[
+                  { icon: BarChart3, title: c.cluster3Card3Title, desc: c.cluster3Card3Desc },
+                  { icon: MessageSquare, title: c.cluster3Card4Title, desc: c.cluster3Card4Desc },
+                ].map((card) => (
+                  <div
+                    key={card.title}
+                    className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                  >
+                    <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/*  S6 — ESTRATEGISTA DE CONTA (minimalist)                      */}
+      {/*  S6 — ESTRATEGISTA DE CONTA (blocked with features)           */}
       {/* ============================================================ */}
-      <section className="relative bg-background px-6 py-10 md:px-12">
-        <div className="mx-auto flex max-w-[1000px] items-center gap-4 rounded-[14px] border border-primary/20 bg-primary/[0.04] px-5 py-4 md:gap-5 md:px-6">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
-            <UserCheck className="h-5 w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="font-headline text-[14px] font-black text-accent-foreground md:text-[15px]">
-              {c.amLineTitle}
+      <section className="relative bg-background px-6 py-16 md:px-12 md:py-20">
+        <div className="mx-auto max-w-[1280px]">
+          <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.3fr] lg:p-6">
+            {/* Header com título e corpo */}
+            <div className="flex flex-col justify-center rounded-[14px] border border-primary/25 bg-gradient-to-br from-primary/[0.08] to-[#E875FF]/[0.04] p-5 lg:p-6">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-[11px] bg-primary text-white shadow-[0_6px_20px_rgba(205,80,241,0.28)]">
+                <UserCheck className="h-[22px] w-[22px]" />
+              </div>
+              <h3 className="mb-2 font-headline text-[20px] font-black leading-tight tracking-[-0.02em] text-accent-foreground lg:text-[22px]">
+                {c.amLineTitle}
+              </h3>
+              <p className="text-[13px] leading-[1.55] text-muted-foreground">
+                {c.amLineBody}
+              </p>
             </div>
-            <div className="mt-0.5 text-[12px] leading-[1.5] text-muted-foreground md:text-[12.5px]">
-              {c.amLineBody}
+
+            {/* 3 feature cards */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[
+                { icon: Settings, title: c.amFeature1Title, desc: c.amFeature1Desc },
+                { icon: Users, title: c.amFeature2Title, desc: c.amFeature2Desc },
+                { icon: MessageSquare, title: c.amFeature3Title, desc: c.amFeature3Desc },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className="flex flex-col rounded-[14px] border border-border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_10px_28px_rgba(205,80,241,0.1)]"
+                >
+                  <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/[0.12] text-primary">
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <h4 className="mb-1.5 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                    {card.title}
+                  </h4>
+                  <p className="text-[12px] leading-[1.5] text-muted-foreground">{card.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -917,17 +1171,7 @@ export default function SaasPageClient() {
             </div>
           </div>
 
-          {/* Combined callout */}
-          <div className="mx-auto mt-8 max-w-[900px] rounded-[16px] border border-dashed border-border bg-card px-6 py-5 text-center">
-            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              {c.togetherCombinedLabel}
-            </div>
-            <p className="text-[14px] leading-[1.6] text-accent-foreground">
-              {c.togetherCombinedBody}
-            </p>
-          </div>
-
-          <div className="mt-8 flex justify-center">
+          <div className="mt-10 flex justify-center">
             <Link
               href="/solucoes/content-as-a-service"
               className="group inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-all duration-250 hover:-translate-y-0.5"

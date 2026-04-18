@@ -531,7 +531,7 @@ function ProposalBuilderModal({
                             <label className="text-sm font-medium text-foreground">
                               Quantos executivos serão gerenciados?
                             </label>
-                            <span className="text-lg font-bold text-amber-600">{fsTls} TLs</span>
+                            <span className="text-lg font-bold text-amber-600">{fsTls} {fsTls === 1 ? 'executivo' : 'executivos'}</span>
                           </div>
                           <Slider
                             min={1}

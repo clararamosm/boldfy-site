@@ -14,7 +14,7 @@ export function LogoFull({ height = 28, className }: LogoProps) {
     <Link href="/" className={className} aria-label="Boldfy - Home">
       <Image
         src="/images/boldfy-logo.svg"
-        alt="Boldfy — plataforma de Employee Advocacy e Content Intelligence"
+        alt="Boldfy · plataforma de Employee Advocacy e Content Intelligence"
         width={width}
         height={height}
         priority
@@ -28,7 +28,7 @@ export function LogoIcon({ size = 32, className }: { size?: number; className?: 
     <Link href="/" className={className} aria-label="Boldfy - Home">
       <Image
         src="/images/boldfy-icon.svg"
-        alt="Boldfy — ícone da plataforma de Employee Advocacy"
+        alt="Boldfy · ícone da plataforma de Employee Advocacy"
         width={size}
         height={size}
         priority
