@@ -907,7 +907,7 @@ export default function SaasPageClient() {
               </div>
 
               {/* LinkedIn Leads — sobrepõe com margin-top negativa e desloca pra direita */}
-              <div className="relative z-20 -mt-8 ml-[12%] mr-0 rounded-[16px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
+              <div className="relative z-20 -mt-8 ml-[12%] mr-0 rounded-[16px] border border-primary/40 bg-gradient-to-br from-[#F7EEFC] to-[#FAF4FD] p-4 shadow-[0_20px_50px_rgba(205,80,241,0.24)]">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                     <Users className="h-[18px] w-[18px]" />
@@ -924,13 +924,13 @@ export default function SaasPageClient() {
 
                 <div className="space-y-1.5">
                   {[
-                    { avatar: 1, name: 'Ricardo Mendes', role: 'VP Marketing · Tech Inc.', action: 'curtiu 3 posts' },
-                    { avatar: 3, name: 'Juliana Torres', role: 'CMO · Startup B2B', action: 'comentou em 2' },
-                    { avatar: 5, name: 'Felipe Araújo', role: 'Head of Sales', action: 'salvou post' },
+                    { avatar: 3, name: 'Ricardo Mendes', role: 'VP Marketing · Tech Inc.', count: '+4' },
+                    { avatar: 1, name: 'Juliana Torres', role: 'CMO · Startup B2B', count: '+3' },
+                    { avatar: 5, name: 'Felipe Araújo', role: 'Head of Sales', count: '+1' },
                   ].map((lead) => (
                     <div
                       key={lead.name}
-                      className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5"
+                      className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 shadow-[0_2px_6px_rgba(93,42,103,0.04)]"
                     >
                       <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border">
                         <Image
@@ -949,8 +949,8 @@ export default function SaasPageClient() {
                           {lead.role}
                         </div>
                       </div>
-                      <div className="shrink-0 rounded-full bg-primary/[0.1] px-2 py-0.5 text-[9px] font-semibold text-primary">
-                        {lead.action}
+                      <div className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                        {lead.count}
                       </div>
                     </div>
                   ))}
@@ -1054,25 +1054,39 @@ export default function SaasPageClient() {
           {/* 2 cards side by side + middle connector */}
           <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_auto_1fr]">
             {/* SaaS column */}
-            <div className="flex flex-col rounded-[20px] border border-primary/30 bg-card p-6 shadow-[0_12px_32px_rgba(205,80,241,0.08)]">
-              <span className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full border border-primary/25 bg-primary/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-                <Sparkles className="h-3 w-3" />
-                {c.togetherSaasLabel}
-              </span>
-              <h3 className="mb-5 font-headline text-[20px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
-                {c.togetherSaasTitle}
-              </h3>
-              <div className="flex flex-col gap-2.5">
-                {[c.togetherSaasItem1, c.togetherSaasItem2, c.togetherSaasItem3, c.togetherSaasItem4].map(
-                  (item) => (
-                    <div key={item} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span className="text-[13px] leading-[1.5] text-muted-foreground">
-                        {item}
-                      </span>
-                    </div>
-                  ),
-                )}
+            <div className="flex flex-col overflow-hidden rounded-[20px] border border-primary/30 bg-card shadow-[0_12px_32px_rgba(205,80,241,0.08)]">
+              {/* Banner horizontal */}
+              <div className="relative h-[140px] w-full overflow-hidden lg:h-[160px]">
+                <Image
+                  src="/images/saas-section-banner.jpg"
+                  alt="Time usando a Plataforma Boldfy em self-service"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card/30 to-transparent" />
+              </div>
+
+              <div className="flex flex-1 flex-col p-6">
+                <span className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full border border-primary/25 bg-primary/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  {c.togetherSaasLabel}
+                </span>
+                <h3 className="mb-5 font-headline text-[20px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
+                  {c.togetherSaasTitle}
+                </h3>
+                <div className="flex flex-col gap-2.5">
+                  {[c.togetherSaasItem1, c.togetherSaasItem2, c.togetherSaasItem3, c.togetherSaasItem4].map(
+                    (item) => (
+                      <div key={item} className="flex items-start gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        <span className="text-[13px] leading-[1.5] text-muted-foreground">
+                          {item}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1085,37 +1099,51 @@ export default function SaasPageClient() {
 
             {/* CaaS column */}
             <div
-              className="flex flex-col rounded-[20px] border p-6 shadow-[0_12px_32px_rgba(94,42,103,0.1)]"
+              className="flex flex-col overflow-hidden rounded-[20px] border shadow-[0_12px_32px_rgba(94,42,103,0.1)]"
               style={{
                 borderColor: 'rgba(94,42,103,0.3)',
                 backgroundImage:
                   'linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)',
               }}
             >
-              <span
-                className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-                style={{ backgroundColor: '#5E2A67' }}
-              >
-                <MessageSquare className="h-3 w-3" />
-                {c.togetherCaasLabel}
-              </span>
-              <h3 className="mb-5 font-headline text-[20px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
-                {c.togetherCaasTitle}
-              </h3>
-              <div className="flex flex-col gap-2.5">
-                {[c.togetherCaasItem1, c.togetherCaasItem2, c.togetherCaasItem3, c.togetherCaasItem4].map(
-                  (item) => (
-                    <div key={item} className="flex items-start gap-2">
-                      <CheckCircle2
-                        className="mt-0.5 h-4 w-4 shrink-0"
-                        style={{ color: '#5E2A67' }}
-                      />
-                      <span className="text-[13px] leading-[1.5] text-muted-foreground">
-                        {item}
-                      </span>
-                    </div>
-                  ),
-                )}
+              {/* Banner horizontal */}
+              <div className="relative h-[140px] w-full overflow-hidden lg:h-[160px]">
+                <Image
+                  src="/images/caas-section-banner.jpg"
+                  alt="Estrategista Boldfy operando conteúdo para executivo"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(94,42,103,0.2)] to-transparent" />
+              </div>
+
+              <div className="flex flex-1 flex-col p-6">
+                <span
+                  className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                  style={{ backgroundColor: '#5E2A67' }}
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  {c.togetherCaasLabel}
+                </span>
+                <h3 className="mb-5 font-headline text-[20px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
+                  {c.togetherCaasTitle}
+                </h3>
+                <div className="flex flex-col gap-2.5">
+                  {[c.togetherCaasItem1, c.togetherCaasItem2, c.togetherCaasItem3, c.togetherCaasItem4].map(
+                    (item) => (
+                      <div key={item} className="flex items-start gap-2">
+                        <CheckCircle2
+                          className="mt-0.5 h-4 w-4 shrink-0"
+                          style={{ color: '#5E2A67' }}
+                        />
+                        <span className="text-[13px] leading-[1.5] text-muted-foreground">
+                          {item}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
             </div>
           </div>
