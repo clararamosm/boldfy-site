@@ -1,16 +1,12 @@
 'use server';
 
 /**
- * Server action to capture proposal builder leads into Notion CRM
- * and ActiveCampaign (email marketing / automation).
+ * Server action to capture proposal builder leads.
  *
- * Flow:
- * 1. Search Person DB by email — if found, reuse; if not, create.
- * 2. Search Company DB by name — if found, reuse; if not, create.
- * 3. Create Interação linked to Person + Company.
- * 4. Store proposal JSON as code block inside the Interação page.
- * 5. Sync contact to ActiveCampaign with tags + proposal note.
- * 6. Return proposalUrl so the frontend can show / share it.
+ * Arquitetura simplificada (a partir de Abr/2026):
+ * - UM único database no Notion: "Propostas" — recebe cada proposta como uma page
+ * - CRM fica no ActiveCampaign (fonte de verdade) — syncContact taggeia tudo
+ * - Notion serve só pra armazenar o snapshot da proposta e gerar o link compartilhável /proposta/[id]
  */
 
 import type { ProposalData } from '@/lib/notion-crm';
@@ -18,12 +14,8 @@ import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 
-const NOTION_PERSON_DB_ID =
-  process.env.NOTION_PERSON_DB_ID || 'e3841003fdc34b9e9d973bd62d39f5bb';
-const NOTION_COMPANY_DB_ID =
-  process.env.NOTION_COMPANY_DB_ID || '696f9f291beb40919f9d93a2de939c45';
-const NOTION_INTERACAO_DB_ID =
-  process.env.NOTION_INTERACAO_DB_ID || '288357bca57246689b8cf3685ee731f0';
+// Single database that stores all proposals (1 page = 1 proposal submission)
+const NOTION_PROPOSTAS_DB_ID = process.env.NOTION_PROPOSTAS_DB_ID;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boldfy.com.br';
 
@@ -73,89 +65,11 @@ export type ProposalLeadResult = {
   success: boolean;
   error?: string;
   proposalUrl?: string;
-  interacaoId?: string;
+  propostaId?: string;
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-async function findPersonByEmail(email: string): Promise<string | null> {
-  const res = await fetch(`${NOTION_API}/databases/${NOTION_PERSON_DB_ID}/query`, {
-    method: 'POST',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      filter: { property: 'Email', email: { equals: email } },
-      page_size: 1,
-    }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.results.length > 0 ? data.results[0].id : null;
-}
-
-async function findCompanyByName(name: string): Promise<string | null> {
-  const res = await fetch(`${NOTION_API}/databases/${NOTION_COMPANY_DB_ID}/query`, {
-    method: 'POST',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      filter: { property: 'Nome', title: { equals: name } },
-      page_size: 1,
-    }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.results.length > 0 ? data.results[0].id : null;
-}
-
-async function createCompany(input: ProposalLeadInput): Promise<string | null> {
-  const res = await fetch(`${NOTION_API}/pages`, {
-    method: 'POST',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      parent: { database_id: NOTION_COMPANY_DB_ID },
-      properties: {
-        Nome: { title: [{ text: { content: input.empresa } }] },
-      },
-    }),
-  });
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    console.error('[proposal-leads] Error creating company:', res.status, errText);
-    return null;
-  }
-  return (await res.json()).id;
-}
-
-async function createPerson(input: ProposalLeadInput, companyId: string | null): Promise<string | null> {
-  const properties: Record<string, unknown> = {
-    Nome: { title: [{ text: { content: input.nome } }] },
-    Email: { email: input.email },
-  };
-  if (input.cargo && input.cargo !== '—') {
-    properties['Cargo'] = { rich_text: [{ text: { content: input.cargo } }] };
-  }
-  if (companyId) {
-    properties['Empresa'] = { relation: [{ id: companyId }] };
-  }
-
-  const res = await fetch(`${NOTION_API}/pages`, {
-    method: 'POST',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      parent: { database_id: NOTION_PERSON_DB_ID },
-      properties,
-    }),
-  });
-  if (!res.ok) {
-    console.error('[proposal-leads] Error creating person:', res.status);
-    return null;
-  }
-  return (await res.json()).id;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Build proposal JSON for storage in Notion                                  */
+/*  Build proposal JSON + summary                                              */
 /* -------------------------------------------------------------------------- */
 
 function buildProposalJSON(input: ProposalLeadInput): ProposalData {
@@ -227,110 +141,147 @@ function buildProposalSummary(input: ProposalLeadInput): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Create Interação in Notion                                                 */
+/*  Create proposal page in Notion (single database)                           */
 /* -------------------------------------------------------------------------- */
 
-async function createInteracao(
+async function createPropostaPage(
   input: ProposalLeadInput,
-  personId: string | null,
-  companyId: string | null,
+  proposalJSON: ProposalData,
 ): Promise<string | null> {
+  if (!NOTION_PROPOSTAS_DB_ID) {
+    console.error('[proposal-leads] NOTION_PROPOSTAS_DB_ID not configured');
+    return null;
+  }
+
   const today = new Date().toISOString().slice(0, 10);
-  const title = `Simulador de Proposta — ${input.nome}`;
+  const title = `${input.nome} — ${input.empresa}`;
   const summary = buildProposalSummary(input);
 
-  // Step 1: Create with minimal properties (title + date + summary)
-  // to avoid failures from non-existent select options or property names.
-  const properties: Record<string, unknown> = {
-    'Interação': { title: [{ text: { content: title } }] },
-    Data: { date: { start: today } },
-    'Conteúdo (resumo)': { rich_text: [{ text: { content: summary } }] },
+  // Discover database schema so we only send properties that exist
+  const dbRes = await fetch(
+    `${NOTION_API}/databases/${NOTION_PROPOSTAS_DB_ID}`,
+    { headers: NOTION_HEADERS() },
+  );
+  let dbProperties: Record<string, { type: string }> = {};
+  if (dbRes.ok) {
+    const dbData = await dbRes.json();
+    dbProperties = dbData.properties || {};
+  }
+
+  // Build properties dynamically — always include title, but other props only if DB has them
+  const properties: Record<string, unknown> = {};
+
+  // 1. Title (required by Notion) — find the title property (any name)
+  const titleKey = Object.keys(dbProperties).find(
+    (k) => dbProperties[k].type === 'title',
+  );
+  if (titleKey) {
+    properties[titleKey] = { title: [{ text: { content: title } }] };
+  }
+
+  const addEmail = (name: string, value?: string) => {
+    if (value && dbProperties[name]?.type === 'email') {
+      properties[name] = { email: value };
+    }
+  };
+  const addRich = (name: string, value?: string) => {
+    if (value && dbProperties[name]?.type === 'rich_text') {
+      properties[name] = {
+        rich_text: [{ text: { content: value.slice(0, 2000) } }],
+      };
+    }
+  };
+  const addSelect = (name: string, value?: string) => {
+    if (value && dbProperties[name]?.type === 'select') {
+      properties[name] = { select: { name: value } };
+    }
+  };
+  const addMultiSelect = (name: string, values: string[]) => {
+    if (values.length > 0 && dbProperties[name]?.type === 'multi_select') {
+      properties[name] = {
+        multi_select: values.map((v) => ({ name: v })),
+      };
+    }
+  };
+  const addNumber = (name: string, value?: number) => {
+    if (value !== undefined && dbProperties[name]?.type === 'number') {
+      properties[name] = { number: value };
+    }
+  };
+  const addDate = (name: string, value: string) => {
+    if (dbProperties[name]?.type === 'date') {
+      properties[name] = { date: { start: value } };
+    }
   };
 
-  if (personId) {
-    properties['Pessoa'] = { relation: [{ id: personId }] };
-  }
-  if (companyId) {
-    properties['Empresa'] = { relation: [{ id: companyId }] };
-  }
+  addEmail('Email', input.email);
+  addRich('Empresa', input.empresa);
+  addRich('Cargo', input.cargo);
+  addRich('Resumo', summary);
+  addDate('Data', today);
+  addSelect('Status', 'Novo');
+  addSelect('Origem', input.origem);
+  addSelect('utm_source', input.utm_source);
+  addSelect('utm_medium', input.utm_medium);
+  addSelect('utm_campaign', input.utm_campaign);
+  addNumber('Total mensal', input.totalCurrent);
+  addNumber('Seats plataforma', input.plataformaSeats);
 
+  // Módulos selecionados como multi_select
+  const modulos: string[] = [];
+  if (input.plataformaEnabled) modulos.push('SaaS');
+  if (input.designPlan) modulos.push('Design on Demand');
+  if (input.fsTls > 0 && input.fsFreq > 0) modulos.push('Content Full-Service');
+  if (input.betaActive) modulos.push('Beta Tester');
+  addMultiSelect('Módulos', modulos);
+
+  // Step 1: Try with all properties
   const res = await fetch(`${NOTION_API}/pages`, {
     method: 'POST',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
-      parent: { database_id: NOTION_INTERACAO_DB_ID },
+      parent: { database_id: NOTION_PROPOSTAS_DB_ID },
       properties,
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    console.error('[proposal-leads] Error creating interação:', res.status, errText);
+    console.error('[proposal-leads] Error creating proposta:', res.status, errText);
 
-    // Step 2: Fallback — try with title only if the full payload failed
-    console.log('[proposal-leads] Retrying interação with title only...');
-    const fallbackRes = await fetch(`${NOTION_API}/pages`, {
-      method: 'POST',
-      headers: NOTION_HEADERS(),
-      body: JSON.stringify({
-        parent: { database_id: NOTION_INTERACAO_DB_ID },
-        properties: {
-          'Interação': { title: [{ text: { content: title } }] },
-        },
-      }),
-    });
-    if (!fallbackRes.ok) {
-      const fallbackErr = await fallbackRes.text().catch(() => '');
-      console.error('[proposal-leads] Fallback interação also failed:', fallbackRes.status, fallbackErr);
-      return null;
+    // Step 2: Fallback — minimum viable (just title)
+    if (titleKey) {
+      const fallbackRes = await fetch(`${NOTION_API}/pages`, {
+        method: 'POST',
+        headers: NOTION_HEADERS(),
+        body: JSON.stringify({
+          parent: { database_id: NOTION_PROPOSTAS_DB_ID },
+          properties: {
+            [titleKey]: { title: [{ text: { content: title } }] },
+          },
+        }),
+      });
+      if (fallbackRes.ok) {
+        return (await fallbackRes.json()).id;
+      }
     }
-    return (await fallbackRes.json()).id;
+    return null;
   }
 
   return (await res.json()).id;
 }
 
 /**
- * After creating the Interação page, try to set the select properties
- * (Tipo, Direção, Canal, Sentimento, Origem). These are done in a
- * separate PATCH so a wrong option name doesn't block the page creation.
- */
-async function enrichInteracao(
-  interacaoId: string,
-  input: ProposalLeadInput,
-): Promise<void> {
-  const properties: Record<string, unknown> = {
-    Tipo: { select: { name: 'Simulador de Proposta' } },
-    'Direção': { select: { name: 'Inbound' } },
-    Canal: { select: { name: 'Site' } },
-    Sentimento: { select: { name: 'Positivo' } },
-  };
-  if (input.origem) {
-    properties['Origem no site'] = { select: { name: input.origem } };
-  }
-
-  const res = await fetch(`${NOTION_API}/pages/${interacaoId}`, {
-    method: 'PATCH',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({ properties }),
-  });
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    console.error('[proposal-leads] Error enriching interação (non-blocking):', res.status, errText);
-  }
-}
-
-/**
- * Append blocks to the Interação page:
- * 1. A code block with the proposal JSON (for the /proposta/[id] route to parse)
- * 2. A bookmark block with the proposal URL
+ * Append proposal data blocks to the page:
+ * - JSON with the full proposal (parsed by /proposta/[id] route)
+ * - Bookmark with the proposal share URL
  */
 async function appendProposalBlocks(
-  interacaoId: string,
+  pageId: string,
   proposalJSON: ProposalData,
   proposalUrl: string,
 ): Promise<void> {
-  await fetch(`${NOTION_API}/blocks/${interacaoId}/children`, {
+  await fetch(`${NOTION_API}/blocks/${pageId}/children`, {
     method: 'PATCH',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
@@ -347,15 +298,15 @@ async function appendProposalBlocks(
           type: 'code',
           code: {
             language: 'json',
-            rich_text: [{ type: 'text', text: { content: JSON.stringify(proposalJSON, null, 2) } }],
+            rich_text: [
+              { type: 'text', text: { content: JSON.stringify(proposalJSON, null, 2) } },
+            ],
           },
         },
         {
           object: 'block',
           type: 'bookmark',
-          bookmark: {
-            url: proposalUrl,
-          },
+          bookmark: { url: proposalUrl },
         },
       ],
     }),
@@ -369,66 +320,52 @@ async function appendProposalBlocks(
 export async function sendProposalLeadToNotion(
   input: ProposalLeadInput,
 ): Promise<ProposalLeadResult> {
-  if (!NOTION_API_KEY) {
-    console.error('[proposal-leads] NOTION_API_KEY not configured');
+  if (!NOTION_API_KEY || !NOTION_PROPOSTAS_DB_ID) {
+    console.error('[proposal-leads] NOTION_API_KEY or NOTION_PROPOSTAS_DB_ID not configured');
     return { success: false, error: 'Integração com Notion não configurada.' };
   }
 
   try {
-    // 1. Find or create company
-    let companyId: string | null = null;
-    if (input.empresa && input.empresa !== '—') {
-      companyId = await findCompanyByName(input.empresa);
-      if (!companyId) companyId = await createCompany(input);
-    }
-
-    // 2. Find or create person (dedup by email)
-    let personId = await findPersonByEmail(input.email);
-    if (!personId) {
-      personId = await createPerson(input, companyId);
-    }
-    if (!personId) {
-      return { success: false, error: 'Erro ao criar contato no Notion.' };
-    }
-
-    // 3. Create Interação linked to Person + Company
-    const interacaoId = await createInteracao(input, personId, companyId);
-    if (!interacaoId) {
-      console.error('[proposal-leads] Interação creation failed');
-      return { success: true, error: undefined };
-    }
-
-    // 3b. Enrich with select fields (non-blocking — won't break if options don't exist)
-    await enrichInteracao(interacaoId, input).catch((err) => {
-      console.error('[proposal-leads] Error enriching interação:', err);
-    });
-
-    // 4. Build proposal JSON and URL
     const proposalJSON = buildProposalJSON(input);
 
+    // 1. Create proposal page in Notion
+    const propostaId = await createPropostaPage(input, proposalJSON);
+
     // Notion IDs come as UUIDs with dashes; the URL uses the raw ID
-    const cleanId = interacaoId.replace(/-/g, '');
-    const proposalUrl = `${SITE_URL}/proposta/${cleanId}`;
+    const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
+    const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
 
-    // 5. Append proposal data blocks to the Interação page
-    await appendProposalBlocks(interacaoId, proposalJSON, proposalUrl).catch((err) => {
-      console.error('[proposal-leads] Error appending blocks:', err);
+    // 2. Append JSON + bookmark blocks to the page (non-blocking)
+    if (propostaId && proposalUrl) {
+      await appendProposalBlocks(propostaId, proposalJSON, proposalUrl).catch((err) => {
+        console.error('[proposal-leads] Error appending blocks:', err);
+      });
+    }
+
+    // 3. Sync to ActiveCampaign (CRM — fonte de verdade)
+    const acTags = buildACTags({
+      formType: 'Simulador de Proposta',
+      origem: input.origem,
+      utms: {
+        utm_source: input.utm_source,
+        utm_medium: input.utm_medium,
+        utm_campaign: input.utm_campaign,
+        utm_content: input.utm_content,
+        utm_term: input.utm_term,
+      },
+      extraTags: [
+        input.plataformaEnabled ? 'Módulo: SaaS' : null,
+        input.designPlan ? 'Módulo: Design on Demand' : null,
+        input.fsTls > 0 ? 'Módulo: Content Full-Service' : null,
+        input.betaActive ? 'Beta Tester' : null,
+      ].filter((t): t is string => !!t),
     });
-
-    // 6. Sync to ActiveCampaign (non-blocking — Notion is the source of truth)
-    const acTags: string[] = ['Simulador de Proposta'];
-    if (input.plataformaEnabled) acTags.push('SaaS');
-    if (input.designPlan) acTags.push('Design on Demand');
-    if (input.fsTls > 0) acTags.push('Content Full-Service');
-    if (input.betaActive) acTags.push('Beta Tester');
-    if (input.utm_source) acTags.push(`utm:${input.utm_source}`);
-    if (input.utm_medium) acTags.push(`meio:${input.utm_medium}`);
-    if (input.utm_campaign) acTags.push(`campanha:${input.utm_campaign}`);
 
     const nameParts = input.nome.trim().split(/\s+/);
     const firstName = nameParts[0] ?? input.nome;
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
+    // Fire-and-forget to AC — CRM não deve bloquear resposta do usuário
     syncContact({
       email: input.email,
       firstName,
@@ -441,7 +378,22 @@ export async function sendProposalLeadToNotion(
       .then((acContactId) => {
         if (acContactId) {
           const summary = buildProposalSummary(input);
-          addNoteToContact(acContactId, `📋 Proposta gerada:\n\n${summary}\n\n🔗 ${proposalUrl}`);
+          const note = [
+            `📋 Proposta gerada via Simulador`,
+            ``,
+            summary,
+            ``,
+            proposalUrl ? `🔗 ${proposalUrl}` : '',
+            ``,
+            `— Tracking —`,
+            `Origem no site: ${input.origem}`,
+            input.utm_source ? `utm_source: ${input.utm_source}` : '',
+            input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
+            input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+          addNoteToContact(acContactId, note);
         }
       })
       .catch((err) => {
@@ -450,11 +402,50 @@ export async function sendProposalLeadToNotion(
 
     return {
       success: true,
-      proposalUrl,
-      interacaoId: interacaoId ?? undefined,
+      proposalUrl: proposalUrl || undefined,
+      propostaId: propostaId ?? undefined,
     };
   } catch (error) {
     console.error('[proposal-leads] Error:', error);
-    return { success: false, error: 'Erro de conexão com o Notion.' };
+    return { success: false, error: 'Erro ao salvar a proposta.' };
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tag builder compartilhado (pra garantir tags consistentes em todos os     */
+/*  endpoints: proposal, demo, contact)                                        */
+/* -------------------------------------------------------------------------- */
+
+export function buildACTags(params: {
+  formType: string;
+  origem?: string;
+  utms?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+  };
+  extraTags?: string[];
+}): string[] {
+  const tags: string[] = [];
+
+  // Sempre taggeia o tipo de form
+  tags.push(`Form: ${params.formType}`);
+
+  // Origem do botão no site (ex: "home:solutions", "precos:saas", "caas:hero")
+  if (params.origem) tags.push(`Origem: ${params.origem}`);
+
+  // UTMs — cada um vira uma tag separada pra facilitar segmentação no AC
+  const u = params.utms ?? {};
+  if (u.utm_source) tags.push(`utm_source:${u.utm_source}`);
+  if (u.utm_medium) tags.push(`utm_medium:${u.utm_medium}`);
+  if (u.utm_campaign) tags.push(`utm_campaign:${u.utm_campaign}`);
+  if (u.utm_content) tags.push(`utm_content:${u.utm_content}`);
+  if (u.utm_term) tags.push(`utm_term:${u.utm_term}`);
+
+  // Extras específicos do form
+  if (params.extraTags) tags.push(...params.extraTags);
+
+  return tags;
 }

@@ -1,6 +1,9 @@
 'use server';
 
-// Server action to send beta test leads to Notion
+// Server action to send beta test leads to Notion + ActiveCampaign
+
+import { syncContact, addNoteToContact } from '@/lib/activecampaign';
+import { buildACTags } from './proposal-leads';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_BETA_DB_ID = process.env.NOTION_BETA_DB_ID;
@@ -16,6 +19,12 @@ type BetaLeadInput = {
   objetivoPrincipal: string;
   comoConheceu: string;
   observacoes?: string;
+  origem?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
 };
 
 export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ success: boolean; error?: string }> {
@@ -119,6 +128,62 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
       console.error('Notion Beta Lead API error:', response.status, errorData);
       return { success: false, error: `Erro ao enviar para o Notion (${response.status}).` };
     }
+
+    // Sync to ActiveCampaign (non-blocking — lead já está salvo no Notion)
+    const nameParts = input.nome.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? input.nome;
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+    const acTags = buildACTags({
+      formType: 'Beta Program',
+      origem: input.origem || 'Beta Test',
+      utms: {
+        utm_source: input.utm_source,
+        utm_medium: input.utm_medium,
+        utm_campaign: input.utm_campaign,
+        utm_content: input.utm_content,
+        utm_term: input.utm_term,
+      },
+      extraTags: [
+        'Beta Tester',
+        input.setor ? `Setor: ${input.setor}` : null,
+        input.colaboradores ? `Porte: ${input.colaboradores}` : null,
+        input.objetivoPrincipal ? `Objetivo: ${input.objetivoPrincipal}` : null,
+      ].filter((t): t is string => !!t),
+    });
+
+    syncContact({
+      email: input.email,
+      firstName,
+      lastName,
+      phone: input.telefone,
+      empresa: input.empresa,
+      cargo: input.cargo,
+      origem: input.origem || 'Beta Test',
+      tags: acTags,
+    })
+      .then((acId) => {
+        if (acId) {
+          const note = [
+            `🧪 Inscrição no Programa Beta`,
+            ``,
+            `Nome: ${input.nome}`,
+            `Email: ${input.email}`,
+            `WhatsApp: ${input.telefone}`,
+            `Cargo: ${input.cargo}`,
+            `Empresa: ${input.empresa}`,
+            `Setor: ${input.setor}`,
+            `Colaboradores: ${input.colaboradores}`,
+            `Objetivo principal: ${input.objetivoPrincipal}`,
+            `Como conheceu: ${input.comoConheceu}`,
+            input.observacoes ? `\n💬 ${input.observacoes}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+          addNoteToContact(acId, note);
+        }
+      })
+      .catch((err) => console.error('[beta-leads] AC sync error:', err));
 
     return { success: true };
   } catch (error) {
