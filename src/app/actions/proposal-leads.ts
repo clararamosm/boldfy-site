@@ -227,6 +227,10 @@ async function createPropostaPage(
   addNumber('Total mensal', input.totalCurrent);
   addNumber('Seats plataforma', input.plataformaSeats);
 
+  // Nota: A propriedade "Imagem" (Files & media) é preenchida DEPOIS que a
+  // page é criada e temos o ID — senão não conseguimos gerar a URL /og.
+  // Ver setImageProperty() no fluxo principal.
+
   // Módulos selecionados como multi_select
   const modulos: string[] = [];
   if (input.plataformaEnabled) modulos.push('SaaS');
@@ -272,14 +276,78 @@ async function createPropostaPage(
 }
 
 /**
+ * Fills a Files & media property on the page with the OG image URL.
+ *
+ * Tries several common property names ("Imagem", "Image", "Preview", "Mídia")
+ * so you can name the property whatever you want in the Notion DB.
+ *
+ * Must be called AFTER the page is created (needs the page ID to build the URL).
+ */
+async function setImageProperty(
+  pageId: string,
+  ogImageUrl: string,
+): Promise<void> {
+  // Discover which files/media property exists on the DB
+  if (!NOTION_PROPOSTAS_DB_ID) return;
+
+  const dbRes = await fetch(
+    `${NOTION_API}/databases/${NOTION_PROPOSTAS_DB_ID}`,
+    { headers: NOTION_HEADERS() },
+  );
+  if (!dbRes.ok) return;
+  const dbData = await dbRes.json();
+  const dbProperties: Record<string, { type: string }> = dbData.properties || {};
+
+  // Find the first files property (any name)
+  const filesKey = Object.keys(dbProperties).find(
+    (k) => dbProperties[k].type === 'files',
+  );
+  if (!filesKey) {
+    console.warn(
+      '[proposal-leads] No "files" property found in Propostas DB — image not attached to row.',
+    );
+    return;
+  }
+
+  const res = await fetch(`${NOTION_API}/pages/${pageId}`, {
+    method: 'PATCH',
+    headers: NOTION_HEADERS(),
+    body: JSON.stringify({
+      properties: {
+        [filesKey]: {
+          files: [
+            {
+              type: 'external',
+              name: 'proposta.png',
+              external: { url: ogImageUrl },
+            },
+          ],
+        },
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    console.error(
+      '[proposal-leads] Error setting image property:',
+      res.status,
+      errText,
+    );
+  }
+}
+
+/**
  * Append proposal data blocks to the page:
+ * - Inline image (the PNG preview of the proposal — same image as the cover)
+ * - Bookmark with the proposal share URL (preview card)
  * - JSON with the full proposal (parsed by /proposta/[id] route)
- * - Bookmark with the proposal share URL
  */
 async function appendProposalBlocks(
   pageId: string,
   proposalJSON: ProposalData,
   proposalUrl: string,
+  ogImageUrl: string,
 ): Promise<void> {
   await fetch(`${NOTION_API}/blocks/${pageId}/children`, {
     method: 'PATCH',
@@ -288,9 +356,45 @@ async function appendProposalBlocks(
       children: [
         {
           object: 'block',
+          type: 'heading_2',
+          heading_2: {
+            rich_text: [{ type: 'text', text: { content: 'Preview visual' } }],
+          },
+        },
+        {
+          object: 'block',
+          type: 'image',
+          image: {
+            type: 'external',
+            external: { url: ogImageUrl },
+            caption: [
+              {
+                type: 'text',
+                text: {
+                  content:
+                    'Imagem gerada automaticamente — pode ser usada em emails de prospect.',
+                },
+              },
+            ],
+          },
+        },
+        {
+          object: 'block',
           type: 'heading_3',
           heading_3: {
-            rich_text: [{ type: 'text', text: { content: 'Dados da proposta' } }],
+            rich_text: [{ type: 'text', text: { content: 'Link compartilhável' } }],
+          },
+        },
+        {
+          object: 'block',
+          type: 'bookmark',
+          bookmark: { url: proposalUrl },
+        },
+        {
+          object: 'block',
+          type: 'heading_3',
+          heading_3: {
+            rich_text: [{ type: 'text', text: { content: 'Dados brutos (JSON)' } }],
           },
         },
         {
@@ -302,11 +406,6 @@ async function appendProposalBlocks(
               { type: 'text', text: { content: JSON.stringify(proposalJSON, null, 2) } },
             ],
           },
-        },
-        {
-          object: 'block',
-          type: 'bookmark',
-          bookmark: { url: proposalUrl },
         },
       ],
     }),
@@ -334,11 +433,19 @@ export async function sendProposalLeadToNotion(
     // Notion IDs come as UUIDs with dashes; the URL uses the raw ID
     const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
     const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
+    const ogImageUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}/og` : '';
 
-    // 2. Append JSON + bookmark blocks to the page (non-blocking)
-    if (propostaId && proposalUrl) {
-      await appendProposalBlocks(propostaId, proposalJSON, proposalUrl).catch((err) => {
-        console.error('[proposal-leads] Error appending blocks:', err);
+    // 2. Fill the "Imagem" (Files & media) property + append image/bookmark/json
+    //    blocks to the page body (non-blocking).
+    //    The image URL points to /proposta/[id]/og, which renders the proposal as PNG.
+    //    Notion re-hosts the image, so mesmo que a URL mude depois, a cópia
+    //    no Notion continua válida.
+    if (propostaId && proposalUrl && ogImageUrl) {
+      Promise.allSettled([
+        setImageProperty(propostaId, ogImageUrl),
+        appendProposalBlocks(propostaId, proposalJSON, proposalUrl, ogImageUrl),
+      ]).catch((err) => {
+        console.error('[proposal-leads] Error enriching Notion page:', err);
       });
     }
 
@@ -383,7 +490,8 @@ export async function sendProposalLeadToNotion(
             ``,
             summary,
             ``,
-            proposalUrl ? `🔗 ${proposalUrl}` : '',
+            proposalUrl ? `🔗 Ver proposta: ${proposalUrl}` : '',
+            ogImageUrl ? `🖼️ Imagem da proposta (PNG): ${ogImageUrl}` : '',
             ``,
             `— Tracking —`,
             `Origem no site: ${input.origem}`,
