@@ -5,8 +5,8 @@
  *
  * Arquitetura simplificada (a partir de Abr/2026):
  * - UM único database no Notion: "Propostas" — recebe cada proposta como uma page
+ * - O link da proposta (/proposta/[id]) é salvo em uma propriedade URL do DB
  * - CRM fica no ActiveCampaign (fonte de verdade) — syncContact taggeia tudo
- * - Notion serve só pra armazenar o snapshot da proposta e gerar o link compartilhável /proposta/[id]
  */
 
 import type { ProposalData } from '@/lib/notion-crm';
@@ -14,10 +14,7 @@ import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
-
-// Single database that stores all proposals (1 page = 1 proposal submission)
 const NOTION_PROPOSTAS_DB_ID = process.env.NOTION_PROPOSTAS_DB_ID;
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boldfy.com.br';
 
 const NOTION_API = 'https://api.notion.com/v1';
@@ -36,29 +33,26 @@ export type ProposalLeadInput = {
   email: string;
   empresa: string;
   cargo: string;
-  // Config
   betaActive: boolean;
   plataformaEnabled: boolean;
   plataformaSeats: number;
   plataformaEnterprise: boolean;
   plataformaPriceFull: number;
   plataformaPriceBeta: number;
-  designPlan: string | null; // 'starter' | 'growth' | 'scale' | null
+  designPlan: string | null;
   designPrice: number;
-  fsTls: number;   // 0 = off, 1–5 = TLs
-  fsFreq: number;  // 0 = off, 2/3/4 = posts per week
+  fsTls: number;
+  fsFreq: number;
   fsPrice: number;
   totalCurrent: number;
   totalFull: number;
   savings: number;
   origem: string;
-  // UTM tracking
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
-  // Team (computed in frontend)
   teamItems: { text: string; dedicated: boolean }[];
 };
 
@@ -147,7 +141,6 @@ function buildProposalSummary(input: ProposalLeadInput): string {
 
 async function createPropostaPage(
   input: ProposalLeadInput,
-  proposalJSON: ProposalData,
 ): Promise<string | null> {
   if (!NOTION_PROPOSTAS_DB_ID) {
     console.error('[proposal-leads] NOTION_PROPOSTAS_DB_ID not configured');
@@ -169,7 +162,6 @@ async function createPropostaPage(
     dbProperties = dbData.properties || {};
   }
 
-  // Build properties dynamically — always include title, but other props only if DB has them
   const properties: Record<string, unknown> = {};
 
   // 1. Title (required by Notion) — find the title property (any name)
@@ -180,6 +172,7 @@ async function createPropostaPage(
     properties[titleKey] = { title: [{ text: { content: title } }] };
   }
 
+  // Helpers — só preenche propriedades que existem no DB
   const addEmail = (name: string, value?: string) => {
     if (value && dbProperties[name]?.type === 'email') {
       properties[name] = { email: value };
@@ -228,10 +221,6 @@ async function createPropostaPage(
   addNumber('Total mensal', input.totalCurrent);
   addNumber('Seats plataforma', input.plataformaSeats);
 
-  // Nota: A propriedade "Imagem" (Files & media) é preenchida DEPOIS que a
-  // page é criada e temos o ID — senão não conseguimos gerar a URL /og.
-  // Ver setImageProperty() no fluxo principal.
-
   // Módulos selecionados como multi_select
   const modulos: string[] = [];
   if (input.plataformaEnabled) modulos.push('SaaS');
@@ -277,18 +266,14 @@ async function createPropostaPage(
 }
 
 /**
- * Fills a Files & media property on the page with the OG image URL.
+ * Preenche a propriedade do tipo URL no row com o link da proposta.
+ * Precisa rodar depois que a page foi criada (dependemos do ID pra montar a URL).
  *
- * Tries several common property names ("Imagem", "Image", "Preview", "Mídia")
- * so you can name the property whatever you want in the Notion DB.
- *
- * Must be called AFTER the page is created (needs the page ID to build the URL).
+ * Descobre automaticamente a propriedade URL — aceita qualquer nome
+ * (ex: "URL", "Link", "Link da proposta", "Proposta").
+ * Se o DB tiver mais de uma URL, usa a primeira.
  */
-async function setImageProperty(
-  pageId: string,
-  ogImageUrl: string,
-): Promise<void> {
-  // Discover which files/media property exists on the DB
+async function setUrlProperty(pageId: string, proposalUrl: string): Promise<void> {
   if (!NOTION_PROPOSTAS_DB_ID) return;
 
   const dbRes = await fetch(
@@ -299,13 +284,12 @@ async function setImageProperty(
   const dbData = await dbRes.json();
   const dbProperties: Record<string, { type: string }> = dbData.properties || {};
 
-  // Find the first files property (any name)
-  const filesKey = Object.keys(dbProperties).find(
-    (k) => dbProperties[k].type === 'files',
+  const urlKey = Object.keys(dbProperties).find(
+    (k) => dbProperties[k].type === 'url',
   );
-  if (!filesKey) {
+  if (!urlKey) {
     console.warn(
-      '[proposal-leads] No "files" property found in Propostas DB — image not attached to row.',
+      '[proposal-leads] No "url" property found in Propostas DB — proposal link not attached to row.',
     );
     return;
   }
@@ -315,15 +299,7 @@ async function setImageProperty(
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
       properties: {
-        [filesKey]: {
-          files: [
-            {
-              type: 'external',
-              name: 'proposta.png',
-              external: { url: ogImageUrl },
-            },
-          ],
-        },
+        [urlKey]: { url: proposalUrl },
       },
     }),
   });
@@ -331,7 +307,7 @@ async function setImageProperty(
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     console.error(
-      '[proposal-leads] Error setting image property:',
+      '[proposal-leads] Error setting url property:',
       res.status,
       errText,
     );
@@ -339,65 +315,18 @@ async function setImageProperty(
 }
 
 /**
- * Append proposal data blocks to the page:
- * - Inline image (the PNG preview of the proposal — same image as the cover)
- * - Bookmark with the proposal share URL (preview card)
- * - JSON with the full proposal (parsed by /proposta/[id] route)
+ * Append only the JSON block to the page body.
+ * A rota /proposta/[id] lê esse bloco pra renderizar a proposta compartilhável.
  */
-async function appendProposalBlocks(
+async function appendProposalJSON(
   pageId: string,
   proposalJSON: ProposalData,
-  proposalUrl: string,
-  ogImageUrl: string,
 ): Promise<void> {
   await fetch(`${NOTION_API}/blocks/${pageId}/children`, {
     method: 'PATCH',
     headers: NOTION_HEADERS(),
     body: JSON.stringify({
       children: [
-        {
-          object: 'block',
-          type: 'heading_2',
-          heading_2: {
-            rich_text: [{ type: 'text', text: { content: 'Preview visual' } }],
-          },
-        },
-        {
-          object: 'block',
-          type: 'image',
-          image: {
-            type: 'external',
-            external: { url: ogImageUrl },
-            caption: [
-              {
-                type: 'text',
-                text: {
-                  content:
-                    'Imagem gerada automaticamente — pode ser usada em emails de prospect.',
-                },
-              },
-            ],
-          },
-        },
-        {
-          object: 'block',
-          type: 'heading_3',
-          heading_3: {
-            rich_text: [{ type: 'text', text: { content: 'Link compartilhável' } }],
-          },
-        },
-        {
-          object: 'block',
-          type: 'bookmark',
-          bookmark: { url: proposalUrl },
-        },
-        {
-          object: 'block',
-          type: 'heading_3',
-          heading_3: {
-            rich_text: [{ type: 'text', text: { content: 'Dados brutos (JSON)' } }],
-          },
-        },
         {
           object: 'block',
           type: 'code',
@@ -429,22 +358,16 @@ export async function sendProposalLeadToNotion(
     const proposalJSON = buildProposalJSON(input);
 
     // 1. Create proposal page in Notion
-    const propostaId = await createPropostaPage(input, proposalJSON);
+    const propostaId = await createPropostaPage(input);
 
-    // Notion IDs come as UUIDs with dashes; the URL uses the raw ID
     const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
     const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
-    const ogImageUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}/og` : '';
 
-    // 2. Fill the "Imagem" (Files & media) property + append image/bookmark/json
-    //    blocks to the page body (non-blocking).
-    //    The image URL points to /proposta/[id]/og, which renders the proposal as PNG.
-    //    Notion re-hosts the image, so mesmo que a URL mude depois, a cópia
-    //    no Notion continua válida.
-    if (propostaId && proposalUrl && ogImageUrl) {
+    // 2. Preenche a URL no campo do row + guarda o JSON no corpo (non-blocking)
+    if (propostaId && proposalUrl) {
       Promise.allSettled([
-        setImageProperty(propostaId, ogImageUrl),
-        appendProposalBlocks(propostaId, proposalJSON, proposalUrl, ogImageUrl),
+        setUrlProperty(propostaId, proposalUrl),
+        appendProposalJSON(propostaId, proposalJSON),
       ]).catch((err) => {
         console.error('[proposal-leads] Error enriching Notion page:', err);
       });
@@ -473,7 +396,7 @@ export async function sendProposalLeadToNotion(
     const firstName = nameParts[0] ?? input.nome;
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
-    // Fire-and-forget to AC — CRM não deve bloquear resposta do usuário
+    // Fire-and-forget pro AC — não deve bloquear a resposta do usuário
     syncContact({
       email: input.email,
       firstName,
@@ -492,7 +415,6 @@ export async function sendProposalLeadToNotion(
             summary,
             ``,
             proposalUrl ? `🔗 Ver proposta: ${proposalUrl}` : '',
-            ogImageUrl ? `🖼️ Imagem da proposta (PNG): ${ogImageUrl}` : '',
             ``,
             `— Tracking —`,
             `Origem no site: ${input.origem}`,
@@ -519,6 +441,3 @@ export async function sendProposalLeadToNotion(
     return { success: false, error: 'Erro ao salvar a proposta.' };
   }
 }
-
-// Nota: buildACTags foi movido para @/lib/ac-tags — arquivos com 'use server'
-// só podem exportar async functions, então o util síncrono precisa viver fora.
