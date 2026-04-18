@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useState } from 'react';
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
@@ -14,13 +15,10 @@ import {
   Mic,
   ChevronDown,
   Calendar,
-  Layers,
   LayoutGrid,
   Sparkles,
   Target,
-  TrendingUp,
   Users,
-  Copy,
   FileStack,
   CheckCircle2,
   MessageSquare,
@@ -391,75 +389,277 @@ export function CaasClient() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {/* Mode 1 — Design */}
+            {/* =============================================== */}
+            {/*  Mode 1 — Design sob demanda (mini-interface)   */}
+            {/* =============================================== */}
             <div
-              className="group rounded-[20px] border bg-card p-8 transition-all duration-300 hover:-translate-y-1"
-              style={{ borderColor: 'rgba(94,42,103,0.2)' }}
+              className="group relative flex flex-col overflow-hidden rounded-[20px] border bg-card p-7 shadow-[0_12px_32px_rgba(94,42,103,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(94,42,103,0.14)]"
+              style={{ borderColor: 'rgba(94,42,103,0.22)' }}
             >
-              <span
-                className="mb-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-                style={{ backgroundColor: CAAS_ACCENT }}
-              >
-                <Palette className="h-3 w-3" />
-                {c.mode1Tag}
-              </span>
-              <h3 className="mb-4 font-headline text-[22px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
+              {/* Header: tag + toggler ativo */}
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                >
+                  <Palette className="h-3 w-3" />
+                  {c.mode1Tag}
+                </span>
+                {/* Toggler ON */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Ativo
+                  </span>
+                  <div
+                    className="flex h-5 w-9 items-center justify-end rounded-full px-0.5 shadow-inner"
+                    style={{ backgroundColor: CAAS_ACCENT }}
+                  >
+                    <div className="h-4 w-4 rounded-full bg-white shadow" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Título */}
+              <h3 className="mb-1 font-headline text-[22px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
                 {c.mode1Title}
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <Target className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode1For}</p>
+
+              {/* Subline — para quem é */}
+              <div className="mb-5 flex items-start gap-1.5">
+                <Target className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: CAAS_ACCENT }} />
+                <p className="text-[12.5px] leading-[1.45] text-muted-foreground">{c.mode1For}</p>
+              </div>
+
+              {/* Mini-painel de "produção ativa" */}
+              <div
+                className="mb-4 rounded-xl border p-3.5"
+                style={{
+                  borderColor: 'rgba(94,42,103,0.18)',
+                  backgroundColor: 'rgba(94,42,103,0.035)',
+                }}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-card shadow-sm overflow-hidden">
+                      <Image
+                        src="/images/avatar-4.jpeg"
+                        alt="Estrategista"
+                        width={28}
+                        height={28}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-[10.5px] font-bold leading-tight text-accent-foreground">
+                        Estrategista Boldfy
+                      </div>
+                      <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                        <span
+                          className="inline-block h-1.5 w-1.5 animate-pulse rounded-full"
+                          style={{ backgroundColor: CAAS_ACCENT }}
+                        />
+                        produzindo agora
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
+                    style={{ backgroundColor: CAAS_ACCENT }}
+                  >
+                    4–20+ /mês
+                  </span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <LayoutGrid className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode1Includes}</p>
+
+                {/* Checklist de formatos */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                  {['Carrossel', 'Infográfico', 'Template de marca', 'Peça de campanha'].map(
+                    (label) => (
+                      <div
+                        key={label}
+                        className="flex items-center gap-1.5 text-[11px] text-accent-foreground"
+                      >
+                        <div
+                          className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm"
+                          style={{ backgroundColor: CAAS_ACCENT }}
+                        >
+                          <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                        </div>
+                        <span className="truncate">{label}</span>
+                      </div>
+                    ),
+                  )}
                 </div>
-                <div className="flex items-start gap-2">
-                  <Layers className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode1Deliverables}</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Users className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode1Who}</p>
+              </div>
+
+              {/* Rodapé: quem opera + quem usa */}
+              <div className="mt-auto flex flex-col gap-2">
+                <div className="flex items-start gap-2 rounded-lg bg-background/60 px-3 py-2">
+                  <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: CAAS_ACCENT }} />
+                  <p className="text-[11.5px] leading-[1.45] text-muted-foreground">
+                    {c.mode1Who}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Mode 2 — Executivo */}
+            {/* =============================================== */}
+            {/*  Mode 2 — Ativação executiva (mini-interface)   */}
+            {/* =============================================== */}
             <div
-              className="group rounded-[20px] border bg-card p-8 transition-all duration-300 hover:-translate-y-1"
+              className="group relative flex flex-col overflow-hidden rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
               style={{
                 borderColor: CAAS_ACCENT,
-                backgroundImage: `linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)`,
+                backgroundImage: `linear-gradient(135deg, rgba(94,42,103,0.06) 0%, rgba(152,64,173,0.03) 100%)`,
               }}
             >
+              {/* Badge "Recomendado" */}
               <span
-                className="mb-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-                style={{ backgroundColor: CAAS_ACCENT }}
+                className="absolute right-5 top-5 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-md"
+                style={{ backgroundColor: CAAS_ACCENT_LIGHT }}
               >
-                <Mic className="h-3 w-3" />
-                {c.mode2Tag}
+                Mais escolhido
               </span>
-              <h3 className="mb-4 font-headline text-[22px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
+
+              {/* Header: tag + toggler ativo */}
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                >
+                  <Mic className="h-3 w-3" />
+                  {c.mode2Tag}
+                </span>
+              </div>
+
+              {/* Título */}
+              <h3 className="mb-1 font-headline text-[22px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
                 {c.mode2Title}
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <Target className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode2For}</p>
+
+              {/* Subline — para quem é */}
+              <div className="mb-5 flex items-start gap-1.5">
+                <Target className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: CAAS_ACCENT }} />
+                <p className="text-[12.5px] leading-[1.45] text-muted-foreground">{c.mode2For}</p>
+              </div>
+
+              {/* Mini-painel pipeline do executivo */}
+              <div
+                className="mb-4 rounded-xl border bg-card p-3.5 shadow-sm"
+                style={{ borderColor: 'rgba(94,42,103,0.22)' }}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-sm">
+                      <Image
+                        src="/images/avatar-2.jpeg"
+                        alt="Executivo"
+                        width={28}
+                        height={28}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-[10.5px] font-bold leading-tight text-accent-foreground">
+                        Executivo
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">voz preservada</div>
+                    </div>
+                  </div>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
+                    style={{ backgroundColor: CAAS_ACCENT }}
+                  >
+                    1–5 posts/sem
+                  </span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <LayoutGrid className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode2Includes}</p>
+
+                {/* Pipeline — 4 etapas horizontais */}
+                <div className="mb-2.5 flex items-center gap-1.5">
+                  {[
+                    { label: 'Estratégia', done: true },
+                    { label: 'Produção', done: true },
+                    { label: 'Aprovação', done: true, active: true },
+                    { label: 'Publicação', done: false },
+                  ].map((step, i, arr) => (
+                    <React.Fragment key={step.label}>
+                      <div
+                        className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-md px-1.5 py-1.5 text-center ${
+                          step.active
+                            ? 'bg-card shadow-sm'
+                            : step.done
+                              ? ''
+                              : 'opacity-55'
+                        }`}
+                        style={
+                          step.active
+                            ? {
+                                border: `1px solid ${CAAS_ACCENT}`,
+                                backgroundColor: 'rgba(94,42,103,0.06)',
+                              }
+                            : undefined
+                        }
+                      >
+                        <div
+                          className="flex h-3.5 w-3.5 items-center justify-center rounded-full"
+                          style={{
+                            backgroundColor: step.done ? CAAS_ACCENT : 'rgba(94,42,103,0.15)',
+                          }}
+                        >
+                          {step.done && (
+                            <Check className="h-2 w-2 text-white" strokeWidth={4} />
+                          )}
+                        </div>
+                        <span
+                          className={`text-[9px] font-semibold leading-tight ${
+                            step.active ? 'text-accent-foreground' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                      {i < arr.length - 1 && (
+                        <div
+                          className="h-[1.5px] w-2 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor:
+                              arr[i].done && arr[i + 1].done
+                                ? CAAS_ACCENT
+                                : 'rgba(94,42,103,0.2)',
+                          }}
+                        />
+                      )}
+                    </React.Fragment>
+                  ))}
                 </div>
-                <div className="flex items-start gap-2">
-                  <Layers className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode2Deliverables}</p>
+
+                {/* Comentário inline de aprovação */}
+                <div
+                  className="flex items-start gap-1.5 rounded-md px-2 py-1.5"
+                  style={{
+                    backgroundColor: 'rgba(94,42,103,0.05)',
+                    borderLeft: `2px solid ${CAAS_ACCENT}`,
+                  }}
+                >
+                  <MessageSquare
+                    className="mt-0.5 h-2.5 w-2.5 shrink-0"
+                    style={{ color: CAAS_ACCENT }}
+                  />
+                  <span className="text-[10px] leading-tight text-accent-foreground">
+                    “Aprova esse, publica amanhã 9h.”
+                  </span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <Users className="h-4 w-4 shrink-0 mt-0.5" style={{ color: CAAS_ACCENT }} />
-                  <p className="text-[13px] leading-[1.5] text-muted-foreground">{c.mode2Who}</p>
+              </div>
+
+              {/* Rodapé: voz do executivo */}
+              <div className="mt-auto flex flex-col gap-2">
+                <div className="flex items-start gap-2 rounded-lg bg-background/60 px-3 py-2">
+                  <CheckCircle2
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                    style={{ color: CAAS_ACCENT }}
+                  />
+                  <p className="text-[11.5px] leading-[1.45] text-muted-foreground">
+                    {c.mode2Who}
+                  </p>
                 </div>
               </div>
             </div>
@@ -480,312 +680,46 @@ export function CaasClient() {
             <p className="text-[15px] leading-[1.65] text-muted-foreground">{c.designBody}</p>
           </div>
 
-          {/* Formatos em linha única compacta — boxes pequenos */}
-          <div className="mb-10">
-            <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              O que produzimos
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { icon: LayoutGrid, title: c.designItem1Title },
-                { icon: TrendingUp, title: c.designItem2Title },
-                { icon: Copy, title: c.designItem3Title },
-                { icon: Sparkles, title: c.designItem4Title },
-                { icon: Layers, title: c.designItem5Title },
-                { icon: FileStack, title: c.designItem6Title },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-center gap-2 rounded-full border bg-card px-3 py-2 transition-all hover:-translate-y-0.5"
-                  style={{
-                    borderColor: 'rgba(94,42,103,0.2)',
-                  }}
-                >
-                  <div
-                    className="flex h-6 w-6 items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor: 'rgba(94,42,103,0.12)',
-                      color: CAAS_ACCENT,
-                    }}
-                  >
-                    <item.icon className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-[12px] font-semibold text-accent-foreground">
-                    {item.title}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Como funciona — cards mais visuais com elementos UI variados */}
+          {/* Como funciona — 4 passos limpos em linha */}
           <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: CAAS_ACCENT }}>
             Como funciona
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            {/* Passo 0 — Input (opcional) */}
+          <div className="relative grid grid-cols-1 gap-3 md:grid-cols-4">
+            {/* Linha conectora desktop */}
             <div
-              className="group relative z-[1] rounded-[16px] border-2 border-dashed bg-card p-4 transition-all hover:-translate-y-1"
-              style={{ borderColor: 'rgba(94,42,103,0.25)' }}
-            >
-              {/* Número 0 */}
+              className="pointer-events-none absolute left-[60px] right-[60px] top-[34px] hidden h-[2px] md:block"
+              style={{
+                backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
+              }}
+            />
+            {[
+              { icon: FileText, label: c.designStep1 },
+              { icon: PenTool, label: c.designStep2 },
+              { icon: FileStack, label: c.designStep3 },
+              { icon: Users, label: c.designStep4 },
+            ].map((step, i) => (
               <div
-                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full border-2 border-dashed bg-card font-headline text-[11px] font-black shadow-md"
-                style={{ borderColor: CAAS_ACCENT, color: CAAS_ACCENT }}
+                key={step.label}
+                className="relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+                style={{ borderColor: 'rgba(94,42,103,0.2)' }}
               >
-                0
-              </div>
-
-              {/* Tag Opcional com toggler de estado */}
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
-                  style={{ backgroundColor: 'rgba(94,42,103,0.06)', color: CAAS_ACCENT }}
-                >
-                  Input
-                </span>
-                {/* Toggler off */}
-                <div className="flex h-4 w-8 items-center rounded-full bg-muted-foreground/20 px-0.5">
-                  <div className="h-3 w-3 rounded-full bg-white shadow" />
-                </div>
-              </div>
-
-              {/* Ícone */}
-              <div
-                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
-                style={{ backgroundColor: 'rgba(94,42,103,0.06)', color: CAAS_ACCENT }}
-              >
-                <FileText className="h-5 w-5" />
-              </div>
-
-              {/* Título */}
-              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                {c.designStep1}
-              </p>
-
-              {/* Label opcional no rodapé */}
-              <div
-                className="mt-3 rounded-md px-2 py-1 text-center text-[9px] font-bold uppercase tracking-[0.12em]"
-                style={{ backgroundColor: 'rgba(94,42,103,0.04)', color: CAAS_ACCENT }}
-              >
-                Opcional
-              </div>
-            </div>
-
-            {/* Passo 1 — Produção */}
-            <div
-              className="group relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(152,64,173,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(152,64,173,0.14)]"
-              style={{ borderColor: 'rgba(152,64,173,0.25)' }}
-            >
-              <div
-                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                style={{ backgroundColor: CAAS_ACCENT_LIGHT }}
-              >
-                1
-              </div>
-
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
-                  style={{ backgroundColor: 'rgba(152,64,173,0.08)', color: CAAS_ACCENT_LIGHT }}
-                >
-                  Produção
-                </span>
-                {/* Pulso "ativo" */}
-                <div className="flex items-center gap-1">
-                  <div
-                    className="h-1.5 w-1.5 animate-pulse rounded-full"
-                    style={{ backgroundColor: CAAS_ACCENT_LIGHT }}
-                  />
-                  <span
-                    className="text-[8px] font-bold uppercase tracking-wider"
-                    style={{ color: CAAS_ACCENT_LIGHT }}
-                  >
-                    ativo
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
-                style={{ backgroundColor: 'rgba(152,64,173,0.08)', color: CAAS_ACCENT_LIGHT }}
-              >
-                <PenTool className="h-5 w-5" />
-              </div>
-
-              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                {c.designStep2}
-              </p>
-
-              {/* Checklist visual */}
-              <div className="mt-3 space-y-1">
-                {['Brand Context', 'Tom de voz', 'Guidelines'].map((label) => (
-                  <div key={label} className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-                    <Check className="h-2.5 w-2.5" style={{ color: CAAS_ACCENT_LIGHT }} />
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Passo 2 — Entrega */}
-            <div
-              className="group relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(245,158,11,0.1)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(245,158,11,0.18)]"
-              style={{ borderColor: 'rgba(245,158,11,0.3)' }}
-            >
-              <div
-                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                style={{ backgroundColor: '#F59E0B' }}
-              >
-                2
-              </div>
-
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
-                  style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#B45309' }}
-                >
-                  Entrega
-                </span>
-                {/* Badge de quantidade */}
-                <span
-                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-                  style={{ backgroundColor: '#F59E0B' }}
-                >
-                  +4
-                </span>
-              </div>
-
-              <div
-                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
-                style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#B45309' }}
-              >
-                <FileStack className="h-5 w-5" />
-              </div>
-
-              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                {c.designStep3}
-              </p>
-
-              {/* Mini progresso ou lista de assets */}
-              <div className="mt-3 space-y-1">
-                {[
-                  { label: 'Carrossel.pdf', done: true },
-                  { label: 'Template.fig', done: true },
-                  { label: 'Infográfico', done: false },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className={`flex items-center gap-1.5 text-[9px] ${
-                      item.done ? 'text-muted-foreground' : 'text-accent-foreground'
-                    }`}
-                  >
-                    {item.done ? (
-                      <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#F59E0B' }} />
-                    ) : (
-                      <div className="h-2.5 w-2.5 shrink-0 rounded-full border border-[#F59E0B]/50" />
-                    )}
-                    <span className={item.done ? 'line-through' : ''}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Passo 3 — Uso (teia de perfis) */}
-            <div
-              className="group relative z-[1] flex flex-col rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
-              style={{ borderColor: 'rgba(94,42,103,0.25)' }}
-            >
-              <div
-                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                style={{ backgroundColor: CAAS_ACCENT }}
-              >
-                3
-              </div>
-
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
-                  style={{ backgroundColor: 'rgba(94,42,103,0.08)', color: CAAS_ACCENT }}
-                >
-                  Uso
-                </span>
-                <span
-                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-                  style={{ backgroundColor: CAAS_ACCENT }}
-                >
-                  time todo
-                </span>
-              </div>
-
-              <p className="mb-3 text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                {c.designStep4}
-              </p>
-
-              {/* Teia de perfis — 1 central (peça) + 5 ao redor (perfis usando) */}
-              <div className="relative mt-2 flex-1 min-h-[120px]">
-                {/* SVG de linhas conectando o centro aos perfis */}
-                <svg
-                  className="pointer-events-none absolute inset-0 h-full w-full"
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  {/* 5 linhas saindo do centro (50,50) */}
-                  {[
-                    { x: 15, y: 20 },
-                    { x: 85, y: 20 },
-                    { x: 10, y: 60 },
-                    { x: 90, y: 60 },
-                    { x: 50, y: 92 },
-                  ].map((p, i) => (
-                    <line
-                      key={i}
-                      x1="50"
-                      y1="50"
-                      x2={p.x}
-                      y2={p.y}
-                      stroke={CAAS_ACCENT}
-                      strokeOpacity="0.3"
-                      strokeWidth="0.5"
-                      strokeDasharray="2 2"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  ))}
-                </svg>
-
-                {/* Ícone central — peça de design */}
                 <div
-                  className="absolute left-1/2 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white shadow-md"
+                  className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
                   style={{ backgroundColor: CAAS_ACCENT }}
                 >
-                  <LayoutGrid className="h-4 w-4 text-white" />
+                  {i + 1}
                 </div>
-
-                {/* 5 perfis ao redor, em posições específicas */}
-                {[
-                  { avatar: 1, style: { left: '5%', top: '10%' } },
-                  { avatar: 3, style: { right: '5%', top: '10%' } },
-                  { avatar: 5, style: { left: '0%', top: '50%' } },
-                  { avatar: 6, style: { right: '0%', top: '50%' } },
-                  { avatar: 8, style: { left: '40%', bottom: '0%' } },
-                ].map((p) => (
-                  <div
-                    key={p.avatar}
-                    className="absolute h-6 w-6 overflow-hidden rounded-full border-2 border-white shadow-sm"
-                    style={p.style}
-                  >
-                    <Image
-                      src={`/images/avatar-${p.avatar}.jpeg`}
-                      alt={`Colaborador ${p.avatar}`}
-                      fill
-                      sizes="24px"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px]"
+                  style={{ backgroundColor: 'rgba(94,42,103,0.12)', color: CAAS_ACCENT }}
+                >
+                  <step.icon className="h-5 w-5" />
+                </div>
+                <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
+                  {step.label}
+                </p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
