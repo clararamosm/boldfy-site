@@ -1177,12 +1177,25 @@ export default function SaasPageClient() {
 
           <div className="flex flex-col gap-3">
             {[
-              { q: c.faq1Q, a: c.faq1A },
-              { q: c.faq2Q, a: c.faq2A },
-              { q: c.faq3Q, a: c.faq3A },
-              { q: c.faq4Q, a: c.faq4A },
-              { q: c.faq5Q, a: c.faq5A },
-              { q: c.faq6Q, a: c.faq6A },
+              { q: c.faq1Q, answer: <p>{c.faq1A}</p> },
+              {
+                q: c.faq2Q,
+                answer: (
+                  <p>
+                    {c.faq2Abefore}
+                    <button
+                      type="button"
+                      onClick={() => openPopup('saas:faq')}
+                      className="font-semibold text-primary underline decoration-primary/40 underline-offset-2 transition-colors hover:text-[#d966f5] hover:decoration-primary"
+                    >
+                      {c.faq2AlinkLabel}
+                    </button>
+                    {c.faq2Aafter}
+                  </p>
+                ),
+              },
+              { q: c.faq3Q, answer: <p>{c.faq3A}</p> },
+              { q: c.faq4Q, answer: <p>{c.faq4A}</p> },
             ].map((faq, i) => (
               <FaqItem
                 key={faq.q}
@@ -1190,7 +1203,7 @@ export default function SaasPageClient() {
                 isOpen={faqOpen === i}
                 onToggle={() => toggleFaq(i)}
               >
-                <p>{faq.a}</p>
+                {faq.answer}
               </FaqItem>
             ))}
           </div>
