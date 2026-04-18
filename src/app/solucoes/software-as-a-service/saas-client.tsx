@@ -1037,7 +1037,7 @@ export default function SaasPageClient() {
           color="bg-[#5E2A67]"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1000px]">
           <div className="mx-auto mb-14 max-w-[820px] text-center">
             <PreTag>{c.togetherTag}</PreTag>
             <SectionHeading title={c.togetherTitle} highlight={c.togetherTitleHighlight} />
@@ -1054,20 +1054,19 @@ export default function SaasPageClient() {
           {/* 2 cards side by side + middle connector */}
           <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_auto_1fr]">
             {/* SaaS column */}
-            <div className="flex flex-col overflow-hidden rounded-[20px] border border-primary/30 bg-card shadow-[0_12px_32px_rgba(205,80,241,0.08)]">
-              {/* Banner horizontal */}
-              <div className="relative h-[140px] w-full overflow-hidden lg:h-[160px]">
+            <div className="flex flex-col rounded-[20px] border border-primary/30 bg-card p-5 shadow-[0_12px_32px_rgba(205,80,241,0.08)] lg:p-6">
+              {/* Banner como card interno com margem */}
+              <div className="relative mb-5 h-[120px] w-full overflow-hidden rounded-[14px] lg:h-[140px]">
                 <Image
                   src="/images/saas-section-banner.jpg"
                   alt="Time usando a Plataforma Boldfy em self-service"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  sizes="(max-width: 1024px) 100vw, 45vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-card/30 to-transparent" />
               </div>
 
-              <div className="flex flex-1 flex-col p-6">
+              <div className="flex flex-1 flex-col">
                 <span className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full border border-primary/25 bg-primary/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
                   <Sparkles className="h-3 w-3" />
                   {c.togetherSaasLabel}
@@ -1099,26 +1098,25 @@ export default function SaasPageClient() {
 
             {/* CaaS column */}
             <div
-              className="flex flex-col overflow-hidden rounded-[20px] border shadow-[0_12px_32px_rgba(94,42,103,0.1)]"
+              className="flex flex-col rounded-[20px] border p-5 shadow-[0_12px_32px_rgba(94,42,103,0.1)] lg:p-6"
               style={{
                 borderColor: 'rgba(94,42,103,0.3)',
                 backgroundImage:
                   'linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)',
               }}
             >
-              {/* Banner horizontal */}
-              <div className="relative h-[140px] w-full overflow-hidden lg:h-[160px]">
+              {/* Banner como card interno com margem */}
+              <div className="relative mb-5 h-[120px] w-full overflow-hidden rounded-[14px] lg:h-[140px]">
                 <Image
                   src="/images/caas-section-banner.jpg"
                   alt="Estrategista Boldfy operando conteúdo para executivo"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  sizes="(max-width: 1024px) 100vw, 45vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(94,42,103,0.2)] to-transparent" />
               </div>
 
-              <div className="flex flex-1 flex-col p-6">
+              <div className="flex flex-1 flex-col">
                 <span
                   className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
                   style={{ backgroundColor: '#5E2A67' }}
