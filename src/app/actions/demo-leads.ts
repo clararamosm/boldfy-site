@@ -9,7 +9,7 @@
  */
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
-import { buildACTags } from './proposal-leads';
+import { buildACTags } from '@/lib/ac-tags';
 
 export type DemoLeadInput = {
   nome: string;

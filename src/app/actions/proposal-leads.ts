@@ -11,6 +11,7 @@
 
 import type { ProposalData } from '@/lib/notion-crm';
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
+import { buildACTags } from '@/lib/ac-tags';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 
@@ -519,41 +520,5 @@ export async function sendProposalLeadToNotion(
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Tag builder compartilhado (pra garantir tags consistentes em todos os     */
-/*  endpoints: proposal, demo, contact)                                        */
-/* -------------------------------------------------------------------------- */
-
-export function buildACTags(params: {
-  formType: string;
-  origem?: string;
-  utms?: {
-    utm_source?: string;
-    utm_medium?: string;
-    utm_campaign?: string;
-    utm_content?: string;
-    utm_term?: string;
-  };
-  extraTags?: string[];
-}): string[] {
-  const tags: string[] = [];
-
-  // Sempre taggeia o tipo de form
-  tags.push(`Form: ${params.formType}`);
-
-  // Origem do botão no site (ex: "home:solutions", "precos:saas", "caas:hero")
-  if (params.origem) tags.push(`Origem: ${params.origem}`);
-
-  // UTMs — cada um vira uma tag separada pra facilitar segmentação no AC
-  const u = params.utms ?? {};
-  if (u.utm_source) tags.push(`utm_source:${u.utm_source}`);
-  if (u.utm_medium) tags.push(`utm_medium:${u.utm_medium}`);
-  if (u.utm_campaign) tags.push(`utm_campaign:${u.utm_campaign}`);
-  if (u.utm_content) tags.push(`utm_content:${u.utm_content}`);
-  if (u.utm_term) tags.push(`utm_term:${u.utm_term}`);
-
-  // Extras específicos do form
-  if (params.extraTags) tags.push(...params.extraTags);
-
-  return tags;
-}
+// Nota: buildACTags foi movido para @/lib/ac-tags — arquivos com 'use server'
+// só podem exportar async functions, então o util síncrono precisa viver fora.

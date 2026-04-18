@@ -3,7 +3,7 @@
 // Server action to send beta test leads to Notion + ActiveCampaign
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
-import { buildACTags } from './proposal-leads';
+import { buildACTags } from '@/lib/ac-tags';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_BETA_DB_ID = process.env.NOTION_BETA_DB_ID;
