@@ -712,23 +712,24 @@ export function CaasClient() {
             </div>
           </div>
 
-          {/* Como funciona — 4 cards compactos iguais + teia de avatares saindo do card 4 */}
+          {/* Como funciona — 4 cards + 5ª coluna linear com avatares conectados por linhas curvas */}
           <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: CAAS_ACCENT }}>
             Como funciona
           </div>
 
-          {/* Wrapper relativo contendo grid de cards + SVG de linhas curvas + avatares fora dos cards */}
+          {/* Wrapper com grid de 5 colunas: 4 cards (1fr cada) + coluna de avatares (0.9fr) */}
           <div className="relative">
-            {/* Grid dos 4 cards — todos do mesmo tamanho, compactos */}
-            <div className="relative z-[2] grid grid-cols-2 gap-3 md:grid-cols-4">
-              {/* Linha conectora horizontal (só entre os 3 primeiros cards, até o card 4) */}
+            <div className="relative z-[2] grid grid-cols-2 items-stretch gap-3 md:grid-cols-[repeat(4,1fr)_0.9fr] md:gap-4">
+              {/* Linha conectora horizontal entre os 4 cards (não chega nos avatares) */}
               <div
-                className="pointer-events-none absolute left-[48px] right-[48px] top-[34px] hidden h-[2px] md:block"
+                className="pointer-events-none absolute left-[48px] top-[34px] hidden h-[2px] md:block"
                 style={{
+                  width: 'calc((100% - 0.9 * ((100% - 16px * 4) / 4.9)) - 96px - 16px)',
                   backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
                 }}
               />
 
+              {/* Cards 1 a 4 */}
               {[
                 { icon: FileText, label: c.designStep1 },
                 { icon: PenTool, label: c.designStep2 },
@@ -757,116 +758,84 @@ export function CaasClient() {
                   </p>
                 </div>
               ))}
-            </div>
 
-            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                Teia externa — FORA dos cards, abaixo do grid
-                Ocupa a largura total, posicionada sob a coluna do card 4
-                Desktop: teia visível com linhas curvas + avatares espalhados
-                Mobile: escondido (avatares aparecem simples no card)
-               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            <div className="relative mt-0 hidden h-[180px] md:block">
-              {/* SVG full-width com linhas curvas (Bézier) saindo do card 4 até os avatares */}
-              <svg
-                className="pointer-events-none absolute inset-0 h-full w-full"
-                viewBox="0 0 1000 180"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                {/*
-                  Origem das linhas: x=875 (centro-baixo do card 4, que ocupa colunas 75-100%)
-                  y=0 (topo do svg, onde o card 4 termina)
-                  Destinos: avatares espalhados abaixo do grid, numa distribuição orgânica
-                  que cobre quase toda a largura da seção (não só a coluna do card 4).
+              {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  5ª COLUNA — avatares em leque vertical conectados
+                  por linhas curvas horizontais ao card 4
+                  Desktop only (md:block)
+                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+              <div className="relative col-span-2 mt-4 md:col-span-1 md:mt-0">
+                {/* Conteúdo em altura igual aos cards (usa flex column centered) */}
+                <div className="relative flex h-full min-h-[160px] flex-col justify-center">
+                  {/* SVG das linhas curvas — ocupa toda a área da coluna */}
+                  <svg
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    {/*
+                      Origem das linhas: x=0 (lateral esquerda da coluna,
+                      que conecta com a lateral direita do card 4),
+                      y=50 (centro vertical da coluna).
+                      Destinos: 6 avatares distribuídos verticalmente na lateral
+                      direita da coluna (x próximo de 100), em diferentes y.
+                      Curva Bézier cúbica com control points horizontais pra
+                      criar arco suave horizontal.
+                    */}
+                    {[
+                      { y: 8 },   // avatar 1 — topo
+                      { y: 25 },  // avatar 2
+                      { y: 42 },  // avatar 3
+                      { y: 58 },  // avatar 4
+                      { y: 75 },  // avatar 5
+                      { y: 92 },  // avatar 6 — base
+                    ].map((p, i) => (
+                      <path
+                        key={i}
+                        d={`M 0 50 C 50 50, 50 ${p.y}, 95 ${p.y}`}
+                        stroke={CAAS_ACCENT}
+                        strokeOpacity="0.4"
+                        strokeWidth="1.5"
+                        strokeDasharray="4 4"
+                        strokeLinecap="round"
+                        fill="none"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    ))}
+                  </svg>
 
-                  Curva Bézier cúbica: M origin C ctrl1 ctrl2 destino
-                  Control points puxam pra baixo, criando arco suave
-                */}
-                {[
-                  // Cada destino tem posição do avatar (cx, cy) e control points pra curva
-                  { cx: 90,  cy: 115 }, // bem à esquerda, baixo
-                  { cx: 220, cy: 155 }, // esquerda, mais baixo
-                  { cx: 360, cy: 95  }, // centro-esquerda, meio
-                  { cx: 490, cy: 155 }, // centro, baixo
-                  { cx: 620, cy: 105 }, // centro-direita, meio
-                  { cx: 760, cy: 150 }, // direita, baixo
-                  { cx: 900, cy: 90  }, // bem à direita, meio
-                ].map((p, i) => {
-                  // Origem fixa no centro-baixo do card 4
-                  const ox = 875;
-                  const oy = 0;
-                  // Control points — curva orgânica, meio caminho entre origem e destino
-                  const midY = (oy + p.cy) / 2 + 20;
-                  return (
-                    <path
-                      key={i}
-                      d={`M ${ox} ${oy} C ${ox} ${midY}, ${p.cx} ${midY}, ${p.cx} ${p.cy}`}
-                      stroke={CAAS_ACCENT}
-                      strokeOpacity="0.4"
-                      strokeWidth="1.5"
-                      strokeDasharray="4 4"
-                      strokeLinecap="round"
-                      fill="none"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  );
-                })}
-              </svg>
-
-              {/* 7 avatares espalhados abaixo do grid, FORA dos cards */}
-              {/*
-                Posições em % da largura (mesma ordem dos destinos do SVG):
-                - Usei valores aproximados considerando que o SVG tem viewBox 1000x180,
-                  então x=90 no SVG ≈ 9% da largura, x=900 ≈ 90%, etc.
-              */}
-              {[
-                { avatar: 1,  style: { left: '7%',   top: '55%' } },
-                { avatar: 2,  style: { left: '20%',  top: '80%' } },
-                { avatar: 3,  style: { left: '34%',  top: '45%' } },
-                { avatar: 5,  style: { left: '47%',  top: '80%' } },
-                { avatar: 6,  style: { left: '60%',  top: '52%' } },
-                { avatar: 8,  style: { left: '74%',  top: '78%' } },
-                { avatar: 10, style: { left: '87%',  top: '42%' } },
-              ].map((p) => (
-                <div
-                  key={p.avatar}
-                  className="absolute h-10 w-10 overflow-hidden rounded-full border-[3px] border-background shadow-[0_6px_16px_rgba(94,42,103,0.2)]"
-                  style={p.style}
-                >
-                  <Image
-                    src={`/images/avatar-${p.avatar}.jpeg`}
-                    alt="Colaborador usando a peça"
-                    fill
-                    sizes="40px"
-                    className="object-cover"
+                  {/* Ponto de origem visual — bolinha na lateral esquerda da coluna */}
+                  <div
+                    className="absolute left-[-4px] top-1/2 z-10 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+                    style={{ backgroundColor: CAAS_ACCENT }}
                   />
-                </div>
-              ))}
 
-              {/* Ponto de origem visual — saindo do card 4 (opcional, pode remover) */}
-              <div
-                className="absolute right-[10%] top-[-6px] h-3 w-3 rounded-full border-2 border-white shadow-md"
-                style={{ backgroundColor: CAAS_ACCENT }}
-              />
-            </div>
-
-            {/* Mobile: avatares simples em linha (sem teia) */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 md:hidden">
-              <div className="text-[11px] text-muted-foreground">Time usa:</div>
-              {[1, 3, 5, 6, 8, 10].map((n) => (
-                <div
-                  key={n}
-                  className="h-8 w-8 overflow-hidden rounded-full border-2 border-background shadow-sm"
-                >
-                  <Image
-                    src={`/images/avatar-${n}.jpeg`}
-                    alt="Colaborador"
-                    width={32}
-                    height={32}
-                    className="object-cover"
-                  />
+                  {/* 6 avatares em leque vertical alinhados à direita */}
+                  {[
+                    { avatar: 1,  top: '8%' },
+                    { avatar: 3,  top: '25%' },
+                    { avatar: 5,  top: '42%' },
+                    { avatar: 6,  top: '58%' },
+                    { avatar: 8,  top: '75%' },
+                    { avatar: 10, top: '92%' },
+                  ].map((p) => (
+                    <div
+                      key={p.avatar}
+                      className="absolute right-0 h-9 w-9 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-background shadow-[0_6px_16px_rgba(94,42,103,0.2)]"
+                      style={{ top: p.top }}
+                    >
+                      <Image
+                        src={`/images/avatar-${p.avatar}.jpeg`}
+                        alt="Colaborador usando a peça"
+                        fill
+                        sizes="36px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
