@@ -42,13 +42,13 @@ Atração de talentos via Employee-Generated Content, cultura real visível, red
 ## Páginas Principais
 
 - Home: /
-- Plataforma: /plataforma
+- Solução SaaS (plataforma): /solucoes/software-as-a-service
+- Solução CaaS (serviço): /solucoes/content-as-a-service
 - Preços: /precos
-- Serviço CaaS: /servico
 - Blog: /blog
-- Sobre: /sobre
-- Contato: /contato
-- Demo: /demo
+- Materiais e recursos: /materiais
+- Ferramentas gratuitas: /ferramentas
+- Legal (privacidade, termos, cookies): /legal
 
 ## Informações de Contato
 

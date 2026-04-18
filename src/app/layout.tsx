@@ -33,6 +33,61 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Boldfy',
+  legalName: 'Boldfy',
+  url: 'https://boldfy.com.br',
+  logo: 'https://boldfy.com.br/images/boldfy-logo-white.svg',
+  description:
+    'Content Intelligence para Employee-Led Growth. A Boldfy transforma colaboradores em criadores de conteúdo autoral no LinkedIn, combinando plataforma SaaS com serviço especializado (CaaS).',
+  email: 'contato@boldfy.com.br',
+  telephone: '+55-11-91368-8100',
+  sameAs: [
+    'https://www.linkedin.com/company/boldfy-branding',
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    addressCountry: 'BR',
+    addressRegion: 'SP',
+  },
+  founder: {
+    '@type': 'Person',
+    name: 'Clara Ramos',
+    jobTitle: 'Founder',
+  },
+  knowsAbout: [
+    'Employee Advocacy',
+    'Employee-Led Growth',
+    'Content Intelligence',
+    'LinkedIn Marketing',
+    'B2B Content Strategy',
+    'Social Selling',
+    'Employer Branding',
+  ],
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Boldfy',
+  url: 'https://boldfy.com.br',
+  inLanguage: 'pt-BR',
+  publisher: {
+    '@type': 'Organization',
+    name: 'Boldfy',
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://boldfy.com.br/blog?q={search_term_string}',
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -54,6 +109,14 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@600;700;800;900&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">

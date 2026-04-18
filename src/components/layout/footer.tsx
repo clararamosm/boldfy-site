@@ -177,7 +177,7 @@ export function Footer() {
               <ul className="flex flex-col gap-3">
                 <li>
                   <Link
-                    href="/privacidade"
+                    href="/legal#privacidade"
                     className="text-[13px] text-white/55 transition-colors hover:text-white"
                   >
                     Privacidade
@@ -185,10 +185,18 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/termos"
+                    href="/legal#termos"
                     className="text-[13px] text-white/55 transition-colors hover:text-white"
                   >
                     Termos de Uso
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/legal#cookies"
+                    className="text-[13px] text-white/55 transition-colors hover:text-white"
+                  >
+                    Cookies
                   </Link>
                 </li>
               </ul>
@@ -209,10 +217,18 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/sobre"
+                  href="/materiais"
                   className="text-[13px] text-white/55 transition-colors hover:text-white"
                 >
-                  Sobre a Boldfy
+                  Materiais
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/ferramentas"
+                  className="text-[13px] text-white/55 transition-colors hover:text-white"
+                >
+                  Ferramentas
                 </Link>
               </li>
               <li>

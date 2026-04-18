@@ -91,29 +91,40 @@ const nextConfig: NextConfig = {
       // PÁGINAS DO SITE ANTIGO (Wix) → site novo
       // ────────────────────────────────────────────────────────────
 
-      // Páginas de produto Wix → páginas relevantes no site novo
-      { source: '/produto/planejamento-de-conteudo-template-notion', destination: '/plataforma', permanent: false },
-      { source: '/produto/kit-mentoria-de-marca-pessoal', destination: '/servico', permanent: false },
-      { source: '/produto/plano-de-acoes-notion', destination: '/plataforma', permanent: false },
-      { source: '/produto/:slug*', destination: '/', permanent: false },
+      // Produtos antigos (Wix) — como não vendemos mais, todos vão pra /materiais
+      { source: '/produto/:slug*', destination: '/materiais', permanent: true },
+      { source: '/category/all-products', destination: '/materiais', permanent: true },
+      { source: '/category/kits', destination: '/materiais', permanent: true },
+      { source: '/category/template-notion', destination: '/materiais', permanent: true },
+      { source: '/recursos', destination: '/materiais', permanent: true },
 
       // Outras páginas Wix
-      { source: '/caf%C3%A9-virtual-branding', destination: '/contato', permanent: false },
-      { source: '/brandgpt-chat-arquetipo-de-marca', destination: '/plataforma', permanent: false },
-      { source: '/conteudo-estrategico', destination: '/servico', permanent: false },
-      { source: '/branding-e-construcao-de-marca', destination: '/servico', permanent: false },
-      { source: '/mentoria-marca-pessoal', destination: '/servico', permanent: false },
-      { source: '/guia-proposta-de-valor', destination: '/blog', permanent: false },
-      { source: '/pesquisa-panorama-de-branding-b2b-brasil', destination: '/blog', permanent: false },
-      { source: '/diagnostico-de-branding-b2b', destination: '/contato', permanent: false },
-      { source: '/category/:slug*', destination: '/blog', permanent: false },
-      { source: '/blog/categories/:slug*', destination: '/blog', permanent: false },
+      { source: '/caf%C3%A9-virtual-branding', destination: '/', permanent: true },
+      { source: '/brandgpt-chat-arquetipo-de-marca', destination: '/solucoes/software-as-a-service', permanent: true },
+      { source: '/conteudo-estrategico', destination: '/solucoes/content-as-a-service', permanent: true },
+      { source: '/branding-e-construcao-de-marca', destination: '/solucoes/content-as-a-service', permanent: true },
+      { source: '/mentoria-marca-pessoal', destination: '/materiais', permanent: true },
+      { source: '/guia-proposta-de-valor', destination: '/blog', permanent: true },
+      { source: '/pesquisa-panorama-de-branding-b2b-brasil', destination: '/blog', permanent: true },
+      { source: '/diagnostico-de-branding-b2b', destination: '/', permanent: true },
+      { source: '/category/:slug*', destination: '/blog', permanent: true },
+      { source: '/blog/categories/:slug*', destination: '/blog', permanent: true },
       { source: '/members-area/:path*', destination: '/', permanent: false },
 
       // Casos de uso → páginas "Para" (novo IA)
       { source: '/casos-de-uso/marketing', destination: '/para/marketing', permanent: true },
       { source: '/casos-de-uso/social-selling', destination: '/para/vendas', permanent: true },
       { source: '/casos-de-uso/employer-branding', destination: '/para/rh', permanent: true },
+
+      // ────────────────────────────────────────────────────────────
+      // LEGAL — consolidado em /legal com âncoras
+      // ────────────────────────────────────────────────────────────
+      { source: '/privacidade', destination: '/legal#privacidade', permanent: true },
+      { source: '/termos', destination: '/legal#termos', permanent: true },
+      { source: '/cookies', destination: '/legal#cookies', permanent: true },
+      { source: '/politica-de-privacidade', destination: '/legal#privacidade', permanent: true },
+      { source: '/politica-de-cookies', destination: '/legal#cookies', permanent: true },
+      { source: '/termos-de-uso', destination: '/legal#termos', permanent: true },
     ];
   },
 };
