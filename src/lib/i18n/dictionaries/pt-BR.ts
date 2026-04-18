@@ -900,7 +900,7 @@ const ptBR = {
     heroMeetCeoLabel: 'CEO',
     heroMeetCeoName: 'Pedro Almeida',
     heroMeetStrategistLabel: 'Estrategista',
-    heroMeetStrategistName: 'Carol Ramos',
+    heroMeetStrategistName: 'Carol Souza',
     heroMeetStatus: 'Alinhamento de conteúdo',
 
     // S2 - Dois modos (card duplo)

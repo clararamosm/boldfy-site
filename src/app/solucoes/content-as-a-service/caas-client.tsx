@@ -27,7 +27,6 @@ import {
   FileText,
   X,
   Check,
-  Video,
   Compass,
   PenTool,
   FileSpreadsheet,
@@ -236,15 +235,15 @@ export function CaasClient() {
           </div>
 
           {/* Visual: 4 elementos flutuando — 2 Meet tiles + calendário + post aprovado */}
-          <div className="relative h-[540px] lg:h-[620px]">
+          <div className="relative h-[620px] lg:h-[700px]">
             {/* Meet tile 1 — CEO (topo esquerda) */}
-            <div className="absolute left-0 top-[10px] z-20 w-[200px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.24)] lg:w-[220px]">
+            <div className="absolute left-0 top-[10px] z-20 w-[240px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.24)] lg:w-[270px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-ceo.jpeg"
                   alt="CEO em reunião de alinhamento de conteúdo"
                   fill
-                  sizes="(max-width: 1024px) 200px, 220px"
+                  sizes="(max-width: 1024px) 240px, 270px"
                   className="object-cover"
                   priority
                 />
@@ -252,11 +251,11 @@ export function CaasClient() {
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between rounded-md bg-black/60 px-2 py-1 text-white backdrop-blur-sm">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <div className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-red-500" />
-                    <span className="truncate text-[10px] font-semibold">
+                    <span className="truncate text-[11px] font-semibold">
                       {c.heroMeetCeoName}
                     </span>
                   </div>
-                  <span className="shrink-0 rounded bg-white/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider">
+                  <span className="shrink-0 rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                     {c.heroMeetCeoLabel}
                   </span>
                 </div>
@@ -264,25 +263,25 @@ export function CaasClient() {
             </div>
 
             {/* Meet tile 2 — Estrategista (centro-direita, sobreposto levemente) */}
-            <div className="absolute right-0 top-[120px] z-30 w-[200px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.28)] lg:w-[220px]">
+            <div className="absolute right-0 top-[140px] z-30 w-[240px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.28)] lg:w-[270px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-estrategista.jpeg"
                   alt="Estrategista Boldfy em reunião de alinhamento de conteúdo"
                   fill
-                  sizes="(max-width: 1024px) 200px, 220px"
+                  sizes="(max-width: 1024px) 240px, 270px"
                   className="object-cover"
                   priority
                 />
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between rounded-md bg-black/60 px-2 py-1 text-white backdrop-blur-sm">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <div className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-red-500" />
-                    <span className="truncate text-[10px] font-semibold">
+                    <span className="truncate text-[11px] font-semibold">
                       {c.heroMeetStrategistName}
                     </span>
                   </div>
                   <span
-                    className="shrink-0 rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white"
+                    className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
                     style={{ backgroundColor: CAAS_ACCENT }}
                   >
                     {c.heroMeetStrategistLabel}
@@ -292,7 +291,7 @@ export function CaasClient() {
             </div>
 
             {/* Calendário editorial — canto inferior esquerdo */}
-            <div className="absolute bottom-[20px] left-[-10px] z-10 w-[260px] animate-hero-float-slow rounded-[18px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(94,42,103,0.14)] lg:w-[300px]">
+            <div className="absolute bottom-[20px] left-[-10px] z-10 w-[320px] animate-hero-float-slow rounded-[18px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(94,42,103,0.14)] lg:w-[360px]">
               <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" style={{ color: CAAS_ACCENT }} />
@@ -308,7 +307,7 @@ export function CaasClient() {
               </div>
 
               {/* Week view com 3 cores distintas (3 perfis: Pedro, Carol, Maria) */}
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-5 gap-2">
                 {[
                   { day: c.heroMockupDay1, post: c.heroMockupPost1, color: CAAS_ACCENT },
                   { day: c.heroMockupDay2, post: c.heroMockupPost2, color: CAAS_ACCENT_LIGHT },
@@ -318,13 +317,13 @@ export function CaasClient() {
                 ].map((d) => (
                   <div
                     key={d.day}
-                    className="flex flex-col gap-1.5 rounded-lg border border-border bg-background/50 p-1.5"
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-background/50 p-2"
                   >
-                    <div className="text-center text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    <div className="text-center text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                       {d.day}
                     </div>
                     <div
-                      className="rounded-md p-1.5 text-[8px] font-semibold leading-tight text-white"
+                      className="rounded-md p-2 text-[9px] font-semibold leading-tight text-white"
                       style={{ backgroundColor: d.color }}
                     >
                       {d.post}
@@ -334,16 +333,16 @@ export function CaasClient() {
               </div>
 
               {/* Legenda de perfis com cores */}
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-[9px] text-muted-foreground">
-                <div className="flex items-center gap-1">
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: CAAS_ACCENT }} />
                   <span>Pedro</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: CAAS_ACCENT_LIGHT }} />
                   <span>Carol</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: '#F59E0B' }} />
                   <span>Maria</span>
                 </div>
@@ -519,90 +518,274 @@ export function CaasClient() {
             </div>
           </div>
 
-          {/* Como funciona — 4 cards coloridos estilo OLX (claros, com ícones, tags e checklist) */}
+          {/* Como funciona — cards mais visuais com elementos UI variados */}
           <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: CAAS_ACCENT }}>
             Como funciona
           </div>
-          <div className="relative grid grid-cols-1 gap-4 md:grid-cols-4">
-            {/* Linha conectora desktop */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {/* Passo 0 — Input (opcional) */}
             <div
-              className="pointer-events-none absolute left-[60px] right-[60px] top-[30px] hidden h-[2px] md:block"
-              style={{
-                backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.35) 10%, rgba(94,42,103,0.35) 90%, transparent)`,
-              }}
-            />
-
-            {[
-              {
-                icon: FileText,
-                title: c.designStep1,
-                tag: 'Input',
-                accent: CAAS_ACCENT,
-                bg: 'rgba(94,42,103,0.06)',
-              },
-              {
-                icon: PenTool,
-                title: c.designStep2,
-                tag: 'Produção',
-                accent: CAAS_ACCENT_LIGHT,
-                bg: 'rgba(152,64,173,0.06)',
-              },
-              {
-                icon: FileStack,
-                title: c.designStep3,
-                tag: 'Entrega',
-                accent: '#F59E0B',
-                bg: 'rgba(245,158,11,0.06)',
-              },
-              {
-                icon: Users,
-                title: c.designStep4,
-                tag: 'Uso',
-                accent: CAAS_ACCENT,
-                bg: 'rgba(94,42,103,0.06)',
-              },
-            ].map((step, i) => (
+              className="group relative z-[1] rounded-[16px] border-2 border-dashed bg-card p-4 transition-all hover:-translate-y-1"
+              style={{ borderColor: 'rgba(94,42,103,0.25)' }}
+            >
+              {/* Número 0 */}
               <div
-                key={step.title}
-                className="relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.12)]"
-                style={{ borderColor: 'rgba(94,42,103,0.2)' }}
+                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full border-2 border-dashed bg-card font-headline text-[11px] font-black shadow-md"
+                style={{ borderColor: CAAS_ACCENT, color: CAAS_ACCENT }}
               >
-                {/* Número flutuante */}
-                <div
-                  className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                  style={{ backgroundColor: step.accent }}
-                >
-                  {i + 1}
-                </div>
+                0
+              </div>
 
-                {/* Tag colorida */}
+              {/* Tag Opcional com toggler de estado */}
+              <div className="mb-3 flex items-center justify-between gap-2">
                 <span
-                  className="mb-3 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
-                  style={{ backgroundColor: step.bg, color: step.accent }}
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
+                  style={{ backgroundColor: 'rgba(94,42,103,0.06)', color: CAAS_ACCENT }}
                 >
-                  {step.tag}
+                  Input
                 </span>
-
-                {/* Ícone */}
-                <div
-                  className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
-                  style={{ backgroundColor: step.bg, color: step.accent }}
-                >
-                  <step.icon className="h-5 w-5" />
-                </div>
-
-                {/* Título */}
-                <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                  {step.title}
-                </p>
-
-                {/* Checklist item fake */}
-                <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-2.5 text-[10px] text-muted-foreground">
-                  <Check className="h-3 w-3" style={{ color: step.accent }} />
-                  <span>Automatizado</span>
+                {/* Toggler off */}
+                <div className="flex h-4 w-8 items-center rounded-full bg-muted-foreground/20 px-0.5">
+                  <div className="h-3 w-3 rounded-full bg-white shadow" />
                 </div>
               </div>
-            ))}
+
+              {/* Ícone */}
+              <div
+                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
+                style={{ backgroundColor: 'rgba(94,42,103,0.06)', color: CAAS_ACCENT }}
+              >
+                <FileText className="h-5 w-5" />
+              </div>
+
+              {/* Título */}
+              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
+                {c.designStep1}
+              </p>
+
+              {/* Label opcional no rodapé */}
+              <div
+                className="mt-3 rounded-md px-2 py-1 text-center text-[9px] font-bold uppercase tracking-[0.12em]"
+                style={{ backgroundColor: 'rgba(94,42,103,0.04)', color: CAAS_ACCENT }}
+              >
+                Opcional
+              </div>
+            </div>
+
+            {/* Passo 1 — Produção */}
+            <div
+              className="group relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(152,64,173,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(152,64,173,0.14)]"
+              style={{ borderColor: 'rgba(152,64,173,0.25)' }}
+            >
+              <div
+                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
+                style={{ backgroundColor: CAAS_ACCENT_LIGHT }}
+              >
+                1
+              </div>
+
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
+                  style={{ backgroundColor: 'rgba(152,64,173,0.08)', color: CAAS_ACCENT_LIGHT }}
+                >
+                  Produção
+                </span>
+                {/* Pulso "ativo" */}
+                <div className="flex items-center gap-1">
+                  <div
+                    className="h-1.5 w-1.5 animate-pulse rounded-full"
+                    style={{ backgroundColor: CAAS_ACCENT_LIGHT }}
+                  />
+                  <span
+                    className="text-[8px] font-bold uppercase tracking-wider"
+                    style={{ color: CAAS_ACCENT_LIGHT }}
+                  >
+                    ativo
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
+                style={{ backgroundColor: 'rgba(152,64,173,0.08)', color: CAAS_ACCENT_LIGHT }}
+              >
+                <PenTool className="h-5 w-5" />
+              </div>
+
+              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
+                {c.designStep2}
+              </p>
+
+              {/* Checklist visual */}
+              <div className="mt-3 space-y-1">
+                {['Brand Context', 'Tom de voz', 'Guidelines'].map((label) => (
+                  <div key={label} className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                    <Check className="h-2.5 w-2.5" style={{ color: CAAS_ACCENT_LIGHT }} />
+                    <span>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Passo 2 — Entrega */}
+            <div
+              className="group relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(245,158,11,0.1)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(245,158,11,0.18)]"
+              style={{ borderColor: 'rgba(245,158,11,0.3)' }}
+            >
+              <div
+                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
+                style={{ backgroundColor: '#F59E0B' }}
+              >
+                2
+              </div>
+
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#B45309' }}
+                >
+                  Entrega
+                </span>
+                {/* Badge de quantidade */}
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                  style={{ backgroundColor: '#F59E0B' }}
+                >
+                  +4
+                </span>
+              </div>
+
+              <div
+                className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-[10px]"
+                style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#B45309' }}
+              >
+                <FileStack className="h-5 w-5" />
+              </div>
+
+              <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
+                {c.designStep3}
+              </p>
+
+              {/* Mini progresso ou lista de assets */}
+              <div className="mt-3 space-y-1">
+                {[
+                  { label: 'Carrossel.pdf', done: true },
+                  { label: 'Template.fig', done: true },
+                  { label: 'Infográfico', done: false },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className={`flex items-center gap-1.5 text-[9px] ${
+                      item.done ? 'text-muted-foreground' : 'text-accent-foreground'
+                    }`}
+                  >
+                    {item.done ? (
+                      <CheckCircle2 className="h-2.5 w-2.5" style={{ color: '#F59E0B' }} />
+                    ) : (
+                      <div className="h-2.5 w-2.5 shrink-0 rounded-full border border-[#F59E0B]/50" />
+                    )}
+                    <span className={item.done ? 'line-through' : ''}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Passo 3 — Uso (teia de perfis) */}
+            <div
+              className="group relative z-[1] flex flex-col rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+              style={{ borderColor: 'rgba(94,42,103,0.25)' }}
+            >
+              <div
+                className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
+                style={{ backgroundColor: CAAS_ACCENT }}
+              >
+                3
+              </div>
+
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em]"
+                  style={{ backgroundColor: 'rgba(94,42,103,0.08)', color: CAAS_ACCENT }}
+                >
+                  Uso
+                </span>
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                >
+                  time todo
+                </span>
+              </div>
+
+              <p className="mb-3 text-[13px] font-semibold leading-[1.4] text-accent-foreground">
+                {c.designStep4}
+              </p>
+
+              {/* Teia de perfis — 1 central (peça) + 5 ao redor (perfis usando) */}
+              <div className="relative mt-2 flex-1 min-h-[120px]">
+                {/* SVG de linhas conectando o centro aos perfis */}
+                <svg
+                  className="pointer-events-none absolute inset-0 h-full w-full"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  {/* 5 linhas saindo do centro (50,50) */}
+                  {[
+                    { x: 15, y: 20 },
+                    { x: 85, y: 20 },
+                    { x: 10, y: 60 },
+                    { x: 90, y: 60 },
+                    { x: 50, y: 92 },
+                  ].map((p, i) => (
+                    <line
+                      key={i}
+                      x1="50"
+                      y1="50"
+                      x2={p.x}
+                      y2={p.y}
+                      stroke={CAAS_ACCENT}
+                      strokeOpacity="0.3"
+                      strokeWidth="0.5"
+                      strokeDasharray="2 2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                </svg>
+
+                {/* Ícone central — peça de design */}
+                <div
+                  className="absolute left-1/2 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white shadow-md"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                >
+                  <LayoutGrid className="h-4 w-4 text-white" />
+                </div>
+
+                {/* 5 perfis ao redor, em posições específicas */}
+                {[
+                  { avatar: 1, style: { left: '5%', top: '10%' } },
+                  { avatar: 3, style: { right: '5%', top: '10%' } },
+                  { avatar: 5, style: { left: '0%', top: '50%' } },
+                  { avatar: 6, style: { right: '0%', top: '50%' } },
+                  { avatar: 8, style: { left: '40%', bottom: '0%' } },
+                ].map((p) => (
+                  <div
+                    key={p.avatar}
+                    className="absolute h-6 w-6 overflow-hidden rounded-full border-2 border-white shadow-sm"
+                    style={p.style}
+                  >
+                    <Image
+                      src={`/images/avatar-${p.avatar}.jpeg`}
+                      alt={`Colaborador ${p.avatar}`}
+                      fill
+                      sizes="24px"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -704,7 +887,7 @@ export function CaasClient() {
             {[
               { icon: Compass, label: c.execStep1Label, exclusive: false },
               { icon: Target, label: c.execStep2Label, exclusive: false },
-              { icon: Video, label: c.execStep3Label, exclusive: false },
+              { icon: PenTool, label: c.execStep3Label, exclusive: false },
               { icon: Calendar, label: c.execStep4Label, exclusive: false },
               { icon: FileSpreadsheet, label: c.execStep5Label, exclusive: true },
             ].map((step, i) => (
