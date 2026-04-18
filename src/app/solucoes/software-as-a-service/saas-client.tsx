@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { BattleCardTrigger } from '@/components/battle-card';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -353,148 +354,150 @@ export default function SaasPageClient() {
           </div>
 
           {/* Wide-frame workflow: problemas (esquerda) → soluções (direita) com linhas animadas */}
-          <div className="relative">
-            {/* SVG de linhas conectoras diretas (desktop) com bolinhas viajando */}
-            <svg
-              className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block"
-              viewBox="0 0 1200 520"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.2" />
-                  <stop offset="50%" stopColor="#CD50F1" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.2" />
-                </linearGradient>
-              </defs>
-
-              {/* Linha 1: Problema 01 → Solução 01 */}
-              <path
-                id="line-1"
-                d="M 400 85 C 600 85, 600 85, 800 85"
-                stroke="url(#line-grad)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5 5"
-              >
-                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.2s" repeatCount="indefinite" />
-              </path>
-              <circle r="4" fill="#CD50F1">
-                <animateMotion dur="3s" repeatCount="indefinite" rotate="auto">
-                  <mpath href="#line-1" />
-                </animateMotion>
-                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Linha 2: Problema 02 → Solução 02 (reta central) */}
-              <path
-                id="line-2"
-                d="M 400 260 L 800 260"
-                stroke="url(#line-grad)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5 5"
-              >
-                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.5s" repeatCount="indefinite" />
-              </path>
-              <circle r="4" fill="#CD50F1">
-                <animateMotion dur="3.5s" begin="0.5s" repeatCount="indefinite" rotate="auto">
-                  <mpath href="#line-2" />
-                </animateMotion>
-                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3.5s" begin="0.5s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Linha 3: Problema 03 → Solução 03 */}
-              <path
-                id="line-3"
-                d="M 400 435 C 600 435, 600 435, 800 435"
-                stroke="url(#line-grad)"
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="5 5"
-              >
-                <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1.8s" repeatCount="indefinite" />
-              </path>
-              <circle r="4" fill="#CD50F1">
-                <animateMotion dur="4s" begin="1s" repeatCount="indefinite" rotate="auto">
-                  <mpath href="#line-3" />
-                </animateMotion>
-                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="4s" begin="1s" repeatCount="indefinite" />
-              </circle>
-            </svg>
-
-            <div className="relative grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_140px_1fr] lg:gap-0">
-              {/* Coluna esquerda: Problemas */}
-              <div className="flex flex-col gap-5 lg:pr-6">
-                {[
-                  { num: '01', icon: Target, label: c.problem1Label, desc: c.problem1Desc },
-                  { num: '02', icon: Brain, label: c.problem2Label, desc: c.problem2Desc },
-                  { num: '03', icon: Wrench, label: c.problem3Label, desc: c.problem3Desc },
-                ].map((item) => (
-                  <div
-                    key={item.num}
-                    className="group relative rounded-[16px] border border-border bg-card p-4 shadow-[0_4px_20px_rgba(93,42,103,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-accent-foreground/[0.06] text-muted-foreground">
-                        <item.icon className="h-[18px] w-[18px]" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-1 flex items-center gap-2">
-                          <span className="font-headline text-[10px] font-black text-muted-foreground">
-                            {item.num}
-                          </span>
-                          <h3 className="font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
-                            {item.label}
-                          </h3>
-                        </div>
-                        <p className="text-[12px] leading-[1.5] text-muted-foreground">
-                          {item.desc}
-                        </p>
-                      </div>
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1fr_90px_1fr] lg:gap-0">
+            {/* Coluna esquerda: Problemas */}
+            <div className="flex flex-col gap-5">
+              {[
+                { num: '01', icon: Target, label: c.problem1Label, desc: c.problem1Desc },
+                { num: '02', icon: Brain, label: c.problem2Label, desc: c.problem2Desc },
+                { num: '03', icon: Wrench, label: c.problem3Label, desc: c.problem3Desc },
+              ].map((item) => (
+                <div
+                  key={item.num}
+                  className="group relative rounded-[16px] border border-border bg-card p-4 shadow-[0_4px_20px_rgba(93,42,103,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-accent-foreground/[0.06] text-muted-foreground">
+                      <item.icon className="h-[18px] w-[18px]" />
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Espaço central (mobile: chevron; desktop: vazio pra passar linhas do SVG) */}
-              <div className="flex items-center justify-center lg:hidden">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary">
-                  <ChevronDown className="h-4 w-4" />
-                </div>
-              </div>
-
-              {/* Coluna direita: Soluções */}
-              <div className="flex flex-col gap-5 lg:pl-6">
-                {[
-                  { icon: Trophy, label: c.problem1SolLabel, desc: c.problem1SolDesc },
-                  { icon: GraduationCap, label: c.problem2SolLabel, desc: c.problem2SolDesc },
-                  { icon: Sparkles, label: c.problem3SolLabel, desc: c.problem3SolDesc },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="group rounded-[16px] border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_8px_24px_rgba(205,80,241,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_12px_32px_rgba(205,80,241,0.14)]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-primary/[0.15] text-primary">
-                        <item.icon className="h-[18px] w-[18px]" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-primary">
-                          Na Boldfy
-                        </div>
-                        <h3 className="mb-1 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="font-headline text-[10px] font-black text-muted-foreground">
+                          {item.num}
+                        </span>
+                        <h3 className="font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
                           {item.label}
                         </h3>
-                        <p className="text-[12px] leading-[1.5] text-muted-foreground">
-                          {item.desc}
-                        </p>
                       </div>
+                      <p className="text-[12px] leading-[1.5] text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Coluna central: linhas animadas (desktop) / chevron (mobile) */}
+            <div className="flex items-center justify-center lg:h-full">
+              {/* Mobile: chevron */}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/[0.12] text-primary lg:hidden">
+                <ChevronDown className="h-4 w-4" />
               </div>
+
+              {/* Desktop: SVG de linhas horizontais animadas */}
+              <svg
+                className="pointer-events-none hidden h-full w-full lg:block"
+                viewBox="0 0 100 300"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.2" />
+                    <stop offset="50%" stopColor="#CD50F1" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#CD50F1" stopOpacity="0.2" />
+                  </linearGradient>
+                </defs>
+
+                {/* Linha 1 (topo ~17%) */}
+                <path
+                  id="line-1"
+                  d="M 0 50 L 100 50"
+                  stroke="url(#line-grad)"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeDasharray="3 3"
+                  vectorEffect="non-scaling-stroke"
+                >
+                  <animate attributeName="stroke-dashoffset" from="6" to="0" dur="1.2s" repeatCount="indefinite" />
+                </path>
+                <circle r="2" fill="#CD50F1" vectorEffect="non-scaling-stroke">
+                  <animateMotion dur="3s" repeatCount="indefinite">
+                    <mpath href="#line-1" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3s" repeatCount="indefinite" />
+                </circle>
+
+                {/* Linha 2 (meio ~50%) */}
+                <path
+                  id="line-2"
+                  d="M 0 150 L 100 150"
+                  stroke="url(#line-grad)"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeDasharray="3 3"
+                  vectorEffect="non-scaling-stroke"
+                >
+                  <animate attributeName="stroke-dashoffset" from="6" to="0" dur="1.5s" repeatCount="indefinite" />
+                </path>
+                <circle r="2" fill="#CD50F1" vectorEffect="non-scaling-stroke">
+                  <animateMotion dur="3.5s" begin="0.5s" repeatCount="indefinite">
+                    <mpath href="#line-2" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3.5s" begin="0.5s" repeatCount="indefinite" />
+                </circle>
+
+                {/* Linha 3 (inferior ~83%) */}
+                <path
+                  id="line-3"
+                  d="M 0 250 L 100 250"
+                  stroke="url(#line-grad)"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeDasharray="3 3"
+                  vectorEffect="non-scaling-stroke"
+                >
+                  <animate attributeName="stroke-dashoffset" from="6" to="0" dur="1.8s" repeatCount="indefinite" />
+                </path>
+                <circle r="2" fill="#CD50F1" vectorEffect="non-scaling-stroke">
+                  <animateMotion dur="4s" begin="1s" repeatCount="indefinite">
+                    <mpath href="#line-3" />
+                  </animateMotion>
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="4s" begin="1s" repeatCount="indefinite" />
+                </circle>
+              </svg>
+            </div>
+
+            {/* Coluna direita: Soluções */}
+            <div className="flex flex-col gap-5">
+              {[
+                { icon: Trophy, label: c.problem1SolLabel, desc: c.problem1SolDesc },
+                { icon: GraduationCap, label: c.problem2SolLabel, desc: c.problem2SolDesc },
+                { icon: Sparkles, label: c.problem3SolLabel, desc: c.problem3SolDesc },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="group rounded-[16px] border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_8px_24px_rgba(205,80,241,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_12px_32px_rgba(205,80,241,0.14)]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-primary/[0.15] text-primary">
+                      <item.icon className="h-[18px] w-[18px]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.08em] text-primary">
+                        Na Boldfy
+                      </div>
+                      <h3 className="mb-1 font-headline text-[14px] font-black tracking-[-0.015em] text-accent-foreground">
+                        {item.label}
+                      </h3>
+                      <p className="text-[12px] leading-[1.5] text-muted-foreground">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -708,12 +711,12 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          {/* 2 colunas alinhadas: mockups sobrepostos (esq) + 4 feature cards (dir) */}
-          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-8">
-            {/* Coluna esquerda: mockup Trilha (cima) sobreposto ao Ranking (baixo) */}
-            <div className="relative min-h-[520px] lg:min-h-[580px]">
-              {/* Trilha — topo esquerda */}
-              <div className="absolute left-0 top-0 z-10 w-[88%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
+          {/* 2 colunas: mockups sobrepostos (esq) + 4 feature cards (dir) */}
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-8">
+            {/* Coluna esquerda: Trilha no topo, Ranking sobreposto por baixo */}
+            <div className="flex flex-col">
+              {/* Trilha */}
+              <div className="relative z-10 ml-0 mr-[12%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
                 <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
@@ -760,8 +763,8 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* Ranking — canto inferior direito, sobreposto */}
-              <div className="absolute bottom-0 right-0 z-20 w-[85%] rounded-[16px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
+              {/* Ranking — sobrepõe a trilha com margin-top negativa e desloca pra direita */}
+              <div className="relative z-20 -mt-8 ml-[12%] mr-0 rounded-[16px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
                 <div className="mb-2.5 flex items-center justify-between border-b border-border pb-2">
                   <div className="flex items-center gap-1.5">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
@@ -811,7 +814,7 @@ export default function SaasPageClient() {
               </div>
             </div>
 
-            {/* Coluna direita: 4 feature cards empilhados */}
+            {/* Coluna direita: 4 feature cards em grid 2x2 */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
                 { icon: Target, title: c.cluster2Card1Title, desc: c.cluster2Card1Desc },
@@ -852,12 +855,12 @@ export default function SaasPageClient() {
             </p>
           </div>
 
-          {/* 2 colunas alinhadas: dashboard + leads sobrepostos (esq) + 4 feature cards (dir) */}
-          <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-8">
-            {/* Coluna esquerda: KPIs (cima) sobreposto a LinkedIn Leads (baixo) */}
-            <div className="relative min-h-[520px] lg:min-h-[580px]">
-              {/* Mini-dashboard KPIs — topo esquerda */}
-              <div className="absolute left-0 top-0 z-10 w-[88%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
+          {/* 2 colunas: mockups sobrepostos (esq) + 4 feature cards (dir) */}
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-8">
+            {/* Coluna esquerda: Dashboard KPIs (cima), LinkedIn Leads sobreposto por baixo */}
+            <div className="flex flex-col">
+              {/* Mini-dashboard KPIs */}
+              <div className="relative z-10 ml-0 mr-[12%] rounded-[16px] border border-border bg-card p-4 shadow-[0_16px_40px_rgba(205,80,241,0.1)]">
                 <div className="mb-3 flex items-center justify-between border-b border-border pb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-primary/[0.12] text-primary">
@@ -903,8 +906,8 @@ export default function SaasPageClient() {
                 </div>
               </div>
 
-              {/* LinkedIn Leads — canto inferior direito, sobreposto */}
-              <div className="absolute bottom-0 right-0 z-20 w-[85%] rounded-[16px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
+              {/* LinkedIn Leads — sobrepõe com margin-top negativa e desloca pra direita */}
+              <div className="relative z-20 -mt-8 ml-[12%] mr-0 rounded-[16px] border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-[#E875FF]/[0.03] p-4 shadow-[0_20px_50px_rgba(205,80,241,0.2)]">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                     <Users className="h-[18px] w-[18px]" />
@@ -955,7 +958,7 @@ export default function SaasPageClient() {
               </div>
             </div>
 
-            {/* Coluna direita: 4 feature cards */}
+            {/* Coluna direita: 4 feature cards em grid 2x2 */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
                 { icon: Send, title: c.cluster3Card1Title, desc: c.cluster3Card1Desc },
@@ -1041,6 +1044,11 @@ export default function SaasPageClient() {
             <p className="mx-auto mt-5 max-w-[720px] text-[15px] leading-[1.6] text-muted-foreground">
               {c.togetherIntro}
             </p>
+            <div className="mt-6 flex justify-center">
+              <BattleCardTrigger source="saas:together" variant="pill">
+                {t.home.solutionsCompareLabel}
+              </BattleCardTrigger>
+            </div>
           </div>
 
           {/* 2 cards side by side + middle connector */}
