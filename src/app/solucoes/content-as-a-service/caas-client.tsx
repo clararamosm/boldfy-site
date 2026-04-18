@@ -235,10 +235,16 @@ export function CaasClient() {
             </div>
           </div>
 
-          {/* Visual: 4 elementos compactados + sobrepostos ao redor do calendário grande */}
-          <div className="relative h-[580px] lg:h-[640px]">
-            {/* Calendário editorial — MAIOR, centralizado, z baixo (fica atrás) */}
-            <div className="absolute bottom-[10px] left-1/2 z-10 w-[420px] -translate-x-1/2 animate-hero-float-slow rounded-[18px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(94,42,103,0.14)] lg:w-[460px]">
+          {/* Visual: 4 elementos colando — calendário central + 2 fotos sobrepondo laterais + post aprovado no topo */}
+          {/* Container com mx-auto + w-[440px] pra caber tudo ancorado ao calendário */}
+          <div className="relative mx-auto h-[520px] w-full max-w-[460px] lg:h-[540px]">
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Calendário editorial — BASE, centralizado, sem float
+                Position: absolute centralizado horizontal, um pouco abaixo do meio
+                z-10 (fica ATRÁS das fotos). Sem animação para garantir
+                que sempre apareça no lugar certo.
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            <div className="absolute left-0 right-0 top-[120px] z-10 mx-auto w-[420px] rounded-[18px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(94,42,103,0.18)] lg:w-[440px]">
               <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" style={{ color: CAAS_ACCENT }} />
@@ -254,7 +260,7 @@ export function CaasClient() {
               </div>
 
               {/* Week view com 3 cores distintas (3 perfis: Pedro, Carol, Maria) */}
-              <div className="grid grid-cols-5 gap-2.5">
+              <div className="grid grid-cols-5 gap-2">
                 {[
                   { day: c.heroMockupDay1, post: c.heroMockupPost1, color: CAAS_ACCENT },
                   { day: c.heroMockupDay2, post: c.heroMockupPost2, color: CAAS_ACCENT_LIGHT },
@@ -264,7 +270,7 @@ export function CaasClient() {
                 ].map((d) => (
                   <div
                     key={d.day}
-                    className="flex flex-col gap-2 rounded-lg border border-border bg-background/50 p-2.5"
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-background/50 p-2"
                   >
                     <div className="text-center text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
                       {d.day}
@@ -296,14 +302,17 @@ export function CaasClient() {
               </div>
             </div>
 
-            {/* Meet tile 1 — CEO (topo esquerda, sobrepondo calendário) */}
-            <div className="absolute left-[-10px] top-[20px] z-30 w-[220px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.28)] lg:w-[250px]">
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Meet tile 1 — CEO (ESQUERDA, cola no calendário)
+                Fica parcialmente sobre o lado esquerdo do calendário
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            <div className="absolute left-[-18px] top-[60px] z-30 w-[200px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[220px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-ceo.jpeg"
                   alt="CEO em reunião de alinhamento de conteúdo"
                   fill
-                  sizes="(max-width: 1024px) 220px, 250px"
+                  sizes="(max-width: 1024px) 200px, 220px"
                   className="object-cover"
                   priority
                 />
@@ -322,14 +331,18 @@ export function CaasClient() {
               </div>
             </div>
 
-            {/* Meet tile 2 — Estrategista (direita, sobrepondo calendário) */}
-            <div className="absolute right-[-10px] top-[80px] z-30 w-[220px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.28)] lg:w-[250px]">
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Meet tile 2 — Estrategista (DIREITA, cola no calendário)
+                Fica parcialmente sobre o lado direito do calendário,
+                um pouco mais embaixo criando rítmo visual
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            <div className="absolute right-[-18px] top-[230px] z-30 w-[200px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[220px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-estrategista.jpeg"
                   alt="Estrategista Boldfy em reunião de alinhamento de conteúdo"
                   fill
-                  sizes="(max-width: 1024px) 220px, 250px"
+                  sizes="(max-width: 1024px) 200px, 220px"
                   className="object-cover"
                   priority
                 />
@@ -350,10 +363,13 @@ export function CaasClient() {
               </div>
             </div>
 
-            {/* Mini-card Post aprovado — topo, centralizado/direita, sobreposto */}
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Mini-card "Post aprovado" — TOPO, cola no CEO e calendário
+                Posicionado no topo-direita do calendário, sobrepondo
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
             <div
-              className="absolute right-[50px] top-[-8px] z-40 w-[220px] rounded-[12px] bg-card p-3 lg:right-[80px]"
-              style={{ boxShadow: '0 16px 40px rgba(15,10,24,0.18), 0 0 0 1px rgba(94,42,103,0.22)' }}
+              className="absolute right-[10px] top-[10px] z-40 w-[220px] rounded-[12px] bg-card p-3"
+              style={{ boxShadow: '0 16px 40px rgba(15,10,24,0.2), 0 0 0 1px rgba(94,42,103,0.25)' }}
             >
               <div className="flex items-center gap-2.5">
                 <div
@@ -696,142 +712,161 @@ export function CaasClient() {
             </div>
           </div>
 
-          {/* Como funciona — 3 passos compactos + card 4 "expandido" em teia/mapa mental */}
+          {/* Como funciona — 4 cards compactos iguais + teia de avatares saindo do card 4 */}
           <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: CAAS_ACCENT }}>
             Como funciona
           </div>
 
-          {/* Grid: 3 cards compactos (1fr cada) + card 4 que se expande com teia (1.6fr) */}
-          <div className="relative grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr_1fr_1.6fr]">
-            {/* Linha conectora desktop (apenas entre os 3 primeiros cards) */}
-            <div
-              className="pointer-events-none absolute left-[48px] top-[34px] hidden h-[2px] md:block"
-              style={{
-                width: 'calc((100% - 1.6fr * (100% / 4.6)) - 96px)',
-                backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
-              }}
-            />
-
-            {/* Passos 1, 2, 3 — cards compactos */}
-            {[
-              { icon: FileText, label: c.designStep1 },
-              { icon: PenTool, label: c.designStep2 },
-              { icon: FileStack, label: c.designStep3 },
-            ].map((step, i) => (
+          {/* Wrapper relativo contendo grid de cards + SVG de linhas curvas + avatares fora dos cards */}
+          <div className="relative">
+            {/* Grid dos 4 cards — todos do mesmo tamanho, compactos */}
+            <div className="relative z-[2] grid grid-cols-2 gap-3 md:grid-cols-4">
+              {/* Linha conectora horizontal (só entre os 3 primeiros cards, até o card 4) */}
               <div
-                key={step.label}
-                className="relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
-                style={{ borderColor: 'rgba(94,42,103,0.2)' }}
-              >
-                <div
-                  className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                  style={{ backgroundColor: CAAS_ACCENT }}
-                >
-                  {i + 1}
-                </div>
-                <div
-                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px]"
-                  style={{ backgroundColor: 'rgba(94,42,103,0.12)', color: CAAS_ACCENT }}
-                >
-                  <step.icon className="h-5 w-5" />
-                </div>
-                <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                  {step.label}
-                </p>
-              </div>
-            ))}
+                className="pointer-events-none absolute left-[48px] right-[48px] top-[34px] hidden h-[2px] md:block"
+                style={{
+                  backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
+                }}
+              />
 
-            {/* Passo 4 — card expandido com teia/mapa mental */}
-            <div
-              className="relative z-[1] overflow-hidden rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.08)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.16)]"
-              style={{ borderColor: 'rgba(94,42,103,0.25)' }}
-            >
-              <div
-                className="absolute -top-3 -left-3 z-10 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
-                style={{ backgroundColor: CAAS_ACCENT }}
-              >
-                4
-              </div>
-
-              {/* Layout interno: texto na esquerda + teia na direita */}
-              <div className="flex items-center gap-3">
-                {/* Lado esquerdo: ícone + label do passo 4 */}
-                <div className="flex min-w-0 flex-col">
+              {[
+                { icon: FileText, label: c.designStep1 },
+                { icon: PenTool, label: c.designStep2 },
+                { icon: FileStack, label: c.designStep3 },
+                { icon: Users, label: c.designStep4 },
+              ].map((step, i) => (
+                <div
+                  key={step.label}
+                  className="relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+                  style={{ borderColor: 'rgba(94,42,103,0.2)' }}
+                >
+                  <div
+                    className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
+                    style={{ backgroundColor: CAAS_ACCENT }}
+                  >
+                    {i + 1}
+                  </div>
                   <div
                     className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px]"
                     style={{ backgroundColor: 'rgba(94,42,103,0.12)', color: CAAS_ACCENT }}
                   >
-                    <Users className="h-5 w-5" />
+                    <step.icon className="h-5 w-5" />
                   </div>
                   <p className="text-[13px] font-semibold leading-[1.4] text-accent-foreground">
-                    {c.designStep4}
+                    {step.label}
                   </p>
                 </div>
+              ))}
+            </div>
 
-                {/* Lado direito: teia/mapa mental — SVG com linhas + avatares */}
-                <div className="relative h-[140px] w-full min-w-[160px] flex-1">
-                  {/* SVG com linhas saindo do ponto central-esquerdo pra cada avatar */}
-                  <svg
-                    className="pointer-events-none absolute inset-0 h-full w-full"
-                    viewBox="0 0 200 140"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    {/* Ponto de origem (esquerda, centro vertical) — vai pra cada avatar */}
-                    {[
-                      { x: 170, y: 15 },   // topo direita
-                      { x: 185, y: 50 },   // meio direita alto
-                      { x: 185, y: 90 },   // meio direita baixo
-                      { x: 170, y: 125 },  // baixo direita
-                      { x: 110, y: 10 },   // topo meio
-                      { x: 110, y: 130 },  // baixo meio
-                    ].map((p, i) => (
-                      <line
-                        key={i}
-                        x1="10"
-                        y1="70"
-                        x2={p.x}
-                        y2={p.y}
-                        stroke={CAAS_ACCENT}
-                        strokeOpacity="0.35"
-                        strokeWidth="1"
-                        strokeDasharray="3 3"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    ))}
-                  </svg>
+            {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                Teia externa — FORA dos cards, abaixo do grid
+                Ocupa a largura total, posicionada sob a coluna do card 4
+                Desktop: teia visível com linhas curvas + avatares espalhados
+                Mobile: escondido (avatares aparecem simples no card)
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            <div className="relative mt-0 hidden h-[180px] md:block">
+              {/* SVG full-width com linhas curvas (Bézier) saindo do card 4 até os avatares */}
+              <svg
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox="0 0 1000 180"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {/*
+                  Origem das linhas: x=875 (centro-baixo do card 4, que ocupa colunas 75-100%)
+                  y=0 (topo do svg, onde o card 4 termina)
+                  Destinos: avatares espalhados abaixo do grid, numa distribuição orgânica
+                  que cobre quase toda a largura da seção (não só a coluna do card 4).
 
-                  {/* Ponto de origem visual (bolinha à esquerda) */}
-                  <div
-                    className="absolute left-[2px] top-1/2 z-10 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
-                    style={{ backgroundColor: CAAS_ACCENT }}
+                  Curva Bézier cúbica: M origin C ctrl1 ctrl2 destino
+                  Control points puxam pra baixo, criando arco suave
+                */}
+                {[
+                  // Cada destino tem posição do avatar (cx, cy) e control points pra curva
+                  { cx: 90,  cy: 115 }, // bem à esquerda, baixo
+                  { cx: 220, cy: 155 }, // esquerda, mais baixo
+                  { cx: 360, cy: 95  }, // centro-esquerda, meio
+                  { cx: 490, cy: 155 }, // centro, baixo
+                  { cx: 620, cy: 105 }, // centro-direita, meio
+                  { cx: 760, cy: 150 }, // direita, baixo
+                  { cx: 900, cy: 90  }, // bem à direita, meio
+                ].map((p, i) => {
+                  // Origem fixa no centro-baixo do card 4
+                  const ox = 875;
+                  const oy = 0;
+                  // Control points — curva orgânica, meio caminho entre origem e destino
+                  const midY = (oy + p.cy) / 2 + 20;
+                  return (
+                    <path
+                      key={i}
+                      d={`M ${ox} ${oy} C ${ox} ${midY}, ${p.cx} ${midY}, ${p.cx} ${p.cy}`}
+                      stroke={CAAS_ACCENT}
+                      strokeOpacity="0.4"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                      strokeLinecap="round"
+                      fill="none"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+              </svg>
+
+              {/* 7 avatares espalhados abaixo do grid, FORA dos cards */}
+              {/*
+                Posições em % da largura (mesma ordem dos destinos do SVG):
+                - Usei valores aproximados considerando que o SVG tem viewBox 1000x180,
+                  então x=90 no SVG ≈ 9% da largura, x=900 ≈ 90%, etc.
+              */}
+              {[
+                { avatar: 1,  style: { left: '7%',   top: '55%' } },
+                { avatar: 2,  style: { left: '20%',  top: '80%' } },
+                { avatar: 3,  style: { left: '34%',  top: '45%' } },
+                { avatar: 5,  style: { left: '47%',  top: '80%' } },
+                { avatar: 6,  style: { left: '60%',  top: '52%' } },
+                { avatar: 8,  style: { left: '74%',  top: '78%' } },
+                { avatar: 10, style: { left: '87%',  top: '42%' } },
+              ].map((p) => (
+                <div
+                  key={p.avatar}
+                  className="absolute h-10 w-10 overflow-hidden rounded-full border-[3px] border-background shadow-[0_6px_16px_rgba(94,42,103,0.2)]"
+                  style={p.style}
+                >
+                  <Image
+                    src={`/images/avatar-${p.avatar}.jpeg`}
+                    alt="Colaborador usando a peça"
+                    fill
+                    sizes="40px"
+                    className="object-cover"
                   />
-
-                  {/* 6 avatares em posições específicas, formando um leque à direita */}
-                  {[
-                    { avatar: 1, style: { right: '4%', top: '2%' } },
-                    { avatar: 3, style: { right: '-2%', top: '30%' } },
-                    { avatar: 5, style: { right: '-2%', top: '60%' } },
-                    { avatar: 6, style: { right: '4%', bottom: '2%' } },
-                    { avatar: 8, style: { left: '46%', top: '0%' } },
-                    { avatar: 10, style: { left: '46%', bottom: '0%' } },
-                  ].map((p) => (
-                    <div
-                      key={p.avatar}
-                      className="absolute h-7 w-7 overflow-hidden rounded-full border-2 border-white shadow-sm"
-                      style={p.style}
-                    >
-                      <Image
-                        src={`/images/avatar-${p.avatar}.jpeg`}
-                        alt={`Colaborador usando a peça`}
-                        fill
-                        sizes="28px"
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
                 </div>
-              </div>
+              ))}
+
+              {/* Ponto de origem visual — saindo do card 4 (opcional, pode remover) */}
+              <div
+                className="absolute right-[10%] top-[-6px] h-3 w-3 rounded-full border-2 border-white shadow-md"
+                style={{ backgroundColor: CAAS_ACCENT }}
+              />
+            </div>
+
+            {/* Mobile: avatares simples em linha (sem teia) */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 md:hidden">
+              <div className="text-[11px] text-muted-foreground">Time usa:</div>
+              {[1, 3, 5, 6, 8, 10].map((n) => (
+                <div
+                  key={n}
+                  className="h-8 w-8 overflow-hidden rounded-full border-2 border-background shadow-sm"
+                >
+                  <Image
+                    src={`/images/avatar-${n}.jpeg`}
+                    alt="Colaborador"
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
