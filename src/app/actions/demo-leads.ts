@@ -85,10 +85,13 @@ export async function sendDemoLeadToNotion(
       .filter(Boolean)
       .join('\n');
 
-    // Fire-and-forget — note não deve bloquear o sucesso
-    addNoteToContact(contactId, note).catch((err) => {
-      console.error('[demo-leads] Error adding note:', err);
-    });
+    // AWAIT essencial em serverless — fire-and-forget e descartado quando
+    // a funcao retorna
+    try {
+      await addNoteToContact(contactId, note);
+    } catch (err) {
+      console.error('[demo-leads] Error adding note (non-blocking):', err);
+    }
 
     return { success: true };
   } catch (error) {

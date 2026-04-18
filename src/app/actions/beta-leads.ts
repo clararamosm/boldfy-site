@@ -152,38 +152,44 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
       ].filter((t): t is string => !!t),
     });
 
-    syncContact({
-      email: input.email,
-      firstName,
-      lastName,
-      phone: input.telefone,
-      empresa: input.empresa,
-      cargo: input.cargo,
-      origem: input.origem || 'Beta Test',
-      tags: acTags,
-    })
-      .then((acId) => {
-        if (acId) {
-          const note = [
-            `🧪 Inscrição no Programa Beta`,
-            ``,
-            `Nome: ${input.nome}`,
-            `Email: ${input.email}`,
-            `WhatsApp: ${input.telefone}`,
-            `Cargo: ${input.cargo}`,
-            `Empresa: ${input.empresa}`,
-            `Setor: ${input.setor}`,
-            `Colaboradores: ${input.colaboradores}`,
-            `Objetivo principal: ${input.objetivoPrincipal}`,
-            `Como conheceu: ${input.comoConheceu}`,
-            input.observacoes ? `\n💬 ${input.observacoes}` : '',
-          ]
-            .filter(Boolean)
-            .join('\n');
-          addNoteToContact(acId, note);
-        }
-      })
-      .catch((err) => console.error('[beta-leads] AC sync error:', err));
+    // AWAIT essencial em serverless — fire-and-forget e descartado quando
+    // a funcao retorna, entao leads nao chegavam no AC antes desse fix.
+    try {
+      const acId = await syncContact({
+        email: input.email,
+        firstName,
+        lastName,
+        phone: input.telefone,
+        empresa: input.empresa,
+        cargo: input.cargo,
+        origem: input.origem || 'Beta Test',
+        tags: acTags,
+      });
+
+      if (acId) {
+        const note = [
+          `🧪 Inscrição no Programa Beta`,
+          ``,
+          `Nome: ${input.nome}`,
+          `Email: ${input.email}`,
+          `WhatsApp: ${input.telefone}`,
+          `Cargo: ${input.cargo}`,
+          `Empresa: ${input.empresa}`,
+          `Setor: ${input.setor}`,
+          `Colaboradores: ${input.colaboradores}`,
+          `Objetivo principal: ${input.objetivoPrincipal}`,
+          `Como conheceu: ${input.comoConheceu}`,
+          input.observacoes ? `\n💬 ${input.observacoes}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n');
+        await addNoteToContact(acId, note);
+      } else {
+        console.warn('[beta-leads] AC syncContact returned null — verificar env vars.');
+      }
+    } catch (err) {
+      console.error('[beta-leads] AC sync error (non-blocking):', err);
+    }
 
     return { success: true };
   } catch (error) {

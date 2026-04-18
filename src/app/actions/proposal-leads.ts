@@ -363,14 +363,14 @@ export async function sendProposalLeadToNotion(
     const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
     const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
 
-    // 2. Preenche a URL no campo do row + guarda o JSON no corpo (non-blocking)
+    // 2. Preenche a URL no campo do row + guarda o JSON no corpo
+    //    IMPORTANTE: precisamos de await aqui — em serverless (Vercel),
+    //    fire-and-forget é descartado quando a função retorna.
     if (propostaId && proposalUrl) {
-      Promise.allSettled([
+      await Promise.allSettled([
         setUrlProperty(propostaId, proposalUrl),
         appendProposalJSON(propostaId, proposalJSON),
-      ]).catch((err) => {
-        console.error('[proposal-leads] Error enriching Notion page:', err);
-      });
+      ]);
     }
 
     // 3. Sync to ActiveCampaign (CRM — fonte de verdade)
@@ -396,40 +396,46 @@ export async function sendProposalLeadToNotion(
     const firstName = nameParts[0] ?? input.nome;
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
-    // Fire-and-forget pro AC — não deve bloquear a resposta do usuário
-    syncContact({
-      email: input.email,
-      firstName,
-      lastName,
-      empresa: input.empresa,
-      cargo: input.cargo,
-      origem: input.origem,
-      tags: acTags,
-    })
-      .then((acContactId) => {
-        if (acContactId) {
-          const summary = buildProposalSummary(input);
-          const note = [
-            `📋 Proposta gerada via Simulador`,
-            ``,
-            summary,
-            ``,
-            proposalUrl ? `🔗 Ver proposta: ${proposalUrl}` : '',
-            ``,
-            `— Tracking —`,
-            `Origem no site: ${input.origem}`,
-            input.utm_source ? `utm_source: ${input.utm_source}` : '',
-            input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
-            input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
-          ]
-            .filter(Boolean)
-            .join('\n');
-          addNoteToContact(acContactId, note);
-        }
-      })
-      .catch((err) => {
-        console.error('[proposal-leads] ActiveCampaign sync error:', err);
+    // AWAIT aqui é essencial — em serverless (Vercel), fire-and-forget é
+    // descartado quando a função retorna. Foi por isso que leads apareciam
+    // no Notion mas não chegavam no ActiveCampaign antes desse fix.
+    try {
+      const acContactId = await syncContact({
+        email: input.email,
+        firstName,
+        lastName,
+        empresa: input.empresa,
+        cargo: input.cargo,
+        origem: input.origem,
+        tags: acTags,
       });
+
+      if (acContactId) {
+        const summary = buildProposalSummary(input);
+        const note = [
+          `📋 Proposta gerada via Simulador`,
+          ``,
+          summary,
+          ``,
+          proposalUrl ? `🔗 Ver proposta: ${proposalUrl}` : '',
+          ``,
+          `— Tracking —`,
+          `Origem no site: ${input.origem}`,
+          input.utm_source ? `utm_source: ${input.utm_source}` : '',
+          input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
+          input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n');
+        await addNoteToContact(acContactId, note);
+      } else {
+        console.warn(
+          '[proposal-leads] AC syncContact returned null — contato nao foi criado/atualizado. Verificar ACTIVECAMPAIGN_API_URL e ACTIVECAMPAIGN_API_KEY no Vercel.',
+        );
+      }
+    } catch (acErr) {
+      console.error('[proposal-leads] ActiveCampaign sync error (non-blocking):', acErr);
+    }
 
     return {
       success: true,

@@ -83,9 +83,12 @@ export async function sendContactLeadToNotion(
       .filter(Boolean)
       .join('\n');
 
-    addNoteToContact(contactId, note).catch((err) => {
-      console.error('[contact-leads] Error adding note:', err);
-    });
+    // AWAIT essencial em serverless
+    try {
+      await addNoteToContact(contactId, note);
+    } catch (err) {
+      console.error('[contact-leads] Error adding note (non-blocking):', err);
+    }
 
     return { success: true };
   } catch (error) {
