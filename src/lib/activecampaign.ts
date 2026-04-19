@@ -243,6 +243,11 @@ async function findOrCreateField(
       );
       if (existing) {
         fieldIdCache[normalizedPerstag] = existing.id;
+        // Garantia: field pode existir mas sem fieldRel à lista 0.
+        // Sem fieldRel, o field nao aparece no contact view da UI.
+        await ensureFieldRel(existing.id).catch((err) =>
+          console.error(`[activecampaign] ensureFieldRel error:`, err),
+        );
         return existing.id;
       }
     }
@@ -278,11 +283,57 @@ async function findOrCreateField(
 
     const created = await createRes.json();
     const fieldId = created.field?.id ?? null;
-    if (fieldId) fieldIdCache[normalizedPerstag] = fieldId;
+    if (fieldId) {
+      fieldIdCache[normalizedPerstag] = fieldId;
+      // IMPORTANTE: sem fieldRel, o field existe no backend mas NAO aparece
+      // no contact view da UI do AC. Por isso associamos a lista 0 (= todas).
+      await ensureFieldRel(fieldId).catch((err) =>
+        console.error(`[activecampaign] ensureFieldRel error:`, err),
+      );
+    }
     return fieldId;
   } catch (err) {
     console.error(`[activecampaign] Error creating field "${title}":`, err);
     return null;
+  }
+}
+
+/**
+ * Garante que o field esta associado a "todas as listas" via /fieldRel.
+ *
+ * No AC, um custom field so aparece no contact view da UI se houver uma
+ * relacao field<->lista (via endpoint /fieldRel). list: 0 = todas as
+ * listas, incluindo contatos sem lista. Esse e o comportamento que a
+ * maioria das integracoes espera (campo visivel pra todos os contatos).
+ *
+ * Idempotente: se a relacao ja existe, AC retorna 422 "already exists" e
+ * a gente engole o erro (nao impacta).
+ */
+async function ensureFieldRel(fieldId: string): Promise<void> {
+  try {
+    const res = await fetch(`${AC_API_URL}/api/3/fieldRels`, {
+      method: 'POST',
+      headers: acHeaders(),
+      body: JSON.stringify({
+        fieldRel: {
+          field: fieldId,
+          relid: 0, // 0 = all lists
+        },
+      }),
+    });
+
+    // 201 criado, 422 ja existia (esperado quando o field ja tem relacao).
+    // Outros status sao erros reais.
+    if (!res.ok && res.status !== 422) {
+      const errText = await res.text().catch(() => '');
+      console.error(
+        `[activecampaign] Error creating fieldRel for field ${fieldId}:`,
+        res.status,
+        errText,
+      );
+    }
+  } catch (err) {
+    console.error(`[activecampaign] Error ensuring fieldRel:`, err);
   }
 }
 

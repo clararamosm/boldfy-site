@@ -176,6 +176,39 @@ export async function GET(request: NextRequest) {
     responseSnippet: `empresaFieldId: ${empresaFieldId ?? 'null (perstag EMPRESA nao encontrado)'}`,
   });
 
+  // Step 3b: ensure fieldRel (associate field to all lists via relid=0)
+  // Sem isso o field nao aparece no contact view da UI do AC.
+  if (empresaFieldId) {
+    const t3b = Date.now();
+    try {
+      const res = await fetch(`${AC_URL}/api/3/fieldRels`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          fieldRel: {
+            field: empresaFieldId,
+            relid: 0,
+          },
+        }),
+      });
+      const txt = await res.text();
+      steps.push({
+        step: '3b_ensure_fieldRel',
+        ok: res.ok || res.status === 422, // 422 = ja existe
+        httpStatus: res.status,
+        responseSnippet: txt.substring(0, 400),
+        durationMs: Date.now() - t3b,
+      });
+    } catch (err) {
+      steps.push({
+        step: '3b_ensure_fieldRel',
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+        durationMs: Date.now() - t3b,
+      });
+    }
+  }
+
   // Step 4: POST /fieldValues com o field empresa
   if (empresaFieldId) {
     const t4 = Date.now();
