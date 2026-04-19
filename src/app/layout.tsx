@@ -3,6 +3,14 @@ import './globals.css';
 import { Providers } from './providers';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { GTMScript, GTMNoScript } from '@/components/analytics/gtm';
+import { GA4Script } from '@/components/analytics/ga4';
+import { LinkedInInsightScript } from '@/components/analytics/linkedin-insight';
+import { ActiveCampaignTracking } from '@/components/analytics/ac-site-tracking';
+import {
+  ConsentBanner,
+  ConsentModeDefaults,
+} from '@/components/analytics/consent-banner';
 
 export const metadata: Metadata = {
   title: {
@@ -96,6 +104,19 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="h-full antialiased">
       <head>
+        {/* Consent Mode v2 defaults — precisa rodar antes do GTM */}
+        <ConsentModeDefaults />
+
+        {/* Google Tag Manager — orquestra GA4 + LinkedIn Insight Tag */}
+        <GTMScript />
+
+        {/* Fallbacks pra quem não quiser usar GTM (ficam inativos enquanto GTM estiver ativo) */}
+        <GA4Script />
+        <LinkedInInsightScript />
+
+        {/* ActiveCampaign Site Tracking (VGO) — pode coexistir com GTM */}
+        <ActiveCampaignTracking />
+
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
@@ -120,10 +141,14 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
+        {/* GTM noscript fallback — obrigatório ficar logo após <body> */}
+        <GTMNoScript />
+
         <Providers>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <ConsentBanner />
         </Providers>
       </body>
     </html>
