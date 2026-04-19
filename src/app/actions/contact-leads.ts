@@ -45,7 +45,6 @@ export async function sendContactLeadToNotion(
         utm_content: input.utm_content,
         utm_term: input.utm_term,
       },
-      extraTags: input.colaboradores ? [`Porte: ${input.colaboradores}`] : [],
     });
 
     const contactId = await syncContact({
@@ -53,9 +52,12 @@ export async function sendContactLeadToNotion(
       firstName,
       lastName,
       phone: input.telefone,
-      empresa: input.empresa,
       origem: input.origem || 'Site - Contato',
       tags: acTags,
+      fields: {
+        empresa: input.empresa,
+        porte: input.colaboradores,
+      },
     });
 
     if (!contactId) {

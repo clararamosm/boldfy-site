@@ -47,7 +47,6 @@ export async function sendDemoLeadToNotion(
         utm_content: input.utm_content,
         utm_term: input.utm_term,
       },
-      extraTags: input.funcionarios ? [`Porte: ${input.funcionarios}`] : [],
     });
 
     const contactId = await syncContact({
@@ -55,10 +54,13 @@ export async function sendDemoLeadToNotion(
       firstName,
       lastName,
       phone: input.telefone,
-      empresa: input.empresa,
-      cargo: input.cargo,
       origem: input.origem || 'Popup Demo',
       tags: acTags,
+      fields: {
+        empresa: input.empresa,
+        cargo: input.cargo,
+        porte: input.funcionarios,
+      },
     });
 
     if (!contactId) {

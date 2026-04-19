@@ -144,12 +144,7 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
         utm_content: input.utm_content,
         utm_term: input.utm_term,
       },
-      extraTags: [
-        'Beta Tester',
-        input.setor ? `Setor: ${input.setor}` : null,
-        input.colaboradores ? `Porte: ${input.colaboradores}` : null,
-        input.objetivoPrincipal ? `Objetivo: ${input.objetivoPrincipal}` : null,
-      ].filter((t): t is string => !!t),
+      extraTags: ['Beta Tester'],
     });
 
     // AWAIT essencial em serverless — fire-and-forget e descartado quando
@@ -160,10 +155,16 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
         firstName,
         lastName,
         phone: input.telefone,
-        empresa: input.empresa,
-        cargo: input.cargo,
         origem: input.origem || 'Beta Test',
         tags: acTags,
+        fields: {
+          empresa: input.empresa,
+          cargo: input.cargo,
+          porte: input.colaboradores,
+          setor: input.setor,
+          objetivo_principal: input.objetivoPrincipal,
+          como_conheceu: input.comoConheceu,
+        },
       });
 
       if (acId) {

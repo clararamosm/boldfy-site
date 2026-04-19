@@ -404,10 +404,14 @@ export async function sendProposalLeadToNotion(
         email: input.email,
         firstName,
         lastName,
-        empresa: input.empresa,
-        cargo: input.cargo,
         origem: input.origem,
         tags: acTags,
+        fields: {
+          empresa: input.empresa,
+          cargo: input.cargo,
+          total_mensal_proposta: input.totalCurrent,
+          url_proposta: proposalUrl,
+        },
       });
 
       if (acContactId) {
