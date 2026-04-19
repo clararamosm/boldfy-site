@@ -29,11 +29,39 @@ type StepResult = {
   durationMs?: number;
 };
 
+/**
+ * Guard: o endpoint só responde se:
+ *   1. DEBUG_SECRET estiver presente e `?key=...` bater, OU
+ *   2. `?key=...` for exatamente o token derivado do hash da chave do AC
+ *      (assim não precisamos rotacionar DEBUG_SECRET — qualquer pessoa
+ *      sem acesso ao AC key não consegue gerar esse token).
+ *
+ * Como o atacante precisaria da key do AC pra gerar o token, o endpoint
+ * fica protegido pelo próprio segredo que já existe no Vercel.
+ */
+async function isAuthorized(key: string | null): Promise<boolean> {
+  if (!key) return false;
+
+  // Opção 1: DEBUG_SECRET match
+  if (process.env.DEBUG_SECRET && key === process.env.DEBUG_SECRET) return true;
+
+  // Opção 2: token derivado da key do AC (últimos 12 chars do SHA-256)
+  const acKey = process.env.ACTIVECAMPAIGN_API_KEY;
+  if (!acKey) return false;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`boldfy-debug-ac-${acKey}`);
+  const hashBuf = await crypto.subtle.digest('SHA-256', data);
+  const hashArr = Array.from(new Uint8Array(hashBuf));
+  const hashHex = hashArr.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const derived = hashHex.slice(-12);
+  return key === derived;
+}
+
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('key');
-  const expected = process.env.DEBUG_SECRET;
+  const authorized = await isAuthorized(secret);
 
-  if (!expected || secret !== expected) {
+  if (!authorized) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
