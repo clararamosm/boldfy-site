@@ -59,14 +59,32 @@ async function isAuthorized(key: string | null): Promise<boolean> {
 
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('key');
-  const authorized = await isAuthorized(secret);
-
-  if (!authorized) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  }
-
   const AC_URL = process.env.ACTIVECAMPAIGN_API_URL;
   const AC_KEY = process.env.ACTIVECAMPAIGN_API_KEY;
+
+  // Fingerprint público — só 8 chars iniciais + 4 finais + length.
+  // Permite comparar se env no Vercel bate com .env.local sem expor
+  // o valor completo. Roda SEM auth.
+  const keyFingerprint = AC_KEY
+    ? `${AC_KEY.slice(0, 8)}...${AC_KEY.slice(-4)} (len=${AC_KEY.length})`
+    : 'not_set';
+  const urlFingerprint = AC_URL ?? 'not_set';
+
+  const authorized = await isAuthorized(secret);
+  if (!authorized) {
+    return NextResponse.json(
+      {
+        error: 'unauthorized',
+        hint: 'pass ?key=<DEBUG_SECRET> or ?key=<derived token of AC key>',
+        publicFingerprint: {
+          AC_URL: urlFingerprint,
+          AC_KEY: keyFingerprint,
+        },
+      },
+      { status: 401 },
+    );
+  }
+
   const steps: StepResult[] = [];
 
   // Step 1: env vars presence
