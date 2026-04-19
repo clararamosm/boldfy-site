@@ -82,9 +82,6 @@ function DemoPopupModal({
   const [errorMessage, setErrorMessage] = React.useState('');
   const [fields, setFields] = React.useState<FormFields>(EMPTY_FIELDS);
 
-  // Todos os campos sao required — form valido quando todos tem valor
-  const isFormValid = Object.values(fields).every((v) => v.trim().length > 0);
-
   const updateField = (name: keyof FormFields, value: string) => {
     setFields((prev) => ({ ...prev, [name]: value }));
   };
@@ -284,12 +281,8 @@ function DemoPopupModal({
 
               <button
                 type="submit"
-                disabled={status === 'loading' || !isFormValid}
-                className={`w-full flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all ${
-                  isFormValid && status !== 'loading'
-                    ? 'bg-accent hover:bg-accent/90 hover:shadow-md cursor-pointer'
-                    : 'bg-accent/40 cursor-not-allowed'
-                }`}
+                disabled={status === 'loading'}
+                className="w-full flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-semibold text-white bg-accent hover:bg-accent/90 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all disabled:opacity-60 disabled:cursor-wait"
               >
                 {status === 'loading' ? (
                   <>
