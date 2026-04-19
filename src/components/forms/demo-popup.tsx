@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Loader2, CheckCircle2, Calendar, ArrowRight } from 'lucide-react';
+import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { CalComEmbed } from './cal-com-embed';
 
-const GOOGLE_CALENDAR_URL = 'https://calendar.app.google/88o2FH7sxKDuU5p97';
-const REDIRECT_DELAY_MS = 3000;
+const CAL_LINK = 'clara-boldfy/demo';
 
 type DemoPopupContextType = {
   isOpen: boolean;
@@ -75,7 +75,6 @@ function DemoPopupModal({
   const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState('');
   const [fields, setFields] = React.useState<FormFields>(EMPTY_FIELDS);
-  const [countdown, setCountdown] = React.useState<number>(REDIRECT_DELAY_MS / 1000);
 
   // Todos os campos sao required — form valido quando todos tem valor
   const isFormValid = Object.values(fields).every((v) => v.trim().length > 0);
@@ -88,7 +87,6 @@ function DemoPopupModal({
     setStatus('idle');
     setErrorMessage('');
     setFields(EMPTY_FIELDS);
-    setCountdown(REDIRECT_DELAY_MS / 1000);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -119,37 +117,17 @@ function DemoPopupModal({
     }
   };
 
-  // Redirect automatico pro Google Calendar apos sucesso + countdown visivel
-  React.useEffect(() => {
-    if (status !== 'success') return;
-
-    const startTs = Date.now();
-    const redirectTs = startTs + REDIRECT_DELAY_MS;
-
-    const interval = setInterval(() => {
-      const secondsLeft = Math.max(0, Math.ceil((redirectTs - Date.now()) / 1000));
-      setCountdown(secondsLeft);
-    }, 250);
-
-    const timer = setTimeout(() => {
-      // Abre em nova aba — preserva o site atual aberto caso volte
-      window.open(GOOGLE_CALENDAR_URL, '_blank', 'noopener,noreferrer');
-      clearInterval(interval);
-    }, REDIRECT_DELAY_MS);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, [status]);
-
   const firstName = fields.nome.trim().split(/\s+/)[0] || '';
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl">
+        <Dialog.Content
+          className={`fixed left-[50%] top-[50%] z-50 grid w-full ${
+            status === 'success' ? 'max-w-3xl' : 'max-w-lg'
+          } max-h-[90vh] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl`}
+        >
           
           <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
             <Dialog.Title className="text-xl font-bold leading-none tracking-tight">
@@ -172,37 +150,20 @@ function DemoPopupModal({
           </Dialog.Close>
 
           {status === 'success' ? (
-            <div className="flex flex-col items-center justify-center py-6 space-y-5 text-center">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-green-400/30" />
-                <CheckCircle2 className="relative w-16 h-16 text-green-500" />
-              </div>
-
-              <div className="space-y-2">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center gap-3 text-left">
+                <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
                 <p className="text-sm text-gray-600">
-                  Recebi seus dados e já te envio os detalhes por e-mail.
-                </p>
-                <p className="text-sm text-gray-600">
-                  Escolhe agora um horário que funcione pra você 👉
+                  Recebi seus dados! Escolhe agora um horário que funcione pra você:
                 </p>
               </div>
 
-              <a
-                href={GOOGLE_CALENDAR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center justify-center gap-2 bg-accent text-white font-semibold px-6 py-3 rounded-md shadow-sm hover:bg-accent/90 transition-all hover:shadow-md"
-              >
-                <Calendar className="w-4 h-4" />
-                Escolher horário agora
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
-
-              <p className="text-xs text-gray-400">
-                {countdown > 0
-                  ? `Abrindo automaticamente em ${countdown}s…`
-                  : 'Abrindo…'}
-              </p>
+              <CalComEmbed
+                calLink={CAL_LINK}
+                name={fields.nome}
+                email={fields.email}
+                height="600px"
+              />
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">

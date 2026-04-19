@@ -47,6 +47,11 @@ export async function sendDemoLeadToNotion(
         utm_content: input.utm_content,
         utm_term: input.utm_term,
       },
+      // Tag de rastreamento: lead pediu demo mas ainda nao agendou horario
+      // no Cal.com. O webhook /api/webhooks/cal remove essa tag quando a
+      // pessoa agenda — permite rodar cadencia de recuperacao pra quem
+      // submeteu o form mas nao chegou a escolher horario.
+      extraTags: ['Demo: Aguardando agendamento'],
     });
 
     const contactId = await syncContact({

@@ -209,6 +209,120 @@ async function findOrCreateTag(tagName: string): Promise<string | null> {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Public helpers (used by webhooks / automations outside of form submits)    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Busca um contato no AC pelo email. Retorna o ID do primeiro match ou null.
+ *
+ * Usado pelos webhooks que recebem email do lead (tipo Cal.com) e precisam
+ * achar o contato existente pra atualizar tags.
+ */
+export async function findContactByEmail(email: string): Promise<string | null> {
+  if (!AC_API_URL || !AC_API_KEY) return null;
+
+  try {
+    const url = `${AC_API_URL}/api/3/contacts?email=${encodeURIComponent(email)}`;
+    const res = await fetch(url, { headers: acHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const contact = (data.contacts ?? [])[0];
+    return contact?.id ?? null;
+  } catch (err) {
+    console.error('[activecampaign] Error finding contact by email:', err);
+    return null;
+  }
+}
+
+/**
+ * Adiciona tags a um contato existente. Wrapper publico de addTagsToContact.
+ *
+ * Cria as tags no AC caso ainda nao existam (find or create).
+ */
+export async function addTagsToExistingContact(
+  contactId: string,
+  tagNames: string[],
+): Promise<void> {
+  return addTagsToContact(contactId, tagNames);
+}
+
+/**
+ * Remove uma tag de um contato (sem deletar a tag em si).
+ *
+ * Fluxo:
+ *   1. Busca o ID da tag pelo nome.
+ *   2. Lista as associacoes tag<->contato desse contato (contactTags).
+ *   3. Encontra a associacao especifica desta tag e deleta.
+ *
+ * Silencioso: se a tag nao existe ou o contato nao tem ela, retorna sem erro.
+ */
+export async function removeTagFromContact(
+  contactId: string,
+  tagName: string,
+): Promise<void> {
+  if (!AC_API_URL || !AC_API_KEY) return;
+
+  try {
+    // 1. Find tag by name
+    const tagId = await findTagByName(tagName);
+    if (!tagId) return; // tag nem existe, nada pra remover
+
+    // 2. List contactTags associations for this contact
+    const listRes = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/contactTags`,
+      { headers: acHeaders() },
+    );
+    if (!listRes.ok) return;
+
+    const listData = await listRes.json();
+    const associations = (listData.contactTags ?? []) as Array<{
+      id: string;
+      tag: string;
+    }>;
+
+    // 3. Find the association for this specific tag
+    const association = associations.find((ct) => ct.tag === tagId);
+    if (!association) return; // contato nao tem essa tag, ok
+
+    // 4. Delete the contactTag association
+    const deleteRes = await fetch(
+      `${AC_API_URL}/api/3/contactTags/${association.id}`,
+      { method: 'DELETE', headers: acHeaders() },
+    );
+    if (!deleteRes.ok) {
+      const errText = await deleteRes.text().catch(() => '');
+      console.error(
+        `[activecampaign] Error removing tag "${tagName}":`,
+        deleteRes.status,
+        errText,
+      );
+    }
+  } catch (err) {
+    console.error(`[activecampaign] Error removing tag "${tagName}":`, err);
+  }
+}
+
+/**
+ * Variante de findOrCreateTag que so busca (nao cria). Retorna null se a tag
+ * nao existe. Usado pra remoção de tag — nao faz sentido criar tag so pra
+ * dizer que alguem nao a tem.
+ */
+async function findTagByName(tagName: string): Promise<string | null> {
+  const searchRes = await fetch(
+    `${AC_API_URL}/api/3/tags?search=${encodeURIComponent(tagName)}`,
+    { headers: acHeaders() },
+  );
+
+  if (!searchRes.ok) return null;
+
+  const data = await searchRes.json();
+  const existing = data.tags?.find(
+    (t: { tag: string }) => t.tag.toLowerCase() === tagName.toLowerCase(),
+  );
+  return existing?.id ?? null;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Custom Fields                                                              */
 /* -------------------------------------------------------------------------- */
 
