@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { trackEvent } from '@/lib/track';
 import { CalComEmbed } from './cal-com-embed';
 
 const CAL_LINK = 'clara-boldfy/demo';
@@ -31,8 +32,13 @@ export function DemoPopupProvider({ children }: { children: React.ReactNode }) {
   const [source, setSource] = React.useState('direto');
 
   const openPopup = React.useCallback((src?: string) => {
-    setSource(src ?? 'direto');
+    const effectiveSource = src ?? 'direto';
+    setSource(effectiveSource);
     setIsOpen(true);
+    // Dispara cta_click + form_open juntos: o clique no CTA levou direto
+    // a abrir o popup, ent\u00e3o os dois eventos s\u00e3o simult\u00e2neos.
+    trackEvent('cta_click', { cta_type: 'demo', source: effectiveSource });
+    trackEvent('form_open', { form_type: 'demo', source: effectiveSource });
   }, []);
   const closePopup = React.useCallback(() => setIsOpen(false), []);
 
@@ -101,6 +107,8 @@ function DemoPopupModal({
     setStatus('loading');
     setErrorMessage('');
 
+    trackEvent('form_submit_start', { form_type: 'demo', source });
+
     const data: DemoLeadInput = {
       ...fields,
       origem: source,
@@ -111,9 +119,19 @@ function DemoPopupModal({
 
     if (res.success) {
       setStatus('success');
+      trackEvent('form_submit_success', {
+        form_type: 'demo',
+        source,
+        porte: fields.funcionarios,
+      });
     } else {
+      const msg = res.error || 'Algo deu errado. Tente novamente.';
       setStatus('error');
-      setErrorMessage(res.error || 'Algo deu errado. Tente novamente.');
+      setErrorMessage(msg);
+      trackEvent('form_submit_error', {
+        form_type: 'demo',
+        error_message: msg,
+      });
     }
   };
 

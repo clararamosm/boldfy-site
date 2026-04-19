@@ -22,6 +22,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { sendProposalLeadToNotion, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { trackEvent } from '@/lib/track';
 
 /* -------------------------------------------------------------------------- */
 /*  Pricing data (synced with official Boldfy pricing 2026-04-08)              */
@@ -98,8 +99,11 @@ export function ProposalBuilderProvider({ children }: { children: React.ReactNod
   const [source, setSource] = useState('direto');
 
   const openBuilder = useCallback((src?: string) => {
-    setSource(src ?? 'direto');
+    const effectiveSource = src ?? 'direto';
+    setSource(effectiveSource);
     setIsOpen(true);
+    trackEvent('cta_click', { cta_type: 'proposal', source: effectiveSource });
+    trackEvent('form_open', { form_type: 'proposal', source: effectiveSource });
   }, []);
   const closeBuilder = useCallback(() => setIsOpen(false), []);
 
@@ -188,6 +192,8 @@ function ProposalBuilderModal({
     setStatus('loading');
     setErrorMessage('');
 
+    trackEvent('form_submit_start', { form_type: 'proposal', source });
+
     const input: ProposalLeadInput = {
       nome: nome.trim(),
       email: email.trim(),
@@ -218,9 +224,19 @@ function ProposalBuilderModal({
       setStatus('success');
       setProposalUrl(res.proposalUrl);
       setStep('result');
+      trackEvent('form_submit_success', {
+        form_type: 'proposal',
+        source,
+        total_mensal: totalCurrent,
+      });
     } else {
+      const msg = res.error || 'Algo deu errado. Tente novamente.';
       setStatus('error');
-      setErrorMessage(res.error || 'Algo deu errado. Tente novamente.');
+      setErrorMessage(msg);
+      trackEvent('form_submit_error', {
+        form_type: 'proposal',
+        error_message: msg,
+      });
     }
   };
 

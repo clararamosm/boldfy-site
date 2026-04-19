@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { sendBetaLeadToNotion } from '@/app/actions/beta-leads';
+import { trackEvent } from '@/lib/track';
 import { Loader2, CheckCircle2, Calendar, ArrowRight, Megaphone, Target, Heart, Rocket, Skull, Calculator, Users, Eye, TrendingUp, Monitor } from 'lucide-react';
 import { useT } from '@/lib/i18n/context';
 
@@ -107,7 +108,8 @@ export default function BetaTestPage() {
   const [comoConheceu, setComoConheceu] = useState('');
   const [observacoes, setObservacoes] = useState('');
 
-  const scrollToForm = () => {
+  const scrollToForm = (source: string) => {
+    trackEvent('cta_click', { cta_type: 'beta', source });
     document.getElementById('form-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -116,6 +118,8 @@ export default function BetaTestPage() {
     setError('');
     setSending(true);
 
+    trackEvent('form_submit_start', { form_type: 'beta', source: 'beta-test-page' });
+
     const result = await sendBetaLeadToNotion({
       nome, email, telefone, cargo, empresa, setor,
       colaboradores, objetivoPrincipal, comoConheceu, observacoes,
@@ -123,8 +127,18 @@ export default function BetaTestPage() {
 
     if (result.success) {
       setSent(true);
+      trackEvent('form_submit_success', {
+        form_type: 'beta',
+        source: 'beta-test-page',
+        porte: colaboradores,
+      });
     } else {
-      setError(result.error || t.betaTest.formErrorDefault);
+      const msg = result.error || t.betaTest.formErrorDefault;
+      setError(msg);
+      trackEvent('form_submit_error', {
+        form_type: 'beta',
+        error_message: msg,
+      });
     }
     setSending(false);
   };
@@ -145,7 +159,7 @@ export default function BetaTestPage() {
         <p className="text-sm text-white/50 leading-relaxed max-w-3xl relative z-10">
           {t.betaTest.heroSubtitle}
         </p>
-        <Button onClick={scrollToForm} size="sm" className="mt-6 text-[11px] font-bold h-8 relative z-10">
+        <Button onClick={() => scrollToForm('beta:hero')} size="sm" className="mt-6 text-[11px] font-bold h-8 relative z-10">
           {t.betaTest.betaTesterButton} <ArrowRight className="w-3 h-3 ml-1" />
         </Button>
         {/* Platform mockup */}
@@ -480,7 +494,7 @@ export default function BetaTestPage() {
             {p.enterprise ? (
               <>
                 <p className="font-headline text-sm font-black text-white mt-2">{t.betaTest.enterprisePrice}</p>
-                <button onClick={scrollToForm} className="mt-2 text-[9px] font-bold text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
+                <button onClick={() => scrollToForm('beta:enterprise-tier')} className="mt-2 text-[9px] font-bold text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
                   {t.betaTest.enterpriseCta}
                 </button>
               </>
@@ -504,7 +518,7 @@ export default function BetaTestPage() {
           </h2>
           <p className="text-[11px] text-white/40">{t.betaTest.ctaSubtitle}</p>
         </div>
-        <Button onClick={scrollToForm} className="text-[11px] font-bold shrink-0">
+        <Button onClick={() => scrollToForm('beta:cta-final')} className="text-[11px] font-bold shrink-0">
           {t.betaTest.ctaButton} <ArrowRight className="w-3 h-3 ml-1" />
         </Button>
       </section>
