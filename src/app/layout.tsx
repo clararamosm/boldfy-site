@@ -11,6 +11,7 @@ import {
   ConsentBanner,
   ConsentModeDefaults,
 } from '@/components/analytics/consent-banner';
+import { InternalTrafficMarker } from '@/components/analytics/internal-traffic-marker';
 
 export const metadata: Metadata = {
   title: {
@@ -145,6 +146,7 @@ export default function RootLayout({
         <GTMNoScript />
 
         <Providers>
+          <InternalTrafficMarker />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
