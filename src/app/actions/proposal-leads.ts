@@ -354,23 +354,11 @@ export async function sendProposalLeadToNotion(
     return { success: false, error: 'Integração com Notion não configurada.' };
   }
 
-  const T0 = Date.now();
-  const log = (step: string, extra?: Record<string, unknown>) => {
-    console.log(`[proposal-leads] ${step}`, {
-      ms_elapsed: Date.now() - T0,
-      email: input.email,
-      empresa: input.empresa,
-      ...extra,
-    });
-  };
-
   try {
-    log('start');
     const proposalJSON = buildProposalJSON(input);
 
     // 1. Create proposal page in Notion
     const propostaId = await createPropostaPage(input);
-    log('after_notion_create', { propostaId });
 
     const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
     const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
@@ -383,7 +371,6 @@ export async function sendProposalLeadToNotion(
         setUrlProperty(propostaId, proposalUrl),
         appendProposalJSON(propostaId, proposalJSON),
       ]);
-      log('after_notion_enrichment');
     }
 
     // 3. Sync to ActiveCampaign (CRM — fonte de verdade)
@@ -412,7 +399,6 @@ export async function sendProposalLeadToNotion(
     // AWAIT aqui é essencial — em serverless (Vercel), fire-and-forget é
     // descartado quando a função retorna. Foi por isso que leads apareciam
     // no Notion mas não chegavam no ActiveCampaign antes desse fix.
-    log('before_ac_sync', { tagsCount: acTags.length, tags: acTags });
     try {
       const acContactId = await syncContact({
         email: input.email,
@@ -423,7 +409,6 @@ export async function sendProposalLeadToNotion(
         origem: input.origem,
         tags: acTags,
       });
-      log('after_ac_sync', { acContactId });
 
       if (acContactId) {
         const summary = buildProposalSummary(input);
@@ -443,18 +428,14 @@ export async function sendProposalLeadToNotion(
           .filter(Boolean)
           .join('\n');
         await addNoteToContact(acContactId, note);
-        log('after_ac_note');
       } else {
         console.warn(
           '[proposal-leads] AC syncContact returned null — contato nao foi criado/atualizado. Verificar ACTIVECAMPAIGN_API_URL e ACTIVECAMPAIGN_API_KEY no Vercel.',
         );
       }
     } catch (acErr) {
-      console.error('[proposal-leads] ActiveCampaign sync error (non-blocking):', acErr, {
-        ms_elapsed: Date.now() - T0,
-      });
+      console.error('[proposal-leads] ActiveCampaign sync error (non-blocking):', acErr);
     }
-    log('end');
 
     return {
       success: true,
