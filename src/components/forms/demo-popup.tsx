@@ -2,9 +2,12 @@
 
 import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Loader2, CheckCircle2, Calendar, ArrowRight } from 'lucide-react';
 import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+
+const GOOGLE_CALENDAR_URL = 'https://calendar.app.google/88o2FH7sxKDuU5p97';
+const REDIRECT_DELAY_MS = 3000;
 
 type DemoPopupContextType = {
   isOpen: boolean;
@@ -41,6 +44,24 @@ export function DemoPopupProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+type FormFields = {
+  nome: string;
+  email: string;
+  telefone: string;
+  cargo: string;
+  empresa: string;
+  funcionarios: string;
+};
+
+const EMPTY_FIELDS: FormFields = {
+  nome: '',
+  email: '',
+  telefone: '',
+  cargo: '',
+  empresa: '',
+  funcionarios: '',
+};
+
 function DemoPopupModal({
   isOpen,
   onOpenChange,
@@ -53,10 +74,21 @@ function DemoPopupModal({
   const utms = useUtmParams();
   const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const [fields, setFields] = React.useState<FormFields>(EMPTY_FIELDS);
+  const [countdown, setCountdown] = React.useState<number>(REDIRECT_DELAY_MS / 1000);
+
+  // Todos os campos sao required — form valido quando todos tem valor
+  const isFormValid = Object.values(fields).every((v) => v.trim().length > 0);
+
+  const updateField = (name: keyof FormFields, value: string) => {
+    setFields((prev) => ({ ...prev, [name]: value }));
+  };
 
   const resetState = () => {
     setStatus('idle');
     setErrorMessage('');
+    setFields(EMPTY_FIELDS);
+    setCountdown(REDIRECT_DELAY_MS / 1000);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -71,14 +103,8 @@ function DemoPopupModal({
     setStatus('loading');
     setErrorMessage('');
 
-    const formData = new FormData(e.currentTarget);
     const data: DemoLeadInput = {
-      nome: formData.get('nome') as string,
-      email: formData.get('email') as string,
-      telefone: formData.get('telefone') as string,
-      cargo: formData.get('cargo') as string,
-      empresa: formData.get('empresa') as string,
-      funcionarios: formData.get('funcionarios') as string,
+      ...fields,
       origem: source,
       ...utms,
     };
@@ -93,6 +119,32 @@ function DemoPopupModal({
     }
   };
 
+  // Redirect automatico pro Google Calendar apos sucesso + countdown visivel
+  React.useEffect(() => {
+    if (status !== 'success') return;
+
+    const startTs = Date.now();
+    const redirectTs = startTs + REDIRECT_DELAY_MS;
+
+    const interval = setInterval(() => {
+      const secondsLeft = Math.max(0, Math.ceil((redirectTs - Date.now()) / 1000));
+      setCountdown(secondsLeft);
+    }, 250);
+
+    const timer = setTimeout(() => {
+      // Abre em nova aba — preserva o site atual aberto caso volte
+      window.open(GOOGLE_CALENDAR_URL, '_blank', 'noopener,noreferrer');
+      clearInterval(interval);
+    }, REDIRECT_DELAY_MS);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [status]);
+
+  const firstName = fields.nome.trim().split(/\s+/)[0] || '';
+
   return (
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
@@ -101,12 +153,16 @@ function DemoPopupModal({
           
           <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
             <Dialog.Title className="text-xl font-bold leading-none tracking-tight">
-              {status === 'success' ? 'Solicitação enviada!' : 'Agendar demonstração'}
+              {status === 'success'
+                ? firstName
+                  ? `Tudo certo, ${firstName}!`
+                  : 'Tudo certo!'
+                : 'Agendar demonstração'}
             </Dialog.Title>
             <Dialog.Description className="text-sm text-gray-500">
-              {status === 'success' 
-                ? 'Nossa equipe entrará em contato com você o mais breve possível.'
-                : 'Preencha os dados abaixo e entraremos em contato para apresentar a Boldfy.'}
+              {status === 'success'
+                ? 'Agora escolha o melhor horário pra gente conversar.'
+                : 'Preencha os dados abaixo e escolha um horário pra nossa conversa.'}
             </Dialog.Description>
           </div>
 
@@ -116,47 +172,121 @@ function DemoPopupModal({
           </Dialog.Close>
 
           {status === 'success' ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <CheckCircle2 className="w-16 h-16 text-green-500" />
-              <button
-                onClick={() => handleOpenChange(false)}
-                className="mt-4 px-6 py-2 bg-accent text-white font-medium rounded-md hover:bg-accent/90 transition-colors"
-                type="button"
+            <div className="flex flex-col items-center justify-center py-6 space-y-5 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 animate-ping rounded-full bg-green-400/30" />
+                <CheckCircle2 className="relative w-16 h-16 text-green-500" />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  Recebi seus dados e já te envio os detalhes por e-mail.
+                </p>
+                <p className="text-sm text-gray-600">
+                  Escolhe agora um horário que funcione pra você 👉
+                </p>
+              </div>
+
+              <a
+                href={GOOGLE_CALENDAR_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center justify-center gap-2 bg-accent text-white font-semibold px-6 py-3 rounded-md shadow-sm hover:bg-accent/90 transition-all hover:shadow-md"
               >
-                Concluir
-              </button>
+                <Calendar className="w-4 h-4" />
+                Escolher horário agora
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </a>
+
+              <p className="text-xs text-gray-400">
+                {countdown > 0
+                  ? `Abrindo automaticamente em ${countdown}s…`
+                  : 'Abrindo…'}
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-1">
                   <label htmlFor="nome" className="text-sm font-medium text-gray-700">Nome completo</label>
-                  <input required id="nome" name="nome" type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" placeholder="João Silva" />
+                  <input
+                    required
+                    id="nome"
+                    name="nome"
+                    type="text"
+                    value={fields.nome}
+                    onChange={(e) => updateField('nome', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                    placeholder="João Silva"
+                  />
                 </div>
-                
+
                 <div className="col-span-2 sm:col-span-1 space-y-1">
                   <label htmlFor="email" className="text-sm font-medium text-gray-700">E-mail corporativo</label>
-                  <input required id="email" name="email" type="email" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" placeholder="joao@empresa.com" />
+                  <input
+                    required
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={fields.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                    placeholder="joao@empresa.com"
+                  />
                 </div>
 
                 <div className="col-span-2 sm:col-span-1 space-y-1">
                   <label htmlFor="telefone" className="text-sm font-medium text-gray-700">WhatsApp</label>
-                  <input required id="telefone" name="telefone" type="tel" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" placeholder="(11) 99999-9999" />
+                  <input
+                    required
+                    id="telefone"
+                    name="telefone"
+                    type="tel"
+                    value={fields.telefone}
+                    onChange={(e) => updateField('telefone', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                    placeholder="(11) 99999-9999"
+                  />
                 </div>
 
                 <div className="col-span-2 sm:col-span-1 space-y-1">
                   <label htmlFor="cargo" className="text-sm font-medium text-gray-700">Cargo</label>
-                  <input required id="cargo" name="cargo" type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" placeholder="CEO / Diretor de Marketing" />
+                  <input
+                    required
+                    id="cargo"
+                    name="cargo"
+                    type="text"
+                    value={fields.cargo}
+                    onChange={(e) => updateField('cargo', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                    placeholder="CEO / Diretor de Marketing"
+                  />
                 </div>
 
                 <div className="col-span-2 sm:col-span-1 space-y-1">
                   <label htmlFor="empresa" className="text-sm font-medium text-gray-700">Nome da empresa</label>
-                  <input required id="empresa" name="empresa" type="text" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent" placeholder="Sua Empresa" />
+                  <input
+                    required
+                    id="empresa"
+                    name="empresa"
+                    type="text"
+                    value={fields.empresa}
+                    onChange={(e) => updateField('empresa', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                    placeholder="Sua Empresa"
+                  />
                 </div>
 
                 <div className="col-span-2 space-y-1">
                   <label htmlFor="funcionarios" className="text-sm font-medium text-gray-700">Tamanho da empresa</label>
-                  <select required id="funcionarios" name="funcionarios" defaultValue="" className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white">
+                  <select
+                    required
+                    id="funcionarios"
+                    name="funcionarios"
+                    value={fields.funcionarios}
+                    onChange={(e) => updateField('funcionarios', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent bg-white"
+                  >
                     <option value="" disabled>Selecione...</option>
                     <option value="1 a 10 funcionários">1 a 10 funcionários</option>
                     <option value="11 a 50 funcionários">11 a 50 funcionários</option>
@@ -175,8 +305,12 @@ function DemoPopupModal({
 
               <button
                 type="submit"
-                disabled={status === 'loading'}
-                className="w-full flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-75 disabled:cursor-not-allowed transition-colors"
+                disabled={status === 'loading' || !isFormValid}
+                className={`w-full flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all ${
+                  isFormValid && status !== 'loading'
+                    ? 'bg-accent hover:bg-accent/90 hover:shadow-md cursor-pointer'
+                    : 'bg-accent/40 cursor-not-allowed'
+                }`}
               >
                 {status === 'loading' ? (
                   <>
