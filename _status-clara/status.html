@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status do dia — Clara</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #18181b;
+    --surface-2: #1f1f23;
+    --border: #2a2a30;
+    --text: #f5f5f7;
+    --text-dim: #a1a1aa;
+    --text-muted: #71717a;
+    --accent: #fafafa;
+    --urgent: #ef4444;
+    --warning: #f59e0b;
+    --info: #60a5fa;
+    --ok: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 32px 24px 80px;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  .title-block h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .title-block p {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .meta {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .meta strong { color: var(--text-dim); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .stat .num {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .stat .label {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+  .stat.urgent .num { color: var(--urgent); }
+  .stat.warning .num { color: var(--warning); }
+
+  section {
+    margin-bottom: 36px;
+  }
+  section h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section h2 .count {
+    background: var(--surface-2);
+    color: var(--text-dim);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  .item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .item:hover {
+    border-color: #3a3a42;
+  }
+  .item .tag {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 2px;
+  }
+  .tag.urgent { background: rgba(239,68,68,0.12); color: var(--urgent); }
+  .tag.warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+  .tag.info { background: rgba(96,165,250,0.12); color: var(--info); }
+  .tag.neutral { background: var(--surface-2); color: var(--text-dim); }
+
+  .item .body {
+    flex: 1;
+    min-width: 0;
+  }
+  .item .body .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .item .body h3 {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .item .body .source {
+    color: var(--text-muted);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .item .body p {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .item .body .actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+  }
+  .item .body .actions a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .item .body .actions a:hover {
+    color: var(--text);
+    border-color: #4a4a52;
+  }
+
+  .empty {
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .footer-note {
+    margin-top: 40px;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .footer-note strong { color: var(--text); }
+  .footer-note code {
+    background: var(--surface-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 720px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="title-block">
+      <h1>Status do dia</h1>
+      <p>O que precisa da sua atenção em todas as ferramentas conectadas</p>
+    </div>
+    <div class="meta">
+      <div>Última atualização</div>
+      <strong>Terça, 28 de abril de 2026 — 14:55 BRT</strong>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat urgent">
+      <div class="num">2</div>
+      <div class="label">Urgentes</div>
+    </div>
+    <div class="stat warning">
+      <div class="num">3</div>
+      <div class="label">Precisam ação</div>
+    </div>
+    <div class="stat">
+      <div class="num">1</div>
+      <div class="label">Reuniões hoje</div>
+    </div>
+    <div class="stat">
+      <div class="num">2</div>
+      <div class="label">DMs com você</div>
+    </div>
+  </div>
+
+  <!-- URGENTES -->
+  <section>
+    <h2>Urgente <span class="count">2</span></h2>
+
+    <div class="item">
+      <span class="tag urgent">Atrasado</span>
+      <div class="body">
+        <div class="row">
+          <h3>preparar mais conteúdo — Omie</h3>
+          <span class="source">Notion · Tarefa</span>
+        </div>
+        <p>Vence hoje (28/04) e está com status <em>Não iniciada</em>.</p>
+        <div class="actions">
+          <a href="https://www.notion.so/30594982dee48084a708de2e2412d638" target="_blank">Abrir tarefa</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <span class="tag urgent">Bola com você</span>
+      <div class="body">
+        <div class="row">
+          <h3>Bruna Hellen pediu reenvio do link de redefinição de senha</h3>
+          <span class="source">Slack · DM</span>
+        </div>
+        <p>"tentei acessar para redefinir a senha mas o link expirou, consegue me enviar novamente?" — sem resposta sua até agora.</p>
+        <div class="actions">
+          <a href="https://omiexperience.slack.com/archives/D09F4PHKT0B/p1777398457199739" target="_blank">Abrir DM</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRECISAM AÇÃO -->
+  <section>
+    <h2>Precisam da sua ação hoje <span class="count">3</span></h2>
+
+    <div class="item">
+      <span class="tag warning">Hoje</span>
+      <div class="body">
+        <div class="row">
+          <h3>preparar mais conteúdo — PricingIO</h3>
+          <span class="source">Notion · Tarefa</span>
+        </div>
+        <p>Vence hoje (28/04) — está em andamento.</p>
+        <div class="actions">
+          <a href="https://www.notion.so/30594982dee480ac984bfbd264eecb8b" target="_blank">Abrir tarefa</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <span class="tag warning">Aguardando</span>
+      <div class="body">
+        <div class="row">
+          <h3>Emanuelle te pingou: "vc viu o que o JA mandou lá?"</h3>
+          <span class="source">Slack · DM</span>
+        </div>
+        <p>Pergunta direta, ainda não respondida. Provável referência a algo do JA (José Adriano) que precisa do seu olhar.</p>
+        <div class="actions">
+          <a href="https://boldfy.slack.com/archives/D09KK7V7BDF/p1777384163601729" target="_blank">Abrir DM</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <span class="tag info">Confirmar</span>
+      <div class="body">
+        <div class="row">
+          <h3>Demo com Clara Ramos Miranda</h3>
+          <span class="source">Calendar · Hoje 14:00</span>
+        </div>
+        <p>Reunião de demo às 14:00 BRT (17:00 UTC). Link: meet.google.com/tod-qyph-qqy</p>
+        <div class="actions">
+          <a href="https://meet.google.com/tod-qyph-qqy" target="_blank">Entrar na call</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INFO / FYI -->
+  <section>
+    <h2>Para você saber <span class="count">2</span></h2>
+
+    <div class="item">
+      <span class="tag neutral">Resolvido</span>
+      <div class="body">
+        <div class="row">
+          <h3>Bruna Hellen confirmou que deu certo</h3>
+          <span class="source">Slack · DM · 14:50</span>
+        </div>
+        <p>"deu super certo aqui — obrigada! vou organizar com o time" — não exige resposta, mas vale acompanhar se ela voltar.</p>
+        <div class="actions">
+          <a href="https://omiexperience.slack.com/archives/D09F4PHKT0B/p1777398638390149" target="_blank">Abrir thread</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <span class="tag neutral">FYI</span>
+      <div class="body">
+        <div class="row">
+          <h3>Emanuelle reagindo ao conteúdo de hoje</h3>
+          <span class="source">Slack · DM</span>
+        </div>
+        <p>Conversa casual rolando ("FOFOOOOOOOOOO", "eu posso querer abraçar ele?"). Sem ação esperada.</p>
+        <div class="actions">
+          <a href="https://boldfy.slack.com/archives/D09KK7V7BDF/p1777384966290029" target="_blank">Abrir DM</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <strong>Como manter atualizado:</strong> esta página é um snapshot do estado atual. Para atualizar, peça <code>"atualiza meu status"</code> no Cowork e eu rodo a busca de novo, regravando esta página com os dados mais recentes. Também posso configurar uma tarefa agendada (ex: refresh a cada 1h) — basta pedir.
+  </div>
+
+</div>
+</body>
+</html>

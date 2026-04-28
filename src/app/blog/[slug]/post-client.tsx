@@ -6,6 +6,7 @@ import { useDemoPopup } from '@/components/forms/demo-popup';
 import { Badge } from '@/components/ui/badge';
 import { NotionRenderer } from '@/components/notion-renderer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Clock, User } from 'lucide-react';
 import type { BlogPost, NotionBlock } from '@/lib/notion';
 
@@ -64,12 +65,16 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
 
           {/* Cover */}
           {post.coverUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.coverUrl}
-              alt={post.title}
-              className="w-full rounded-xl mb-10"
-            />
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-10">
+              <Image
+                src={post.coverUrl}
+                alt={post.title}
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 768px"
+              />
+            </div>
           )}
 
           {/* Content */}
@@ -80,10 +85,11 @@ export function BlogPostClient({ post, blocks }: BlogPostClientProps) {
             <div className="mt-12 rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5">
               {/* Avatar */}
               {post.authorPhoto ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={post.authorPhoto}
                   alt={post.author}
+                  width={64}
+                  height={64}
                   className="h-16 w-16 rounded-full object-cover shrink-0"
                 />
               ) : (

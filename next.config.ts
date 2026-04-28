@@ -16,6 +16,33 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      // Notion: imagens de covers e fotos de autores hospedadas no S3 da Notion
+      {
+        protocol: 'https',
+        hostname: 'prod-files-secure.s3.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.notion.so',
+      },
+      {
+        protocol: 'https',
+        hostname: 'notion.so',
+      },
+      // Imagens de uploads do Notion via CDN
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
+
   async headers() {
     return [
       {

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useT } from '@/lib/i18n/context';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Clock } from 'lucide-react';
@@ -19,13 +20,15 @@ function PostCard({ post }: { post: BlogPost }) {
       <article className="rounded-xl border border-border bg-card overflow-hidden transition-shadow hover:shadow-md hover:border-primary/20">
         {/* Cover image */}
         {post.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.coverUrl}
-            alt={post.title}
-            className="w-full h-48 object-cover"
-            loading="lazy"
-          />
+          <div className="relative w-full h-48">
+            <Image
+              src={post.coverUrl}
+              alt={post.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
         ) : (
           <div className="w-full h-48 bg-primary/5 flex items-center justify-center">
             <span className="text-4xl font-bold text-primary/20">B</span>
@@ -38,10 +41,11 @@ function PostCard({ post }: { post: BlogPost }) {
               {post.category}
             </Badge>
             {post.authorPhoto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={post.authorPhoto}
                 alt={post.author}
+                width={24}
+                height={24}
                 className="h-6 w-6 rounded-full object-cover ring-2 ring-white"
               />
             ) : (
