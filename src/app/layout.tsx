@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+import {
+  ConditionalHeader,
+  ConditionalFooter,
+} from '@/components/layout/conditional-chrome';
 import { GTMScript, GTMNoScript } from '@/components/analytics/gtm';
 import { GA4Script } from '@/components/analytics/ga4';
 import { LinkedInInsightScript } from '@/components/analytics/linkedin-insight';
@@ -156,9 +158,9 @@ export default function RootLayout({
 
         <Providers>
           <InternalTrafficMarker />
-          <Header />
+          <ConditionalHeader />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <ConditionalFooter />
           <ConsentBanner />
         </Providers>
       </body>
