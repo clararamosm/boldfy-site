@@ -6,7 +6,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static pages — all public routes
   const highPriority = ['', '/solucoes/software-as-a-service', '/solucoes/content-as-a-service', '/precos'];
-  const medPriority = ['/para/marketing', '/para/vendas', '/para/rh', '/materiais', '/ferramentas'];
+  const medPriority = ['/para/marketing', '/para/vendas', '/para/rh', '/materiais', '/ferramentas', '/algoritmo-linkedin'];
   const lowPriority = ['/blog', '/legal'];
   
   const staticPages = [...highPriority, ...medPriority, ...lowPriority].map((route) => ({

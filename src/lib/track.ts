@@ -15,9 +15,9 @@
  *   trackEvent('cta_click', { cta_type: 'demo', source: 'header:desktop' });
  */
 
-type FormType = 'demo' | 'proposal' | 'contact' | 'beta';
+type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'report';
 
-type CtaType = 'demo' | 'proposal' | 'contact' | 'beta';
+type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'report_download' | 'schedule_meeting';
 
 /**
  * Uni\u00e3o discriminada dos eventos que tem nome + params bem definidos.
