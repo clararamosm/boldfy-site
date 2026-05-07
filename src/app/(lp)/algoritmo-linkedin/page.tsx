@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { sendReportLead } from '@/app/actions/report-leads';
+import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
 import { useUtmParams } from '@/hooks/use-utm-params';
 import {
@@ -56,7 +57,18 @@ export default function AlgoritmoLinkedinPage() {
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  // Intenção declarada de uso do material — decide o segmento (lista AC)
+  // e se o lead recebe a cadência completa (só quem marca "marca da
+  // empresa" recebe E2-E6; os outros recebem só o E1 com o PDF).
+  // '' = ainda não escolheu (form não pode ser enviado).
+  const [intencaoUso, setIntencaoUso] = useState<IntencaoUso | ''>('');
+  // Empresa só é pedida quando intencaoUso === 'marca-empresa'.
   const [empresa, setEmpresa] = useState('');
+  // Opt-in da newsletter contínua (separado da cadência do report).
+  // Default = false pra ser LGPD-compliant (opt-in ativo, não pré-marcado).
+  // Quem marcar entra na lista 'Newsletter Boldfy' (Notion) + tag
+  // 'Segmento: Newsletter Boldfy' (AC).
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
 
   // 6 destaques de dados do report — números que param o scroll e dão
   // densidade ao que a LP promete entregar.
@@ -160,6 +172,14 @@ export default function AlgoritmoLinkedinPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Guard: intenção é obrigatória — botão fica disabled até a pessoa
+    // escolher, mas se algum estado estranho deixar passar, falhamos cedo.
+    if (!intencaoUso) {
+      setError('Escolha pra que você vai usar o report.');
+      return;
+    }
+
     setSending(true);
 
     trackEvent('form_submit_start', {
@@ -170,8 +190,12 @@ export default function AlgoritmoLinkedinPage() {
     const result = await sendReportLead({
       nome,
       email,
-      empresa,
+      intencaoUso,
+      // Empresa só é enviada quando faz sentido (intenção = marca da
+      // empresa). Pra outras intenções, o backend usa um label semântico.
+      empresa: intencaoUso === 'marca-empresa' ? empresa : undefined,
       origem: 'LP Algoritmo LinkedIn',
+      newsletterOptIn,
       ...utms,
     });
 
@@ -495,31 +519,78 @@ export default function AlgoritmoLinkedinPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-xs">
-                    Email corporativo <span className="text-destructive">*</span>
+                    Email <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="voce@empresa.com"
+                    placeholder="voce@email.com"
                     required
                     autoComplete="email"
                   />
                 </div>
+                {/* Dropdown de intenção — decide o segmento e a cadência.
+                    Native <select> em vez de Radix pra ficar leve no bundle
+                    da LP (importar Select inflaria o JS). */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="empresa" className="text-xs">
-                    Empresa <span className="text-destructive">*</span>
+                  <Label htmlFor="intencao" className="text-xs">
+                    Quero baixar pra usar... <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="empresa"
-                    value={empresa}
-                    onChange={(e) => setEmpresa(e.target.value)}
-                    placeholder="Onde você trabalha hoje"
+                  <select
+                    id="intencao"
+                    value={intencaoUso}
+                    onChange={(e) => setIntencaoUso(e.target.value as IntencaoUso | '')}
                     required
-                    autoComplete="organization"
-                  />
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Selecione uma opção
+                    </option>
+                    <option value="marca-empresa">
+                      Na marca da empresa onde trabalho
+                    </option>
+                    <option value="marca-clientes">
+                      Na marca dos meus clientes (sou de agência, consultor)
+                    </option>
+                    <option value="marca-pessoal">Na minha marca pessoal</option>
+                  </select>
                 </div>
+                {/* Campo Empresa só aparece pra quem escolheu marca da empresa.
+                    Pros outros casos não faz sentido pedir. */}
+                {intencaoUso === 'marca-empresa' && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="empresa" className="text-xs">
+                      Empresa onde trabalha <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="empresa"
+                      value={empresa}
+                      onChange={(e) => setEmpresa(e.target.value)}
+                      placeholder="Nome da empresa"
+                      required
+                      autoComplete="organization"
+                    />
+                  </div>
+                )}
+
+                {/* Opt-in opcional pra newsletter — separado da cadência
+                    transacional do report (essa é parte do que o lead
+                    pediu ao baixar). Default desmarcado pra LGPD. */}
+                <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                  <input
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-primary/30 focus:ring-offset-0 cursor-pointer accent-primary"
+                  />
+                  <span className="text-[11px] text-muted-foreground leading-snug">
+                    Quero aproveitar e assinar a newsletter da Boldfy. Aceito
+                    receber comunicações por email — dá pra cancelar com um
+                    clique.
+                  </span>
+                </label>
 
                 {error && (
                   <div className="text-sm text-destructive text-center">{error}</div>
@@ -545,8 +616,8 @@ export default function AlgoritmoLinkedinPage() {
                 </Button>
 
                 <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                  Ao baixar, você aceita receber emails da Boldfy sobre o tema. Dá
-                  pra sair quando quiser, com um clique.
+                  Ao baixar, você recebe o PDF por email + uma sequência curta
+                  com aprofundamentos sobre o tema. Pode sair quando quiser.
                 </p>
               </form>
             </>
