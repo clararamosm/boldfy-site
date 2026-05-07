@@ -377,13 +377,6 @@ export async function sendProposalLeadToNotion(
     const acTags = buildACTags({
       formType: 'Simulador de Proposta',
       origem: input.origem,
-      utms: {
-        utm_source: input.utm_source,
-        utm_medium: input.utm_medium,
-        utm_campaign: input.utm_campaign,
-        utm_content: input.utm_content,
-        utm_term: input.utm_term,
-      },
       extraTags: [
         input.plataformaEnabled ? 'Módulo: SaaS' : null,
         input.designPlan ? 'Módulo: Design on Demand' : null,
@@ -411,6 +404,10 @@ export async function sendProposalLeadToNotion(
           cargo: input.cargo,
           total_mensal_proposta: input.totalCurrent,
           url_proposta: proposalUrl,
+          // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
+          ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+          ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+          ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
         },
       });
 

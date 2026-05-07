@@ -137,13 +137,6 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
     const acTags = buildACTags({
       formType: 'Beta Program',
       origem: input.origem || 'Beta Test',
-      utms: {
-        utm_source: input.utm_source,
-        utm_medium: input.utm_medium,
-        utm_campaign: input.utm_campaign,
-        utm_content: input.utm_content,
-        utm_term: input.utm_term,
-      },
       extraTags: ['Beta Tester'],
     });
 
@@ -164,6 +157,10 @@ export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ succ
           setor: input.setor,
           objetivo_principal: input.objetivoPrincipal,
           como_conheceu: input.comoConheceu,
+          // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
+          ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+          ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+          ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
         },
       });
 

@@ -69,6 +69,25 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
   como_conheceu: { title: 'Como conheceu', type: 'text' },
   total_mensal_proposta: { title: 'Total mensal da proposta', type: 'text' },
   url_proposta: { title: 'URL da proposta', type: 'text' },
+  /**
+   * Classificação do lead derivada da intenção declarada no form (em vez de
+   * tags `ICP:`/`Persona:`). Valores possíveis:
+   *   - "ICP B2B"      → marca-empresa, recebe cadência completa
+   *   - "Agência"      → marca-clientes, só E1
+   *   - "Criador"      → marca-pessoal, só E1
+   * Gate da cadência: If/Else no AC compara `tipo_lead = "ICP B2B"`.
+   */
+  tipo_lead: { title: 'Tipo de Lead', type: 'text' },
+  /**
+   * UTMs de PRIMEIRO toque — registram a origem real do lead (não atualizam
+   * em visitas posteriores). Substituem as tags `utm_source:X` etc, que
+   * poluíam o contato com 3-5 tags por captura.
+   * Lógica de "primeiro toque" é responsabilidade do caller (só seta se o
+   * campo ainda estiver vazio — ver report-leads.ts).
+   */
+  utm_source_first: { title: 'UTM Source (1º toque)', type: 'text' },
+  utm_medium_first: { title: 'UTM Medium (1º toque)', type: 'text' },
+  utm_campaign_first: { title: 'UTM Campaign (1º toque)', type: 'text' },
 };
 
 // Cache em memória (survive hot module reloads dentro da mesma lambda execution)

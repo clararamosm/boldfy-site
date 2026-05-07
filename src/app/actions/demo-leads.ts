@@ -40,13 +40,6 @@ export async function sendDemoLeadToNotion(
     const acTags = buildACTags({
       formType: 'Demo',
       origem: input.origem || 'Popup Demo',
-      utms: {
-        utm_source: input.utm_source,
-        utm_medium: input.utm_medium,
-        utm_campaign: input.utm_campaign,
-        utm_content: input.utm_content,
-        utm_term: input.utm_term,
-      },
       // Tag de rastreamento: lead pediu demo mas ainda nao agendou horario
       // no Cal.com. O webhook /api/webhooks/cal remove essa tag quando a
       // pessoa agenda — permite rodar cadencia de recuperacao pra quem
@@ -65,6 +58,10 @@ export async function sendDemoLeadToNotion(
         empresa: input.empresa,
         cargo: input.cargo,
         porte: input.funcionarios,
+        // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
+        ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+        ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+        ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
       },
     });
 

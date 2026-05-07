@@ -27,8 +27,8 @@
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import {
   buildACTags,
-  classificacaoIntencao,
   routeSegments,
+  tipoLeadFromIntencao,
   type IntencaoUso,
 } from '@/lib/ac-tags';
 import { captureLead, upsertPessoa } from '@/lib/notion-leads';
@@ -154,35 +154,22 @@ export async function sendReportLead(
       intencaoUso: input.intencaoUso,
     });
 
-    // Tags de classificação (`ICP:` ou `Persona:`) derivadas da intenção.
-    // O branch da automação da cadência usa `ICP: Empresa B2B` como gate
-    // pra E2-E6 (não-ICP recebe só E1 com a entrega do PDF).
-    const classificacaoTags = classificacaoIntencao(input.intencaoUso);
+    // Classificação do lead (ICP B2B / Agência / Criador) — agora é CAMPO
+    // (`tipo_lead`), não mais tags `ICP:`/`Persona:`. O If/Else da cadência
+    // no AC compara `tipo_lead = "ICP B2B"` pra liberar E2-E5.
+    const tipoLead = tipoLeadFromIntencao(input.intencaoUso);
 
     const acTags = buildACTags({
       formType: 'Report Algoritmo LinkedIn 2026',
       origem: origemNoSite,
-      utms: {
-        utm_source: input.utm_source,
-        utm_medium: input.utm_medium,
-        utm_campaign: input.utm_campaign,
-        utm_content: input.utm_content,
-        utm_term: input.utm_term,
-      },
       extraTags: [
-        // 'Lead: Material rico' classifica o tipo de captura — usado em
-        // relatórios de aquisição (qualificação inicial do lead).
-        'Lead: Material rico',
         // 'Report: Algoritmo LinkedIn 2026' é o gatilho da cadência de
-        // 6 emails (1º email entrega o PDF, depois desenvolvem o tema
-        // SE o lead for ICP — branch dentro da automação).
-        // Mantido como tag de campanha (não-prefixada) por ser específica
-        // dessa peça de conteúdo, não um cohort permanente.
+        // 5 emails (1º entrega o PDF, depois If/Else: ICP B2B recebe os
+        // 4 de aprofundamento; outros encerram).
         'Report: Algoritmo LinkedIn 2026',
-        // Classificação ICP/Persona — gate da cadência completa.
-        ...classificacaoTags,
         // Segmentos persistentes (Líderes B2B / Parceiros / Individuais
-        // + Newsletter Boldfy se marcou opt-in).
+        // + Newsletter Boldfy se marcou opt-in). Cada um dispara a
+        // automação Tag→Lista que inscreve o contato na lista correta.
         ...segmentTags,
       ],
     });
@@ -195,6 +182,17 @@ export async function sendReportLead(
       tags: acTags,
       fields: {
         empresa: empresaForCRM,
+        // Classificação do lead (gate da cadência via If/Else)
+        ...(tipoLead ? { tipo_lead: tipoLead } : {}),
+        // UTMs de PRIMEIRO toque — substituem 5 tags `utm_*` por 3 campos
+        // que aparecem direto no perfil do contato. Setados sempre que
+        // existirem; idealmente "primeiro toque" deveria ser preservado
+        // (não sobrescrever em capturas posteriores), mas o AC não tem
+        // upsert condicional nativo — deixaremos pra próxima iteração se
+        // virar dor (ver task de migration).
+        ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+        ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+        ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
       },
     });
 

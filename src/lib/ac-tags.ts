@@ -108,49 +108,42 @@ export function routeSegments(params: {
 }
 
 /**
- * Tags de classificação derivadas da intenção de uso. Diferentes de
- * `Segmento:` (que define lista) e de `Lead:` (que classifica evento) —
- * essas tags `ICP:` e `Persona:` qualificam QUEM é o lead.
+ * Valor do campo customizado `tipo_lead` derivado da intenção declarada.
+ * Substitui as tags `ICP:`/`Persona:` (mais ruído que sinal — cada lead
+ * ganhava 1 tag de classificação que ninguém usava em filtro).
  *
- * Uso principal: branch da cadência do Report (só `ICP: Empresa B2B`
- * recebe os emails de aprofundamento E2-E6).
+ * Uso principal: gate do If/Else da cadência do Report — agora compara
+ * `Campo tipo_lead = "ICP B2B"` em vez de `Tag ICP: Empresa B2B existe`.
+ *
+ * Migration nota: o If/Else da automação no AC precisa ser atualizado
+ * MANUALMENTE pra usar esse campo antes deste código entrar em produção.
+ * Caso contrário, leads novos não passarão pelo gate (e ninguém recebe
+ * E2-E5).
  */
-export function classificacaoIntencao(intencaoUso?: IntencaoUso): string[] {
-  if (intencaoUso === 'marca-empresa') return ['ICP: Empresa B2B'];
-  if (intencaoUso === 'marca-clientes') return ['Persona: Agência'];
-  if (intencaoUso === 'marca-pessoal') return ['Persona: Criador'];
-  return [];
+export function tipoLeadFromIntencao(intencaoUso?: IntencaoUso): string | undefined {
+  if (intencaoUso === 'marca-empresa') return 'ICP B2B';
+  if (intencaoUso === 'marca-clientes') return 'Agência';
+  if (intencaoUso === 'marca-pessoal') return 'Criador';
+  return undefined;
 }
 
 export function buildACTags(params: {
   formType: string;
   origem?: string;
-  utms?: {
-    utm_source?: string;
-    utm_medium?: string;
-    utm_campaign?: string;
-    utm_content?: string;
-    utm_term?: string;
-  };
   extraTags?: string[];
 }): string[] {
   const tags: string[] = [];
 
-  // Sempre taggeia o tipo de form
+  // Sempre taggeia o tipo de form — é a tag-mãe que dispara automações
+  // (cadências, sincronização Notion, relatórios de aquisição).
   tags.push(`Form: ${params.formType}`);
 
   // Origem do botão no site (ex: "home:solutions", "precos:saas", "caas:hero")
   if (params.origem) tags.push(`Origem: ${params.origem}`);
 
-  // UTMs — cada um vira uma tag separada pra facilitar segmentação no AC
-  const u = params.utms ?? {};
-  if (u.utm_source) tags.push(`utm_source:${u.utm_source}`);
-  if (u.utm_medium) tags.push(`utm_medium:${u.utm_medium}`);
-  if (u.utm_campaign) tags.push(`utm_campaign:${u.utm_campaign}`);
-  if (u.utm_content) tags.push(`utm_content:${u.utm_content}`);
-  if (u.utm_term) tags.push(`utm_term:${u.utm_term}`);
-
-  // Extras específicos do form (Lead:, Status:, Módulo:, Segmento:)
+  // Extras específicos do form (Status:, Módulo:, Segmento:, Report:)
+  // UTMs e tipo_lead saíram daqui — agora são CAMPOS (ver CUSTOM_FIELDS
+  // em activecampaign.ts e tipoLeadFromIntencao acima).
   if (params.extraTags) tags.push(...params.extraTags);
 
   return tags;

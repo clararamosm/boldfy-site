@@ -38,13 +38,6 @@ export async function sendContactLeadToNotion(
     const acTags = buildACTags({
       formType: 'Contato',
       origem: input.origem || 'Site - Contato',
-      utms: {
-        utm_source: input.utm_source,
-        utm_medium: input.utm_medium,
-        utm_campaign: input.utm_campaign,
-        utm_content: input.utm_content,
-        utm_term: input.utm_term,
-      },
     });
 
     const contactId = await syncContact({
@@ -57,6 +50,10 @@ export async function sendContactLeadToNotion(
       fields: {
         empresa: input.empresa,
         porte: input.colaboradores,
+        // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
+        ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+        ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+        ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
       },
     });
 
