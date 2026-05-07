@@ -475,8 +475,8 @@ export default function AlgoritmoLinkedinPage() {
                   Onde a gente envia?
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  O PDF abre na hora e também vai pro seu email — pra você achar
-                  depois. Sem newsletter automática, prometido.
+                  O PDF abre na hora e também vai pro seu email, pra você achar
+                  depois.
                 </p>
               </div>
 
