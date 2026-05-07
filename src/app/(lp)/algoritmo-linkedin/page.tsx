@@ -16,6 +16,7 @@
  */
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -280,44 +281,20 @@ export default function AlgoritmoLinkedinPage() {
               </Button>
             </div>
 
-            {/* Mock visual da capa do report — versão visual, não imagem real */}
+            {/* Capa real do report — imagem editorial inclinada -3deg */}
             <div className="hidden lg:block">
-              <div className="relative w-[260px] h-[340px]">
-                <div
-                  className="absolute inset-0 rounded-lg bg-gradient-to-br from-white to-[#F4ECFB] shadow-2xl border-4 border-primary/40"
-                  style={{ transform: 'rotate(-3deg)' }}
-                >
-                  <div className="p-6 h-full flex flex-col">
-                    <p className="text-[8px] font-bold uppercase tracking-[.18em] text-primary mb-4">
-                      Boldfy · Março 2026
-                    </p>
-                    <div className="flex-1">
-                      <p className="font-headline text-[13px] font-black text-[#1A0E2E] leading-tight">
-                        O Algoritmo
-                        <br />
-                        do LinkedIn
-                      </p>
-                      <p className="font-headline text-[15px] font-black text-primary leading-tight mt-1">
-                        Mudou Tudo.
-                      </p>
-                      <div className="w-8 h-[2px] bg-primary mt-3 mb-4" />
-                      <p className="text-[8px] text-[#1A0E2E]/70 leading-snug">
-                        Análise da atualização 360Brew: o que mudou e o que precisa
-                        mudar na estratégia de conteúdo agora.
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5 mt-3">
-                      {['Alcance', 'Perfil', 'Identidade', 'Formatos'].map((c) => (
-                        <div
-                          key={c}
-                          className="text-[7px] font-semibold text-[#1A0E2E]/70 bg-primary/5 border border-primary/20 rounded px-2 py-1"
-                        >
-                          {c}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div
+                className="relative w-[260px] h-[340px] rounded-lg overflow-hidden shadow-2xl border-4 border-primary/40"
+                style={{ transform: 'rotate(-3deg)' }}
+              >
+                <Image
+                  src="/images/algoritmo-linkedin-cover.jpeg"
+                  alt="Capa do report O Algoritmo do LinkedIn Mudou Tudo"
+                  fill
+                  sizes="260px"
+                  className="object-cover"
+                  priority
+                />
               </div>
             </div>
           </div>
@@ -477,13 +454,13 @@ export default function AlgoritmoLinkedinPage() {
                 Pronto, {nome.split(' ')[0]}.
               </h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Seu download começou em uma nova aba. Também enviamos o PDF pro seu
-                email — se não chegar em alguns minutos, dá uma olhada no spam.
+                O PDF fica disponível pra download na hora e também vai pro seu
+                email, pra você achar depois.
               </p>
               <a href={PDF_URL} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="text-sm font-bold gap-2 w-full sm:w-auto">
                   <Download className="w-4 h-4" />
-                  Baixar o PDF de novo
+                  Baixar o PDF
                 </Button>
               </a>
             </div>
