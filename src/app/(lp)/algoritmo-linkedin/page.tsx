@@ -47,7 +47,8 @@ import { LpFooter } from '@/components/layout/lp-footer';
 
 const FORM_SECTION_ID = 'form-section';
 const PDF_URL = '/reports/algoritmo-linkedin-2026-boldfy.pdf';
-const CALENDAR_URL = 'https://calendar.app.google/5Q1HDD2jZSkWa1DH6';
+const CALENDAR_URL =
+  'https://cal.com/clara-boldfy/diagnostico?utm_source=lp&utm_medium=cta&utm_campaign=report-algoritmo-linkedin&utm_content=lp-cta-secundario';
 
 export default function AlgoritmoLinkedinPage() {
   const utms = useUtmParams();
