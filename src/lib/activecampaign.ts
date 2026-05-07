@@ -75,9 +75,11 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
    *   - "ICP B2B"      → marca-empresa, recebe cadência completa
    *   - "Agência"      → marca-clientes, só E1
    *   - "Criador"      → marca-pessoal, só E1
-   * Gate da cadência: If/Else no AC compara `tipo_lead = "ICP B2B"`.
+   * Gate da cadência: If/Else no AC compara `Tipo de Lead = "ICP B2B"`.
+   * Perstag é `tipo_de_lead` porque o AC gera a partir do título "Tipo de
+   * Lead" (preserva preposições — virou TIPO_DE_LEAD, não TIPO_LEAD).
    */
-  tipo_lead: { title: 'Tipo de Lead', type: 'text' },
+  tipo_de_lead: { title: 'Tipo de Lead', type: 'text' },
   /**
    * UTMs de PRIMEIRO toque — registram a origem real do lead (não atualizam
    * em visitas posteriores). Substituem as tags `utm_source:X` etc, que

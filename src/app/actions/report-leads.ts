@@ -183,7 +183,7 @@ export async function sendReportLead(
       fields: {
         empresa: empresaForCRM,
         // Classificação do lead (gate da cadência via If/Else)
-        ...(tipoLead ? { tipo_lead: tipoLead } : {}),
+        ...(tipoLead ? { tipo_de_lead: tipoLead } : {}),
         // UTMs de PRIMEIRO toque — substituem 5 tags `utm_*` por 3 campos
         // que aparecem direto no perfil do contato. Setados sempre que
         // existirem; idealmente "primeiro toque" deveria ser preservado
