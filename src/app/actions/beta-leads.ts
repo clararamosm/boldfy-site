@@ -4,30 +4,22 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { BetaLeadSchema, parseInput } from './_schemas';
+import type { z } from 'zod';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_BETA_DB_ID = process.env.NOTION_BETA_DB_ID;
 
-type BetaLeadInput = {
-  nome: string;
-  email: string;
-  telefone: string;
-  cargo: string;
-  empresa: string;
-  setor: string;
-  colaboradores: string;
-  objetivoPrincipal: string;
-  comoConheceu: string;
-  observacoes?: string;
-  origem?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-};
+type BetaLeadInput = z.input<typeof BetaLeadSchema>;
 
-export async function sendBetaLeadToNotion(input: BetaLeadInput): Promise<{ success: boolean; error?: string }> {
+export async function sendBetaLeadToNotion(rawInput: BetaLeadInput): Promise<{ success: boolean; error?: string }> {
+  // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC
+  const parsed = parseInput(BetaLeadSchema, rawInput);
+  if (!parsed.ok) {
+    return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
+  }
+  const input = parsed.data;
+
   if (!NOTION_API_KEY || !NOTION_BETA_DB_ID) {
     console.error('Notion beta leads credentials not configured');
     return { success: false, error: 'Integração com Notion não configurada.' };

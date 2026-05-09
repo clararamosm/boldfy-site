@@ -12,6 +12,9 @@
 import type { ProposalData } from '@/lib/notion-crm';
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { ProposalLeadSchema, parseInput } from './_schemas';
+import { buildProposalUrl } from '@/lib/proposal-token';
+import type { z } from 'zod';
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 const NOTION_PROPOSTAS_DB_ID = process.env.NOTION_PROPOSTAS_DB_ID;
@@ -28,33 +31,11 @@ const NOTION_HEADERS = () => ({
 /*  Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export type ProposalLeadInput = {
-  nome: string;
-  email: string;
-  empresa: string;
-  cargo: string;
-  betaActive: boolean;
-  plataformaEnabled: boolean;
-  plataformaSeats: number;
-  plataformaEnterprise: boolean;
-  plataformaPriceFull: number;
-  plataformaPriceBeta: number;
-  designPlan: string | null;
-  designPrice: number;
-  fsTls: number;
-  fsFreq: number;
-  fsPrice: number;
-  totalCurrent: number;
-  totalFull: number;
-  savings: number;
-  origem: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-  teamItems: { text: string; dedicated: boolean }[];
-};
+// Tipo de input público — o que o caller (proposal-builder.tsx) constrói.
+export type ProposalLeadInput = z.input<typeof ProposalLeadSchema>;
+
+// Tipo após validação/normalização — usado internamente pelas funções helper.
+type ProposalLeadData = z.infer<typeof ProposalLeadSchema>;
 
 export type ProposalLeadResult = {
   success: boolean;
@@ -67,7 +48,7 @@ export type ProposalLeadResult = {
 /*  Build proposal JSON + summary                                              */
 /* -------------------------------------------------------------------------- */
 
-function buildProposalJSON(input: ProposalLeadInput): ProposalData {
+function buildProposalJSON(input: ProposalLeadData): ProposalData {
   return {
     version: 1,
     createdAt: new Date().toISOString(),
@@ -106,7 +87,7 @@ function buildProposalJSON(input: ProposalLeadInput): ProposalData {
 
 const fmt = (n: number) => n.toLocaleString('pt-BR');
 
-function buildProposalSummary(input: ProposalLeadInput): string {
+function buildProposalSummary(input: ProposalLeadData): string {
   const lines: string[] = [];
   lines.push(`Proposta montada via Simulador`);
   lines.push(`Beta ativo: ${input.betaActive ? 'Sim (30% off plataforma)' : 'Não'}`);
@@ -140,7 +121,7 @@ function buildProposalSummary(input: ProposalLeadInput): string {
 /* -------------------------------------------------------------------------- */
 
 async function createPropostaPage(
-  input: ProposalLeadInput,
+  input: ProposalLeadData,
 ): Promise<string | null> {
   if (!NOTION_PROPOSTAS_DB_ID) {
     console.error('[proposal-leads] NOTION_PROPOSTAS_DB_ID not configured');
@@ -347,8 +328,15 @@ async function appendProposalJSON(
 /* -------------------------------------------------------------------------- */
 
 export async function sendProposalLeadToNotion(
-  input: ProposalLeadInput,
+  rawInput: ProposalLeadInput,
 ): Promise<ProposalLeadResult> {
+  // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC
+  const parsed = parseInput(ProposalLeadSchema, rawInput);
+  if (!parsed.ok) {
+    return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
+  }
+  const input = parsed.data;
+
   if (!NOTION_API_KEY || !NOTION_PROPOSTAS_DB_ID) {
     console.error('[proposal-leads] NOTION_API_KEY or NOTION_PROPOSTAS_DB_ID not configured');
     return { success: false, error: 'Integração com Notion não configurada.' };
@@ -361,7 +349,9 @@ export async function sendProposalLeadToNotion(
     const propostaId = await createPropostaPage(input);
 
     const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
-    const proposalUrl = cleanId ? `${SITE_URL}/proposta/${cleanId}` : '';
+    // URL com token HMAC quando PROPOSAL_TOKEN_SECRET estiver configurada.
+    // Sem secret = URL sem token (modo legado).
+    const proposalUrl = cleanId ? buildProposalUrl(SITE_URL, cleanId) : '';
 
     // 2. Preenche a URL no campo do row + guarda o JSON no corpo
     //    IMPORTANTE: precisamos de await aqui — em serverless (Vercel),

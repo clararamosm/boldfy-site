@@ -1,6 +1,84 @@
 import type { NextConfig } from 'next';
 
+/**
+ * Content-Security-Policy — restringe origens de scripts, estilos, imagens, etc.
+ *
+ * 'unsafe-inline' em script-src é necessário porque:
+ *   - GTM injeta scripts inline no documento
+ *   - layout.tsx tem JSON-LD via dangerouslySetInnerHTML
+ *   - Next 16 ainda emite alguns scripts inline (RSC bootstrapping)
+ *
+ * 'unsafe-eval' em script-src é necessário pelo loader do Cal.com (eval do IIFE).
+ *
+ * 'unsafe-inline' em style-src é necessário pra Tailwind/Next inline styles.
+ *
+ * connect-src cobre:
+ *   - GA4 / GTM beacons (*.google-analytics.com, *.analytics.google.com)
+ *   - LinkedIn Insight (px.ads.linkedin.com)
+ *   - ActiveCampaign Site Tracking (*.activehosted.com, trackcmp.net)
+ *   - Cal.com embed API (app.cal.com)
+ *
+ * Próxima evolução: trocar 'unsafe-inline' por nonce-based CSP via middleware.
+ */
+const cspDirectives = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+  [
+    "script-src 'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://*.licdn.com",
+    "https://*.activehosted.com",
+    "https://*.app-us1.com", // ActiveCampaign Site Tracking (VGO) — diffuser-cdn
+    "https://trackcmp.net",
+    "https://app.cal.com",
+  ].join(' '),
+  "style-src 'self' 'unsafe-inline'",
+  [
+    "img-src 'self'",
+    "data:",
+    "blob:",
+    "https://*.amazonaws.com",
+    "https://images.unsplash.com",
+    "https://www.notion.so",
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://*.google-analytics.com",
+    "https://px.ads.linkedin.com",
+    "https://*.licdn.com",
+    "https://*.activehosted.com",
+    "https://*.app-us1.com",
+  ].join(' '),
+  "font-src 'self' data:",
+  [
+    "connect-src 'self'",
+    "https://www.google-analytics.com",
+    "https://*.google-analytics.com",
+    "https://*.analytics.google.com",
+    "https://www.googletagmanager.com",
+    "https://px.ads.linkedin.com",
+    "https://*.licdn.com",
+    "https://*.activehosted.com",
+    "https://*.app-us1.com", // AC Site Tracking POSTs aqui
+    "https://trackcmp.net",
+    "https://app.cal.com",
+  ].join(' '),
+  "frame-src 'self' https://app.cal.com https://www.googletagmanager.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+];
+
 const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: cspDirectives.join('; '),
+  },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -16,6 +94,28 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Remove o header `X-Powered-By: Next.js` (vaza info do servidor sem benefício)
+  poweredByHeader: false,
+
+  // Compressão gzip/brotli explícita (Vercel já faz por padrão, mas explícito é melhor)
+  compress: true,
+
+  // Tree-shake melhor de pacotes pesados — Next só inclui o que é importado
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-label',
+      '@radix-ui/react-navigation-menu',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slider',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-tabs',
+    ],
+  },
+
   images: {
     remotePatterns: [
       // Notion: imagens de covers e fotos de autores hospedadas no S3 da Notion

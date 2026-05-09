@@ -29,46 +29,23 @@ import {
   buildACTags,
   routeSegments,
   tipoLeadFromIntencao,
-  type IntencaoUso,
 } from '@/lib/ac-tags';
 import { captureLead, upsertPessoa } from '@/lib/notion-leads';
+import { ReportLeadSchema, parseInput } from './_schemas';
+import type { z } from 'zod';
 
-export type ReportLeadInput = {
-  nome: string;
-  email: string;
-  /**
-   * Intenção declarada de uso do material — define qual segmento (lista
-   * AC) e classificação (`ICP:`/`Persona:`) o lead recebe. Essa última é
-   * o gate da cadência: só `ICP: Empresa B2B` recebe os emails E2-E6.
-   */
-  intencaoUso: IntencaoUso;
-  /**
-   * Nome da empresa onde o lead trabalha. Obrigatório APENAS quando
-   * `intencaoUso === 'marca-empresa'` — pra outras intenções (marca
-   * pessoal, marca de clientes) não faz sentido pedir empresa.
-   */
-  empresa?: string;
-  origem?: string;
-  /**
-   * Lead marcou o checkbox de também receber a newsletter ongoing da
-   * Boldfy. Default false (LGPD opt-in ativo). Quando true:
-   *   - Pessoa.Email opt-in = true no Notion
-   *   - Adiciona tag 'Segmento: Newsletter Boldfy' no AC
-   *   - Adiciona à lista 'Newsletter Boldfy' (DB Listas/Cohorts)
-   *     [feito separadamente pela automação interna do Notion]
-   */
-  newsletterOptIn?: boolean;
-  // UTM tracking
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-};
+export type ReportLeadInput = z.input<typeof ReportLeadSchema>;
 
 export async function sendReportLead(
-  input: ReportLeadInput,
+  rawInput: ReportLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
+  // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC
+  const parsed = parseInput(ReportLeadSchema, rawInput);
+  if (!parsed.ok) {
+    return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
+  }
+  const input = parsed.data;
+
   try {
     const nameParts = input.nome.trim().split(/\s+/);
     const firstName = nameParts[0] ?? input.nome;

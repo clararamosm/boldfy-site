@@ -10,26 +10,21 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { DemoLeadSchema, parseInput } from './_schemas';
+import type { z } from 'zod';
 
-export type DemoLeadInput = {
-  nome: string;
-  email: string;
-  telefone: string;
-  cargo: string;
-  empresa: string;
-  funcionarios: string;
-  origem?: string;
-  // UTM tracking
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-};
+export type DemoLeadInput = z.input<typeof DemoLeadSchema>;
 
 export async function sendDemoLeadToNotion(
-  input: DemoLeadInput,
+  rawInput: DemoLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
+  // Validação zod — bloqueia inputs malformados antes de chamar AC
+  const parsed = parseInput(DemoLeadSchema, rawInput);
+  if (!parsed.ok) {
+    return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
+  }
+  const input = parsed.data;
+
   // Mantido nome do export pra não quebrar as imports existentes —
   // na prática agora só dispara pro ActiveCampaign
   try {

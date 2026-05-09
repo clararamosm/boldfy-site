@@ -1,27 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import {
+  EmailSchema,
+  NameSchema,
+  CompanyNameSchema,
+  PhoneOptionalSchema,
+} from '@/app/actions/_schemas';
 
 /**
  * POST /api/contact
  *
  * Receives form submissions from the contact page.
  * For now, stores in console. Later, send to email / Notion / CRM.
+ *
+ * Atenção: route handlers NAO sao protegidos por origin-check do Next
+ * (diferente das server actions). Quando integrar com email/CRM,
+ * adicionar origin check ou trocar essa rota por server action.
  */
+
+// Schema próprio porque o form aqui usa nomes em inglês (legado);
+// outras rotas/actions usam pt-BR.
+const ContactRouteSchema = z.object({
+  name: NameSchema,
+  email: EmailSchema,
+  company: CompanyNameSchema,
+  phone: PhoneOptionalSchema,
+  collaborators: z.string().trim().max(60).optional(),
+  message: z.string().trim().max(5000).optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { name, email, company, phone, collaborators, message } = body;
-
-    // Validate required fields
-    if (!name || !email || !company) {
+    const parsed = ContactRouteSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Nome, email e empresa são obrigatórios.' },
+        { error: 'Dados inválidos. Verifique o formulário.' },
         { status: 400 },
       );
     }
 
-    // Log the submission (replace with actual integration later)
-    console.log('[Contact Form]', {
+    const { name, email, company, phone, collaborators, message } = parsed.data;
+
+    // ⚠️  TEMPORÁRIO: enquanto não há integração real (Resend / Notion / CRM),
+    // logamos a submissão em warn pra ela aparecer nos logs do Vercel e não ser
+    // perdida. Substituir por integração definitiva (SOP-S2 do AUDIT).
+    console.warn('[Contact Form] integration pending — submission logged:', {
       name,
       email,
       company,

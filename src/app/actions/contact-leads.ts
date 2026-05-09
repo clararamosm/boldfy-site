@@ -10,25 +10,21 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { ContactLeadSchema, parseInput } from './_schemas';
+import type { z } from 'zod';
 
-type ContactLeadInput = {
-  nome: string;
-  email: string;
-  telefone?: string;
-  empresa: string;
-  colaboradores?: string;
-  mensagem?: string;
-  origem?: string;
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-};
+type ContactLeadInput = z.input<typeof ContactLeadSchema>;
 
 export async function sendContactLeadToNotion(
-  input: ContactLeadInput,
+  rawInput: ContactLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
+  // Validação zod — bloqueia inputs malformados antes de chamar AC
+  const parsed = parseInput(ContactLeadSchema, rawInput);
+  if (!parsed.ok) {
+    return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
+  }
+  const input = parsed.data;
+
   // Mantido nome do export pra compatibilidade — na prática só dispara pro AC
   try {
     const nameParts = input.nome.trim().split(/\s+/);

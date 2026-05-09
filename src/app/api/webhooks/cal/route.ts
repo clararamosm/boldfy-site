@@ -92,19 +92,41 @@ export async function POST(request: NextRequest) {
   // 1. Le o raw body (precisa pra verificar assinatura antes de parsear)
   const rawBody = await request.text();
 
-  // 2. Verifica assinatura se CAL_WEBHOOK_SECRET estiver configurada.
-  //    Se nao estiver, loga warning e deixa passar (modo desenvolvimento).
+  // 2. Verifica assinatura HMAC.
+  //    Modo de operacao por env:
+  //
+  //    CAL_WEBHOOK_SECRET ausente + CAL_REQUIRE_SECRET != "true":
+  //      -> modo PERMISSIVO (default). Aceita sem assinatura, com warning
+  //         ruidoso. Comportamento igual ao que existia antes da auditoria.
+  //
+  //    CAL_WEBHOOK_SECRET ausente + CAL_REQUIRE_SECRET = "true":
+  //      -> modo STRICT. Recusa com 501 Not Implemented. Habilitar APOS
+  //         confirmar que o secret esta configurado no Vercel + Cal.com.
+  //
+  //    CAL_WEBHOOK_SECRET presente:
+  //      -> verifica HMAC sempre. Recusa requisicoes sem assinatura valida.
   const secret = process.env.CAL_WEBHOOK_SECRET;
-  if (secret) {
+  const requireSecret = process.env.CAL_REQUIRE_SECRET === 'true';
+
+  if (!secret) {
+    if (requireSecret) {
+      console.error(
+        '[cal-webhook] CAL_REQUIRE_SECRET=true mas CAL_WEBHOOK_SECRET ausente — recusando',
+      );
+      return NextResponse.json(
+        { error: 'webhook_not_configured' },
+        { status: 501 },
+      );
+    }
+    console.warn(
+      '[cal-webhook] CAL_WEBHOOK_SECRET nao configurada — modo permissivo. Configure no Vercel + ative CAL_REQUIRE_SECRET=true pra strict.',
+    );
+  } else {
     const signature = request.headers.get('x-cal-signature-256');
     if (!verifySignature(rawBody, signature, secret)) {
       console.error('[cal-webhook] Invalid signature');
       return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
     }
-  } else {
-    console.warn(
-      '[cal-webhook] CAL_WEBHOOK_SECRET not set — webhook running without signature verification',
-    );
   }
 
   // 3. Parse body

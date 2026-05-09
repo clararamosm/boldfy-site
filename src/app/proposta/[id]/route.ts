@@ -17,14 +17,40 @@ import {
   parseProposalFromBlocks,
 } from '@/lib/notion-crm';
 import { generateProposalHTML } from '@/components/proposal-html';
+import { verifyProposalToken } from '@/lib/proposal-token';
 
 export const revalidate = 3600; // ISR: cache for 1 hour
 
+// Valida formato do id antes de qualquer outra coisa.
+// Aceita 32-char hex puro ou UUID com hifens (8-4-4-4-12).
+const ID_HEX_32 = /^[a-f0-9]{32}$/i;
+const ID_UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+
+  // 1. Valida formato do ID — descarta lixo antes de qualquer fetch
+  if (!ID_HEX_32.test(id) && !ID_UUID.test(id)) {
+    return new NextResponse(notFoundHTML(), {
+      status: 404,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
+
+  // 2. Valida token HMAC (anti-enumeracao). Comportamento depende de
+  //    PROPOSAL_TOKEN_SECRET / PROPOSAL_REQUIRE_TOKEN — ver lib/proposal-token.
+  const url = new URL(request.url);
+  const providedToken = url.searchParams.get('t');
+  const tokenCheck = verifyProposalToken(id, providedToken);
+  if (!tokenCheck.ok) {
+    return new NextResponse(notFoundHTML(), {
+      status: 404,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    });
+  }
 
   // Normalize: 32-char hex (no dashes) → UUID with dashes for Notion API
   const normalizedId =
@@ -51,7 +77,11 @@ export async function GET(
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boldfy.com.br';
-  const proposalUrl = `${siteUrl}/proposta/${id}`;
+  // Reconstroi URL preservando o token (se veio na request original) — usada
+  // no HTML pra botoes de "copiar link" e "compartilhar".
+  const proposalUrl = providedToken
+    ? `${siteUrl}/proposta/${id}?t=${providedToken}`
+    : `${siteUrl}/proposta/${id}`;
   const html = generateProposalHTML(proposal, proposalUrl);
 
   // Shorter cache when proposal is close to expiring (or already expired)
