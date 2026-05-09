@@ -61,6 +61,9 @@ export interface InteracaoMeta {
   date: string;
 }
 
+// Tipo aberto pra blocos do Notion — a API tem dezenas de tipos (paragraph,
+// heading_1, image, code, etc.) com shapes diferentes. Tratamos cada um no
+// renderer; aqui só precisamos de id+type e um indexador genérico.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface NotionBlock {
   id: string;

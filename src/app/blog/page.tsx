@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getPublishedPosts, type BlogPost } from '@/lib/notion';
+import { getPublishedPosts } from '@/lib/notion';
 import { BlogPageClient } from './blog-client';
 
 export const revalidate = 300; // ISR: revalidate every 5 min

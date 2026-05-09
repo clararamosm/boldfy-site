@@ -91,8 +91,10 @@ export function CalComEmbed({
       `;
       // Usa eval pra executar o IIFE em um unico statement sem precisar de
       // <script> tag extra. Nao e codigo de usuario — e o loader oficial do
-      // Cal.com recomendado na documentacao.
-      // eslint-disable-next-line no-eval
+      // Cal.com recomendado na documentacao. React Compiler nao suporta
+      // eval, mas como esta dentro de useEffect (executa no client apos mount)
+      // nao e problema funcional.
+      // eslint-disable-next-line react-hooks/unsupported-syntax
       eval(calScript);
     }
 

@@ -49,37 +49,45 @@ function saveToStorage(params: UtmParams) {
 }
 
 /**
- * Hook that captures UTM parameters from the URL and persists them
- * in sessionStorage for the duration of the visit.
+ * Lê UTMs da URL atual; se não houver, cai para sessionStorage.
+ * Roda apenas no client (retorna {} no servidor).
+ */
+function computeInitialUtms(): UtmParams {
+  if (typeof window === 'undefined') return {};
+
+  const url = new URL(window.location.href);
+  const fromUrl: UtmParams = {};
+  let hasUtm = false;
+
+  for (const key of UTM_KEYS) {
+    const value = url.searchParams.get(key);
+    if (value) {
+      fromUrl[key] = value;
+      hasUtm = true;
+    }
+  }
+
+  // UTMs frescos da URL têm prioridade sobre o storage
+  return hasUtm ? fromUrl : readFromStorage();
+}
+
+/**
+ * Hook que captura UTM parameters da URL e persiste em sessionStorage
+ * pela duração da visita. Returna {} se não houver UTMs.
  *
- * Returns the UTM params object (empty if none present).
+ * Implementação evita setState dentro de useEffect (anti-pattern do
+ * React 19) usando lazy initializer no useState. O efeito colateral de
+ * salvar no storage fica num useEffect separado (idempotente).
  */
 export function useUtmParams(): UtmParams {
-  const [utms, setUtms] = useState<UtmParams>({});
+  const [utms] = useState<UtmParams>(computeInitialUtms);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const fromUrl: UtmParams = {};
-    let hasUtm = false;
-
-    for (const key of UTM_KEYS) {
-      const value = url.searchParams.get(key);
-      if (value) {
-        fromUrl[key] = value;
-        hasUtm = true;
-      }
+    // Só persiste se vieram UTMs novos da URL (storage já tem os antigos)
+    if (Object.keys(utms).length > 0) {
+      saveToStorage(utms);
     }
-
-    if (hasUtm) {
-      // Fresh UTMs from URL override stored ones
-      saveToStorage(fromUrl);
-      setUtms(fromUrl);
-    } else {
-      // No UTMs in URL — try sessionStorage
-      const stored = readFromStorage();
-      setUtms(stored);
-    }
-  }, []);
+  }, [utms]);
 
   return utms;
 }

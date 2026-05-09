@@ -11,8 +11,15 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        headline: ['"Nunito Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        headline: [
+          'var(--font-headline)',
+          '"Nunito Sans"',
+          'var(--font-sans)',
+          'Inter',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       colors: {
         background: 'hsl(var(--background))',

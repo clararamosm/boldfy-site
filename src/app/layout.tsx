@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter, Nunito_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import {
@@ -14,6 +15,21 @@ import {
   ConsentModeDefaults,
 } from '@/components/analytics/consent-banner';
 import { InternalTrafficMarker } from '@/components/analytics/internal-traffic-marker';
+
+// Fontes self-hosted via next/font (sem render-blocking, com preload automático)
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const nunitoSans = Nunito_Sans({
+  subsets: ['latin'],
+  weight: ['600', '700', '800', '900'],
+  variable: '--font-headline',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -114,7 +130,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full antialiased">
+    <html
+      lang="pt-BR"
+      className={`h-full antialiased ${inter.variable} ${nunitoSans.variable}`}
+    >
       <head>
         {/* Consent Mode v2 defaults — precisa rodar antes do GTM */}
         <ConsentModeDefaults />
@@ -129,20 +148,6 @@ export default function RootLayout({
         {/* ActiveCampaign Site Tracking (VGO) — pode coexistir com GTM */}
         <ActiveCampaignTracking />
 
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

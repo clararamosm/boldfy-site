@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Mail, MoveLeft } from 'lucide-react';
+import { MoveLeft } from 'lucide-react';
 
 export default function SobreOAutorPage() {
   return (

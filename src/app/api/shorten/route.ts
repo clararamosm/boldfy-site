@@ -112,8 +112,6 @@ export async function POST(request: NextRequest) {
       originalUrl: url,
     });
 
-    console.log('[shorten] Codigo gerado:', { code, host: parsed.hostname });
-
     return NextResponse.json(
       {
         code,
