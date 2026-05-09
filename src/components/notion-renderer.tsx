@@ -1,12 +1,67 @@
-'use client';
-
 import type { NotionBlock } from '@/lib/notion';
+import { MaterialCallout } from '@/components/embed/material-callout';
+import { InfograficoEmbed } from '@/components/embed/infografico-embed';
+import { PostTags, parseTagsLine } from '@/components/embed/post-tags';
 
 /**
  * Renders Notion blocks to React elements.
- * Supports: paragraph, heading_1/2/3, bulleted_list_item, numbered_list_item,
- * quote, callout, code, image, divider, toggle.
+ *
+ * Tipos suportados:
+ *   - paragraph (com deteccao de [TAGS: ...] -> chips)
+ *   - heading_1/2/3
+ *   - bulleted_list_item / numbered_list_item
+ *   - quote, callout, code, image, divider
+ *   - embed (com deteccao de URLs internas -> componentes inline)
+ *
+ * Embed URLs reconhecidas:
+ *   /embed/material/<slug>?source=<post-slug>  -> <MaterialCallout>
+ *   /embed/grafico/<slug>?source=<post-slug>   -> <InfograficoEmbed>
+ *
+ * Server Component — renderiza tudo no HTML do post, totalmente indexavel
+ * por Google + LLMs. Sem hidratacao desnecessaria.
  */
+
+/**
+ * Detecta URL de embed interna do dominio Boldfy. Retorna o tipo + slug
+ * + source se for, ou null se for embed externo (renderizado como link).
+ */
+function parseInternalEmbedUrl(url: string): {
+  kind: 'material' | 'grafico';
+  slug: string;
+  source: string | null;
+} | null {
+  try {
+    const parsed = new URL(url);
+    // Aceita boldfy.com.br, www.boldfy.com.br e localhost (dev)
+    const isBoldfy =
+      parsed.hostname === 'boldfy.com.br' ||
+      parsed.hostname === 'www.boldfy.com.br' ||
+      parsed.hostname === 'localhost';
+    if (!isBoldfy) return null;
+
+    // /embed/material/<slug> ou /embed/grafico/<slug>
+    const match = parsed.pathname.match(/^\/embed\/(material|grafico)\/([\w-]+)\/?$/);
+    if (!match) return null;
+
+    return {
+      kind: match[1] as 'material' | 'grafico',
+      slug: match[2],
+      source: parsed.searchParams.get('source'),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Concatena rich_text num plain string. Util pra detectar patterns
+ * tipo [TAGS: ...] que podem vir fragmentados em multiplos rich_text
+ * items por causa de formatacao no Notion.
+ */
+function richTextToPlain(richText: Array<{ plain_text?: string }> | undefined): string {
+  if (!richText) return '';
+  return richText.map((rt) => rt.plain_text ?? '').join('');
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderRichText(richText: any[]) {
@@ -25,12 +80,19 @@ function renderRichText(richText: any[]) {
 
 function Block({ block }: { block: NotionBlock }) {
   switch (block.type) {
-    case 'paragraph':
+    case 'paragraph': {
+      // Detecta [TAGS: a, b, c] -> renderiza chips em vez de paragrafo
+      const plain = richTextToPlain(block.paragraph.rich_text);
+      const tags = parseTagsLine(plain);
+      if (tags) {
+        return <PostTags tags={tags} />;
+      }
       return (
         <p className="text-base text-foreground leading-relaxed mb-4">
           {renderRichText(block.paragraph.rich_text)}
         </p>
       );
+    }
     case 'heading_1':
       return (
         <h2 className="font-headline text-2xl font-black text-accent-foreground mt-8 mb-4">
@@ -93,6 +155,34 @@ function Block({ block }: { block: NotionBlock }) {
     }
     case 'divider':
       return <hr className="my-8 border-border" />;
+    case 'embed': {
+      // Embed interno do dominio -> renderiza componente inline (indexavel)
+      const url: string | undefined = block.embed?.url;
+      if (!url) return null;
+
+      const internal = parseInternalEmbedUrl(url);
+      if (internal?.kind === 'material') {
+        return <MaterialCallout slug={internal.slug} source={internal.source} />;
+      }
+      if (internal?.kind === 'grafico') {
+        return <InfograficoEmbed slug={internal.slug} />;
+      }
+
+      // Embed externo desconhecido — renderiza como link discreto
+      // (em vez de tentar fazer iframe, que cai no problema de SEO).
+      return (
+        <p className="text-base text-foreground leading-relaxed mb-4">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline hover:no-underline break-all"
+          >
+            {url}
+          </a>
+        </p>
+      );
+    }
     default:
       return null;
   }
