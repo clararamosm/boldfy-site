@@ -1151,7 +1151,7 @@ const ptBR = {
     faqTitle: 'Perguntas que CMOs fazem',
     faqTitleHighlight: 'toda semana.',
     faq1Q: 'Isso substitui meu investimento em Ads?',
-    faq1A: 'Não substitui, complementa. Employee Advocacy bem feito gera um canal orgânico novo que divide a carga com o tráfego pago, reduz dependência e alimenta listas de remarketing qualificadas. Ads continua existindo, só para de ser o único motor.',
+    faq1A: 'Não substitui, complementa. Employee Advocacy bem feito gera um canal orgânico novo que divide a carga com o tráfego pago, reduz dependência e alimenta listas de remarketing qualificadas. Ads pode continuar existindo, só para de ser o único motor.',
     faq2Q: 'Quanto tempo até o CAC começar a cair?',
     faq2A: 'Em média, a partir do mês 4-6. Os primeiros 3 meses são construção do canal: onboarding, primeiros posts, primeiras listas de remarketing. Redução mensurável de CAC em Ads aparece depois que o volume orgânico acumulado começa a alimentar o funil.',
     faq3Q: 'Meu time de marketing é enxuto. Quanto tempo a Boldfy vai consumir da gente?',
@@ -1159,7 +1159,7 @@ const ptBR = {
     faq4Q: 'Como medir o ROI pra apresentar pro CFO?',
     faq4A: 'O dashboard da Boldfy calcula valor equivalente em R$ baseado no CPM médio do LinkedIn Ads Brasil. Você consegue dizer literalmente "o time gerou X impressões que, em Ads, custariam Y reais". Não é promessa de pipeline, é equivalência de mídia, que é muito mais fácil de defender na reunião de orçamento.',
     faq5Q: 'A Boldfy é pra quem tem Company Page forte ou fraca?',
-    faq5A: 'Funciona melhor quando a Company Page é fraca, porque o crescimento do canal dos colaboradores fica mais visível. Mas Company Page forte também se beneficia: os posts dos colaboradores amplificam o alcance muito além do que a própria página consegue sozinha.',
+    faq5A: 'Funciona de qualquer forma, porque o crescimento do canal dos colaboradores expande o crescimento da Company Page também. Afinal os posts dos colaboradores amplificam o alcance muito além do que a própria página consegue sozinha.',
   },
 
   // Para Vendas (full page)
@@ -1364,13 +1364,13 @@ const ptBR = {
     faq1Q: 'A Boldfy é ferramenta de comunicação interna?',
     faq1A: 'Não. Comunicação interna é empresa falando com funcionário (intranet, Slack, mural). A Boldfy é o oposto: é o que seu time fala pra fora, no LinkedIn. Se você precisa das duas coisas, a Boldfy complementa, nunca substitui.',
     faq2Q: 'Vou precisar obrigar os colaboradores a usar?',
-    faq2A: 'Não. 40-60% dos convidados se tornam ativos nos primeiros 3 meses só pela gamificação e reconhecimento. Forçar gera post ruim.',
+    faq2A: 'Não. Os convidados se tornam ativos nos primeiros meses só pela gamificação e reconhecimento. Forçar gera post ruim, quem não quer participar não deve entrar no programa.',
     faq3Q: 'E o risco de compliance no conteúdo dos colaboradores?',
-    faq3A: 'O Brand Context define os guardrails (temas, tom, assuntos sensíveis). A IA mantém cada post dentro desses limites e admins podem revisar antes da publicação. LGPD e governança pensadas desde o primeiro dia.',
+    faq3A: 'O Brand Context define os guardrails (temas, tom, assuntos sensíveis). A IA mantém cada post dentro desses limites, sem falar que os colaboradores devem revisar antes da publicação e o admins podem acompanhar pelo feed da empresa todos os conteúdos. LGPD e governança pensadas desde o primeiro dia.',
     faq4Q: 'Em quanto tempo isso reduz o custo de recrutamento?',
     faq4A: 'Inbound espontâneo começa no mês 3-4. Redução mensurável de custo por contratação aparece entre o mês 6 e 9, quando o volume de inbound qualificado começa a competir com recrutamento ativo.',
     faq5Q: 'Preciso envolver o marketing pra usar a Boldfy?',
-    faq5A: 'Idealmente sim, porque o Brand Context é compartilhado. Mas RH pode ter admin próprio dedicado a trilhas voltadas pra cultura. Os dois times acabam trabalhando lado a lado.',
+    faq5A: 'Idealmente sim, porque o Brand Context é compartilhado. Mas RH pode ter acesso à conta de admin. Os dois times acabam trabalhando lado a lado.',
   },
 
   // Privacidade page
