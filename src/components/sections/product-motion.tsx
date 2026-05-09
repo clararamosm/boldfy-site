@@ -1,5 +1,3 @@
-'use client';
-
 import { useT } from '@/lib/i18n/context';
 import { Brain, Zap, BookOpen, Sparkles, Check, Circle } from 'lucide-react';
 

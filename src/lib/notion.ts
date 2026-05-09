@@ -4,10 +4,20 @@
  * Requires env vars:
  *  - NOTION_TOKEN: Internal integration token
  *  - NOTION_BLOG_DATABASE_ID: Database ID for blog posts
+ *
+ * Caching:
+ *  - fetch() ja tem cache nativo via { next: { revalidate: 300 } } (Data Cache)
+ *  - unstable_cache adiciona memoization in-memory dentro de um request +
+ *    cache do resultado MAPEADO (evita re-mapear pageToPost na revalidacao)
+ *  - Tags permitem invalidacao manual via revalidateTag() se precisar
  */
+
+import { unstable_cache } from 'next/cache';
 
 const NOTION_TOKEN = process.env.NOTION_API_KEY ?? process.env.NOTION_TOKEN ?? '';
 const NOTION_DATABASE_ID = process.env.NOTION_BLOG_DATABASE_ID ?? '';
+
+const CACHE_TTL = 300; // 5 minutos — alinhado com revalidate do fetch
 
 const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
@@ -118,9 +128,9 @@ function pageToPost(page: any): BlogPost {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Fetch all published blog posts, sorted by published date desc.
+ * Implementacao raw — NAO chamar diretamente, use getPublishedPosts.
  */
-export async function getPublishedPosts(): Promise<BlogPost[]> {
+async function _fetchPublishedPosts(): Promise<BlogPost[]> {
   if (!NOTION_TOKEN || !NOTION_DATABASE_ID) {
     console.warn('[notion] Missing NOTION_TOKEN or NOTION_BLOG_DATABASE_ID');
     return [];
@@ -138,7 +148,7 @@ export async function getPublishedPosts(): Promise<BlogPost[]> {
         { property: 'Data de Publicação', direction: 'descending' },
       ],
     }),
-    next: { revalidate: 300 }, // ISR: revalidate every 5 minutes
+    next: { revalidate: CACHE_TTL, tags: ['blog-posts'] },
   });
 
   if (!res.ok) {
@@ -151,9 +161,17 @@ export async function getPublishedPosts(): Promise<BlogPost[]> {
 }
 
 /**
- * Fetch a single post by slug.
+ * Fetch all published blog posts, sorted by published date desc.
+ *
+ * Cacheado: revalidacao a cada 5 min OU manual via revalidateTag('blog-posts').
  */
-export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+export const getPublishedPosts = unstable_cache(
+  _fetchPublishedPosts,
+  ['notion-blog-posts'],
+  { revalidate: CACHE_TTL, tags: ['blog-posts'] },
+);
+
+async function _fetchPostBySlug(slug: string): Promise<BlogPost | null> {
   if (!NOTION_TOKEN || !NOTION_DATABASE_ID) return null;
 
   const res = await fetch(`${NOTION_API}/databases/${NOTION_DATABASE_ID}/query`, {
@@ -168,7 +186,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       },
       page_size: 1,
     }),
-    next: { revalidate: 300 },
+    next: { revalidate: CACHE_TTL, tags: ['blog-posts', `blog-post-${slug}`] },
   });
 
   if (!res.ok) return null;
@@ -178,9 +196,16 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 }
 
 /**
- * Fetch the block children of a Notion page (the post content).
+ * Fetch a single post by slug. Cacheado por slug — revalidatea via tag
+ * `blog-post-<slug>` ou `blog-posts` (purga geral).
  */
-export async function getPageBlocks(pageId: string): Promise<NotionBlock[]> {
+export const getPostBySlug = unstable_cache(
+  _fetchPostBySlug,
+  ['notion-blog-post-by-slug'],
+  { revalidate: CACHE_TTL, tags: ['blog-posts'] },
+);
+
+async function _fetchPageBlocks(pageId: string): Promise<NotionBlock[]> {
   if (!NOTION_TOKEN) return [];
 
   const blocks: NotionBlock[] = [];
@@ -190,7 +215,7 @@ export async function getPageBlocks(pageId: string): Promise<NotionBlock[]> {
     const url = `${NOTION_API}/blocks/${pageId}/children?page_size=100${cursor ? `&start_cursor=${cursor}` : ''}`;
     const res = await fetch(url, {
       headers: headers(),
-      next: { revalidate: 300 },
+      next: { revalidate: CACHE_TTL, tags: ['blog-posts', `blog-blocks-${pageId}`] },
     });
 
     if (!res.ok) break;
@@ -201,3 +226,13 @@ export async function getPageBlocks(pageId: string): Promise<NotionBlock[]> {
 
   return blocks;
 }
+
+/**
+ * Fetch the block children of a Notion page (the post content).
+ * Cacheado por pageId.
+ */
+export const getPageBlocks = unstable_cache(
+  _fetchPageBlocks,
+  ['notion-page-blocks'],
+  { revalidate: CACHE_TTL, tags: ['blog-posts'] },
+);

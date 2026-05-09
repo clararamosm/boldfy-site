@@ -314,3 +314,29 @@ html {
 .gift-badge {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* ================================================================== */
+/*  Acessibilidade: respeita preferência de redução de movimento.      */
+/*                                                                     */
+/*  Aplicado pra usuários com prefers-reduced-motion (preferência do   */
+/*  sistema operacional). Zera animações infinitas, transições longas  */
+/*  e scroll suave — mantém o site funcional, sem movimento que pode   */
+/*  causar enjoo / desconforto vestibular.                             */
+/*                                                                     */
+/*  Bonus: anima offscreen consome bateria. Zerar economiza energia    */
+/*  em mobile/laptop também.                                           */
+/* ================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

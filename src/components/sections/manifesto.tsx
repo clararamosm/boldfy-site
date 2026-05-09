@@ -1,5 +1,3 @@
-'use client';
-
 import { useT } from '@/lib/i18n/context';
 import Image from 'next/image';
 import Link from 'next/link';
