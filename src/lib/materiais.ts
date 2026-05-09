@@ -24,6 +24,13 @@ export type Material = {
   description: string;
   /** Caminho da capa em /public (ex: /images/algoritmo-linkedin-cover.jpeg) */
   cover: string;
+  /**
+   * Proporcao da capa no formato CSS aspect-ratio: largura/altura.
+   * Ex: '3/4' pra capa vertical (livro), '4/3' pra horizontal,
+   * '1/1' pra quadrada. Garante que a imagem aparece INTEIRA, sem
+   * cortar (object-cover funciona perfeito com a proporcao certa).
+   */
+  coverAspect: string;
   /** Texto do botao CTA */
   ctaText: string;
   /**
@@ -41,6 +48,7 @@ export const MATERIAIS: Record<string, Material> = {
     description:
       'O que muda na pratica pro seu B2B em 2026 — entenda como o 360Brew reescreveu as regras do feed.',
     cover: '/images/algoritmo-linkedin-cover.jpeg',
+    coverAspect: '932/1280', // proporcao real da imagem
     ctaText: 'Baixar gratis',
     href: '/algoritmo-linkedin',
   },

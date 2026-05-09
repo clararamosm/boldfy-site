@@ -43,18 +43,29 @@ export function MaterialCallout({ slug, source }: MaterialCalloutProps) {
 
   return (
     <aside
-      className="my-8 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6"
+      className="group my-8 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.04] p-5 sm:p-6"
       aria-labelledby={`material-callout-${material.slug}`}
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
-        {/* Capa — esconde em mobile portrait pra dar espaco pro texto */}
-        <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl sm:h-[120px] sm:w-[160px]">
+        {/*
+          Capa — usa a proporcao real da imagem (definida em material.coverAspect)
+          pra mostrar a capa COMPLETA sem cortar. Em mobile, largura 100% e
+          altura calculada pela proporcao; em desktop, altura fixa 150px e
+          largura calculada pela proporcao.
+
+          Hover: micro animacao de "respiro" — escala 0.97 quando o cursor
+          entra no callout. Coberta por prefers-reduced-motion via globals.css.
+        */}
+        <div
+          className="relative w-full shrink-0 overflow-hidden rounded-xl bg-muted/30 transition-transform duration-300 ease-out group-hover:scale-[0.97] sm:h-[150px] sm:w-auto"
+          style={{ aspectRatio: material.coverAspect }}
+        >
           <Image
             src={material.cover}
             alt={`Capa do material ${material.title}`}
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 100vw, 160px"
+            sizes="(max-width: 640px) 100vw, 110px"
           />
         </div>
 
