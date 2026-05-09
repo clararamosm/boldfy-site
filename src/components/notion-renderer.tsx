@@ -155,9 +155,17 @@ function Block({ block }: { block: NotionBlock }) {
     }
     case 'divider':
       return <hr className="my-8 border-border" />;
-    case 'embed': {
-      // Embed interno do dominio -> renderiza componente inline (indexavel)
-      const url: string | undefined = block.embed?.url;
+    case 'embed':
+    case 'bookmark': {
+      // Aceita tanto bloco `embed` quanto `bookmark` do Notion. URLs internas
+      // do dominio viram componentes inline (indexaveis); URLs externas viram
+      // link discreto (NUNCA iframe — iframe nao eh indexado por Google/LLMs).
+      //
+      // Por que aceita os dois: depende de como o usuario cola a URL no
+      // Notion — `/embed`, `/bookmark`, ou cola direto e escolhe no menu.
+      // Suportar ambos elimina pegadinha editorial.
+      const url: string | undefined =
+        block.type === 'embed' ? block.embed?.url : block.bookmark?.url;
       if (!url) return null;
 
       const internal = parseInternalEmbedUrl(url);
@@ -168,8 +176,7 @@ function Block({ block }: { block: NotionBlock }) {
         return <InfograficoEmbed slug={internal.slug} />;
       }
 
-      // Embed externo desconhecido — renderiza como link discreto
-      // (em vez de tentar fazer iframe, que cai no problema de SEO).
+      // URL externa — renderiza como link discreto. Evita iframe.
       return (
         <p className="text-base text-foreground leading-relaxed mb-4">
           <a
