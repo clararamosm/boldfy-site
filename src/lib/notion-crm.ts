@@ -64,10 +64,10 @@ export interface InteracaoMeta {
 // Tipo aberto pra blocos do Notion — a API tem dezenas de tipos (paragraph,
 // heading_1, image, code, etc.) com shapes diferentes. Tratamos cada um no
 // renderer; aqui só precisamos de id+type e um indexador genérico.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface NotionBlock {
   id: string;
   type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -89,11 +89,16 @@ export async function getInteracaoById(pageId: string): Promise<InteracaoMeta | 
     });
 
     if (!res.ok) return null;
-    const page = await res.json();
+    const page = (await res.json()) as {
+      id: string;
+      properties?: {
+        'Interação'?: { title?: Array<{ plain_text: string }> };
+        Data?: { date?: { start?: string } };
+      };
+    };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const titleArr = page.properties?.['Interação']?.title as any[];
-    const title = titleArr?.map((t: { plain_text: string }) => t.plain_text).join('') ?? '';
+    const titleArr = page.properties?.['Interação']?.title;
+    const title = titleArr?.map((t) => t.plain_text).join('') ?? '';
     const date = page.properties?.Data?.date?.start ?? '';
 
     return { id: page.id, title, date };
@@ -134,9 +139,8 @@ export async function getInteracaoBlocks(pageId: string): Promise<NotionBlock[]>
 export function parseProposalFromBlocks(blocks: NotionBlock[]): ProposalData | null {
   for (const block of blocks) {
     if (block.type === 'code' && block.code?.language === 'json') {
-      const text = block.code.rich_text
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ?.map((rt: any) => rt.plain_text)
+      const text = (block.code.rich_text as Array<{ plain_text: string }> | undefined)
+        ?.map((rt) => rt.plain_text)
         .join('');
       if (!text) continue;
       try {

@@ -53,6 +53,28 @@ export interface BlogPost {
   indexar: boolean;
 }
 
+/**
+ * Tipos minimos do Notion API. Sao "shapes parciais" — apenas os campos
+ * que de fato lemos. Notion tem dezenas de tipos de bloco/property; o
+ * indexador genérico abaixo cobre o resto sem precisar exhaustive typing.
+ */
+
+interface RichTextItem {
+  plain_text: string;
+}
+
+interface NotionFile {
+  file?: { url: string };
+  external?: { url: string };
+}
+
+interface NotionPage {
+  id: string;
+  cover?: NotionFile | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  properties: Record<string, any>;
+}
+
 export interface NotionBlock {
   id: string;
   type: string;
@@ -72,22 +94,19 @@ function headers() {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractPlainText(richTextArr: any[]): string {
+function extractPlainText(richTextArr: RichTextItem[] | undefined): string {
   if (!richTextArr) return '';
-  return richTextArr.map((rt: { plain_text: string }) => rt.plain_text).join('');
+  return richTextArr.map((rt) => rt.plain_text).join('');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractFileUrl(files: any[]): string | null {
+function extractFileUrl(files: NotionFile[] | undefined): string | null {
   if (!files || files.length === 0) return null;
   const file = files[0];
   // Notion Files & media: pode ser "file" (upload) ou "external" (URL)
   return file?.file?.url ?? file?.external?.url ?? null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pageToPost(page: any): BlogPost {
+function pageToPost(page: NotionPage): BlogPost {
   const props = page.properties;
 
   // Campo "Indexar" vem como checkbox (__YES__ / vazio) ou checkbox real

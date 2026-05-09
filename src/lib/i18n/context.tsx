@@ -1,32 +1,21 @@
 /**
  * i18n simplificado — funciona em Server E Client Components.
  *
- * Antes: `useT()` era um React Hook que dependia de I18nContext (Client only).
- * Isso forcava qualquer componente que usasse i18n a virar `'use client'`,
- * mesmo seções 100% estáticas. Custo: hidratação desnecessária.
+ * `useT()` é uma função síncrona pura que retorna o dicionário importado
+ * estaticamente. NÃO é um React Hook (apesar do prefixo `use`) — funciona
+ * em qualquer contexto: RSC, Client Component, route handler, server action.
  *
- * Agora: `useT()` é uma função síncrona pura que retorna o dicionário
- * importado estaticamente. Funciona em RSC (sem hidratação) ou em Client
- * Components (igual antes).
+ * Quando virar multi-locale, trocar por uma função que aceita locale como
+ * parâmetro (ex: `useT(locale)`) e usar lookup baseado em URL/cookie.
  *
- * Quando virar multi-locale: trocar `useT` por uma função que aceita locale
- * como parâmetro (ex: `useT(locale)`) e use a Server lookup baseada em URL.
- *
- * `I18nProvider` virou passthrough — mantido pra compat com providers.tsx.
- * Pode ser removido quando garantirmos que ninguem mais depende de Context.
+ * NOTA: o nome do arquivo `context.tsx` é histórico — não tem mais Context.
+ * Mantido pra evitar churn de imports em ~34 callsites.
  */
 
-import type { ReactNode } from 'react';
 import { getDictionary, type Dictionary } from './dictionaries';
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  return <>{children}</>;
-}
-
 /**
- * Retorna o dicionário ativo. Funciona em Server Components e Client
- * Components. Mantém o nome `useT` pra evitar refator em todos os
- * callsites.
+ * Retorna o dicionário ativo. Funciona em Server e Client Components.
  */
 export function useT(): Dictionary {
   return getDictionary();

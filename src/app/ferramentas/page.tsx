@@ -6,6 +6,28 @@ import { Button } from '@/components/ui/button';
 export const metadata: Metadata = {
   title: 'Ferramentas',
   description: 'Ferramentas gratuitas da Boldfy para Content Intelligence.',
+  openGraph: {
+    title: 'Boldfy · Ferramentas',
+    description: 'Ferramentas gratuitas da Boldfy para Content Intelligence.',
+    url: 'https://boldfy.com.br/ferramentas',
+    images: [
+      {
+        url: '/images/og-default.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Boldfy · Ferramentas',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Boldfy · Ferramentas',
+    description: 'Ferramentas gratuitas da Boldfy para Content Intelligence.',
+    images: ['/images/og-default.jpg'],
+  },
+  alternates: {
+    canonical: 'https://boldfy.com.br/ferramentas',
+  },
 };
 
 export default function FerramentasPage() {
