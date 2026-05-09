@@ -114,6 +114,17 @@ function pageToPost(page: NotionPage): BlogPost {
   const indexar =
     indexarRaw === true || indexarRaw === '__YES__' || indexarRaw === 'Yes';
 
+  // Capa do post — lookup em ordem de prioridade:
+  //   1. Property "Imagem" do database (Files & media OU URL)
+  //   2. Property "Capa" (alias comum, fallback)
+  //   3. Cover image da pagina do Notion (fallback pra posts antigos)
+  // Aceita variacoes de case: Imagem | imagem | Image | Capa | capa.
+  const imagemProp = props.Imagem ?? props.imagem ?? props.Image ?? props.Capa ?? props.capa;
+  const coverFromProp =
+    extractFileUrl(imagemProp?.files) ?? imagemProp?.url ?? null;
+  const coverFromPage =
+    page.cover?.external?.url ?? page.cover?.file?.url ?? null;
+
   return {
     id: page.id,
     slug: extractPlainText(props.Slug?.rich_text) || page.id,
@@ -123,7 +134,7 @@ function pageToPost(page: NotionPage): BlogPost {
     status: props.Status?.select?.name ?? 'Rascunho',
     publishedAt: props['Data de Publicação']?.date?.start ?? '',
     readTime: props['Tempo de Leitura']?.number ?? 5,
-    coverUrl: page.cover?.external?.url ?? page.cover?.file?.url ?? null,
+    coverUrl: coverFromProp ?? coverFromPage,
     author: extractPlainText(props.Autor?.rich_text) || 'Boldfy',
     authorBio: extractPlainText(props['Bio do Autor']?.rich_text) || '',
     authorLinkedIn: props['LinkedIn do Autor']?.url ?? '',
