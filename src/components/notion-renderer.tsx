@@ -54,13 +54,55 @@ function parseInternalEmbedUrl(url: string): {
 }
 
 /**
+ * Tipo minimo de rich_text item do Notion (so o que a gente lê).
+ */
+type RichTextItem = {
+  plain_text?: string;
+  href?: string | null;
+};
+
+/**
  * Concatena rich_text num plain string. Util pra detectar patterns
  * tipo [TAGS: ...] que podem vir fragmentados em multiplos rich_text
  * items por causa de formatacao no Notion.
  */
-function richTextToPlain(richText: Array<{ plain_text?: string }> | undefined): string {
+function richTextToPlain(richText: RichTextItem[] | undefined): string {
   if (!richText) return '';
   return richText.map((rt) => rt.plain_text ?? '').join('');
+}
+
+/**
+ * Procura no rich_text um link interno de embed que "domine" o conteudo.
+ * Heuristica: 1 unico link interno cujo plain_text representa >=85% do
+ * texto total (descontando whitespace). Retorna o internal parsed ou null.
+ *
+ * Caso de uso: parágrafo ou callout do Notion que contém apenas o link
+ * pra /embed/material/<slug> (ex: IA do Notion insere link inline em vez
+ * de bloco embed). Promovemos pra MaterialCallout/InfograficoEmbed.
+ */
+function findDominantInternalLink(
+  richTexts: RichTextItem[] | undefined,
+): { kind: 'material' | 'grafico'; slug: string; source: string | null } | null {
+  if (!richTexts || richTexts.length === 0) return null;
+
+  const linksInternos = richTexts
+    .map((rt) => {
+      const href = rt?.href;
+      if (!href) return null;
+      const internal = parseInternalEmbedUrl(href);
+      if (!internal) return null;
+      return { rt, internal };
+    })
+    .filter((x): x is { rt: RichTextItem; internal: NonNullable<ReturnType<typeof parseInternalEmbedUrl>> } => x !== null);
+
+  if (linksInternos.length !== 1) return null;
+
+  const linkPlain = (linksInternos[0].rt.plain_text ?? '').replace(/\s/g, '');
+  const totalPlain = richTextToPlain(richTexts).replace(/\s/g, '');
+  const ratio = totalPlain.length === 0 ? 1 : linkPlain.length / totalPlain.length;
+  if (ratio < 0.85) return null;
+
+  return linksInternos[0].internal;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,15 +123,26 @@ function renderRichText(richText: any[]) {
 function Block({ block }: { block: NotionBlock }) {
   switch (block.type) {
     case 'paragraph': {
-      // Detecta [TAGS: a, b, c] -> renderiza chips em vez de paragrafo
-      const plain = richTextToPlain(block.paragraph.rich_text);
-      const tags = parseTagsLine(plain);
-      if (tags) {
-        return <PostTags tags={tags} />;
+      const richTexts: RichTextItem[] = block.paragraph.rich_text || [];
+
+      // 1. [TAGS: a, b, c] -> chips
+      const tags = parseTagsLine(richTextToPlain(richTexts));
+      if (tags) return <PostTags tags={tags} />;
+
+      // 2. Paragrafo dominado por link interno de embed -> promove pra callout
+      //    (caso comum: IA do Notion insere link clicavel inline em vez de
+      //    bloco embed/bookmark)
+      const internal = findDominantInternalLink(richTexts);
+      if (internal?.kind === 'material') {
+        return <MaterialCallout slug={internal.slug} source={internal.source} />;
       }
+      if (internal?.kind === 'grafico') {
+        return <InfograficoEmbed slug={internal.slug} />;
+      }
+
       return (
         <p className="text-base text-foreground leading-relaxed mb-4">
-          {renderRichText(block.paragraph.rich_text)}
+          {renderRichText(richTexts)}
         </p>
       );
     }
@@ -129,13 +182,29 @@ function Block({ block }: { block: NotionBlock }) {
           {renderRichText(block.quote.rich_text)}
         </blockquote>
       );
-    case 'callout':
+    case 'callout': {
+      const calloutRichText: RichTextItem[] = block.callout?.rich_text || [];
+
+      // Callout dominado por link interno de embed -> promove pra
+      // MaterialCallout/InfograficoEmbed (caso a IA do Notion gere um
+      // callout contendo o link em vez de embed/bookmark direto).
+      const internal = findDominantInternalLink(calloutRichText);
+      if (internal?.kind === 'material') {
+        return <MaterialCallout slug={internal.slug} source={internal.source} />;
+      }
+      if (internal?.kind === 'grafico') {
+        return <InfograficoEmbed slug={internal.slug} />;
+      }
+
       return (
         <div className="rounded-lg bg-secondary/50 border border-border p-4 my-4 flex gap-3">
-          {block.callout.icon?.emoji && <span className="text-xl">{block.callout.icon.emoji}</span>}
-          <div>{renderRichText(block.callout.rich_text)}</div>
+          {block.callout?.icon?.emoji && (
+            <span className="text-xl">{block.callout.icon.emoji}</span>
+          )}
+          <div>{renderRichText(calloutRichText)}</div>
         </div>
       );
+    }
     case 'code':
       return (
         <pre className="bg-accent-foreground text-white rounded-lg p-4 my-4 overflow-x-auto text-sm">
