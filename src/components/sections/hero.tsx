@@ -247,7 +247,7 @@ export function HeroSection() {
         {/* ════════════ RIGHT COLUMN: Visual ════════════ */}
         {/*
           Simple layering:
-          z-2  → Person photo (hero-person.png, transparent bg, already cropped)
+          z-2  → Person photo (hero-person.webp, transparent bg, already cropped)
           z-5  → All 3 floating cards on top
         */}
         <div
@@ -257,11 +257,11 @@ export function HeroSection() {
           {/* Halo behind everything */}
           <div className="pointer-events-none absolute left-[40%] top-[5%] z-[1] h-[80%] w-[70%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,hsl(var(--primary)/0.18)_0%,transparent_65%)] blur-[60px]" />
 
-          {/* ── Person photo (z-2) — transparent PNG, no border, no card styling ── */}
+          {/* ── Person photo (z-2) — WebP transparente, sem borda, sem card styling ── */}
           <div className="pointer-events-none absolute inset-x-0 top-0 bottom-0 z-[2] flex items-start justify-center">
             <div className="relative h-full w-[460px]">
               <Image
-                src="/images/hero-person.png"
+                src="/images/hero-person.webp"
                 alt="Profissional criando conteúdo no LinkedIn com a plataforma Boldfy"
                 fill
                 className="object-contain object-top"
