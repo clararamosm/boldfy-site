@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUp, Shield, FileText, Cookie } from 'lucide-react';
+import { ArrowUp, Shield, FileText, Cookie, ShieldAlert } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Âncora de navegação lateral (sticky)                               */
@@ -11,7 +11,7 @@ function NavAnchor() {
   const [active, setActive] = useState<string>('privacidade');
 
   useEffect(() => {
-    const sections = ['privacidade', 'termos', 'cookies'];
+    const sections = ['privacidade', 'termos', 'uso-aceitavel', 'cookies'];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -32,6 +32,7 @@ function NavAnchor() {
   const items = [
     { id: 'privacidade', label: 'Política de Privacidade', icon: Shield },
     { id: 'termos', label: 'Termos de Uso', icon: FileText },
+    { id: 'uso-aceitavel', label: 'Política de Uso Aceitável', icon: ShieldAlert },
     { id: 'cookies', label: 'Política de Cookies', icon: Cookie },
   ];
 
@@ -121,7 +122,7 @@ function UL({ children }: { children: React.ReactNode }) {
 /*  Legal client                                                       */
 /* ------------------------------------------------------------------ */
 export default function LegalClient() {
-  const LAST_UPDATE = '18 de abril de 2026';
+  const LAST_UPDATE = '8 de maio de 2026';
 
   return (
     <>
@@ -142,7 +143,7 @@ export default function LegalClient() {
             Legal
           </span>
           <h1 className="font-headline text-[clamp(32px,4vw,48px)] font-black leading-[1.05] tracking-[-0.03em] text-accent-foreground">
-            Privacidade, Termos e Cookies
+            Privacidade, Termos, Uso Aceitável e Cookies
           </h1>
           <p className="mt-4 max-w-[640px] text-[15px] leading-[1.6] text-muted-foreground">
             Tudo que rege nossa relação com você, num só lugar. Direto ao ponto, sem juridiquês
@@ -287,20 +288,17 @@ export default function LegalClient() {
               </UL>
 
               <H3>2.3 Uso aceitável</H3>
-              <P>Você se compromete a NÃO usar a plataforma para:</P>
-              <UL>
-                <li>
-                  Publicar conteúdo ilegal, ofensivo, discriminatório, difamatório, enganoso ou
-                  que viole direitos de terceiros
-                </li>
-                <li>Violar leis brasileiras, incluindo LGPD, direitos autorais e trabalhistas</li>
-                <li>Fazer engenharia reversa, descompilar ou tentar acessar o código-fonte</li>
-                <li>Sobrecarregar, atacar ou tentar invadir a infraestrutura</li>
-                <li>Automatizar ações ou criar contas falsas em escala</li>
-                <li>
-                  Usar a plataforma para spam, phishing ou qualquer prática abusiva no LinkedIn
-                </li>
-              </UL>
+              <P>
+                Ao usar a plataforma e os serviços da Boldfy, você se compromete a respeitar a{' '}
+                <a
+                  href="#uso-aceitavel"
+                  className="font-semibold text-primary underline underline-offset-2"
+                >
+                  Política de Uso Aceitável
+                </a>{' '}
+                (Seção 3 desta página), que detalha o que é permitido e o que é vedado dentro
+                da plataforma e nos conteúdos produzidos pela Boldfy.
+              </P>
 
               <H3>2.4 Conteúdo que você publica</H3>
               <P>
@@ -359,26 +357,136 @@ export default function LegalClient() {
               <H3>2.9 Foro</H3>
               <P>
                 Estes termos são regidos pelas leis brasileiras. Fica eleito o foro da Comarca de
-                São Paulo/SP para dirimir qualquer questão.
+                Belo Horizonte/MG para dirimir qualquer questão.
               </P>
             </section>
 
             {/* ============================================== */}
-            {/*  3. POLÍTICA DE COOKIES                        */}
+            {/*  3. POLÍTICA DE USO ACEITÁVEL                  */}
             {/* ============================================== */}
             <section>
-              <SectionTitle id="cookies">3. Política de Cookies</SectionTitle>
+              <SectionTitle id="uso-aceitavel">3. Política de Uso Aceitável</SectionTitle>
+              <p className="mt-3 text-[13px] font-semibold uppercase tracking-wider text-primary">
+                O que esperamos de quem usa a plataforma e os serviços
+              </p>
+
+              <H3>3.1 A quem se aplica</H3>
+              <P>
+                Esta política vale para qualquer pessoa que acesse a plataforma Boldfy ou
+                consuma serviços de produção de conteúdo (Content as a Service) — sejam
+                administradores, colaboradores, embaixadores cadastrados ou convidados. Faz
+                parte integrante dos Termos de Uso e do contrato comercial assinado com cada
+                cliente.
+              </P>
+
+              <H3>3.2 Princípio geral</H3>
+              <P>
+                A Boldfy existe para amplificar a voz de marcas e profissionais sérios no
+                LinkedIn. Tudo que acontece dentro da plataforma e do conteúdo produzido pela
+                equipe Boldfy deve ser compatível com prática comercial legítima, com a
+                cultura B2B e com as diretrizes da rede social onde o conteúdo é publicado.
+              </P>
+
+              <H3>3.3 Usos vedados</H3>
+              <P>É proibido usar a plataforma ou os serviços da Boldfy para:</P>
+              <UL>
+                <li>
+                  <strong>Conteúdo ilegal, ofensivo ou enganoso</strong> — discurso de ódio,
+                  discriminação, assédio, difamação, desinformação deliberada, fake news,
+                  pornografia ou qualquer material que viole leis brasileiras.
+                </li>
+                <li>
+                  <strong>Violação de direitos de terceiros</strong> — uso não autorizado de
+                  marca, imagem, voz, obra protegida, dados pessoais alheios ou qualquer
+                  conteúdo sobre o qual o cliente não tenha autorização clara.
+                </li>
+                <li>
+                  <strong>Práticas abusivas no LinkedIn</strong> — automação não autorizada,
+                  spam de mensagens privadas, criação de contas falsas, compra de seguidores,
+                  pods de engajamento artificial, raspagem (scraping) de dados em escala ou
+                  qualquer prática que viole os Termos do LinkedIn.
+                </li>
+                <li>
+                  <strong>Concorrência desleal</strong> — fazer engenharia reversa, copiar
+                  metodologia, replicar templates, decompilar software, ou tentar reproduzir o
+                  serviço Boldfy fora dos limites do contrato.
+                </li>
+                <li>
+                  <strong>Ataque à infraestrutura</strong> — sobrecarga intencional, tentativa
+                  de invasão, exploração de vulnerabilidade, distribuição de malware ou
+                  qualquer ação que comprometa a segurança da plataforma e de outros clientes.
+                </li>
+                <li>
+                  <strong>Uso indevido de dados</strong> — compartilhamento de logins, criação
+                  de usuários genéricos para múltiplas pessoas, exportação de Brand Context ou
+                  conteúdo de outros clientes, repasse de credenciais a terceiros não
+                  autorizados.
+                </li>
+                <li>
+                  <strong>Conteúdo regulado sem competência</strong> — recomendações
+                  financeiras, médicas, jurídicas ou de qualquer área regulamentada sem que a
+                  pessoa responsável tenha habilitação profissional adequada.
+                </li>
+              </UL>
+
+              <H3>3.4 Conteúdo produzido pela Boldfy (CaaS)</H3>
+              <P>
+                Quando a Boldfy produz conteúdo em nome do cliente, o material passa por nossa
+                curadoria editorial e respeita esta política. Reservamo-nos o direito de
+                recusar pedidos que confrontem estas regras — mesmo que o cliente insista —
+                sem que isso configure descumprimento contratual.
+              </P>
+
+              <H3>3.5 Consequências</H3>
+              <P>
+                Identificada qualquer violação, a Boldfy pode, conforme a gravidade e a
+                reincidência:
+              </P>
+              <UL>
+                <li>Notificar o cliente para regularização imediata</li>
+                <li>Suspender preventivamente o acesso à plataforma</li>
+                <li>Recusar a publicação ou produção de conteúdo específico</li>
+                <li>
+                  Rescindir o contrato por descumprimento, sem prejuízo das demais sanções
+                  previstas no contrato comercial e na legislação aplicável
+                </li>
+                <li>
+                  Reportar às autoridades competentes em casos que envolvam crime ou risco
+                  iminente
+                </li>
+              </UL>
+
+              <H3>3.6 Como reportar</H3>
+              <P>
+                Se você identificar conteúdo ou comportamento que viole esta política — seja
+                de outro usuário, de cliente ou da própria Boldfy —, mande um e-mail para{' '}
+                <a
+                  href="mailto:contato@boldfy.com.br"
+                  className="font-semibold text-primary underline underline-offset-2"
+                >
+                  contato@boldfy.com.br
+                </a>{' '}
+                com o assunto &quot;Uso aceitável - denúncia&quot;. Apuramos toda denúncia
+                recebida e respondemos em até 5 dias úteis.
+              </P>
+            </section>
+
+            {/* ============================================== */}
+            {/*  4. POLÍTICA DE COOKIES                        */}
+            {/* ============================================== */}
+            <section>
+              <SectionTitle id="cookies">4. Política de Cookies</SectionTitle>
               <p className="mt-3 text-[13px] font-semibold uppercase tracking-wider text-primary">
                 O que guardamos no seu navegador e por quê
               </p>
 
-              <H3>3.1 O que são cookies</H3>
+              <H3>4.1 O que são cookies</H3>
               <P>
                 Cookies são pequenos arquivos que sites gravam no seu navegador para lembrar
                 preferências, manter você logado e medir uso. Usamos o mínimo necessário.
               </P>
 
-              <H3>3.2 Quais cookies usamos</H3>
+              <H3>4.2 Quais cookies usamos</H3>
               <UL>
                 <li>
                   <strong>Essenciais</strong> — autenticação, sessão, preferências de idioma.
@@ -394,7 +502,7 @@ export default function LegalClient() {
                 </li>
               </UL>
 
-              <H3>3.3 Como controlar</H3>
+              <H3>4.3 Como controlar</H3>
               <P>
                 Você pode bloquear ou deletar cookies a qualquer momento nas configurações do seu
                 navegador. Observe que bloquear cookies essenciais pode impedir o funcionamento
@@ -433,7 +541,7 @@ export default function LegalClient() {
                 </li>
               </UL>
 
-              <H3>3.4 Dúvidas</H3>
+              <H3>4.4 Dúvidas</H3>
               <P>
                 Qualquer pergunta sobre cookies ou privacidade, fala com a gente:{' '}
                 <a

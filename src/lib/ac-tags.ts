@@ -1,6 +1,6 @@
 /**
  * Utility to build consistent ActiveCampaign tags across all form actions
- * (report, demo, contact, beta, proposal).
+ * (report, demo, beta, proposal).
  *
  * Important: this file is NOT a server action — it's pure client/server
  * utility. That's why it lives in /lib and not in /app/actions.
@@ -8,33 +8,32 @@
  *
  * --- Convenção de prefixos (alinhada com o Notion) ---
  *
- *  Form:      tipo de form que originou o lead
- *             (ex: "Form: Demo", "Form: Report Algoritmo LinkedIn 2026")
- *  Origem:    de onde no site veio o clique
- *             (ex: "Origem: home:hero", "Origem: LP Algoritmo LinkedIn")
+ *  Form:      tipo de form que originou o lead — É a tag-mãe que dispara
+ *             cadências e relatórios de aquisição.
+ *             (ex: "Form: Demo", "Form: Algoritmo LinkedIn 2026")
  *  Status:    estágio do funil — sincroniza com Status outreach (Pessoas)
  *             e Estágio (Empresas) no Notion
  *             (ex: "Status: Demo agendada", "Status: Proposta enviada")
  *  Módulo:    módulo da Boldfy de interesse
  *             (ex: "Módulo: SaaS", "Módulo: Content Full-Service")
- *  Lead:      tipo de captura
- *             (ex: "Lead: Material rico", "Lead: Demo solicitada")
  *  Segmento:  cohort persistente (espelha a DB Listas/Cohorts no Notion)
- *             (ex: "Segmento: Beta tester", "Segmento: Newsletter Boldfy")
+ *             (ex: "Segmento: Líderes B2B", "Segmento: Newsletter Boldfy")
  *  Outreach:  canal/sequência de outreach que tocou o lead
  *             (uso reservado pra automações de prospecção saindo do AC)
+ *
+ * Nota: a `Origem:` foi abolida em mai/2026 — a info ainda vai pro AC como
+ * note no contato + custom fields de UTM, mas não cria tag dedicada.
  */
 
 /**
  * Forms suportados — cada um tem rota específica no `routeSegments`.
- * Adicionar form novo aqui obriga a tratar o caso no switch.
+ * Adicionar form novo aqui obriga a tratar o caso onde for relevante.
  */
 export type FormType =
-  | 'Report Algoritmo LinkedIn 2026'
+  | 'Algoritmo LinkedIn 2026'
   | 'Demo'
-  | 'Contato'
-  | 'Beta'
-  | 'Proposta'
+  | 'Beta Program'
+  | 'Simulador de Proposta'
   | 'Newsletter';
 
 /**
@@ -73,12 +72,6 @@ export function routeSegments(params: {
   intencaoUso?: IntencaoUso;
 }): string[] {
   const segments: string[] = [];
-
-  // Beta tester é cohort permanente — quem se inscreve ENTRA no segmento
-  // mesmo sem opt-in extra (a inscrição é o opt-in implícito do programa).
-  if (params.formType === 'Beta') {
-    segments.push('Segmento: Beta tester');
-  }
 
   // Form que se chama explicitamente "Newsletter" sempre vira opt-in.
   if (params.formType === 'Newsletter') {
@@ -129,7 +122,6 @@ export function tipoLeadFromIntencao(intencaoUso?: IntencaoUso): string | undefi
 
 export function buildACTags(params: {
   formType: string;
-  origem?: string;
   extraTags?: string[];
 }): string[] {
   const tags: string[] = [];
@@ -138,12 +130,10 @@ export function buildACTags(params: {
   // (cadências, sincronização Notion, relatórios de aquisição).
   tags.push(`Form: ${params.formType}`);
 
-  // Origem do botão no site (ex: "home:solutions", "precos:saas", "caas:hero")
-  if (params.origem) tags.push(`Origem: ${params.origem}`);
-
-  // Extras específicos do form (Status:, Módulo:, Segmento:, Report:)
-  // UTMs e tipo_lead saíram daqui — agora são CAMPOS (ver CUSTOM_FIELDS
-  // em activecampaign.ts e tipoLeadFromIntencao acima).
+  // Extras específicos do form (Status:, Módulo:, Segmento:).
+  // Origem foi abolida em mai/2026 — info vai pro AC via note + UTMs.
+  // UTMs e tipo_lead também saíram daqui — agora são CAMPOS (ver
+  // CUSTOM_FIELDS em activecampaign.ts e tipoLeadFromIntencao acima).
   if (params.extraTags) tags.push(...params.extraTags);
 
   return tags;

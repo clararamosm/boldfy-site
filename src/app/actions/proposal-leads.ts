@@ -12,6 +12,7 @@
 import type { ProposalData } from '@/lib/notion-crm';
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { syncFolkLead } from '@/lib/folk';
 import { ProposalLeadSchema, parseInput } from './_schemas';
 import { buildProposalUrl } from '@/lib/proposal-token';
 import type { z } from 'zod';
@@ -203,11 +204,12 @@ async function createPropostaPage(
   addNumber('Seats plataforma', input.plataformaSeats);
 
   // Módulos selecionados como multi_select
+  // Beta tester saiu — info do beta já está refletida no valor da proposta
+  // (total_mensal_proposta) e no resumo da note.
   const modulos: string[] = [];
   if (input.plataformaEnabled) modulos.push('SaaS');
   if (input.designPlan) modulos.push('Design on Demand');
   if (input.fsTls > 0 && input.fsFreq > 0) modulos.push('Content Full-Service');
-  if (input.betaActive) modulos.push('Beta Tester');
   addMultiSelect('Módulos', modulos);
 
   // Step 1: Try with all properties
@@ -363,15 +365,19 @@ export async function sendProposalLeadToNotion(
       ]);
     }
 
-    // 3. Sync to ActiveCampaign (CRM — fonte de verdade)
+    // 3. Sync to ActiveCampaign (universo geral)
+    // Simulador é form 100% B2B — adiciona segmento automático (dispara
+    // a automação Tag→Lista no AC que inscreve em Líderes B2B).
+    // Beta tester saiu daqui — a info do beta vai via campo
+    // `total_mensal_proposta` (que já reflete o desconto) + a note com
+    // o resumo da proposta.
     const acTags = buildACTags({
       formType: 'Simulador de Proposta',
-      origem: input.origem,
       extraTags: [
+        'Segmento: Líderes B2B',
         input.plataformaEnabled ? 'Módulo: SaaS' : null,
         input.designPlan ? 'Módulo: Design on Demand' : null,
         input.fsTls > 0 ? 'Módulo: Content Full-Service' : null,
-        input.betaActive ? 'Beta Tester' : null,
       ].filter((t): t is string => !!t),
     });
 
@@ -387,7 +393,6 @@ export async function sendProposalLeadToNotion(
         email: input.email,
         firstName,
         lastName,
-        origem: input.origem,
         tags: acTags,
         fields: {
           empresa: input.empresa,
@@ -419,6 +424,35 @@ export async function sendProposalLeadToNotion(
           .filter(Boolean)
           .join('\n');
         await addNoteToContact(acContactId, note);
+
+        // Folk: simulador é o lead mais qualificado — Person status=Lead.
+        // A URL da proposta vai como campo customizado pra Clara abrir direto.
+        try {
+          await syncFolkLead({
+            person: {
+              email: input.email,
+              firstName,
+              lastName,
+              jobTitle: input.cargo,
+              status: 'Lead',
+              customFields: {
+                form_origem: 'Simulador',
+                ac_contact_id: acContactId,
+                ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+                ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+                ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
+              },
+            },
+            company: {
+              name: input.empresa,
+              customFields: {
+                origem: 'Simulador',
+              },
+            },
+          });
+        } catch (folkErr) {
+          console.error('[proposal-leads] Folk sync error (non-blocking):', folkErr);
+        }
       } else {
         console.warn(
           '[proposal-leads] AC syncContact returned null — contato nao foi criado/atualizado. Verificar ACTIVECAMPAIGN_API_URL e ACTIVECAMPAIGN_API_KEY no Vercel.',

@@ -106,18 +106,6 @@ export const BetaLeadSchema = z
   })
   .extend(UtmFieldsSchema.shape);
 
-export const ContactLeadSchema = z
-  .object({
-    nome: NameSchema,
-    email: EmailSchema,
-    telefone: PhoneOptionalSchema,
-    empresa: CompanyNameSchema,
-    colaboradores: optionalText(60),
-    mensagem: optionalText(5000),
-    origem: optionalText(200),
-  })
-  .extend(UtmFieldsSchema.shape);
-
 export const DemoLeadSchema = z
   .object({
     nome: NameSchema,

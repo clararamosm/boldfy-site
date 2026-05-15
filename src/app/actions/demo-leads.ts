@@ -10,6 +10,7 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
+import { syncFolkLead } from '@/lib/folk';
 import { DemoLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -34,12 +35,16 @@ export async function sendDemoLeadToNotion(
 
     const acTags = buildACTags({
       formType: 'Demo',
-      origem: input.origem || 'Popup Demo',
-      // Tag de rastreamento: lead pediu demo mas ainda nao agendou horario
-      // no Cal.com. O webhook /api/webhooks/cal remove essa tag quando a
-      // pessoa agenda — permite rodar cadencia de recuperacao pra quem
-      // submeteu o form mas nao chegou a escolher horario.
-      extraTags: ['Demo: Aguardando agendamento'],
+      extraTags: [
+        // Demo é form 100% B2B — adiciona segmento automático (dispara a
+        // automação Tag→Lista no AC que inscreve em Líderes B2B).
+        'Segmento: Líderes B2B',
+        // Tag de rastreamento: lead pediu demo mas ainda nao agendou
+        // horario no Cal.com. O webhook /api/webhooks/cal remove essa
+        // tag quando a pessoa agenda — permite rodar cadencia de
+        // recuperacao pra quem submeteu o form mas nao chegou a escolher.
+        'Demo: Aguardando agendamento',
+      ],
     });
 
     const contactId = await syncContact({
@@ -47,7 +52,6 @@ export async function sendDemoLeadToNotion(
       firstName,
       lastName,
       phone: input.telefone,
-      origem: input.origem || 'Popup Demo',
       tags: acTags,
       fields: {
         empresa: input.empresa,
@@ -90,6 +94,38 @@ export async function sendDemoLeadToNotion(
       await addNoteToContact(contactId, note);
     } catch (err) {
       console.error('[demo-leads] Error adding note (non-blocking):', err);
+    }
+
+    // Folk: lead vai como Person status=Lead + Company status=No status.
+    // Demo é form 100% B2B → todo lead vai pro Folk sem gate.
+    // Failure aqui não bloqueia o sucesso do AC (que é fonte de verdade).
+    try {
+      await syncFolkLead({
+        person: {
+          email: input.email,
+          firstName,
+          lastName,
+          phone: input.telefone,
+          jobTitle: input.cargo,
+          status: 'Lead',
+          customFields: {
+            form_origem: 'Demo',
+            ac_contact_id: contactId,
+            ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+            ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+            ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
+          },
+        },
+        company: {
+          name: input.empresa,
+          customFields: {
+            origem: 'Demo',
+            porte: input.funcionarios,
+          },
+        },
+      });
+    } catch (err) {
+      console.error('[demo-leads] Folk sync error (non-blocking):', err);
     }
 
     return { success: true };

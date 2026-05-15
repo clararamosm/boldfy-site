@@ -9,7 +9,7 @@
  *    globais (escondidos pelo `ConditionalChrome` quando a rota é uma LP).
  *  - Form leve: nome + email + empresa. Server action `sendReportLead`
  *    sincroniza com ActiveCampaign (sem Notion DB), tag
- *    'Report: Algoritmo LinkedIn 2026' dispara cadência de email com o PDF.
+ *    'Form: Algoritmo LinkedIn 2026' dispara cadência de email com o PDF.
  *  - Entrega dupla: tela de sucesso mostra botão de download direto
  *    (PDF em /public/reports/) E o AC envia o email da cadência.
  *  - CTA secundário "agendar conversa" no fim da LP, depois do form.

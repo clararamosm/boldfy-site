@@ -25,7 +25,6 @@ export type ACContactInput = {
   firstName: string;
   lastName?: string;
   phone?: string;
-  origem?: string;
   // Proposal data (optional)
   proposalSummary?: string;
   tags?: string[];
@@ -135,10 +134,10 @@ export async function syncContact(input: ACContactInput): Promise<string | null>
 
     // Add tags (non-blocking — don't fail if tags don't work)
     // Tags agora são APENAS categorização/segmentação (Form, Módulo,
-    // Origem, Beta Tester, utm_*). Dados estruturados tipo empresa/cargo
-    // viraram custom fields (campo `fields`).
+    // Segmento). Origem foi abolida em mai/2026 — info de origem vai pro
+    // contato via note + UTMs (custom fields utm_*_first). Dados
+    // estruturados tipo empresa/cargo viraram custom fields (campo `fields`).
     const allTags = [...(input.tags ?? [])];
-    if (input.origem) allTags.push(input.origem);
 
     if (allTags.length > 0) {
       await addTagsToContact(contactId, allTags).catch((err) => {

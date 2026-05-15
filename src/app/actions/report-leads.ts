@@ -4,24 +4,20 @@
  * Server action para capturar leads que baixam o report
  * "O Algoritmo do LinkedIn Mudou Tudo" (LP /algoritmo-linkedin).
  *
- * Form leve: nome + email + empresa.
+ * Form leve: nome + email + empresa (opcional) + intenção declarada.
  *
- * Fluxo de captura:
- *  1. Notion CRM (3 DBs): upsert Empresa → upsert Pessoa → cria Interação.
- *     - Pessoa não duplica se já existe (match por email).
- *     - Empresa não duplica se já existe (match por domínio do email).
- *     - Interação SEMPRE é criada (log append-only).
- *  2. ActiveCampaign: sync contato + tags pra disparar a cadência de
- *     nutrição. Anota o AC Contact ID de volta na Pessoa do Notion.
- *  3. Entrega do PDF: dupla
- *     - Download direto na tela de sucesso (link em /reports/...)
- *     - Email de confirmação disparado pela cadência do AC
+ * Fluxo de captura (mai/2026 — pós-deprecação do Notion CRM):
+ *  1. ActiveCampaign: sync contato + tags pra disparar a cadência de
+ *     nutrição. O gate da cadência (E2-E5) é o campo `tipo_de_lead`.
+ *  2. Folk (CRM de vendas, pluga em etapa seguinte): só leads com
+ *     intenção `marca-empresa` viram Company em Prospects + Person em
+ *     Leads no Folk. Parceiros/criadores ficam só no AC.
+ *  3. Entrega do PDF: dupla — download direto na tela de sucesso +
+ *     email transacional disparado pela cadência do AC.
  *
- * Graceful degradation: se o Notion não estiver configurado (env vars
- * faltando), só roda o AC. Se o AC falhar, lead já está salvo no Notion.
- * Em ambos os casos, retornamos success ao usuário pra não bloquear o
- * download — perder um lead em uma das integrações é melhor que
- * bloquear o usuário.
+ * Notion CRM (Pessoas/Empresas/Interações) foi removido — substituído
+ * por AC (universo geral) + Folk (CRM B2B). O Notion continua sendo a
+ * fonte de verdade SÓ pro blog e pro storage do JSON da proposta.
  */
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
@@ -30,7 +26,7 @@ import {
   routeSegments,
   tipoLeadFromIntencao,
 } from '@/lib/ac-tags';
-import { captureLead, upsertPessoa } from '@/lib/notion-leads';
+import { syncFolkLead } from '@/lib/folk';
 import { ReportLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -39,7 +35,7 @@ export type ReportLeadInput = z.input<typeof ReportLeadSchema>;
 export async function sendReportLead(
   rawInput: ReportLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
-  // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC
+  // Validação zod — bloqueia inputs malformados antes de chamar o AC
   const parsed = parseInput(ReportLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
@@ -53,18 +49,16 @@ export async function sendReportLead(
 
     const origemNoSite = input.origem || 'LP Algoritmo LinkedIn';
 
-    // Fallback semântico pro campo `empresa`: só leads que declaram
-    // intenção 'marca-empresa' informam empresa real. Pros outros, o
-    // Notion ainda recebe um label coerente que identifica o tipo de
-    // lead (necessário porque CaptureLeadInput.empresa é required).
-    const empresaForCRM =
+    // Empresa só faz sentido pra quem declarou `marca-empresa`. Os outros
+    // ramos não preenchem esse campo no form, então gravamos vazio (o
+    // Folk faz enrich depois quando esse lead chegar lá; AC fica sem o
+    // custom field `empresa` quando não tem nome real).
+    const empresaInformada =
       input.intencaoUso === 'marca-empresa'
-        ? input.empresa?.trim() || 'Empresa não informada'
-        : input.intencaoUso === 'marca-clientes'
-          ? 'Agência / Consultor'
-          : 'Profissional Individual';
+        ? input.empresa?.trim() || ''
+        : '';
 
-    // Label legível da intenção (pra entrar em notas e no Notion).
+    // Label legível da intenção (pra entrar em notas no AC).
     const intencaoLabel =
       input.intencaoUso === 'marca-empresa'
         ? 'Marca da empresa onde trabalha'
@@ -73,92 +67,45 @@ export async function sendReportLead(
           : 'Marca pessoal (criador/autônomo)';
 
     /* ---------------------------------------------------------------- */
-    /*  1. Notion CRM: upsert Empresa + Pessoa + criar Interação          */
-    /* ---------------------------------------------------------------- */
-
-    let notionResult: Awaited<ReturnType<typeof captureLead>> = {
-      empresaId: null,
-      pessoaId: null,
-      interacaoId: null,
-    };
-
-    try {
-      notionResult = await captureLead({
-        nome: input.nome,
-        email: input.email,
-        empresa: empresaForCRM,
-        origemNoSite,
-        // Email opt-in agora é especificamente NEWSLETTER (ongoing), não
-        // a cadência transacional do report. A cadência roda
-        // independente do checkbox — é o material que o lead pediu.
-        emailOptIn: !!input.newsletterOptIn,
-        interacaoTitulo: `Download Report Algoritmo LinkedIn — ${input.nome}`,
-        interacaoTipo: 'Download material',
-        interacaoCanal: 'Site',
-        conteudoResumo: [
-          `Baixou o report "O Algoritmo do LinkedIn Mudou Tudo" via LP.`,
-          `Intenção declarada: ${intencaoLabel}.`,
-          input.intencaoUso === 'marca-empresa'
-            ? `Empresa informada: ${input.empresa || '(em branco)'}.`
-            : '',
-          input.newsletterOptIn ? `Opt-in newsletter: SIM.` : `Opt-in newsletter: não.`,
-          input.utm_source ? `UTM source: ${input.utm_source}` : '',
-          input.utm_medium ? `UTM medium: ${input.utm_medium}` : '',
-          input.utm_campaign ? `UTM campaign: ${input.utm_campaign}` : '',
-        ]
-          .filter(Boolean)
-          .join(' '),
-        utmSource: input.utm_source,
-        utmMedium: input.utm_medium,
-        utmCampaign: input.utm_campaign,
-      });
-    } catch (err) {
-      console.error('[report-leads] Notion capture error (non-blocking):', err);
-    }
-
-    /* ---------------------------------------------------------------- */
-    /*  2. ActiveCampaign: sync contato + tags                            */
+    /*  1. ActiveCampaign: sync contato + tags                            */
     /* ---------------------------------------------------------------- */
 
     // Roteamento de segmentos persistentes baseado no form + intenção +
     // opt-in. A intenção declarada decide o cohort: Líderes B2B (ICP),
     // Parceiros estratégicos (agência) ou Profissionais Individuais
-    // (criador). Cada segmento é uma lista no AC, vinculada via
-    // automação `Tag Segmento: X → Lista X` que já está ativa.
+    // (criador). Cada segmento é uma tag no AC, vinculada via automação
+    // `Tag Segmento: X → Lista X` que já está ativa.
     const segmentTags = routeSegments({
-      formType: 'Report Algoritmo LinkedIn 2026',
+      formType: 'Algoritmo LinkedIn 2026',
       newsletterOptIn: input.newsletterOptIn,
       intencaoUso: input.intencaoUso,
     });
 
     // Classificação do lead (ICP B2B / Agência / Criador) — agora é CAMPO
-    // (`tipo_lead`), não mais tags `ICP:`/`Persona:`. O If/Else da cadência
-    // no AC compara `tipo_lead = "ICP B2B"` pra liberar E2-E5.
+    // (`tipo_de_lead`), não mais tags `ICP:`/`Persona:`. O If/Else da
+    // cadência no AC compara `tipo_de_lead = "ICP B2B"` pra liberar E2-E5.
     const tipoLead = tipoLeadFromIntencao(input.intencaoUso);
 
     const acTags = buildACTags({
-      formType: 'Report Algoritmo LinkedIn 2026',
-      origem: origemNoSite,
-      extraTags: [
-        // 'Report: Algoritmo LinkedIn 2026' é o gatilho da cadência de
-        // 5 emails (1º entrega o PDF, depois If/Else: ICP B2B recebe os
-        // 4 de aprofundamento; outros encerram).
-        'Report: Algoritmo LinkedIn 2026',
-        // Segmentos persistentes (Líderes B2B / Parceiros / Individuais
-        // + Newsletter Boldfy se marcou opt-in). Cada um dispara a
-        // automação Tag→Lista que inscreve o contato na lista correta.
-        ...segmentTags,
-      ],
+      // 'Form: Algoritmo LinkedIn 2026' é o ÚNICO gatilho da cadência
+      // de 5 emails (1º entrega o PDF, depois If/Else: ICP B2B recebe
+      // os 4 de aprofundamento; outros encerram).
+      formType: 'Algoritmo LinkedIn 2026',
+      // Segmentos persistentes (Líderes B2B / Parceiros / Individuais
+      // + Newsletter Boldfy se marcou opt-in). Cada um dispara a
+      // automação Tag→Lista que inscreve o contato na lista correta.
+      extraTags: segmentTags,
     });
 
     const acContactId = await syncContact({
       email: input.email,
       firstName,
       lastName,
-      origem: origemNoSite,
       tags: acTags,
       fields: {
-        empresa: empresaForCRM,
+        // Só grava empresa no AC se foi efetivamente informada — pros
+        // outros ramos não polui o perfil com label semântico.
+        ...(empresaInformada ? { empresa: empresaInformada } : {}),
         // Classificação do lead (gate da cadência via If/Else)
         ...(tipoLead ? { tipo_de_lead: tipoLead } : {}),
         // UTMs de PRIMEIRO toque — substituem 5 tags `utm_*` por 3 campos
@@ -166,7 +113,7 @@ export async function sendReportLead(
         // existirem; idealmente "primeiro toque" deveria ser preservado
         // (não sobrescrever em capturas posteriores), mas o AC não tem
         // upsert condicional nativo — deixaremos pra próxima iteração se
-        // virar dor (ver task de migration).
+        // virar dor.
         ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
         ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
         ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
@@ -174,23 +121,48 @@ export async function sendReportLead(
     });
 
     /* ---------------------------------------------------------------- */
-    /*  3. Linkagem reversa: AC Contact ID volta pra Pessoa no Notion    */
+    /*  2. Folk: SÓ se intenção é marca-empresa (gate ICP B2B)           */
     /* ---------------------------------------------------------------- */
-
-    if (acContactId && notionResult.pessoaId) {
+    // Report gera 3 tipos de leads (ICP B2B / Agência / Criador). Só os
+    // ICP B2B viram leads de vendas — esses entram no Folk como Ativo
+    // (só baixou material, ainda não preencheu form B2B). Os outros 2
+    // tipos ficam só no AC pra cadência editorial.
+    if (input.intencaoUso === 'marca-empresa' && acContactId) {
       try {
-        await upsertPessoa({
-          nome: input.nome,
-          email: input.email,
-          acContactId,
+        await syncFolkLead({
+          person: {
+            email: input.email,
+            firstName,
+            lastName,
+            status: 'Ativo',
+            customFields: {
+              form_origem: 'Report B2B',
+              ac_contact_id: acContactId,
+              ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
+              ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
+              ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
+            },
+          },
+          // Só cria company se empresa foi informada — senão Folk Enrich
+          // pode preencher depois a partir do email (Clara paga conta de Enrich).
+          ...(empresaInformada
+            ? {
+                company: {
+                  name: empresaInformada,
+                  customFields: {
+                    origem: 'Report B2B',
+                  },
+                },
+              }
+            : {}),
         });
       } catch (err) {
-        console.error('[report-leads] AC ID linkback error (non-blocking):', err);
+        console.error('[report-leads] Folk sync error (non-blocking):', err);
       }
     }
 
     /* ---------------------------------------------------------------- */
-    /*  4. Nota no AC com tracking completo                              */
+    /*  3. Nota no AC com tracking completo                              */
     /* ---------------------------------------------------------------- */
 
     if (acContactId) {
@@ -200,9 +172,7 @@ export async function sendReportLead(
         `Nome: ${input.nome}`,
         `Email: ${input.email}`,
         `Intenção: ${intencaoLabel}`,
-        input.intencaoUso === 'marca-empresa'
-          ? `Empresa: ${input.empresa || '(em branco)'}`
-          : `Empresa: ${empresaForCRM}`,
+        empresaInformada ? `Empresa: ${empresaInformada}` : '',
         `Opt-in newsletter: ${input.newsletterOptIn ? 'SIM' : 'não'}`,
         ``,
         `— Tracking —`,
@@ -212,10 +182,6 @@ export async function sendReportLead(
         input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
         input.utm_content ? `utm_content: ${input.utm_content}` : '',
         input.utm_term ? `utm_term: ${input.utm_term}` : '',
-        ``,
-        notionResult.pessoaId ? `Notion Pessoa: ${notionResult.pessoaId}` : '',
-        notionResult.empresaId ? `Notion Empresa: ${notionResult.empresaId}` : '',
-        notionResult.interacaoId ? `Notion Interação: ${notionResult.interacaoId}` : '',
       ]
         .filter(Boolean)
         .join('\n');
@@ -228,14 +194,10 @@ export async function sendReportLead(
     }
 
     /* ---------------------------------------------------------------- */
-    /*  5. Retorno                                                       */
+    /*  4. Retorno                                                       */
     /* ---------------------------------------------------------------- */
 
-    // Se nem Notion nem AC funcionaram, retornamos erro pra o usuário.
-    // Se pelo menos um dos dois salvou, success — o lead está em algum
-    // lugar e podemos reconciliar depois.
-    const anySaved = !!(acContactId || notionResult.pessoaId);
-    if (!anySaved) {
+    if (!acContactId) {
       return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
     }
 

@@ -6,6 +6,10 @@ import {
   removeTagFromContact,
   addNoteToContact,
 } from '@/lib/activecampaign';
+import {
+  findFolkPrimaryCompanyByEmail,
+  updateFolkCompanyStatus,
+} from '@/lib/folk';
 
 /**
  * Webhook receiver pro Cal.com.
@@ -176,6 +180,23 @@ export async function POST(request: NextRequest) {
         : 'horario nao informado';
       const note = `📅 Demo agendada via Cal.com\n\nData: ${startTime}\nTitulo: ${payload.title ?? '-'}\nBooking UID: ${payload.uid ?? '-'}`;
       await addNoteToContact(contactId, note);
+
+      // Folk: move a primary company do lead pra "Reunião marcada".
+      // Failure aqui não é crítica — AC já atualizado, tags no AC são fonte
+      // de verdade pra cadência. Folk é dashboard de vendas.
+      try {
+        const folkCompanyId = await findFolkPrimaryCompanyByEmail(email);
+        if (folkCompanyId) {
+          await updateFolkCompanyStatus(folkCompanyId, 'Reunião marcada');
+        } else {
+          console.warn(
+            '[cal-webhook] Folk: lead não encontrado ou sem empresa primária',
+            { email },
+          );
+        }
+      } catch (folkErr) {
+        console.error('[cal-webhook] Folk update error (non-blocking):', folkErr);
+      }
     } else if (triggerEvent === 'BOOKING_CANCELLED') {
       // Demo cancelada → volta pra aguardando, marca tag de cancelamento
       await Promise.allSettled([

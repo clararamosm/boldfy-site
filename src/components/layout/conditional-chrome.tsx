@@ -20,6 +20,7 @@ import { Header } from './header';
 const LP_ROUTES = [
   '/beta-test',
   '/algoritmo-linkedin',
+  '/agendar-demo',
 ];
 
 function isLpRoute(pathname: string): boolean {
