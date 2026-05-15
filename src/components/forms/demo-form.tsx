@@ -264,7 +264,7 @@ export function DemoForm({
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="w-full flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-semibold text-white bg-accent hover:bg-accent/90 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all disabled:opacity-60 disabled:cursor-wait"
+            className="w-full flex justify-center items-center py-2.5 px-4 rounded-md text-sm font-semibold text-white bg-primary shadow-[0_4px_14px_rgba(205,80,241,0.3)] hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_6px_18px_rgba(205,80,241,0.4)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-60 disabled:cursor-wait disabled:hover:translate-y-0"
           >
             {status === 'loading' ? (
               <>
