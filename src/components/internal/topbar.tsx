@@ -107,6 +107,7 @@ export function InternalTopbar() {
           position: absolute;
           top: 4px;
           bottom: 4px;
+          left: 4px;
           width: calc(50% - 4px);
           background: #FFFFFF;
           border-radius: 999px;
@@ -119,15 +120,17 @@ export function InternalTopbar() {
         .toggler-btn {
           position: relative;
           z-index: 1;
-          padding: 7px 18px;
+          padding: 7px 22px;
           font-size: 13px;
           font-weight: 600;
           color: #9D85B3;
           text-decoration: none;
           transition: color 0.2s ease;
           border-radius: 999px;
-          min-width: 88px;
+          min-width: 100px;
           text-align: center;
+          flex: 1;
+          white-space: nowrap;
         }
         .toggler-btn:hover { color: #5E2A67; }
         .toggler-btn.active { color: #CD50F1; }
