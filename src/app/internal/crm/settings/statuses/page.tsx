@@ -30,6 +30,7 @@ export default async function StatusesSettingsPage() {
       <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
         <Link href="/internal/crm" className="crm-btn">← Voltar pro CRM</Link>
         <Link href="/internal/crm/settings/import" className="crm-btn">↓ Importar do AC</Link>
+        <Link href="/internal/crm/settings/import-folk" className="crm-btn">↓ Importar do Folk</Link>
       </div>
 
       <div className="crm-header">

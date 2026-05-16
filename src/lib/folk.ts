@@ -196,6 +196,74 @@ async function folkFetch<T>(
 }
 
 /* -------------------------------------------------------------------------- */
+/*  List ALL — usado pra importação one-shot pro nosso CRM próprio.            */
+/* -------------------------------------------------------------------------- */
+
+export type FolkPersonRaw = {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  emails?: string[];
+  phones?: string[];
+  jobTitle?: string;
+  description?: string;
+  customFieldValues?: Record<string, Record<string, unknown>>;
+  companies?: Array<{ id: string; name?: string }>;
+};
+
+export type FolkCompanyRaw = {
+  id: string;
+  name: string;
+  description?: string;
+  industry?: string;
+  customFieldValues?: Record<string, Record<string, unknown>>;
+};
+
+/**
+ * Lista todas as Persons do group Leads paginado. Yields lotes.
+ */
+export async function* listAllFolkPersons(): AsyncGenerator<FolkPersonRaw[]> {
+  if (!isConfigured()) return;
+  let cursor: string | undefined = undefined;
+  const limit = 100;
+  while (true) {
+    const url: string = `/v1/people?groupId=${FOLK_GROUP_LEADS_ID}&limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    const res: FolkListResponse<FolkPersonRaw> | null = await folkFetch<FolkListResponse<FolkPersonRaw>>('GET', url);
+    if (!res?.data?.items) break;
+    yield res.data.items;
+    cursor = res.data.pagination?.nextCursor;
+    if (!cursor || res.data.items.length === 0) break;
+  }
+}
+
+export async function* listAllFolkCompanies(): AsyncGenerator<FolkCompanyRaw[]> {
+  if (!isConfigured()) return;
+  let cursor: string | undefined = undefined;
+  const limit = 100;
+  while (true) {
+    const url: string = `/v1/companies?groupId=${FOLK_GROUP_PROSPECTS_ID}&limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    const res: FolkListResponse<FolkCompanyRaw> | null = await folkFetch<FolkListResponse<FolkCompanyRaw>>('GET', url);
+    if (!res?.data?.items) break;
+    yield res.data.items;
+    cursor = res.data.pagination?.nextCursor;
+    if (!cursor || res.data.items.length === 0) break;
+  }
+}
+
+/**
+ * Helpers exportados pra outras libs (import).
+ */
+export function getFolkLeadsGroupId(): string | undefined {
+  return FOLK_GROUP_LEADS_ID;
+}
+export function getFolkProspectsGroupId(): string | undefined {
+  return FOLK_GROUP_PROSPECTS_ID;
+}
+export function isFolkConfigured(): boolean {
+  return isConfigured();
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Find by email / name                                                       */
 /* -------------------------------------------------------------------------- */
 
