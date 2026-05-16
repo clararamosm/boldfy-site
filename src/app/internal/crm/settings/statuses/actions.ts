@@ -184,18 +184,18 @@ export async function deleteStatus(id: string): Promise<ActionResult> {
  * Adiciona pack de statuses B2B sugeridos pra Pessoas. Idempotent — só
  * cria os que não existem ainda (compara por label LOWER).
  *
- * Pack:
- *   - LinkedIn Lead (azul, score 5)   — lead captado via extensão LinkedIn
- *   - Reunião marcada (roxo, sem threshold) — agendou demo, aguarda reunir
+ * Pack completo (instalações antigas só precisam clicar pra completar):
+ *   - Reunião marcada (roxo)           — agendou demo via Cal.com (auto-promove)
  *   - Fechado (verde, terminal)        — virou cliente
  *   - Perdido (cinza, terminal)        — não rolou
+ *   - LinkedIn Lead (azul, score 5)    — captado via extensão LinkedIn (fase 2)
  */
 export async function addSuggestedB2BPack(): Promise<ActionResult> {
   const pack: Array<{ label: string; color: string; scoreThresholdMin: number | null; isTerminal: boolean }> = [
-    { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: 5, isTerminal: false },
     { label: 'Reunião marcada', color: 'purple', scoreThresholdMin: null, isTerminal: false },
     { label: 'Fechado', color: 'green', scoreThresholdMin: null, isTerminal: true },
     { label: 'Perdido', color: 'gray', scoreThresholdMin: null, isTerminal: true },
+    { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: 5, isTerminal: false },
   ];
 
   try {

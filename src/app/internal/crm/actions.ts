@@ -250,6 +250,46 @@ export async function createPersonManual(_prev: unknown, formData: FormData): Pr
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Criar Empresa manual                                                       */
+/* -------------------------------------------------------------------------- */
+
+const CreateCompanySchema = z.object({
+  name: z.string().trim().min(1, 'Nome obrigatório').max(200),
+  industry: z.string().trim().max(120).optional(),
+  size: z.string().trim().max(60).optional(),
+  website: z.string().trim().url('Website inválido').optional().or(z.literal('')),
+  linkedinUrl: z.string().trim().url('LinkedIn inválido').optional().or(z.literal('')),
+});
+
+export async function createCompanyManual(_prev: unknown, formData: FormData): Promise<ActionResult & { companyId?: string }> {
+  const parsed = CreateCompanySchema.safeParse({
+    name: formData.get('name'),
+    industry: formData.get('industry') || undefined,
+    size: formData.get('size') || undefined,
+    website: formData.get('website') || undefined,
+    linkedinUrl: formData.get('linkedinUrl') || undefined,
+  });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  try {
+    const { upsertCompany } = await import('@/lib/crm');
+    const c = await upsertCompany({
+      name: parsed.data.name,
+      industry: parsed.data.industry,
+      size: parsed.data.size,
+      website: parsed.data.website || undefined,
+      linkedinUrl: parsed.data.linkedinUrl || undefined,
+    });
+    if (!c.ok) return { ok: false, error: c.error };
+
+    revalidatePath('/internal/crm/empresas');
+    return { ok: true, companyId: c.data.id };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Merge de leads — combina 2+ pessoas em 1                                  */
 /* -------------------------------------------------------------------------- */
 

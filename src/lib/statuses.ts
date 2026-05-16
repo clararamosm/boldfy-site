@@ -20,13 +20,19 @@ const DEFAULT_PERSON_STATUSES: Array<{
   label: string;
   color: string;
   sortOrder: number;
-  scoreThresholdMin: number;
+  scoreThresholdMin: number | null;
   isDefault: boolean;
   isTerminal: boolean;
 }> = [
+  // Etapas iniciais — promoção automática por score
   { label: 'Ativo', color: 'neutral', sortOrder: 0, scoreThresholdMin: 0, isDefault: true, isTerminal: false },
   { label: 'Lead', color: 'blue', sortOrder: 1, scoreThresholdMin: 21, isDefault: false, isTerminal: false },
   { label: 'Quente', color: 'amber', sortOrder: 2, scoreThresholdMin: 51, isDefault: false, isTerminal: false },
+  // Etapas de vendas — preenchidas via Cal.com webhook ou movimento manual
+  { label: 'Reunião marcada', color: 'purple', sortOrder: 3, scoreThresholdMin: null, isDefault: false, isTerminal: false },
+  // Etapas terminais — só movimento manual, sem auto-promotion
+  { label: 'Fechado', color: 'green', sortOrder: 4, scoreThresholdMin: null, isDefault: false, isTerminal: true },
+  { label: 'Perdido', color: 'gray', sortOrder: 5, scoreThresholdMin: null, isDefault: false, isTerminal: true },
 ];
 
 const DEFAULT_COMPANY_STATUSES: Array<{

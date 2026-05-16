@@ -10,9 +10,9 @@ import {
   findFolkPrimaryCompanyByEmail,
   updateFolkCompanyStatus,
 } from '@/lib/folk';
-import { db, meetings, people } from '@/db';
+import { db, meetings, people, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 /**
  * Webhook receiver pro Cal.com.
@@ -233,6 +233,29 @@ export async function POST(request: NextRequest) {
               title: payload.title,
             },
           });
+
+          // Auto-promove pessoa pra "Reunião marcada" se essa coluna existir.
+          // Se Clara renomeou ou apagou, vira no-op silencioso.
+          const reuniaoStatus = await db
+            .select({ id: statuses.id })
+            .from(statuses)
+            .where(and(eq(statuses.kind, 'person'), eq(statuses.label, 'Reunião marcada')))
+            .limit(1);
+
+          if (reuniaoStatus[0]) {
+            await db
+              .update(people)
+              .set({ statusId: reuniaoStatus[0].id, updatedAt: new Date() })
+              .where(eq(people.id, personRow[0].id));
+
+            await logActivity({
+              personId: personRow[0].id,
+              type: 'status_change',
+              weight: 0,
+              source: 'system',
+              data: { toLabel: 'Reunião marcada', reason: 'cal_scheduled_auto' },
+            });
+          }
         }
       } catch (crmErr) {
         console.error('[cal-webhook] CRM dual-write error (non-blocking):', crmErr);

@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCompaniesByStatus, type CompaniesByStatus } from '@/lib/crm-queries';
 import { CompanyKanban } from '@/components/crm/company-kanban';
+import { AddCompanyButton } from '@/components/crm/add-company-button';
 
 export const metadata: Metadata = {
   title: 'CRM · Empresas',
@@ -32,9 +33,12 @@ export default async function CrmCompaniesPage() {
             Pipeline de oportunidades · arraste pra mudar etapa · rolagem só no kanban
           </p>
         </div>
-        <Link href="/internal/crm/settings/statuses" className="crm-btn">
-          ⚙ Configurar status
-        </Link>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Link href="/internal/crm/settings/statuses" className="crm-btn">
+            ⚙ Configurar
+          </Link>
+          <AddCompanyButton />
+        </div>
       </div>
 
       {dbError ? (
