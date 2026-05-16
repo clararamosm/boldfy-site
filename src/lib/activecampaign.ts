@@ -277,6 +277,69 @@ export async function addTagsToExistingContact(
  * Silencioso: se a tag nao existe ou o contato nao tem ela, retorna sem erro.
  */
 /**
+ * Lista TODOS os contatos do AC paginados. Usado pra importação inicial.
+ * Yields lotes de 100. Atenção: pode ser lento se a base é grande.
+ */
+export async function* listAllContacts(): AsyncGenerator<Array<{
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}>> {
+  if (!AC_API_URL || !AC_API_KEY) return;
+  let offset = 0;
+  const limit = 100;
+  while (true) {
+    try {
+      const res = await fetch(
+        `${AC_API_URL}/api/3/contacts?limit=${limit}&offset=${offset}`,
+        { headers: acHeaders() },
+      );
+      if (!res.ok) break;
+      const data = await res.json() as { contacts?: Array<{ id: string; email: string; firstName: string; lastName: string; phone: string }> };
+      const contacts = data.contacts ?? [];
+      if (contacts.length === 0) break;
+      yield contacts;
+      if (contacts.length < limit) break;
+      offset += limit;
+    } catch (err) {
+      console.error('[activecampaign] listAllContacts error:', err);
+      break;
+    }
+  }
+}
+
+/**
+ * Pega field values de um contato (custom fields tipo empresa, cargo, etc).
+ * Usado na importação pra trazer dados ricos.
+ */
+export async function getContactFieldValues(contactId: string): Promise<Record<string, string>> {
+  if (!AC_API_URL || !AC_API_KEY) return {};
+  try {
+    const res = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/fieldValues`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return {};
+    const data = await res.json() as { fieldValues?: Array<{ field: string; value: string }>, fields?: Array<{ id: string; perstag: string }> };
+    // Resolve field IDs → perstags (cached em mem fica caro; faz simples aqui)
+    const fieldsRes = await fetch(`${AC_API_URL}/api/3/fields?limit=100`, { headers: acHeaders() });
+    if (!fieldsRes.ok) return {};
+    const fieldsData = await fieldsRes.json() as { fields?: Array<{ id: string; perstag: string }> };
+    const fieldMap = new Map((fieldsData.fields ?? []).map((f) => [f.id, f.perstag]));
+    const out: Record<string, string> = {};
+    for (const fv of data.fieldValues ?? []) {
+      const perstag = fieldMap.get(fv.field);
+      if (perstag && fv.value) out[perstag.toLowerCase()] = fv.value;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Lista todas as tags do contato (nomes). Usado no tag manager UI do CRM.
  * Retorna [] se contato não tem tags ou se houve erro.
  */

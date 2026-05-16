@@ -1,15 +1,8 @@
 /**
  * Person card — usado no kanban Pessoas.
  *
- * Design (validado, ver SPEC sec 9.1):
- *   [via X badge]
- *   [avatar] Nome              [score pill]
- *            Cargo · Empresa
- *   [icon] última ação · tempo
- *   [origem canal] [origem página]
- *
- * Sprint 3a: agora suporta drag-drop nativo HTML5 + status dinâmico vindo do
- * banco (cor + label).
+ * Suporta seleção múltipla via props opcionais (selected, onToggleSelect).
+ * Quando anySelected=true, o checkbox aparece sempre. Quando false, só no hover.
  */
 
 'use client';
@@ -21,14 +14,16 @@ import { avatarHue, initials, timeAgo, methodVia, channelLabel } from '@/lib/crm
 type Props = {
   person: PersonWithDetails;
   lastActionText?: string;
+  selected?: boolean;
+  anySelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 };
 
-export function PersonCard({ person, lastActionText }: Props) {
+export function PersonCard({ person, lastActionText, selected, anySelected, onToggleSelect }: Props) {
   const via = methodVia(person.sourceMethod);
   const hue = avatarHue(person.email);
   const channel = channelLabel(person.sourceChannel);
 
-  // Score class baseada na ordem do status atual (cinza/azul/âmbar tendência)
   const statusColor = person.status?.color ?? 'neutral';
   const scoreClass = statusColor === 'amber' || statusColor === 'orange'
     ? 'quente'
@@ -36,26 +31,36 @@ export function PersonCard({ person, lastActionText }: Props) {
       ? 'lead'
       : '';
 
+  const showCheckbox = onToggleSelect && (anySelected || selected);
+
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
     e.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'person', id: person.id, statusId: person.statusId }));
     e.dataTransfer.effectAllowed = 'move';
-    // Pequeno delay pra browser pegar o ghost antes do CSS aplicar
-    setTimeout(() => {
-      (e.target as HTMLElement).classList.add('crm-card-dragging');
-    }, 0);
   }
 
-  function handleDragEnd(e: React.DragEvent<HTMLDivElement>) {
-    (e.target as HTMLElement).classList.remove('crm-card-dragging');
+  function handleCheckboxClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    onToggleSelect?.(person.id);
   }
 
   return (
     <div
-      draggable
+      draggable={!anySelected}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      className="crm-person-card-wrap"
+      className={`crm-person-card-wrap ${selected ? 'selected' : ''}`}
     >
+      {onToggleSelect ? (
+        <button
+          type="button"
+          onClick={handleCheckboxClick}
+          className={`crm-card-checkbox ${selected ? 'checked' : ''} ${showCheckbox ? 'visible' : ''}`}
+          aria-label={selected ? 'Desmarcar' : 'Selecionar pra mesclar'}
+        >
+          {selected ? '✓' : ''}
+        </button>
+      ) : null}
+
       <Link href={`/internal/crm/people/${person.id}`} className="crm-person-card" draggable={false}>
         {via ? (
           <span className={`crm-via-badge ${via.classKey}`}>{via.label}</span>

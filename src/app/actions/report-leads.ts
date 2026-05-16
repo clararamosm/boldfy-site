@@ -163,10 +163,11 @@ export async function sendReportLead(
     }
 
     /* ---------------------------------------------------------------- */
-    /*  2.5 CRM Boldfy (dual-write) — escreve TODOS os leads (gate é só */
-    /*       no Folk). No nosso CRM filtramos por sourceMethod depois.   */
+    /*  2.5 CRM Boldfy — SÓ líderes B2B (intencaoUso=marca-empresa).    */
+    /*       Mesmo gate do Folk: agências e criadores individuais       */
+    /*       ficam só no AC pra cadência editorial.                     */
     /* ---------------------------------------------------------------- */
-    if (acContactId) {
+    if (acContactId && input.intencaoUso === 'marca-empresa') {
       try {
         await recordLeadFromForm({
           name: input.nome,

@@ -1,84 +1,69 @@
 /**
- * Topbar fixo do /internal — logo Boldfy + view switcher CRM | Dashboard + logout.
+ * Topbar fixo do /internal — logo + toggler CRM/Dashboard + busca + logout.
  *
- * Client component pra suportar interações (botão logout chama server action).
+ * Toggler: segmented control com indicator deslizante (estilo Apple).
+ * Layout: tudo numa linha só, compacto.
  */
 
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { logout } from '@/app/internal/actions/auth';
 
-type View = 'crm' | 'dashboard' | null;
+export function InternalTopbar() {
+  const pathname = usePathname() ?? '';
+  const activeView: 'crm' | 'dashboard' = pathname.startsWith('/internal/crm') ? 'crm' : 'dashboard';
 
-export function InternalTopbar({ activeView }: { activeView: View }) {
+  function openCmdK() {
+    const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true, bubbles: true });
+    window.dispatchEvent(event);
+  }
+
   return (
     <header className="internal-topbar">
       <div className="topbar-left">
         <Link href="/internal/dashboard" className="topbar-logo" aria-label="Boldfy — área interna">
-          <Image
-            src="/images/boldfy-logo.svg"
-            alt="Boldfy"
-            width={88}
-            height={26}
-            priority
-          />
+          <Image src="/images/boldfy-logo.svg" alt="Boldfy" width={84} height={24} priority />
         </Link>
-        <nav className="view-switcher" aria-label="Trocar entre CRM e Dashboard">
+
+        <nav className="view-toggler" aria-label="Trocar entre CRM e Dashboard">
+          <div className={`toggler-indicator ${activeView}`} aria-hidden />
           <Link
             href="/internal/crm"
-            className={`vs-btn ${activeView === 'crm' ? 'active' : ''}`}
+            className={`toggler-btn ${activeView === 'crm' ? 'active' : ''}`}
             aria-current={activeView === 'crm' ? 'page' : undefined}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
             CRM
           </Link>
           <Link
             href="/internal/dashboard"
-            className={`vs-btn ${activeView === 'dashboard' ? 'active' : ''}`}
+            className={`toggler-btn ${activeView === 'dashboard' ? 'active' : ''}`}
             aria-current={activeView === 'dashboard' ? 'page' : undefined}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M7 12l4-4 4 4 6-6"/>
-            </svg>
             Dashboard
           </Link>
         </nav>
       </div>
 
       <div className="topbar-right">
-        <button
-          type="button"
-          onClick={() => {
-            // Dispara o evento de keyboard que abre o CmdK
-            const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true, bubbles: true });
-            window.dispatchEvent(event);
-          }}
-          className="topbar-search"
-          title="Buscar (⌘K)"
-        >
+        <button type="button" onClick={openCmdK} className="topbar-icon-btn" title="Buscar (⌘K)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.3-4.3"/>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
           </svg>
-          Buscar
+          <span>Buscar</span>
           <kbd>⌘K</kbd>
         </button>
         <form action={logout}>
-          <button type="submit" className="topbar-logout" title="Sair">
+          <button type="submit" className="topbar-icon-btn" title="Sair">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            Sair
+            <span>Sair</span>
           </button>
         </form>
       </div>
@@ -87,7 +72,7 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
         .internal-topbar {
           background: #FFFFFF;
           border-bottom: 1px solid #E4D8ED;
-          padding: 14px 28px;
+          padding: 12px 28px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -95,40 +80,66 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
           top: 0;
           z-index: 50;
           backdrop-filter: blur(8px);
+          gap: 16px;
         }
-        .topbar-left { display: flex; align-items: center; gap: 20px; }
+        .topbar-left {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          min-width: 0;
+        }
         .topbar-logo {
           display: flex;
           align-items: center;
-          text-decoration: none;
+          flex-shrink: 0;
         }
-        .view-switcher {
-          display: flex;
+
+        /* === TOGGLER segmented com indicador deslizante === */
+        .view-toggler {
+          position: relative;
+          display: inline-flex;
           background: #F7EEFC;
-          border-radius: 10px;
-          padding: 3px;
-          gap: 2px;
+          border-radius: 999px;
+          padding: 4px;
+          gap: 0;
         }
-        .vs-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 7px 14px;
-          border-radius: 8px;
-          background: transparent;
+        .toggler-indicator {
+          position: absolute;
+          top: 4px;
+          bottom: 4px;
+          width: calc(50% - 4px);
+          background: #FFFFFF;
+          border-radius: 999px;
+          box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08), 0 0 0 1px rgba(205, 80, 241, 0.08);
+          transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 0;
+        }
+        .toggler-indicator.crm { transform: translateX(0); }
+        .toggler-indicator.dashboard { transform: translateX(100%); }
+        .toggler-btn {
+          position: relative;
+          z-index: 1;
+          padding: 7px 18px;
           font-size: 13px;
           font-weight: 600;
           color: #9D85B3;
           text-decoration: none;
-          transition: all 0.2s;
+          transition: color 0.2s ease;
+          border-radius: 999px;
+          min-width: 88px;
+          text-align: center;
         }
-        .vs-btn:hover { color: #5E2A67; }
-        .vs-btn.active {
-          background: #FFFFFF;
-          color: #5E2A67;
-          box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08);
+        .toggler-btn:hover { color: #5E2A67; }
+        .toggler-btn.active { color: #CD50F1; }
+
+        /* === RIGHT side compacto === */
+        .topbar-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
         }
-        .topbar-search, .topbar-logout {
+        .topbar-icon-btn {
           background: transparent;
           border: 1px solid #E4D8ED;
           padding: 7px 12px;
@@ -137,22 +148,34 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
           font-weight: 600;
           color: #9D85B3;
           cursor: pointer;
-          display: flex;
+          display: inline-flex;
           align-items: center;
           gap: 6px;
           font-family: inherit;
+          text-decoration: none;
+          transition: all 0.15s ease;
+          white-space: nowrap;
         }
-        .topbar-search:hover, .topbar-logout:hover { color: #CD50F1; border-color: #CD50F1; }
-        .topbar-search kbd {
+        .topbar-icon-btn:hover {
+          color: #CD50F1;
+          border-color: #CD50F1;
+        }
+        .topbar-icon-btn kbd {
           background: #F7EEFC;
           color: #9D85B3;
           font-size: 10px;
           padding: 2px 6px;
           border-radius: 4px;
           font-weight: 600;
+          font-family: inherit;
         }
-        @media (max-width: 640px) {
-          .internal-topbar { padding: 12px 16px; }
+
+        @media (max-width: 720px) {
+          .internal-topbar { padding: 10px 14px; gap: 10px; }
+          .topbar-left { gap: 10px; }
+          .topbar-icon-btn span { display: none; }
+          .topbar-icon-btn kbd { display: none; }
+          .toggler-btn { min-width: 64px; padding: 6px 12px; }
         }
       `}</style>
     </header>

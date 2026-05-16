@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getPeopleByStatus, type PeopleByStatus } from '@/lib/crm-queries';
 import { PersonKanban } from '@/components/crm/person-kanban';
+import { AddPersonButton } from '@/components/crm/add-person-button';
 
 export const metadata: Metadata = {
   title: 'CRM · Pessoas',
@@ -35,9 +36,12 @@ export default async function CrmPeoplePage() {
             Arraste os cards entre colunas pra mudar status · auto-promoção por score nos thresholds definidos
           </p>
         </div>
-        <Link href="/internal/crm/settings/statuses" className="crm-btn">
-          ⚙ Configurar status
-        </Link>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Link href="/internal/crm/settings/statuses" className="crm-btn">
+            ⚙ Configurar
+          </Link>
+          <AddPersonButton />
+        </div>
       </div>
 
       {dbError ? (

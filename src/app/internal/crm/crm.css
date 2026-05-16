@@ -97,10 +97,67 @@
 }
 .crm-person-card-wrap {
   cursor: grab;
+  position: relative;
 }
 .crm-person-card-wrap:active {
   cursor: grabbing;
 }
+.crm-person-card-wrap.selected .crm-person-card {
+  border-color: #CD50F1;
+  box-shadow: 0 0 0 2px rgba(205, 80, 241, 0.18);
+}
+
+.crm-card-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #FFFFFF;
+  border: 1.5px solid #E4D8ED;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.crm-person-card-wrap:hover .crm-card-checkbox { opacity: 1; }
+.crm-card-checkbox.visible { opacity: 1; }
+.crm-card-checkbox.checked {
+  background: #CD50F1;
+  border-color: #CD50F1;
+  opacity: 1;
+}
+.crm-card-checkbox:hover { border-color: #CD50F1; }
+
+/* Selection toolbar (flutuante) */
+.crm-select-toolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  background: #FFFFFF;
+  border: 1px solid #E4D8ED;
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 16px 48px rgba(15, 10, 24, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 380px;
+}
+.crm-select-count { font-size: 13px; color: #45336B; }
+.crm-select-count strong { color: #CD50F1; font-family: var(--font-headline); }
+.crm-select-actions { display: flex; gap: 8px; align-items: center; }
 .crm-col-header {
   display: flex;
   align-items: center;

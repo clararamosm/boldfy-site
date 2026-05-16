@@ -1,62 +1,29 @@
 /**
- * Layout do /internal/crm — wraps as sub-views (Pessoas, Empresas, Feed) com
- * uma sub-nav comum.
+ * Layout do /internal/crm — wraps as sub-views com sub-nav.
  *
- * Renderiza counts em real-time pra cada aba (Pessoas N, Empresas N).
+ * O server component busca os counts (queries DB), e passa pra um client
+ * component (CrmSubNav) que usa usePathname() pra detectar a aba ativa
+ * corretamente em navegações client-side.
  */
 
-import { headers } from 'next/headers';
-import Link from 'next/link';
 import { getCrmCounts } from '@/lib/crm-queries';
+import { CrmSubNav } from '@/components/crm/sub-nav';
 import './crm.css';
 
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
-  const h = await headers();
-  const pathname = h.get('x-pathname') || '';
-
-  // Counts são opcionais — se DB não estiver conectado, ignora silenciosamente
-  let counts: { totalPeople: number; totalCompanies: number; totalActivities: number } | null = null;
+  let totalPeople: number | null = null;
+  let totalCompanies: number | null = null;
   try {
-    counts = await getCrmCounts();
+    const counts = await getCrmCounts();
+    totalPeople = counts.totalPeople;
+    totalCompanies = counts.totalCompanies;
   } catch {
-    counts = null;
+    // DB não conectado — passa null e o sub-nav esconde os counts
   }
-
-  const isActive = (path: string): boolean =>
-    pathname === path || (path !== '/internal/crm' && pathname.startsWith(path));
 
   return (
     <div>
-      <nav className="crm-subnav" aria-label="Sub-navegação do CRM">
-        <Link
-          href="/internal/crm"
-          className={`crm-subnav-link ${pathname === '/internal/crm' ? 'active' : ''}`}
-        >
-          Pessoas
-          {counts ? <span className="count">{counts.totalPeople}</span> : null}
-        </Link>
-        <Link
-          href="/internal/crm/empresas"
-          className={`crm-subnav-link ${isActive('/internal/crm/empresas') ? 'active' : ''}`}
-        >
-          Empresas
-          {counts ? <span className="count">{counts.totalCompanies}</span> : null}
-        </Link>
-        <Link
-          href="/internal/crm/feed"
-          className={`crm-subnav-link ${isActive('/internal/crm/feed') ? 'active' : ''}`}
-        >
-          Feed
-        </Link>
-        <Link
-          href="/internal/crm/settings/statuses"
-          className={`crm-subnav-link ${isActive('/internal/crm/settings') ? 'active' : ''}`}
-          style={{ marginLeft: 'auto' }}
-        >
-          ⚙ Configurar
-        </Link>
-      </nav>
-
+      <CrmSubNav totalPeople={totalPeople} totalCompanies={totalCompanies} />
       {children}
     </div>
   );

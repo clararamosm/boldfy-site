@@ -1,18 +1,14 @@
 /**
  * Layout do /internal — wrapper das views CRM e Dashboard.
  *
- * Render:
- *   - Topbar com logo Boldfy + view switcher CRM | Dashboard + botão logout
- *   - Children (cada rota renderiza sua sub-nav e conteúdo)
- *
- * Acesso: protegido por proxy.ts. Esse layout assume que usuário já tá logado.
+ * Topbar e sub-navs são client components (usePathname) — assim a aba ativa
+ * sempre reflete a URL atual mesmo em navegação client-side.
  *
  * SEO: noindex/nofollow herdado de metadata aqui + bloqueio em robots.ts.
  */
 
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import Link from 'next/link';
 import { InternalTopbar } from '@/components/internal/topbar';
 import { CmdK } from '@/components/crm/cmd-k';
 import './internal.css';
@@ -27,23 +23,17 @@ export default async function InternalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Pega o pathname dos headers (set pelo proxy/Next) pra destacar view ativa
+  // Detecta página de login só pra omitir topbar (não precisa pro highlight)
   const h = await headers();
   const pathname = h.get('x-pathname') || '';
-  const activeView = pathname.startsWith('/internal/crm')
-    ? 'crm'
-    : pathname.startsWith('/internal/dashboard')
-      ? 'dashboard'
-      : null;
 
-  // Rota de login não renderiza topbar
   if (pathname.startsWith('/internal/login')) {
     return <div className="internal-root">{children}</div>;
   }
 
   return (
     <div className="internal-root">
-      <InternalTopbar activeView={activeView} />
+      <InternalTopbar />
       <main className="internal-main">{children}</main>
       <CmdK />
     </div>

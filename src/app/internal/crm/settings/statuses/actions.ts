@@ -180,6 +180,65 @@ export async function deleteStatus(id: string): Promise<ActionResult> {
   }
 }
 
+/**
+ * Adiciona pack de statuses B2B sugeridos pra Pessoas. Idempotent — só
+ * cria os que não existem ainda (compara por label LOWER).
+ *
+ * Pack:
+ *   - LinkedIn Lead (azul, score 5)   — lead captado via extensão LinkedIn
+ *   - Reunião marcada (roxo, sem threshold) — agendou demo, aguarda reunir
+ *   - Fechado (verde, terminal)        — virou cliente
+ *   - Perdido (cinza, terminal)        — não rolou
+ */
+export async function addSuggestedB2BPack(): Promise<ActionResult> {
+  const pack: Array<{ label: string; color: string; scoreThresholdMin: number | null; isTerminal: boolean }> = [
+    { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: 5, isTerminal: false },
+    { label: 'Reunião marcada', color: 'purple', scoreThresholdMin: null, isTerminal: false },
+    { label: 'Fechado', color: 'green', scoreThresholdMin: null, isTerminal: true },
+    { label: 'Perdido', color: 'gray', scoreThresholdMin: null, isTerminal: true },
+  ];
+
+  try {
+    const existing = await db
+      .select({ label: statuses.label })
+      .from(statuses)
+      .where(eq(statuses.kind, 'person'));
+
+    const existingLower = new Set(existing.map((s) => s.label.toLowerCase()));
+
+    const [maxRow] = await db
+      .select({ max: sql<number>`COALESCE(MAX(${statuses.sortOrder}), -1)::int` })
+      .from(statuses)
+      .where(eq(statuses.kind, 'person'));
+    let nextOrder = (maxRow?.max ?? -1) + 1;
+
+    const toAdd = pack.filter((p) => !existingLower.has(p.label.toLowerCase()));
+
+    if (toAdd.length === 0) {
+      return { ok: true };
+    }
+
+    await db.insert(statuses).values(
+      toAdd.map((p) => ({
+        kind: 'person' as const,
+        label: p.label,
+        color: p.color,
+        sortOrder: nextOrder++,
+        scoreThresholdMin: p.scoreThresholdMin,
+        isDefault: false,
+        isTerminal: p.isTerminal,
+      })),
+    );
+
+    invalidateStatusCache();
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/settings/statuses');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export async function reorderStatuses(kind: 'person' | 'company', orderedIds: string[]): Promise<ActionResult> {
   const k = KindSchema.safeParse(kind);
   if (!k.success) return { ok: false, error: 'Tipo inválido' };
