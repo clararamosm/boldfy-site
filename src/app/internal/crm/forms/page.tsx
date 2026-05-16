@@ -24,6 +24,12 @@ export type FormSubmission = {
   activityId: string;
   createdAt: Date;
   data: Record<string, unknown> | null;
+  /**
+   * Metadata da person — usado como fallback quando activity.data está vazio
+   * (caso clássico: leads importados do AC, onde os dados ricos do form ficaram
+   * em person.metadata.ac_custom_fields / form_data ao invés de activity.data).
+   */
+  personMetadata: Record<string, unknown> | null;
   person: { id: string; name: string; email: string } | null;
   company: { id: string; name: string } | null;
 };
@@ -38,6 +44,7 @@ async function getSubmissionsByForm(): Promise<Record<FormType, FormSubmission[]
       personId: people.id,
       personName: people.name,
       personEmail: people.email,
+      personMetadata: people.metadata,
       companyId: companies.id,
       companyName: companies.name,
     })
@@ -62,6 +69,7 @@ async function getSubmissionsByForm(): Promise<Record<FormType, FormSubmission[]
       activityId: row.activityId,
       createdAt: row.createdAt,
       data: row.data as Record<string, unknown> | null,
+      personMetadata: row.personMetadata as Record<string, unknown> | null,
       person: row.personId
         ? { id: row.personId, name: row.personName ?? '', email: row.personEmail ?? '' }
         : null,

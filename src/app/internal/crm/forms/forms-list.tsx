@@ -96,6 +96,13 @@ export function FormsList({ submissions }: { submissions: Record<FormType, FormS
     return String(v);
   }
 
+  /**
+   * Resolve o valor de uma célula com fallback em cascata. Necessário porque:
+   *   - Submissões REAIS dos forms têm tudo em activity.data
+   *   - Submissões IMPORTADAS do AC têm activity.data sintético (só {reconstructed:true})
+   *     e os dados ricos ficaram em person.metadata.{ac_custom_fields, form_data}
+   * Sem fallback, leads importados aparecem com tudo em branco.
+   */
   function getCellValue(sub: FormSubmission, col: FormConfig['columns'][number]): string {
     if (col.from === 'person') {
       if (!sub.person) return '—';
@@ -106,7 +113,37 @@ export function FormsList({ submissions }: { submissions: Record<FormType, FormS
       if (col.key === 'companyName') return sub.company?.name ?? '—';
       return '—';
     }
-    return formatValue(sub.data?.[col.key]);
+
+    // from === 'data' — tenta activity.data, depois person.metadata
+    const direct = sub.data?.[col.key];
+    if (direct !== undefined && direct !== null && direct !== '') return formatValue(direct);
+
+    const meta = sub.personMetadata ?? {};
+    const acFields = (meta as Record<string, unknown>)['ac_custom_fields'] as Record<string, unknown> | undefined;
+    const formData = (meta as Record<string, unknown>)['form_data'] as Record<string, unknown> | undefined;
+
+    // Aliases — campo na config → nomes possíveis no AC custom fields
+    const aliases: Record<string, string[]> = {
+      tipo_lead: ['tipo_lead', 'tipo_de_lead'],
+      newsletter_opt_in: ['newsletter_opt_in', 'newsletter'],
+      cargo: ['cargo', 'job_title'],
+      jobTitle: ['jobTitle', 'cargo', 'job_title'],
+      porte: ['porte', 'colaboradores', 'funcionarios'],
+      setor: ['setor', 'industry'],
+      intencao_uso: ['intencao_uso'],
+      utm_source: ['utm_source', 'utm_source_first'],
+      utm_campaign: ['utm_campaign', 'utm_campaign_first'],
+      objetivo_principal: ['objetivo_principal'],
+      como_conheceu: ['como_conheceu'],
+      observacoes: ['observacoes'],
+    };
+    const tryKeys = aliases[col.key] ?? [col.key];
+
+    for (const k of tryKeys) {
+      if (acFields && acFields[k] !== undefined && acFields[k] !== '') return formatValue(acFields[k]);
+      if (formData && formData[k] !== undefined && formData[k] !== '') return formatValue(formData[k]);
+    }
+    return '—';
   }
 
   return (

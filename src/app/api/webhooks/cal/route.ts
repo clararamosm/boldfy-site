@@ -12,7 +12,7 @@ import {
 } from '@/lib/folk';
 import { db, meetings, people, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 /**
  * Webhook receiver pro Cal.com.
@@ -187,10 +187,35 @@ export async function POST(request: NextRequest) {
       // CRM Boldfy (dual-write) — popula tabela meetings + activity cal_scheduled.
       // Failure não é crítica — Folk e AC já receberam.
       try {
-        const personRow = await db.select({ id: people.id })
+        // Match em 2 níveis pro Cal: email primário OU já em alternate_emails
+        // (caso anterior já tenha enriquecido). Quando achar, garante que o
+        // email do attendee fica em alternate_emails pra futuros matches Folk.
+        const emailLower = email.toLowerCase();
+        let personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata })
           .from(people)
-          .where(eq(people.email, email.toLowerCase()))
+          .where(eq(people.email, emailLower))
           .limit(1);
+
+        if (!personRow[0]) {
+          personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata })
+            .from(people)
+            .where(sql`${people.metadata}->'alternate_emails' @> ${JSON.stringify([emailLower])}::jsonb`)
+            .limit(1);
+        }
+
+        // Se o attendee email é diferente do email primário, registra como alternativo
+        if (personRow[0] && personRow[0].email !== emailLower) {
+          const meta = (personRow[0].metadata as Record<string, unknown> | null) ?? {};
+          const existing = Array.isArray(meta.alternate_emails) ? (meta.alternate_emails as string[]) : [];
+          if (!existing.includes(emailLower)) {
+            await db.update(people)
+              .set({
+                metadata: { ...meta, alternate_emails: [...existing, emailLower], cal_attendee_email: emailLower },
+                updatedAt: new Date(),
+              })
+              .where(eq(people.id, personRow[0].id));
+          }
+        }
 
         if (personRow[0] && payload.startTime) {
           // Upsert meeting por cal_event_id (uid)
