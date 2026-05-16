@@ -29,7 +29,6 @@ export function InternalTopbar() {
         </Link>
 
         <nav className="view-toggler" aria-label="Trocar entre CRM e Dashboard">
-          <div className={`toggler-indicator ${activeView}`} aria-hidden />
           <Link
             href="/internal/crm"
             className={`toggler-btn ${activeView === 'crm' ? 'active' : ''}`}
@@ -94,46 +93,32 @@ export function InternalTopbar() {
           flex-shrink: 0;
         }
 
-        /* === TOGGLER segmented com indicador deslizante === */
+        /* === TOGGLER segmented (abordagem simples sem indicator absoluto) === */
         .view-toggler {
-          position: relative;
           display: inline-flex;
           background: #F7EEFC;
           border-radius: 999px;
           padding: 4px;
-          gap: 0;
+          gap: 2px;
         }
-        .toggler-indicator {
-          position: absolute;
-          top: 4px;
-          bottom: 4px;
-          left: 4px;
-          width: calc(50% - 4px);
-          background: #FFFFFF;
-          border-radius: 999px;
-          box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08), 0 0 0 1px rgba(205, 80, 241, 0.08);
-          transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-          z-index: 0;
-        }
-        .toggler-indicator.crm { transform: translateX(0); }
-        .toggler-indicator.dashboard { transform: translateX(100%); }
         .toggler-btn {
-          position: relative;
-          z-index: 1;
           padding: 7px 22px;
           font-size: 13px;
           font-weight: 600;
           color: #9D85B3;
           text-decoration: none;
-          transition: color 0.2s ease;
+          transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
           border-radius: 999px;
-          min-width: 100px;
           text-align: center;
-          flex: 1;
           white-space: nowrap;
+          background: transparent;
         }
         .toggler-btn:hover { color: #5E2A67; }
-        .toggler-btn.active { color: #CD50F1; }
+        .toggler-btn.active {
+          background: #FFFFFF;
+          color: #CD50F1;
+          box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08), 0 0 0 1px rgba(205, 80, 241, 0.08);
+        }
 
         /* === RIGHT side compacto === */
         .topbar-right {
