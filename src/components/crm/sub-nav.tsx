@@ -23,6 +23,7 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
   const isPessoas = pathname === '/internal/crm';
   const isEmpresas = pathname.startsWith('/internal/crm/empresas');
   const isFeed = pathname.startsWith('/internal/crm/feed');
+  const isForms = pathname.startsWith('/internal/crm/forms');
   const isSettings = pathname.startsWith('/internal/crm/settings');
 
   return (
@@ -49,6 +50,13 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
         aria-current={isFeed ? 'page' : undefined}
       >
         Feed
+      </Link>
+      <Link
+        href="/internal/crm/forms"
+        className={`crm-subnav-link ${isForms ? 'active' : ''}`}
+        aria-current={isForms ? 'page' : undefined}
+      >
+        Formulários
       </Link>
       <Link
         href="/internal/crm/settings/statuses"
