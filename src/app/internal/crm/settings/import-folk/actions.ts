@@ -1,67 +1,123 @@
 /**
- * Import inicial do Folk pro nosso CRM.
+ * Import do Folk via UPLOAD CSV.
  *
- * Estratégia:
- *  - Lê Companies do grupo Prospects do Folk (paginado) → upsert por nome
- *  - Lê Persons do grupo Leads do Folk → match com Company se tiver, upsert por email
- *  - Status do Folk vence (Clara disse que tá mais atualizado lá)
- *  - Idempotent: match por email/nome, não duplica
+ * Aceita os 2 CSVs que o Folk exporta:
+ *   - people.csv (do grupo Leads)
+ *   - companies.csv (do grupo Prospects)
  *
- * Folk vai ser desativado em fase 2 — esse código é descartável junto.
+ * Aplica:
+ *   - INSERT/UPDATE Companies match por nome lower
+ *   - UPDATE Persons match por email
+ *   - Status do Folk vence
+ *   - Outros campos só preenche se vazios
+ *   - Vincula Person → Company
+ *
+ * Idempotent. Não toca em leads que estão só no AC (não no Folk).
  */
 
 'use server';
 
-import {
-  listAllFolkPersons,
-  listAllFolkCompanies,
-  getFolkLeadsGroupId,
-  getFolkProspectsGroupId,
-  isFolkConfigured,
-  type FolkPersonRaw,
-  type FolkCompanyRaw,
-} from '@/lib/folk';
-import { upsertPerson, upsertCompany, logActivity } from '@/lib/crm';
 import { db, people, companies, statuses } from '@/db';
 import { eq, and, sql } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 
-type Result = {
-  ok: true;
-  importedPeople: number;
-  updatedPeople: number;
-  importedCompanies: number;
-  updatedCompanies: number;
-  errors: number;
-} | { ok: false; error: string };
-
-const SLEEP_MS = 200;
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+type Result =
+  | {
+      ok: true;
+      companies: { inserted: number; updated: number; errors: number };
+      persons: { updated: number; notFound: number; errors: number };
+    }
+  | { ok: false; error: string };
 
 /* -------------------------------------------------------------------------- */
-/*  Extract helpers — Folk armazena custom fields aninhados por groupId       */
+/*  CSV parser manual — lida com quoted fields + commas dentro de aspas       */
 /* -------------------------------------------------------------------------- */
 
-function extractCustomField(
-  obj: FolkPersonRaw | FolkCompanyRaw,
-  groupId: string | undefined,
-  field: string,
-): string | undefined {
-  if (!groupId) return undefined;
-  const groupValues = obj.customFieldValues?.[groupId];
-  if (!groupValues) return undefined;
-  const value = groupValues[field];
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object' && value !== null && 'name' in value) {
-    return (value as { name: string }).name;
+function parseCSV(text: string): Record<string, string>[] {
+  const rows: string[][] = [];
+  let current: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          // Escaped quote
+          field += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      field += ch;
+      i++;
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+      } else if (ch === ',') {
+        current.push(field);
+        field = '';
+        i++;
+      } else if (ch === '\n' || ch === '\r') {
+        current.push(field);
+        field = '';
+        if (current.length > 1 || current[0] !== '') rows.push(current);
+        current = [];
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        i++;
+      } else {
+        field += ch;
+        i++;
+      }
+    }
   }
-  return undefined;
+  if (field !== '' || current.length > 0) {
+    current.push(field);
+    rows.push(current);
+  }
+
+  if (rows.length === 0) return [];
+  const headers = rows[0];
+  return rows.slice(1).map((row) => {
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => {
+      obj[h] = (row[idx] ?? '').trim();
+    });
+    return obj;
+  });
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Mappers Folk → nosso CRM                                                   */
+/*  Status mapping Folk → nosso CRM                                            */
 /* -------------------------------------------------------------------------- */
 
-async function getStatusIdByLabel(kind: 'person' | 'company', label: string): Promise<string | null> {
+const PERSON_STATUS_MAP: Record<string, string> = {
+  Ativo: 'Ativo',
+  Lead: 'Lead',
+  Quente: 'Quente',
+  Reunião: 'Reunião marcada',
+  'Reunião marcada': 'Reunião marcada',
+  'Em andamento': 'Em andamento',
+  Fechado: 'Fechado',
+  Perdido: 'Perdido',
+};
+
+const COMPANY_STATUS_MAP: Record<string, string> = {
+  '': 'No status',
+  'No status': 'No status',
+  'Quero prospectar': 'Quero prospectar',
+  'Reunião marcada': 'Reunião marcada',
+  'Em andamento': 'Em andamento',
+  Fechado: 'Fechado',
+  Perdido: 'Perdido',
+};
+
+async function getStatusId(kind: 'person' | 'company', label: string): Promise<string | null> {
   const rows = await db
     .select({ id: statuses.id })
     .from(statuses)
@@ -71,173 +127,154 @@ async function getStatusIdByLabel(kind: 'person' | 'company', label: string): Pr
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Import Companies — primeiro, pra ter o ID disponível pros Persons         */
-/* -------------------------------------------------------------------------- */
-
-async function importCompanies(prospectsGroupId: string | undefined): Promise<{ imported: number; updated: number; errors: number; idMap: Map<string, string> }> {
-  let imported = 0;
-  let updated = 0;
-  let errors = 0;
-  const idMap = new Map<string, string>(); // folkCompanyId → nosso companyId
-
-  for await (const batch of listAllFolkCompanies()) {
-    for (const c of batch) {
-      try {
-        const statusLabel = extractCustomField(c, prospectsGroupId, 'Status');
-        const origem = extractCustomField(c, prospectsGroupId, 'origem');
-        const porte = extractCustomField(c, prospectsGroupId, 'porte');
-
-        // Upsert company (match por nome lower)
-        const result = await upsertCompany({
-          name: c.name,
-          industry: c.industry,
-          size: porte,
-        });
-
-        if (!result.ok) {
-          errors++;
-          continue;
-        }
-
-        idMap.set(c.id, result.data.id);
-
-        // Atualiza status se vier do Folk
-        if (statusLabel) {
-          const statusId = await getStatusIdByLabel('company', statusLabel);
-          if (statusId) {
-            await db
-              .update(companies)
-              .set({ statusId, updatedAt: new Date() })
-              .where(eq(companies.id, result.data.id));
-          }
-        }
-
-        // Heurística pra contar imported vs updated: se created muito recentemente, é novo
-        const isNew = (Date.now() - new Date(result.data.createdAt).getTime()) < 60_000;
-        if (isNew) imported++;
-        else updated++;
-      } catch (err) {
-        console.error('[import-folk] company error:', c.name, err);
-        errors++;
-      }
-    }
-    await sleep(SLEEP_MS);
-  }
-
-  return { imported, updated, errors, idMap };
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Import Persons — depois, linkando com companies já importadas             */
-/* -------------------------------------------------------------------------- */
-
-async function importPersons(
-  leadsGroupId: string | undefined,
-  companyIdMap: Map<string, string>,
-): Promise<{ imported: number; updated: number; errors: number }> {
-  let imported = 0;
-  let updated = 0;
-  let errors = 0;
-
-  for await (const batch of listAllFolkPersons()) {
-    for (const p of batch) {
-      try {
-        const email = p.emails?.[0]?.trim().toLowerCase();
-        if (!email) {
-          errors++;
-          continue;
-        }
-
-        const statusLabel = extractCustomField(p, leadsGroupId, 'Status');
-        const linkedinUrl = extractCustomField(p, leadsGroupId, 'linkedin_url');
-
-        // Resolve companyId: pega primeira company do Folk, mapeia pra nossa
-        const folkCompanyId = p.companies?.[0]?.id;
-        const ourCompanyId = folkCompanyId ? companyIdMap.get(folkCompanyId) : undefined;
-
-        // Verifica se já existe pra reportar como updated
-        const existing = await db
-          .select({ id: people.id, createdAt: people.createdAt })
-          .from(people)
-          .where(eq(people.email, email))
-          .limit(1);
-        const wasExisting = !!existing[0];
-
-        const result = await upsertPerson({
-          name: `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || email,
-          email,
-          phone: p.phones?.[0],
-          jobTitle: p.jobTitle,
-          linkedinUrl,
-          sourceChannel: 'manual',
-          sourceMethod: 'imported_folk',
-        }, ourCompanyId);
-
-        if (!result.ok) {
-          errors++;
-          continue;
-        }
-
-        // Folk vence em conflito: atualiza status sempre que vier
-        if (statusLabel) {
-          const statusId = await getStatusIdByLabel('person', statusLabel);
-          if (statusId) {
-            await db
-              .update(people)
-              .set({ statusId, updatedAt: new Date() })
-              .where(eq(people.id, result.data.id));
-          }
-        }
-
-        // Activity sintética de importação
-        await logActivity({
-          personId: result.data.id,
-          type: 'imported_from_folk',
-          weight: 0,
-          source: 'system',
-          data: { folk_person_id: p.id, folk_status: statusLabel },
-        });
-
-        if (wasExisting) updated++;
-        else imported++;
-      } catch (err) {
-        console.error('[import-folk] person error:', err);
-        errors++;
-      }
-    }
-    await sleep(SLEEP_MS);
-  }
-
-  return { imported, updated, errors };
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Main entry                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export async function importFromFolk(): Promise<Result> {
-  if (!isFolkConfigured()) {
-    return { ok: false, error: 'Folk não configurado (FOLK_API_KEY, FOLK_GROUP_LEADS_ID, FOLK_GROUP_PROSPECTS_ID ausentes)' };
+export async function importFolkCSV(formData: FormData): Promise<Result> {
+  const peopleFile = formData.get('people') as File | null;
+  const companiesFile = formData.get('companies') as File | null;
+
+  if (!peopleFile && !companiesFile) {
+    return { ok: false, error: 'Selecione ao menos um arquivo CSV.' };
   }
 
+  const companiesResult = { inserted: 0, updated: 0, errors: 0 };
+  const personsResult = { updated: 0, notFound: 0, errors: 0 };
+
   try {
-    const prospectsGroupId = getFolkProspectsGroupId();
-    const leadsGroupId = getFolkLeadsGroupId();
+    /* ---------- Companies primeiro (pra ter ID disponível pros Persons) ----- */
+    if (companiesFile) {
+      const text = await companiesFile.text();
+      const rows = parseCSV(text);
 
-    // 1) Companies primeiro
-    const companyResult = await importCompanies(prospectsGroupId);
+      for (const row of rows) {
+        try {
+          const name = (row['name'] || '').trim();
+          if (!name) continue;
+          const statusLabel = COMPANY_STATUS_MAP[row['Status'] || ''] || 'No status';
+          const statusId = await getStatusId('company', statusLabel);
+          const industry = row['industry']?.trim() || null;
+          const size = row['employeeRange']?.trim() || null;
+          const website = row['favoriteUrl']?.trim() || null;
+          const description = row['description']?.trim() || null;
 
-    // 2) Persons depois, usando idMap pra linkar
-    const personResult = await importPersons(leadsGroupId, companyResult.idMap);
+          // Tenta update primeiro
+          const existing = await db
+            .select({ id: companies.id })
+            .from(companies)
+            .where(sql`LOWER(${companies.name}) = LOWER(${name})`)
+            .limit(1);
 
-    return {
-      ok: true,
-      importedPeople: personResult.imported,
-      updatedPeople: personResult.updated,
-      importedCompanies: companyResult.imported,
-      updatedCompanies: companyResult.updated,
-      errors: companyResult.errors + personResult.errors,
-    };
+          if (existing[0]) {
+            await db
+              .update(companies)
+              .set({
+                statusId: statusId ?? null,
+                industry: sql`COALESCE(${companies.industry}, ${industry})`,
+                size: sql`COALESCE(${companies.size}, ${size})`,
+                website: sql`COALESCE(${companies.website}, ${website})`,
+                description: sql`COALESCE(${companies.description}, ${description})`,
+                updatedAt: new Date(),
+              })
+              .where(eq(companies.id, existing[0].id));
+            companiesResult.updated++;
+          } else {
+            await db.insert(companies).values({
+              name,
+              statusId: statusId ?? null,
+              industry,
+              size,
+              website,
+              description,
+              firstTouchAt: new Date(),
+            });
+            companiesResult.inserted++;
+          }
+        } catch (err) {
+          console.error('[importFolkCSV] company error:', err);
+          companiesResult.errors++;
+        }
+      }
+    }
+
+    /* ---------- Persons (UPDATE apenas — quem está só no AC fica) ---------- */
+    if (peopleFile) {
+      const text = await peopleFile.text();
+      const rows = parseCSV(text);
+
+      for (const row of rows) {
+        try {
+          const email = (row['favoriteEmail'] || row['emails']?.split(',')[0] || '').trim().toLowerCase();
+          if (!email) continue;
+
+          const statusLabel = PERSON_STATUS_MAP[row['Status'] || ''] || 'Ativo';
+          const statusId = await getStatusId('person', statusLabel);
+          const jobTitle = row['jobTitle']?.trim() || null;
+          const phone = (row['favoritePhone'] || row['phones']?.split(',')[0] || '').trim() || null;
+          const linkedinUrl = row['favoriteUrl']?.trim() || null;
+          const description = row['description']?.trim() || null;
+          const companyName = row['companies']?.trim() || null;
+          const channel = row['Channel']?.trim().toLowerCase() || null;
+          const closedDate = row['Closed date']?.trim() || null;
+          const dealValue = row['Deal value']?.trim() || null;
+          const lostReason = row['Lost reason']?.trim() || null;
+          const nextSteps = row['Next steps']?.trim() || null;
+
+          // Verifica se person existe
+          const existing = await db
+            .select({ id: people.id, metadata: people.metadata })
+            .from(people)
+            .where(eq(people.email, email))
+            .limit(1);
+
+          if (!existing[0]) {
+            personsResult.notFound++;
+            continue;
+          }
+
+          // Resolve companyId se tiver
+          let companyId: string | null = null;
+          if (companyName) {
+            const c = await db
+              .select({ id: companies.id })
+              .from(companies)
+              .where(sql`LOWER(${companies.name}) = LOWER(${companyName})`)
+              .limit(1);
+            companyId = c[0]?.id ?? null;
+          }
+
+          // Merge metadata Folk
+          const existingMeta = (existing[0].metadata as Record<string, unknown> | null) ?? {};
+          const newMeta = { ...existingMeta };
+          if (channel) newMeta.folk_channel = channel;
+          if (closedDate) newMeta.folk_closed_date = closedDate;
+          if (dealValue) newMeta.folk_deal_value = dealValue;
+          if (lostReason) newMeta.folk_lost_reason = lostReason;
+          if (nextSteps) newMeta.folk_next_steps = nextSteps;
+
+          const updates: Record<string, unknown> = {
+            statusId: statusId ?? null,
+            metadata: newMeta,
+            updatedAt: new Date(),
+          };
+          if (jobTitle) updates.jobTitle = sql`COALESCE(NULLIF(${people.jobTitle}, ''), ${jobTitle})`;
+          if (phone) updates.phone = sql`COALESCE(NULLIF(${people.phone}, ''), ${phone})`;
+          if (linkedinUrl) updates.linkedinUrl = sql`COALESCE(NULLIF(${people.linkedinUrl}, ''), ${linkedinUrl})`;
+          if (description) updates.description = sql`COALESCE(NULLIF(${people.description}, ''), ${description})`;
+          if (companyId) updates.companyId = sql`COALESCE(${people.companyId}, ${companyId})`;
+
+          await db.update(people).set(updates).where(eq(people.id, existing[0].id));
+          personsResult.updated++;
+        } catch (err) {
+          console.error('[importFolkCSV] person error:', err);
+          personsResult.errors++;
+        }
+      }
+    }
+
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/empresas');
+    return { ok: true, companies: companiesResult, persons: personsResult };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
