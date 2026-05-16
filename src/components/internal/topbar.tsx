@@ -93,31 +93,37 @@ export function InternalTopbar() {
           flex-shrink: 0;
         }
 
-        /* === TOGGLER segmented (abordagem simples sem indicator absoluto) === */
+        /* === TOGGLER (botões separados, sem container fancy) === */
         .view-toggler {
           display: inline-flex;
-          background: #F7EEFC;
-          border-radius: 999px;
-          padding: 4px;
-          gap: 2px;
+          gap: 6px;
         }
         .toggler-btn {
-          padding: 7px 22px;
+          padding: 8px 18px;
           font-size: 13px;
           font-weight: 600;
           color: #9D85B3;
           text-decoration: none;
-          transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-          border-radius: 999px;
+          transition: all 0.15s ease;
+          border-radius: 8px;
           text-align: center;
           white-space: nowrap;
-          background: transparent;
+          background: #F7EEFC;
+          border: 1px solid transparent;
         }
-        .toggler-btn:hover { color: #5E2A67; }
+        .toggler-btn:hover {
+          color: #5E2A67;
+          background: rgba(205, 80, 241, 0.08);
+        }
         .toggler-btn.active {
-          background: #FFFFFF;
-          color: #CD50F1;
-          box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08), 0 0 0 1px rgba(205, 80, 241, 0.08);
+          background: #CD50F1;
+          color: #FFFFFF;
+          border-color: #CD50F1;
+          box-shadow: 0 4px 12px rgba(205, 80, 241, 0.25);
+        }
+        .toggler-btn.active:hover {
+          background: #9840AD;
+          color: #FFFFFF;
         }
 
         /* === RIGHT side compacto === */
