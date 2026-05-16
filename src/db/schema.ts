@@ -257,6 +257,31 @@ export const extensionTokens = pgTable('extension_tokens', {
 });
 
 /* -------------------------------------------------------------------------- */
+/*  google_oauth_tokens — auth de usuário pra GA4 + Search Console            */
+/* -------------------------------------------------------------------------- */
+/**
+ * Substitui Service Account pra ler GA4/SC. O GA4 admin via UI bloqueia SAs
+ * novas (bug conhecido do Google), então o dashboard usa OAuth de usuário:
+ *   Clara faz login uma vez em /internal/dashboard/connect-google,
+ *   Google retorna refresh_token, salvamos aqui,
+ *   ga4.ts e search-console.ts puxam token daqui e refrescam quando expira.
+ *
+ * Como é single-user (só Clara acessa o /internal), basta UMA linha aqui.
+ * Pra suportar multi-user no futuro, vincula a user id.
+ */
+
+export const googleOauthTokens = pgTable('google_oauth_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  scopes: text('scopes').array().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
 /*  Relations                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -328,3 +353,5 @@ export type ExtensionToken = typeof extensionTokens.$inferSelect;
 export type NewExtensionToken = typeof extensionTokens.$inferInsert;
 export type PrArticle = typeof prArticles.$inferSelect;
 export type NewPrArticle = typeof prArticles.$inferInsert;
+export type GoogleOauthToken = typeof googleOauthTokens.$inferSelect;
+export type NewGoogleOauthToken = typeof googleOauthTokens.$inferInsert;

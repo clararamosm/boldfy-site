@@ -34,12 +34,34 @@ function getSiteUrl(): string | null {
 }
 
 export function isSearchConsoleConfigured(): boolean {
-  return !!getServiceAccount() && !!getSiteUrl();
+  if (!getSiteUrl()) return false;
+  if (getServiceAccount()) return true;
+  return !!process.env.GOOGLE_OAUTH_CLIENT_ID;
+}
+
+export async function isSearchConsoleAuthenticated(): Promise<boolean> {
+  if (!getSiteUrl()) return false;
+  try {
+    const token = await getAccessToken();
+    return !!token;
+  } catch {
+    return false;
+  }
 }
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string | null> {
+  // 1) Preferir OAuth de usuário (SC UI bloqueia SA, ver lib/google-oauth.ts)
+  try {
+    const { getValidAccessToken } = await import('./google-oauth');
+    const oauthToken = await getValidAccessToken();
+    if (oauthToken) return oauthToken;
+  } catch (err) {
+    console.warn('[search-console] OAuth token lookup failed, fallback to SA:', err);
+  }
+
+  // 2) Fallback Service Account
   const sa = getServiceAccount();
   if (!sa) return null;
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) return cachedToken.token;

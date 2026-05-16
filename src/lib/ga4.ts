@@ -42,8 +42,30 @@ function getPropertyId(): string | null {
   return process.env.GA4_PROPERTY_ID || null;
 }
 
+/**
+ * Síncrono: só sabe se tem property ID + alguma config base (SA ou OAuth client).
+ * Pra check completo de auth use `isGa4Authenticated()` (assíncrono, checa DB).
+ */
 export function isGa4Configured(): boolean {
-  return !!getServiceAccount() && !!getPropertyId();
+  if (!getPropertyId()) return false;
+  if (getServiceAccount()) return true;
+  // OAuth: basta ter client id configurado (token vem do DB, checado em runtime)
+  return !!process.env.GOOGLE_OAUTH_CLIENT_ID;
+}
+
+/**
+ * Checa se realmente tem auth válido (OAuth token no DB ou SA com creds).
+ * Use nas pages pra distinguir "tá tudo configurado mas usuário não conectou"
+ * de "tá tudo conectado, pode buscar dados".
+ */
+export async function isGa4Authenticated(): Promise<boolean> {
+  if (!getPropertyId()) return false;
+  try {
+    const token = await getAccessToken();
+    return !!token;
+  } catch {
+    return false;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -53,6 +75,18 @@ export function isGa4Configured(): boolean {
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string | null> {
+  // 1) Preferir OAuth de usuário (GA4 admin UI bloqueia adicionar SA, então
+  // o caminho que funciona em prod é via OAuth da Clara, salvo no DB).
+  try {
+    const { getValidAccessToken } = await import('./google-oauth');
+    const oauthToken = await getValidAccessToken();
+    if (oauthToken) return oauthToken;
+  } catch (err) {
+    console.warn('[ga4] OAuth token lookup failed, fallback to SA:', err);
+  }
+
+  // 2) Fallback Service Account (legado — fica aqui caso a Clara dê acesso
+  // pra SA no futuro via API/CLI).
   const sa = getServiceAccount();
   if (!sa) return null;
 
