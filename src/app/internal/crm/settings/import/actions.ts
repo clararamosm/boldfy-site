@@ -25,6 +25,8 @@ import {
   getContactTags,
   getContactEmailEvents,
   getContactPageViews,
+  getContactNotes,
+  parseFormNote,
 } from '@/lib/activecampaign';
 import { upsertPerson, upsertCompany, logActivity, weightForActivity } from '@/lib/crm';
 import { db, people } from '@/db';
@@ -95,11 +97,21 @@ export async function importFromAC(): Promise<Result> {
           }
 
           // Agora puxa o resto (mais chamadas, mas só pros B2B)
-          const [fields, emailEvents, pageViews] = await Promise.all([
+          const [fields, emailEvents, pageViews, notes] = await Promise.all([
             getContactFieldValues(c.id),
             getContactEmailEvents(c.id),
             getContactPageViews(c.id),
+            getContactNotes(c.id),
           ]);
+
+          // Parse das notas — extrai Intenção, Empresa, Opt-in newsletter, Origem
+          // dos textos gerados pelos forms. Merge em ordem: nota mais antiga primeiro
+          // (a mais recente sobrescreve campos repetidos).
+          const formDataFromNotes: Record<string, string> = {};
+          const sortedNotes = [...notes].sort((a, b) => a.cdate.localeCompare(b.cdate));
+          for (const n of sortedNotes) {
+            Object.assign(formDataFromNotes, parseFormNote(n.note));
+          }
 
           // Resolve company se tiver no AC custom fields
           let companyId: string | undefined;
@@ -156,6 +168,19 @@ export async function importFromAC(): Promise<Result> {
             continue;
           }
 
+          // Merge form data: custom fields primeiro, notas por cima (notas têm tudo
+          // que o form pediu — Intenção, Newsletter opt-in, Origem). Notas vencem
+          // porque o form antigo não populava custom fields.
+          const mergedFormData = {
+            objetivo_principal: fields['objetivo_principal'] ?? formDataFromNotes['objetivo_principal'] ?? null,
+            como_conheceu: fields['como_conheceu'] ?? formDataFromNotes['como_conheceu'] ?? null,
+            intencao_uso: fields['intencao_uso'] ?? formDataFromNotes['intencao'] ?? formDataFromNotes['intencao_uso'] ?? null,
+            tipo_de_lead: fields['tipo_de_lead'] ?? formDataFromNotes['tipo_de_lead'] ?? null,
+            newsletter_opt_in: fields['newsletter_opt_in'] ?? formDataFromNotes['opt_in_newsletter'] ?? formDataFromNotes['newsletter_opt_in'] ?? null,
+            observacoes: fields['observacoes'] ?? formDataFromNotes['observacoes'] ?? null,
+            origem_lp: formDataFromNotes['origem'] ?? null,
+          };
+
           // Resetar score pra recalcular do zero (substituir = true)
           await db
             .update(people)
@@ -163,16 +188,12 @@ export async function importFromAC(): Promise<Result> {
               acTags: tags,
               metadata: {
                 ac_custom_fields: fields,
-                form_data: {
-                  objetivo_principal: fields['objetivo_principal'],
-                  como_conheceu: fields['como_conheceu'],
-                  intencao_uso: fields['intencao_uso'],
-                  tipo_de_lead: fields['tipo_de_lead'],
-                  observacoes: fields['observacoes'],
-                },
+                form_data: mergedFormData,
+                form_notes_raw: sortedNotes.map((n) => ({ id: n.id, cdate: n.cdate, note: n.note })),
                 imported_from: {
                   ac_contact_id: c.id,
                   ac_imported_at: new Date().toISOString(),
+                  notes_count: sortedNotes.length,
                 },
               } as Record<string, unknown>,
               leadScore: 0, // reset pra recalcular via activities

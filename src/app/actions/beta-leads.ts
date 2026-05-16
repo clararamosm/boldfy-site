@@ -56,6 +56,10 @@ export async function sendBetaLeadToNotion(
         setor: input.setor,
         objetivo_principal: input.objetivoPrincipal,
         como_conheceu: input.comoConheceu,
+        // Beta é form 100% B2B
+        tipo_de_lead: 'ICP B2B',
+        intencao_uso: 'marca-empresa',
+        ...(input.observacoes ? { observacoes: input.observacoes } : {}),
         // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
         ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
         ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),

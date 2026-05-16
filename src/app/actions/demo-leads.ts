@@ -58,6 +58,9 @@ export async function sendDemoLeadToNotion(
         empresa: input.empresa,
         cargo: input.cargo,
         porte: input.funcionarios,
+        // Demo é form 100% B2B por gate de UI — marca explicitamente
+        tipo_de_lead: 'ICP B2B',
+        intencao_uso: 'marca-empresa',
         // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
         ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
         ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),

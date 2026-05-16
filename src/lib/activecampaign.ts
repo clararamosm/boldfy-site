@@ -89,6 +89,19 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
   utm_source_first: { title: 'UTM Source (1º toque)', type: 'text' },
   utm_medium_first: { title: 'UTM Medium (1º toque)', type: 'text' },
   utm_campaign_first: { title: 'UTM Campaign (1º toque)', type: 'text' },
+  /**
+   * Campos que antes só viviam nas notas geradas pelos forms. Hoje viram
+   * custom fields estruturados — populados em todos os submits e expostos
+   * direto na aba Formulários do CRM (sem precisar de parser de nota).
+   *
+   * `intencao_uso`: marca-empresa | desenvolver-pessoal | criar-publico (etc)
+   * `newsletter_opt_in`: "SIM" | "NÃO"
+   * `como_conheceu`: texto livre (LinkedIn, indicação, busca, etc)
+   * `observacoes`: textarea livre (form Beta tem este)
+   */
+  intencao_uso: { title: 'Intenção de uso', type: 'text' },
+  newsletter_opt_in: { title: 'Newsletter opt-in', type: 'text' },
+  observacoes: { title: 'Observações', type: 'textarea' },
 };
 
 // Cache em memória (survive hot module reloads dentro da mesma lambda execution)
@@ -731,6 +744,164 @@ async function setContactFields(
 /* -------------------------------------------------------------------------- */
 /*  Notes (attach proposal details to contact)                                 */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Lista todas as notas de um contato.
+ * Endpoint: GET /api/3/contacts/{id}/notes
+ *
+ * IMPORTANTE: o AC retorna a relação como `notes` quando você bate no path
+ * /contacts/{id}/notes (relação inversa do reltype=Subscriber).
+ *
+ * Usado pra extrair dados do form que foram salvos em notas (Intenção,
+ * Newsletter opt-in, Origem) — esses não viraram custom fields nos forms antigos.
+ */
+export type ContactNote = {
+  id: string;
+  note: string;
+  cdate: string; // ISO timestamp
+};
+
+export async function getContactNotes(contactId: string): Promise<ContactNote[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  try {
+    const res = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/notes?limit=100`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { notes?: Array<{ id: string; note: string; cdate: string }> };
+    return (data.notes ?? []).map((n) => ({ id: n.id, note: n.note, cdate: n.cdate }));
+  } catch (err) {
+    console.error('[activecampaign] getContactNotes failed:', err);
+    return [];
+  }
+}
+
+/**
+ * Parser das notas geradas automaticamente pelos forms do site.
+ * Formato típico:
+ *   Download do Report Algoritmo LinkedIn 2026
+ *   Nome: Waldo Lima
+ *   Email: waldo@goalfy.com.br
+ *   Intenção: Marca da empresa onde trabalha
+ *   Empresa: tecnologia
+ *   Opt-in newsletter: SIM
+ *   — Tracking —
+ *   Origem: LP Algoritmo LinkedIn
+ *   utm_source: linkedin
+ *   ...
+ *
+ * Retorna um dict com keys normalizadas (intencao, opt_in_newsletter, origem, etc).
+ */
+export function parseFormNote(noteText: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const lines = noteText.split('\n');
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('—') || line.startsWith('-')) continue;
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+    const rawKey = line.slice(0, colonIdx).trim();
+    const value = line.slice(colonIdx + 1).trim();
+    if (!value) continue;
+    // Normaliza key: lowercase, remove acentos, espaços → underscore
+    const key = rawKey
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    if (key) result[key] = value;
+  }
+  return result;
+}
+
+/**
+ * Cria um custom field no AC (Subscriber). Idempotent: se já existir um campo
+ * com o mesmo perstag, retorna o ID dele.
+ *
+ * Usado pra criar Intenção de uso, Como conheceu, Newsletter opt-in,
+ * Observações — esses campos eram salvos em nota e agora viram custom field
+ * pros próximos leads.
+ *
+ * type: 'text' (single line), 'textarea', 'dropdown', 'checkbox'
+ */
+export async function createCustomFieldIfMissing(args: {
+  perstag: string;
+  title: string;
+  type?: 'text' | 'textarea' | 'dropdown' | 'checkbox';
+}): Promise<string | null> {
+  if (!AC_API_URL || !AC_API_KEY) return null;
+  const { perstag, title, type = 'text' } = args;
+
+  try {
+    // 1) Checa se já existe
+    const existing = await fetch(`${AC_API_URL}/api/3/fields?limit=100`, { headers: acHeaders() });
+    if (existing.ok) {
+      const data = (await existing.json()) as { fields?: Array<{ id: string; perstag: string }> };
+      const found = (data.fields ?? []).find((f) => f.perstag.toLowerCase() === perstag.toLowerCase());
+      if (found) return found.id;
+    }
+
+    // 2) Cria
+    const res = await fetch(`${AC_API_URL}/api/3/fields`, {
+      method: 'POST',
+      headers: acHeaders(),
+      body: JSON.stringify({
+        field: {
+          type,
+          title,
+          perstag: perstag.toUpperCase(),
+          visible: 1,
+        },
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      console.error('[activecampaign] createCustomField failed:', res.status, txt);
+      return null;
+    }
+    const data = (await res.json()) as { field?: { id: string } };
+    return data.field?.id ?? null;
+  } catch (err) {
+    console.error('[activecampaign] createCustomField error:', err);
+    return null;
+  }
+}
+
+/**
+ * Seta o valor de um custom field pra um contato. Por perstag (mais legível
+ * que ID). Resolve perstag → fieldId internamente.
+ */
+export async function setContactFieldValue(args: {
+  contactId: string;
+  perstag: string;
+  value: string;
+}): Promise<boolean> {
+  if (!AC_API_URL || !AC_API_KEY) return false;
+  const { contactId, perstag, value } = args;
+  try {
+    const fieldsRes = await fetch(`${AC_API_URL}/api/3/fields?limit=100`, { headers: acHeaders() });
+    if (!fieldsRes.ok) return false;
+    const fieldsData = (await fieldsRes.json()) as { fields?: Array<{ id: string; perstag: string }> };
+    const field = (fieldsData.fields ?? []).find((f) => f.perstag.toLowerCase() === perstag.toLowerCase());
+    if (!field) {
+      console.warn('[activecampaign] setContactFieldValue: field not found:', perstag);
+      return false;
+    }
+    const res = await fetch(`${AC_API_URL}/api/3/fieldValues`, {
+      method: 'POST',
+      headers: acHeaders(),
+      body: JSON.stringify({
+        fieldValue: { contact: contactId, field: field.id, value },
+      }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('[activecampaign] setContactFieldValue error:', err);
+    return false;
+  }
+}
 
 /**
  * Adds a note to a contact with the proposal summary.

@@ -63,6 +63,7 @@ const FORMS: FormConfig[] = [
       { key: 'intencao_uso', label: 'Intenção de uso', from: 'data' },
       { key: 'tipo_lead', label: 'Tipo lead', from: 'data' },
       { key: 'newsletter_opt_in', label: 'Newsletter', from: 'data' },
+      { key: 'origem', label: 'Origem', from: 'data' },
       { key: 'utm_source', label: 'utm_source', from: 'data' },
       { key: 'utm_campaign', label: 'utm_campaign', from: 'data' },
     ],
@@ -122,20 +123,23 @@ export function FormsList({ submissions }: { submissions: Record<FormType, FormS
     const acFields = (meta as Record<string, unknown>)['ac_custom_fields'] as Record<string, unknown> | undefined;
     const formData = (meta as Record<string, unknown>)['form_data'] as Record<string, unknown> | undefined;
 
-    // Aliases — campo na config → nomes possíveis no AC custom fields
+    // Aliases — campo na config → nomes possíveis no AC custom fields ou form_data
+    // (form_data inclui o que o parser de nota extrai: intencao, opt_in_newsletter, origem)
     const aliases: Record<string, string[]> = {
       tipo_lead: ['tipo_lead', 'tipo_de_lead'],
-      newsletter_opt_in: ['newsletter_opt_in', 'newsletter'],
+      newsletter_opt_in: ['newsletter_opt_in', 'newsletter', 'opt_in_newsletter'],
       cargo: ['cargo', 'job_title'],
       jobTitle: ['jobTitle', 'cargo', 'job_title'],
       porte: ['porte', 'colaboradores', 'funcionarios'],
       setor: ['setor', 'industry'],
-      intencao_uso: ['intencao_uso'],
+      intencao_uso: ['intencao_uso', 'intencao'],
       utm_source: ['utm_source', 'utm_source_first'],
+      utm_medium: ['utm_medium', 'utm_medium_first'],
       utm_campaign: ['utm_campaign', 'utm_campaign_first'],
       objetivo_principal: ['objetivo_principal'],
       como_conheceu: ['como_conheceu'],
       observacoes: ['observacoes'],
+      origem: ['origem', 'origem_lp'],
     };
     const tryKeys = aliases[col.key] ?? [col.key];
 

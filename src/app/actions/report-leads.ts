@@ -109,6 +109,12 @@ export async function sendReportLead(
         ...(empresaInformada ? { empresa: empresaInformada } : {}),
         // Classificação do lead (gate da cadência via If/Else)
         ...(tipoLead ? { tipo_de_lead: tipoLead } : {}),
+        // Intenção declarada no form (marca-empresa / desenvolver-pessoal / criar-publico).
+        // É a fonte do tipoLead derivado, mas a gente guarda o valor cru também
+        // pra ser usado em segmentação fina.
+        ...(input.intencaoUso ? { intencao_uso: input.intencaoUso } : {}),
+        // Newsletter opt-in (SIM/NÃO) — antes só ia pra nota.
+        newsletter_opt_in: input.newsletterOptIn ? 'SIM' : 'NAO',
         // UTMs de PRIMEIRO toque — substituem 5 tags `utm_*` por 3 campos
         // que aparecem direto no perfil do contato. Setados sempre que
         // existirem; idealmente "primeiro toque" deveria ser preservado
