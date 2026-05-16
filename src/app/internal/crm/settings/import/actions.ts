@@ -1,36 +1,75 @@
 /**
- * Import inicial do ActiveCampaign pro nosso CRM.
+ * Import enriquecido do ActiveCampaign pro nosso CRM.
  *
  * GATE: SÓ traz contatos com tag "Segmento: Líderes B2B".
- * Profissionais individuais e parceiros (agências) ficam só no AC pra
- * cadência editorial — não poluem o CRM de vendas.
  *
- * Estratégia:
- *  - Lê todos os contatos do AC (paginado)
- *  - Pra cada um: checa tags. Se NÃO tem "Segmento: Líderes B2B", pula.
- *  - Senão: upsert Person no nosso DB com custom fields + tags
- *  - Cria activity 'imported_from_ac' (peso 0)
+ * Pra cada lead importado:
+ *  1. Cria/atualiza Person + Company
+ *  2. Puxa custom field values (cargo, empresa, porte, objetivo, etc) → metadata.ac_custom_fields
+ *  3. Puxa tags do AC → ac_tags array
+ *  4. Puxa email events (opens/clicks) → cria activities datadas com peso
+ *  5. Puxa page views via VGO → cria activities datadas com peso
+ *  6. Cria activity sintética imported_from_ac
+ *  7. Score é recalculado naturalmente porque cada activity tem peso
  *
- * Idempotent: roda quantas vezes precisar — upsert por email não duplica.
+ * Idempotent: roda quantas vezes precisar — email match. Substitui dados.
  *
- * Limitação: AC API pode rate-limit (5 req/s). Vamos com cuidado (sleep 200ms
- * entre lotes). Pra base com 100 contatos: ~30s. Pra 1000: ~5min.
+ * Demora: ~5-10s por lead (5+ API calls). 500 leads = ~1h.
  */
 
 'use server';
 
-import { listAllContacts, getContactFieldValues, getContactTags } from '@/lib/activecampaign';
-import { upsertPerson, upsertCompany, logActivity } from '@/lib/crm';
+import {
+  listAllContacts,
+  getContactFieldValues,
+  getContactTags,
+  getContactEmailEvents,
+  getContactPageViews,
+} from '@/lib/activecampaign';
+import { upsertPerson, upsertCompany, logActivity, weightForActivity } from '@/lib/crm';
 import { db, people } from '@/db';
 import { eq } from 'drizzle-orm';
 
-type Result = { ok: true; imported: number; skipped: number; skippedNotB2B: number; errors: number } | { ok: false; error: string };
+type Result =
+  | { ok: true; imported: number; updated: number; skippedNotB2B: number; errors: number; activitiesCreated: number }
+  | { ok: false; error: string };
 
 const SLEEP_MS = 200;
 const B2B_TAG = 'Segmento: Líderes B2B';
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+/**
+ * Mapeia URL de page view → tipo de activity com peso adequado.
+ */
+function pageViewActivityType(url: string): { type: string; weight: number } {
+  const path = (() => { try { return new URL(url).pathname; } catch { return url; } })();
+  if (path.includes('/precos')) return { type: 'page_view_precos', weight: 5 };
+  if (path.includes('/solucoes')) return { type: 'page_view_solucoes', weight: 3 };
+  if (path.includes('/agendar-demo')) return { type: 'page_view_agendar_demo', weight: 5 };
+  if (path.includes('/blog/')) return { type: 'blog_read', weight: 2 };
+  return { type: 'page_view', weight: 1 };
+}
+
+/**
+ * Determina source method a partir das tags AC.
+ */
+function inferSourceMethod(tags: string[]): 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta' | 'manual' {
+  if (tags.some((t) => t.includes('Form: Demo'))) return 'form_demo';
+  if (tags.some((t) => t.includes('Form: Beta'))) return 'form_beta';
+  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return 'form_report';
+  if (tags.some((t) => t.includes('Form: Simulador') || t.includes('Form: Proposta'))) return 'form_proposta';
+  return 'manual';
+}
+
+/**
+ * Pesos por tag de Form (pra retroatividade do score quando importar).
+ */
+function activityTypeForFormTag(tags: string[]): { type: string; weight: number } | null {
+  if (tags.some((t) => t.includes('Form: Demo'))) return { type: 'form_submit_demo', weight: 50 };
+  if (tags.some((t) => t.includes('Form: Beta'))) return { type: 'form_submit_beta', weight: 25 };
+  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return { type: 'form_submit_report', weight: 10 };
+  if (tags.some((t) => t.includes('Simulador') || t.includes('Proposta'))) return { type: 'form_submit_proposta', weight: 50 };
+  return null;
 }
 
 export async function importFromAC(): Promise<Result> {
@@ -39,64 +78,66 @@ export async function importFromAC(): Promise<Result> {
   }
 
   let imported = 0;
-  let skipped = 0;
+  let updated = 0;
   let skippedNotB2B = 0;
   let errors = 0;
+  let activitiesCreated = 0;
 
   try {
     for await (const batch of listAllContacts()) {
       for (const c of batch) {
         try {
-          // Pula se já existe no nosso DB (evita refazer trabalho)
-          const existing = await db
-            .select({ id: people.id, acContactId: people.acContactId })
-            .from(people)
-            .where(eq(people.email, c.email.toLowerCase()))
-            .limit(1);
-
-          if (existing[0]) {
-            // Atualiza só ac_contact_id se faltar
-            if (!existing[0].acContactId) {
-              await db.update(people).set({ acContactId: c.id, updatedAt: new Date() }).where(eq(people.id, existing[0].id));
-            }
-            skipped++;
-            continue;
-          }
-
-          // Pega custom fields + tags do AC
-          const [fields, tags] = await Promise.all([
-            getContactFieldValues(c.id),
-            getContactTags(c.id),
-          ]);
-
-          // GATE B2B: só importa contatos com tag "Segmento: Líderes B2B".
-          // Resto fica só no AC (profissionais individuais, agências, etc).
+          // Pega tags primeiro — pra aplicar gate B2B antes de chamadas pesadas
+          const tags = await getContactTags(c.id);
           if (!tags.includes(B2B_TAG)) {
             skippedNotB2B++;
             continue;
           }
 
-          // Resolve company se tiver
+          // Agora puxa o resto (mais chamadas, mas só pros B2B)
+          const [fields, emailEvents, pageViews] = await Promise.all([
+            getContactFieldValues(c.id),
+            getContactEmailEvents(c.id),
+            getContactPageViews(c.id),
+          ]);
+
+          // Resolve company se tiver no AC custom fields
           let companyId: string | undefined;
-          const empresa = fields['empresa'] || fields['company'];
-          if (empresa && typeof empresa === 'string' && empresa.trim().length > 0) {
+          const empresaName = fields['empresa'] || fields['company'];
+          if (empresaName && typeof empresaName === 'string' && empresaName.trim().length > 0) {
             const cc = await upsertCompany({
-              name: empresa.trim(),
-              size: fields['porte'] || fields['colaboradores'] || fields['funcionarios'],
+              name: empresaName.trim(),
               industry: fields['setor'] || fields['industry'],
+              size: fields['porte'] || fields['colaboradores'] || fields['funcionarios'],
             });
-            if (cc.ok) companyId = cc.data.id;
+            if (cc.ok) {
+              companyId = cc.data.id;
+              // Atualiza metadata da company com custom fields
+              await db
+                .update((await import('@/db')).companies)
+                .set({
+                  metadata: {
+                    ac_custom_fields: fields,
+                    ac_contact_count: tags.length,
+                  } as Record<string, unknown>,
+                  updatedAt: new Date(),
+                })
+                .where(eq((await import('@/db')).companies.id, cc.data.id));
+            }
           }
 
-          // Determina source method a partir das tags (Form: X)
-          let sourceMethod: 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta' | 'manual' = 'manual';
-          if (tags.some((t) => t.includes('Form: Demo'))) sourceMethod = 'form_demo';
-          else if (tags.some((t) => t.includes('Form: Beta'))) sourceMethod = 'form_beta';
-          else if (tags.some((t) => t.includes('Form: Algoritmo') || t.includes('Form: Report'))) sourceMethod = 'form_report';
-
+          const sourceMethod = inferSourceMethod(tags);
           const sourceChannel = (fields['utm_source_first'] as
             'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown' | undefined
           ) ?? 'unknown';
+
+          // Verifica se já existia (pra contar imported vs updated)
+          const existing = await db
+            .select({ id: people.id })
+            .from(people)
+            .where(eq(people.email, c.email.toLowerCase()))
+            .limit(1);
+          const wasExisting = !!existing[0];
 
           const p = await upsertPerson({
             name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email,
@@ -115,31 +156,109 @@ export async function importFromAC(): Promise<Result> {
             continue;
           }
 
-          // Persiste ac_tags denormalizado
-          if (tags.length > 0) {
-            await db.update(people).set({ acTags: tags, updatedAt: new Date() }).where(eq(people.id, p.data.id));
+          // Resetar score pra recalcular do zero (substituir = true)
+          await db
+            .update(people)
+            .set({
+              acTags: tags,
+              metadata: {
+                ac_custom_fields: fields,
+                form_data: {
+                  objetivo_principal: fields['objetivo_principal'],
+                  como_conheceu: fields['como_conheceu'],
+                  intencao_uso: fields['intencao_uso'],
+                  tipo_de_lead: fields['tipo_de_lead'],
+                  observacoes: fields['observacoes'],
+                },
+                imported_from: {
+                  ac_contact_id: c.id,
+                  ac_imported_at: new Date().toISOString(),
+                },
+              } as Record<string, unknown>,
+              leadScore: 0, // reset pra recalcular via activities
+              updatedAt: new Date(),
+            })
+            .where(eq(people.id, p.data.id));
+
+          // 1) Activity sintética de "form submit" baseada na tag (data desconhecida → usa first_touch_at)
+          const formActivity = activityTypeForFormTag(tags);
+          if (formActivity) {
+            await logActivity({
+              personId: p.data.id,
+              companyId,
+              type: formActivity.type,
+              weight: formActivity.weight,
+              source: 'system',
+              data: { reconstructed: true, from: 'ac_import_inferred_from_tag' },
+            });
+            activitiesCreated++;
           }
 
-          // Activity de importação (peso 0)
+          // 2) Email events (opens/clicks)
+          for (const ev of emailEvents) {
+            const type = ev.type === 'open' ? 'email_open' : 'email_click';
+            const weight = weightForActivity(type);
+            await logActivity({
+              personId: p.data.id,
+              type,
+              weight,
+              source: 'email',
+              data: {
+                subject: ev.campaignName ?? undefined,
+                url: ev.url,
+                imported: true,
+                original_tstamp: ev.tstamp,
+              },
+            });
+            activitiesCreated++;
+          }
+
+          // 3) Page views (limitado a 50 mais recentes pra não estourar)
+          const recentPageViews = pageViews.slice(0, 50);
+          for (const pv of recentPageViews) {
+            const { type, weight } = pageViewActivityType(pv.url);
+            await logActivity({
+              personId: p.data.id,
+              type,
+              weight,
+              source: 'web',
+              data: {
+                page: pv.url,
+                imported: true,
+                original_tstamp: pv.tstamp,
+              },
+            });
+            activitiesCreated++;
+          }
+
+          // 4) Activity de marcação do import (peso 0)
           await logActivity({
             personId: p.data.id,
             type: 'imported_from_ac',
             weight: 0,
             source: 'system',
-            data: { ac_contact_id: c.id, tags, imported_at: new Date().toISOString() },
+            data: {
+              ac_contact_id: c.id,
+              tags_count: tags.length,
+              email_events_count: emailEvents.length,
+              page_views_count: pageViews.length,
+              page_views_imported: recentPageViews.length,
+            },
           });
+          activitiesCreated++;
 
-          imported++;
+          if (wasExisting) updated++;
+          else imported++;
         } catch (err) {
           console.error('[import-ac] contact error:', c.email, err);
           errors++;
         }
       }
-      // Rate-limit friendly
+      // Rate-limit friendly: pausa entre lotes
       await sleep(SLEEP_MS);
     }
 
-    return { ok: true, imported, skipped, skippedNotB2B, errors };
+    return { ok: true, imported, updated, skippedNotB2B, errors, activitiesCreated };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }

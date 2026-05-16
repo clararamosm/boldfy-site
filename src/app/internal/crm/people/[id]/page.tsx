@@ -173,6 +173,74 @@ export default async function LeadDetailPage({ params }: Props) {
 
         {/* === DIREITA (SIDEBAR) === */}
         <aside>
+          {/* Contato */}
+          <div className="crm-side-card">
+            <div className="crm-side-title">📞 Contato</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+              <div><span style={{ color: '#9D85B3' }}>Email:</span> <a href={`mailto:${person.email}`} style={{ color: '#CD50F1' }}>{person.email}</a></div>
+              {person.phone ? <div><span style={{ color: '#9D85B3' }}>Telefone:</span> {person.phone}</div> : null}
+              {person.linkedinUrl ? (
+                <div>
+                  <span style={{ color: '#9D85B3' }}>LinkedIn:</span>{' '}
+                  <a href={person.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1' }}>perfil</a>
+                </div>
+              ) : null}
+              {person.location ? <div><span style={{ color: '#9D85B3' }}>Localização:</span> {person.location}</div> : null}
+            </div>
+          </div>
+
+          {/* Origem */}
+          {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
+            <div className="crm-side-card">
+              <div className="crm-side-title">📍 Origem</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+                <div><span style={{ color: '#9D85B3' }}>Canal:</span> {channelLabel(person.sourceChannel)}</div>
+                {person.sourcePage ? <div><span style={{ color: '#9D85B3' }}>Página:</span> <code style={{ fontSize: 11 }}>{person.sourcePage}</code></div> : null}
+                {person.firstTouchCampaign ? <div><span style={{ color: '#9D85B3' }}>Campanha:</span> {person.firstTouchCampaign}</div> : null}
+                {person.firstTouchAt ? <div><span style={{ color: '#9D85B3' }}>Primeiro toque:</span> {new Date(person.firstTouchAt).toLocaleDateString('pt-BR')}</div> : null}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Dados de form (vindos do AC custom fields ou direto) */}
+          {(() => {
+            const m = person.metadata as Record<string, unknown> | null;
+            const formData = m?.form_data as Record<string, string | undefined> | undefined;
+            if (!formData || Object.values(formData).every((v) => !v)) return null;
+            return (
+              <div className="crm-side-card">
+                <div className="crm-side-title">📋 Dados do form</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+                  {formData.tipo_de_lead ? <div><span style={{ color: '#9D85B3' }}>Tipo:</span> {formData.tipo_de_lead}</div> : null}
+                  {formData.intencao_uso ? <div><span style={{ color: '#9D85B3' }}>Intenção:</span> {formData.intencao_uso}</div> : null}
+                  {formData.objetivo_principal ? <div><span style={{ color: '#9D85B3' }}>Objetivo:</span><div style={{ marginTop: 2, padding: '6px 8px', background: '#FAF7FF', borderRadius: 6 }}>{formData.objetivo_principal}</div></div> : null}
+                  {formData.como_conheceu ? <div><span style={{ color: '#9D85B3' }}>Como conheceu:</span> {formData.como_conheceu}</div> : null}
+                  {formData.observacoes ? <div><span style={{ color: '#9D85B3' }}>Observações:</span><div style={{ marginTop: 2, padding: '6px 8px', background: '#FAF7FF', borderRadius: 6 }}>{formData.observacoes}</div></div> : null}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* AC custom fields (resto, raw) */}
+          {(() => {
+            const m = person.metadata as Record<string, unknown> | null;
+            const cf = m?.ac_custom_fields as Record<string, string | undefined> | undefined;
+            if (!cf) return null;
+            const shown = new Set(['empresa', 'cargo', 'porte', 'colaboradores', 'funcionarios', 'setor', 'industry', 'utm_source_first', 'utm_medium_first', 'utm_campaign_first', 'objetivo_principal', 'como_conheceu', 'intencao_uso', 'tipo_de_lead', 'observacoes', 'job_title']);
+            const extras = Object.entries(cf).filter(([k, v]) => v && !shown.has(k));
+            if (extras.length === 0) return null;
+            return (
+              <div className="crm-side-card">
+                <div className="crm-side-title">🔖 Custom fields AC</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11 }}>
+                  {extras.map(([k, v]) => (
+                    <div key={k}><span style={{ color: '#9D85B3' }}>{k}:</span> {v}</div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="crm-side-card">
             <div className="crm-side-title">📅 Próximas reuniões</div>
             {meetings.length === 0 ? (

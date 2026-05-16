@@ -340,6 +340,89 @@ export async function getContactFieldValues(contactId: string): Promise<Record<s
 }
 
 /**
+ * Email events do contato (opens/clicks). Usado pra reconstruir timeline
+ * no import enriquecido.
+ */
+export type EmailEventRaw = {
+  type: 'open' | 'click';
+  campaignName: string | null;
+  url?: string;
+  tstamp: string;
+};
+
+export async function getContactEmailEvents(contactId: string): Promise<EmailEventRaw[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  const events: EmailEventRaw[] = [];
+
+  // Endpoint /api/3/contacts/{id}/logs — retorna events de email (opens/clicks)
+  // AC chama isso de "campaign log entries". Vem com type=open|click + tstamp.
+  try {
+    const res = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/logs?limit=100`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return [];
+    const data = await res.json() as {
+      logs?: Array<{ type: string; campaignName?: string; url?: string; tstamp: string }>;
+    };
+    for (const log of data.logs ?? []) {
+      if (log.type === 'open' || log.type === 'click') {
+        events.push({
+          type: log.type,
+          campaignName: log.campaignName ?? null,
+          url: log.url,
+          tstamp: log.tstamp,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[activecampaign] getContactEmailEvents failed:', err);
+  }
+
+  return events;
+}
+
+/**
+ * Site tracking events do contato (page views) via VGO.
+ * AC chama de "eventTrackingEvents" mas também armazena page views.
+ *
+ * Pode retornar MUITOS events (centenas por contato ativo). Limita a 200.
+ */
+export type PageViewRaw = {
+  url: string;
+  tstamp: string;
+  domain?: string;
+};
+
+export async function getContactPageViews(contactId: string): Promise<PageViewRaw[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  const views: PageViewRaw[] = [];
+  try {
+    // /api/3/siteTrackingEvents?filter[contact]=ID
+    const res = await fetch(
+      `${AC_API_URL}/api/3/siteTrackingEvents?filters[contact]=${contactId}&limit=200`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return [];
+    const data = await res.json() as {
+      siteTrackingEvents?: Array<{ name?: string; tstamp: string; data?: { url?: string; domain?: string } }>;
+    };
+    for (const ev of data.siteTrackingEvents ?? []) {
+      const url = ev.data?.url ?? ev.name;
+      if (!url) continue;
+      views.push({
+        url,
+        tstamp: ev.tstamp,
+        domain: ev.data?.domain,
+      });
+    }
+  } catch (err) {
+    console.error('[activecampaign] getContactPageViews failed:', err);
+  }
+  return views;
+}
+
+/**
  * Lista todas as tags do contato (nomes). Usado no tag manager UI do CRM.
  * Retorna [] se contato não tem tags ou se houve erro.
  */

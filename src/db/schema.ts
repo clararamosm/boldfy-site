@@ -112,6 +112,8 @@ export const companies = pgTable(
     firstTouchAt: timestamp('first_touch_at', { withTimezone: true }),
     firstTouchSource: text('first_touch_source'),
     firstTouchCampaign: text('first_touch_campaign'),
+    description: text('description'),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
     internalNotes: text('internal_notes'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -151,6 +153,16 @@ export const people = pgTable(
     lastTouchAt: timestamp('last_touch_at', { withTimezone: true }),
     acContactId: text('ac_contact_id'),
     acTags: text('ac_tags').array(),
+    /**
+     * Metadata flexível — dados ricos vindos de forms, AC custom fields,
+     * extensão LinkedIn etc. Estrutura sugerida:
+     *   form_data: { objetivo_principal, como_conheceu, intencao_uso, observacoes }
+     *   ac_custom_fields: { tipo_de_lead, porte, setor, ... }
+     *   linkedin: { connections_count, mutual, current_company } (extensão)
+     *   imported_from: { folk_id, ac_imported_at }
+     */
+    metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+    description: text('description'),
     internalNotes: text('internal_notes'),
     archived: boolean('archived').notNull().default(false),
     mergedIntoId: uuid('merged_into_id'),
