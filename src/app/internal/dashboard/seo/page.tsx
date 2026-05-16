@@ -23,7 +23,9 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 1800; // 30 min (SC dado tem delay de 2-3 dias mesmo)
+// Removido `revalidate` — conflita com `force-dynamic` e fazia cache do estado
+// de erro (Sem dados) ficar até expirar. SC tem delay de 2-3 dias mesmo, mas
+// se quiser cache, fazer via fetch inline.
 
 function formatPct(value: number): string {
   return `${(value * 100).toFixed(2)}%`;

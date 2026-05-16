@@ -20,7 +20,9 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 900; // 15 min
+// Sem `revalidate` — `force-dynamic` + `revalidate` conflita, Next prioriza
+// revalidate e serve cache mesmo com erro silencioso. Pra cache, usar fetch
+// com next.revalidate inline.
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);

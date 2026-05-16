@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 900;
+// Removido `revalidate` — conflita com `force-dynamic` (Next prioriza cache).
 
 async function getLinkedInLeads() {
   return db
