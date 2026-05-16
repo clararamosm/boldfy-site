@@ -1,11 +1,14 @@
 /**
- * CRM · Empresas — kanban de N colunas (rolagem lateral só no kanban).
+ * CRM · Empresas — kanban de N colunas OU tabela com busca/filtro/sort.
+ * Toggle via ?view=table.
  */
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCompaniesByStatus, type CompaniesByStatus } from '@/lib/crm-queries';
 import { CompanyKanban } from '@/components/crm/company-kanban';
+import { CompanyTable } from '@/components/crm/company-table';
+import { ViewToggle } from '@/components/crm/view-toggle';
 import { AddCompanyButton } from '@/components/crm/add-company-button';
 
 export const metadata: Metadata = {
@@ -15,11 +18,16 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function CrmCompaniesPage() {
+type SearchParams = Promise<{ view?: string }>;
+
+export default async function CrmCompaniesPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const view = params.view === 'table' ? 'table' : 'kanban';
+
   let data: CompaniesByStatus = [];
   let dbError: string | null = null;
   try {
-    data = await getCompaniesByStatus();
+    data = await getCompaniesByStatus(view === 'table' ? 1000 : 100);
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }
@@ -30,10 +38,13 @@ export default async function CrmCompaniesPage() {
         <div>
           <h1 className="crm-title">Empresas</h1>
           <p className="crm-subtitle">
-            Pipeline de oportunidades · arraste pra mudar etapa · rolagem só no kanban
+            {view === 'table'
+              ? 'Tabela completa · busca, filtro por status, ordenação por coluna'
+              : 'Pipeline de oportunidades · arraste pra mudar etapa · rolagem só no kanban'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <ViewToggle />
           <Link href="/internal/crm/settings/statuses" className="crm-btn">
             ⚙ Configurar
           </Link>
@@ -51,6 +62,8 @@ export default async function CrmCompaniesPage() {
           <strong>Sem colunas configuradas.</strong>
           <p>Recarrega a página pra criar os statuses padrão automaticamente.</p>
         </div>
+      ) : view === 'table' ? (
+        <CompanyTable data={data} />
       ) : (
         <CompanyKanban data={data} />
       )}
