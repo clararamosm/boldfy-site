@@ -27,6 +27,7 @@ import {
   tipoLeadFromIntencao,
 } from '@/lib/ac-tags';
 import { syncFolkLead } from '@/lib/folk';
+import { recordLeadFromForm } from '@/lib/crm';
 import { ReportLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -158,6 +159,40 @@ export async function sendReportLead(
         });
       } catch (err) {
         console.error('[report-leads] Folk sync error (non-blocking):', err);
+      }
+    }
+
+    /* ---------------------------------------------------------------- */
+    /*  2.5 CRM Boldfy (dual-write) — escreve TODOS os leads (gate é só */
+    /*       no Folk). No nosso CRM filtramos por sourceMethod depois.   */
+    /* ---------------------------------------------------------------- */
+    if (acContactId) {
+      try {
+        await recordLeadFromForm({
+          name: input.nome,
+          email: input.email,
+          jobTitle: undefined, // Report não captura cargo
+          companyName: empresaInformada || undefined,
+          acContactId,
+          sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
+          sourcePage: origemNoSite,
+          sourceMethod: 'form_report',
+          utmCampaign: input.utm_campaign,
+          activityType: 'form_submit_report',
+          activityData: {
+            form_type: 'report',
+            intencao_uso: input.intencaoUso,
+            tipo_lead: tipoLead,
+            newsletter_opt_in: input.newsletterOptIn,
+            utm_source: input.utm_source,
+            utm_medium: input.utm_medium,
+            utm_campaign: input.utm_campaign,
+            utm_content: input.utm_content,
+            utm_term: input.utm_term,
+          },
+        });
+      } catch (err) {
+        console.error('[report-leads] CRM dual-write error (non-blocking):', err);
       }
     }
 

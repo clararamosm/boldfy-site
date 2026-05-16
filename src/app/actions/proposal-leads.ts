@@ -13,6 +13,7 @@ import type { ProposalData } from '@/lib/notion-crm';
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
 import { syncFolkLead } from '@/lib/folk';
+import { recordLeadFromForm } from '@/lib/crm';
 import { ProposalLeadSchema, parseInput } from './_schemas';
 import { buildProposalUrl } from '@/lib/proposal-token';
 import type { z } from 'zod';
@@ -452,6 +453,33 @@ export async function sendProposalLeadToNotion(
           });
         } catch (folkErr) {
           console.error('[proposal-leads] Folk sync error (non-blocking):', folkErr);
+        }
+
+        // CRM Boldfy (dual-write) — Simulador é lead super qualificado.
+        try {
+          await recordLeadFromForm({
+            name: input.nome,
+            email: input.email,
+            jobTitle: input.cargo,
+            companyName: input.empresa,
+            acContactId,
+            sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
+            sourcePage: input.origem,
+            sourceMethod: 'form_proposta',
+            utmCampaign: input.utm_campaign,
+            activityType: 'form_submit_proposta',
+            activityData: {
+              form_type: 'proposta',
+              total_mensal: input.totalCurrent,
+              total_full: input.totalFull,
+              savings: input.savings,
+              utm_source: input.utm_source,
+              utm_medium: input.utm_medium,
+              utm_campaign: input.utm_campaign,
+            },
+          });
+        } catch (crmErr) {
+          console.error('[proposal-leads] CRM dual-write error (non-blocking):', crmErr);
         }
       } else {
         console.warn(

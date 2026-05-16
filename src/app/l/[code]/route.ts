@@ -27,7 +27,7 @@ const CODE_REGEX = /^[a-zA-Z0-9]{6}$/;
 
 export async function GET(
   _request: NextRequest,
-  { params }: RouteContext<'/l/[code]'>,
+  { params }: { params: Promise<{ code: string }> },
 ) {
   const { code } = await params;
 

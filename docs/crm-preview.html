@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM interno — Boldfy (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root {
+  --primary: #CD50F1;
+  --primary-mid: #9840AD;
+  --primary-dark: #5E2A67;
+  --primary-darker: #2D1445;
+  --primary-darkest: #0F0A18;
+  --bg: #FAF7FF;
+  --card: #FFFFFF;
+  --secondary: #F7EEFC;
+  --border: #E4D8ED;
+  --foreground: #45336B;
+  --muted: #9D85B3;
+  --secondary-fg: #7E3FA6;
+  --accent-orange: #F97316;
+  --accent-green: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-pink: #EC4899;
+  --accent-blue: #3B82F6;
+  --neutral: #6B5B8A;
+  --destructive: #EE5A52;
+  --shadow-card: 0 8px 32px rgba(93, 42, 103, .06);
+  --shadow-hover: 0 16px 40px rgba(205, 80, 241, .12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.font-headline { font-family: 'Nunito Sans', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+
+/* ============== TOP BAR ============== */
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.topbar-left { display: flex; align-items: center; gap: 20px; }
+.logo {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+.logo .b1 { color: #572D63; }
+.logo .b2 { color: #BD58E7; }
+.view-switcher {
+  display: flex;
+  background: var(--secondary);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.vs-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.vs-btn:hover { color: var(--primary-dark); }
+.vs-btn.active {
+  background: var(--card);
+  color: var(--primary-dark);
+  box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08);
+}
+.vs-btn i { width: 15px; height: 15px; }
+
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.btn-icon {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+.btn-icon:hover { color: var(--primary); border-color: var(--primary); }
+.btn-icon i { width: 14px; height: 14px; }
+.btn-icon kbd {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(205, 80, 241, .25);
+}
+.btn-primary:hover { background: var(--primary-mid); transform: translateY(-1px); }
+.btn-primary i { width: 14px; height: 14px; }
+.last-update {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.last-update .dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; }
+
+/* ============== TABS ============== */
+.tabs-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  gap: 4px;
+  position: sticky;
+  top: 65px;
+  z-index: 49;
+}
+.tab-btn {
+  padding: 13px 18px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.tab-btn i { width: 15px; height: 15px; }
+.tab-btn:hover { color: var(--primary-dark); }
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.tab-btn .count {
+  background: var(--secondary);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* ============== MAIN ============== */
+main { padding: 20px 28px 60px; max-width: 1600px; margin: 0 auto; }
+.tab-section { display: none; }
+.tab-section.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+.section-title h2 { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 24px; color: var(--primary-dark); letter-spacing: -0.02em; }
+.section-title p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+/* ============== FILTERS BAR ============== */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.filter-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+}
+.filter-chip:hover { border-color: var(--primary); }
+.filter-chip.active { background: rgba(205, 80, 241, 0.1); border-color: var(--primary); color: var(--primary); }
+.filter-divider { width: 1px; height: 24px; background: var(--border); }
+.filter-label { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+/* ============== KANBAN PESSOAS ============== */
+.kanban {
+  display: grid;
+  gap: 14px;
+}
+.kanban-3 { grid-template-columns: repeat(3, 1fr); }
+.kanban-6 { grid-template-columns: repeat(6, minmax(220px, 1fr)); overflow-x: auto; padding-bottom: 8px; }
+
+.kanban-col {
+  background: var(--secondary);
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 400px;
+}
+.kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 4px 6px;
+}
+.kanban-col-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kanban-col-title .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.kanban-col-title .status-dot.purple { background: var(--primary); }
+.kanban-col-title .status-dot.blue { background: var(--accent-blue); }
+.kanban-col-title .status-dot.amber { background: var(--accent-amber); }
+.kanban-col-title .status-dot.neutral { background: var(--neutral); }
+.kanban-col-title .status-dot.green { background: var(--accent-green); }
+.kanban-col-title .status-dot.gray { background: var(--muted); }
+.kanban-col-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--card);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.kanban-cards { display: flex; flex-direction: column; gap: 10px; }
+
+/* PERSON CARD */
+.person-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.person-card:hover { transform: translateY(-2px); border-color: rgba(205, 80, 241, 0.35); box-shadow: var(--shadow-hover); }
+.person-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.person-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #E875FF);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.person-avatar.blue { background: linear-gradient(135deg, var(--accent-blue), #60A5FA); }
+.person-avatar.green { background: linear-gradient(135deg, var(--accent-green), #34D399); }
+.person-avatar.amber { background: linear-gradient(135deg, var(--accent-amber), #FBBF24); }
+.person-avatar.pink { background: linear-gradient(135deg, var(--accent-pink), #F472B6); }
+.person-avatar.orange { background: linear-gradient(135deg, var(--accent-orange), #FB923C); }
+.person-info { flex: 1; min-width: 0; }
+.person-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primary-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.person-headline {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.person-score {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.score-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--secondary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.score-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+.score-fill.blue { background: var(--accent-blue); }
+.score-fill.amber { background: linear-gradient(90deg, var(--accent-amber), var(--accent-orange)); }
+.score-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-variant-numeric: tabular-nums;
+}
+.person-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+}
+.person-meta .meta-icons { display: flex; align-items: center; gap: 6px; }
+.person-meta .meta-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: var(--secondary);
+  border-radius: 6px;
+  color: var(--primary);
+  font-weight: 600;
+}
+.person-meta .meta-icon i { width: 10px; height: 10px; }
+
+/* COMPANY CARD */
+.company-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.company-card:hover { transform: translateY(-2px); border-color: rgba(205, 80, 241, 0.35); }
+.company-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primary-dark);
+  margin-bottom: 2px;
+}
+.company-industry {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.company-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.company-stats span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+}
+.company-stats i { width: 11px; height: 11px; }
+.company-next {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+}
+.company-next-label {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+.company-next-action {
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+.company-stale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+  padding: 2px 6px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #92580E;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.company-stale i { width: 10px; height: 10px; }
+
+/* ============== LEAD DETAIL ============== */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+@media (max-width: 1100px) { .detail-layout { grid-template-columns: 1fr; } }
+.detail-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+.detail-header { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 24px; }
+.detail-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), #E875FF);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 30px;
+  flex-shrink: 0;
+}
+.detail-header-info { flex: 1; }
+.detail-name { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 24px; color: var(--primary-dark); margin-bottom: 4px; }
+.detail-headline { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+.detail-links { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  background: var(--secondary);
+  color: var(--secondary-fg);
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.detail-link i { width: 12px; height: 12px; }
+.detail-link:hover { background: rgba(205, 80, 241, 0.15); color: var(--primary); }
+
+.detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+.detail-stat { text-align: center; }
+.detail-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.detail-stat-value { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 22px; color: var(--primary-dark); line-height: 1; }
+.detail-stat-meta { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.score-pill.ativo { background: rgba(157, 133, 179, 0.15); color: var(--neutral); }
+.score-pill.lead { background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); }
+.score-pill.quente { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(249, 115, 22, 0.15)); color: #92580E; }
+
+/* TIMELINE */
+.timeline { position: relative; padding-left: 26px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 9px; top: 8px; bottom: 8px;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item {
+  position: relative;
+  padding: 10px 0 14px 0;
+}
+.timeline-dot {
+  position: absolute;
+  left: -22px;
+  top: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timeline-dot i { width: 10px; height: 10px; color: var(--primary); }
+.timeline-dot.blue { border-color: var(--accent-blue); }
+.timeline-dot.blue i { color: var(--accent-blue); }
+.timeline-dot.green { border-color: var(--accent-green); }
+.timeline-dot.green i { color: var(--accent-green); }
+.timeline-dot.amber { border-color: var(--accent-amber); }
+.timeline-dot.amber i { color: var(--accent-amber); }
+.timeline-dot.orange { border-color: var(--accent-orange); }
+.timeline-dot.orange i { color: var(--accent-orange); }
+.timeline-dot.pink { border-color: var(--accent-pink); }
+.timeline-dot.pink i { color: var(--accent-pink); }
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.timeline-title { font-weight: 600; font-size: 13px; color: var(--primary-dark); }
+.timeline-time { font-size: 11px; color: var(--muted); font-weight: 500; }
+.timeline-meta { font-size: 11px; color: var(--muted); }
+.timeline-meta strong { color: var(--primary-dark); font-weight: 600; }
+.timeline-observation {
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: var(--secondary);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--foreground);
+  border-left: 3px solid var(--primary);
+}
+.timeline-score-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-green);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+.timeline-score-delta.negative { background: rgba(107, 91, 138, 0.1); color: var(--neutral); }
+
+/* SIDEBAR */
+.side-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+}
+.side-card-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--primary-dark);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.side-card-title i { width: 16px; height: 16px; color: var(--primary); }
+
+.meeting-item {
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.meeting-when {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.meeting-title { font-weight: 600; font-size: 13px; color: var(--primary-dark); margin-bottom: 4px; }
+.meeting-meta { font-size: 11px; color: var(--muted); }
+.meeting-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--secondary);
+  color: var(--secondary-fg);
+  border-radius: 999px;
+}
+
+/* ============== FEED ============== */
+.feed-container { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; }
+.feed-day { margin-bottom: 28px; }
+.feed-day-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.feed-item {
+  display: flex;
+  gap: 14px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.feed-item:hover { background: var(--bg); }
+.feed-time { font-size: 11px; color: var(--muted); width: 70px; flex-shrink: 0; padding-top: 2px; }
+.feed-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--primary);
+}
+.feed-icon i { width: 14px; height: 14px; }
+.feed-content { flex: 1; }
+.feed-text { color: var(--foreground); }
+.feed-text strong { color: var(--primary-dark); font-weight: 700; }
+.feed-text-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ============== EXTENSION MOCKUP ============== */
+.ext-showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) { .ext-showcase { grid-template-columns: 1fr; } }
+
+.ext-section { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; }
+.ext-mockup {
+  background: #1A1F36;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+  margin-top: 18px;
+}
+.ext-browser-bar {
+  background: #2D3247;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ext-browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+.ext-browser-dot:nth-child(1) { background: #FF5F57; }
+.ext-browser-dot:nth-child(2) { background: #FEBC2E; }
+.ext-browser-dot:nth-child(3) { background: #28C840; }
+.ext-browser-url {
+  flex: 1;
+  background: #1A1F36;
+  color: #9899AA;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-left: 12px;
+  font-family: monospace;
+}
+.ext-page-content {
+  background: #fff;
+  padding: 24px;
+  position: relative;
+  min-height: 320px;
+}
+.ext-linkedin-profile {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.ext-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), #60A5FA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 900;
+  font-size: 32px;
+}
+.ext-profile-info h3 { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 22px; color: #000; margin-bottom: 4px; }
+.ext-profile-info p { font-size: 14px; color: #444; margin-bottom: 2px; }
+.ext-profile-info .ext-profile-meta { font-size: 12px; color: #888; }
+
+.ext-floating-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: linear-gradient(135deg, var(--primary), #E875FF);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(205, 80, 241, 0.4);
+  cursor: pointer;
+}
+.ext-floating-btn::before {
+  content: 'bf';
+  background: white;
+  color: var(--primary);
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.ext-toast {
+  position: absolute;
+  top: 80px;
+  right: 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+}
+.ext-toast-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ext-toast-text { flex: 1; }
+.ext-toast-title { font-weight: 700; font-size: 13px; color: var(--primary-dark); }
+.ext-toast-link { font-size: 11px; color: var(--primary); margin-top: 2px; font-weight: 600; }
+
+.ext-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ext-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.ext-step-num {
+  background: var(--primary);
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.ext-step-text {
+  font-size: 13px;
+  color: var(--foreground);
+}
+.ext-step-text strong { color: var(--primary-dark); }
+
+/* ============== LOG MODAL (always visible for preview) ============== */
+.log-modal-container {
+  background: var(--card);
+  border: 1px solid var(--primary);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 480px;
+  margin: 24px 0;
+  box-shadow: 0 16px 48px rgba(205, 80, 241, 0.2);
+}
+.log-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.log-modal-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.log-modal-title i { color: var(--primary); width: 18px; height: 18px; }
+.log-field { margin-bottom: 14px; }
+.log-field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+.log-field-select, .log-field-input, .log-field-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--foreground);
+  background: var(--card);
+}
+.log-field-select:focus, .log-field-input:focus, .log-field-textarea:focus { outline: none; border-color: var(--primary); }
+.log-field-textarea { min-height: 80px; resize: vertical; }
+.log-weight-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-green);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.log-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.log-btn-cancel { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: inherit; }
+.log-btn-save { background: var(--primary); color: white; border: none; padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(205, 80, 241, 0.25); }
+
+/* ============== PREVIEW NOTE ============== */
+.preview-note {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: #92580E;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.preview-note i { width: 16px; height: 16px; }
+
+@media (max-width: 768px) {
+  .topbar { padding: 10px 16px; flex-wrap: wrap; gap: 10px; }
+  .tabs-nav { padding: 0 16px; overflow-x: auto; }
+  main { padding: 16px 16px 60px; }
+  .kanban-3 { grid-template-columns: 1fr; }
+  .kanban-6 { grid-template-columns: repeat(6, 200px); }
+}
+</style>
+</head>
+<body>
+
+<!-- ============== TOP BAR ============== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><span class="b1">bold</span><span class="b2">fy</span></div>
+    <div class="view-switcher">
+      <button class="vs-btn active">
+        <i data-lucide="users"></i> CRM
+      </button>
+      <a href="dashboard-preview.html" class="vs-btn">
+        <i data-lucide="bar-chart-3"></i> Dashboard
+      </a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-icon">
+      <i data-lucide="search"></i> Buscar <kbd>⌘K</kbd>
+    </button>
+    <button class="btn-primary">
+      <i data-lucide="plus"></i> Adicionar Pessoa
+    </button>
+    <div class="last-update">
+      <span class="dot"></span> Sync ativo
+    </div>
+  </div>
+</div>
+
+<!-- ============== TABS NAV ============== -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-tab="people">
+    <i data-lucide="user"></i> Pessoas <span class="count">47</span>
+  </button>
+  <button class="tab-btn" data-tab="companies">
+    <i data-lucide="building-2"></i> Empresas <span class="count">38</span>
+  </button>
+  <button class="tab-btn" data-tab="detail">
+    <i data-lucide="user-circle"></i> Lead Detail (exemplo)
+  </button>
+  <button class="tab-btn" data-tab="feed">
+    <i data-lucide="activity"></i> Activity Feed
+  </button>
+  <button class="tab-btn" data-tab="ext">
+    <i data-lucide="chrome"></i> Extensão Chrome
+  </button>
+</nav>
+
+<main>
+
+<div class="preview-note">
+  <i data-lucide="eye"></i>
+  <span><strong>Preview navegável do CRM</strong> · dados mockados realistas pra um B2B com ~47 pessoas e 38 empresas em pipeline. Switcher no topo alterna pra preview do Dashboard.</span>
+</div>
+
+<!-- ====================================================================== -->
+<!--                            TAB: PESSOAS                                -->
+<!-- ====================================================================== -->
+<section class="tab-section active" id="people">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Pessoas</h2>
+      <p>Kanban por status · drag-drop entre colunas dispara tag no AC e activity de status_change</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Filtrar:</span>
+    <button class="filter-chip active">Todos</button>
+    <button class="filter-chip">Origem: LinkedIn</button>
+    <button class="filter-chip">Score 50+</button>
+    <button class="filter-chip">Reunião agendada</button>
+    <button class="filter-chip">Sem atividade 7d</button>
+    <div class="filter-divider"></div>
+    <button class="filter-chip"><i data-lucide="sliders" style="width:11px;height:11px;"></i> Mais filtros</button>
+  </div>
+
+  <div class="kanban kanban-3">
+
+    <!-- ATIVO -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title">
+          <span class="status-dot neutral"></span> Ativo
+        </div>
+        <span class="kanban-col-count">23</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar">LT</div>
+            <div class="person-info">
+              <div class="person-name">Laila Tavares</div>
+              <div class="person-headline">CMO at Hash</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 18%;"></div></div>
+            <span class="score-value">18</span>
+          </div>
+          <div class="person-meta">
+            <span>baixou report · 3h</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="newspaper"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar blue">JM</div>
+            <div class="person-info">
+              <div class="person-name">João Marques</div>
+              <div class="person-headline">Head de Vendas at Pluga</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 12%;"></div></div>
+            <span class="score-value">12</span>
+          </div>
+          <div class="person-meta">
+            <span>email aberto · ontem</span>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar green">FS</div>
+            <div class="person-info">
+              <div class="person-name">Fernanda Silva</div>
+              <div class="person-headline">Diretora de Marketing at Resultados Digitais</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 8%;"></div></div>
+            <span class="score-value">8</span>
+          </div>
+          <div class="person-meta">
+            <span>visitou /precos · 2d</span>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar amber">RM</div>
+            <div class="person-info">
+              <div class="person-name">Rafael Macedo</div>
+              <div class="person-headline">COO at Sankhya</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 15%;"></div></div>
+            <span class="score-value">15</span>
+          </div>
+          <div class="person-meta">
+            <span>baixou report · 4d</span>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar pink">AC</div>
+            <div class="person-info">
+              <div class="person-name">Amanda Cardoso</div>
+              <div class="person-headline">Head Growth at Bling</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 5%;"></div></div>
+            <span class="score-value">5</span>
+          </div>
+          <div class="person-meta">
+            <span>visitou home · 5d</span>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar orange">TG</div>
+            <div class="person-info">
+              <div class="person-name">Tiago Gomes</div>
+              <div class="person-headline">VP Marketing at MercadoLivre</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill" style="width: 19%;"></div></div>
+            <span class="score-value">19</span>
+          </div>
+          <div class="person-meta">
+            <span>3 page views · 1d</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEAD -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title">
+          <span class="status-dot blue"></span> Lead
+        </div>
+        <span class="kanban-col-count">16</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar">IM</div>
+            <div class="person-info">
+              <div class="person-name">Igor Mendonça</div>
+              <div class="person-headline">Diretor Mkt at Atrio Lab</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill blue" style="width: 42%;"></div></div>
+            <span class="score-value">42</span>
+          </div>
+          <div class="person-meta">
+            <span>submeteu Beta · 2h</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="zap"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar pink">RO</div>
+            <div class="person-info">
+              <div class="person-name">Renata Oliveira</div>
+              <div class="person-headline">CMO at Nuvini</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill blue" style="width: 48%;"></div></div>
+            <span class="score-value">48</span>
+          </div>
+          <div class="person-meta">
+            <span>submeteu Demo · 12 min</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="calendar"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar amber">PC</div>
+            <div class="person-info">
+              <div class="person-name">Pedro Camargo</div>
+              <div class="person-headline">Head Growth at Lett</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill blue" style="width: 35%;"></div></div>
+            <span class="score-value">35</span>
+          </div>
+          <div class="person-meta">
+            <span>agendou Cal · 5h</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="calendar"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar green">ML</div>
+            <div class="person-info">
+              <div class="person-name">Mariana Lacerda</div>
+              <div class="person-headline">CMO at Olist</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill blue" style="width: 28%;"></div></div>
+            <span class="score-value">28</span>
+          </div>
+          <div class="person-meta">
+            <span>submeteu Demo · 9h</span>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar orange">CB</div>
+            <div class="person-info">
+              <div class="person-name">Caio Bertini</div>
+              <div class="person-headline">CMO at Conexa Saúde</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill blue" style="width: 41%;"></div></div>
+            <span class="score-value">41</span>
+          </div>
+          <div class="person-meta">
+            <span>agendou Cal · 14h</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="calendar"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUENTE -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title">
+          <span class="status-dot amber"></span> Quente
+        </div>
+        <span class="kanban-col-count">8</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar amber">BS</div>
+            <div class="person-info">
+              <div class="person-name">Beatriz Sá</div>
+              <div class="person-headline">CMO at Sallve</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill amber" style="width: 78%;"></div></div>
+            <span class="score-value">78</span>
+          </div>
+          <div class="person-meta">
+            <span>reuniu · 3d atrás</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="message-circle"></i></span>
+              <span class="meta-icon"><i data-lucide="calendar-check"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar pink">CB</div>
+            <div class="person-info">
+              <div class="person-name">Carla Bittencourt</div>
+              <div class="person-headline">VP Marketing at Cubo Itaú</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill amber" style="width: 92%;"></div></div>
+            <span class="score-value">92</span>
+          </div>
+          <div class="person-meta">
+            <span>WhatsApp · 1h</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="phone"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar blue">EH</div>
+            <div class="person-info">
+              <div class="person-name">Eduardo Hauser</div>
+              <div class="person-headline">CEO at Kanui</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill amber" style="width: 67%;"></div></div>
+            <span class="score-value">67</span>
+          </div>
+          <div class="person-meta">
+            <span>respondeu DM · 2d</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="linkedin"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="person-card">
+          <div class="person-card-header">
+            <div class="person-avatar green">MA</div>
+            <div class="person-info">
+              <div class="person-name">Mauricio Almeida</div>
+              <div class="person-headline">Diretor Comercial at Vtex</div>
+            </div>
+          </div>
+          <div class="person-score">
+            <div class="score-bar"><div class="score-fill amber" style="width: 84%;"></div></div>
+            <span class="score-value">84</span>
+          </div>
+          <div class="person-meta">
+            <span>reunião marcada · 5d</span>
+            <div class="meta-icons">
+              <span class="meta-icon"><i data-lucide="calendar"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ====================================================================== -->
+<!--                            TAB: EMPRESAS                                -->
+<!-- ====================================================================== -->
+<section class="tab-section" id="companies">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Empresas</h2>
+      <p>Kanban do pipeline B2B · drag entre etapas (com confirmação em Fechado/Perdido)</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Filtrar:</span>
+    <button class="filter-chip active">Todas</button>
+    <button class="filter-chip">SaaS</button>
+    <button class="filter-chip">Healthtech</button>
+    <button class="filter-chip">Fintech</button>
+    <button class="filter-chip">Score 50+</button>
+    <button class="filter-chip">Paradas há 14d+</button>
+  </div>
+
+  <div class="kanban kanban-6">
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot gray"></span>No status</div>
+        <span class="kanban-col-count">14</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card">
+          <div class="company-name">Resultados Digitais</div>
+          <div class="company-industry">Martech · 500+</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 2</span>
+            <span><i data-lucide="zap"></i> 8</span>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Pluga</div>
+          <div class="company-industry">SaaS · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 12</span>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Bling</div>
+          <div class="company-industry">ERP · 201-500</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot blue"></span>Quero prospectar</div>
+        <span class="kanban-col-count">7</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card">
+          <div class="company-name">MercadoLivre</div>
+          <div class="company-industry">E-commerce · 5000+</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 3</span>
+            <span><i data-lucide="zap"></i> 19</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Próximo</div>
+            <div class="company-next-action">DM no LinkedIn · amanhã</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Sankhya</div>
+          <div class="company-industry">ERP · 500+</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 2</span>
+            <span><i data-lucide="zap"></i> 15</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Próximo</div>
+            <div class="company-next-action">Mandar report · 18/mai</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot purple"></span>Reunião marcada</div>
+        <span class="kanban-col-count">5</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card">
+          <div class="company-name">Conexa Saúde</div>
+          <div class="company-industry">Healthtech · 201-500</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 2</span>
+            <span><i data-lucide="zap"></i> 41</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Reunião</div>
+            <div class="company-next-action">18/mai 14h</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Hash</div>
+          <div class="company-industry">Fintech · 201-500</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 18</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Reunião</div>
+            <div class="company-next-action">20/mai 10h</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Lett</div>
+          <div class="company-industry">Martech · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 35</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Reunião</div>
+            <div class="company-next-action">22/mai 16h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot amber"></span>Em andamento</div>
+        <span class="kanban-col-count">5</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card">
+          <div class="company-name">Nuvini</div>
+          <div class="company-industry">SaaS · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 2</span>
+            <span><i data-lucide="zap"></i> 48</span>
+          </div>
+          <div class="company-next">
+            <div class="company-next-label">Próximo</div>
+            <div class="company-next-action">Enviar proposta · 17/mai</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Sallve</div>
+          <div class="company-industry">Beauty · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 78</span>
+          </div>
+          <div class="company-stale"><i data-lucide="clock-alert"></i> Parada há 14d</div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Atrio Lab</div>
+          <div class="company-industry">Saúde · 11-50</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="zap"></i> 42</span>
+          </div>
+          <div class="company-stale"><i data-lucide="clock-alert"></i> Parada há 16d</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot green"></span>Fechado</div>
+        <span class="kanban-col-count">4</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card">
+          <div class="company-name">Cubo Itaú</div>
+          <div class="company-industry">Innovation · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="trophy" style="color: var(--accent-green);"></i> R$ 8k/mês</span>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Vtex</div>
+          <div class="company-industry">E-commerce · 500+</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 2</span>
+            <span><i data-lucide="trophy" style="color: var(--accent-green);"></i> R$ 12k/mês</span>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="company-name">Kanui</div>
+          <div class="company-industry">E-commerce · 51-200</div>
+          <div class="company-stats">
+            <span><i data-lucide="users"></i> 1</span>
+            <span><i data-lucide="trophy" style="color: var(--accent-green);"></i> R$ 6k/mês</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <div class="kanban-col-title"><span class="status-dot gray"></span>Perdido</div>
+        <span class="kanban-col-count">3</span>
+      </div>
+      <div class="kanban-cards">
+        <div class="company-card" style="opacity: 0.65;">
+          <div class="company-name">Olist</div>
+          <div class="company-industry">E-commerce · 500+</div>
+          <div class="company-stats">
+            <span style="color: var(--neutral);">sem budget · 28/abr</span>
+          </div>
+        </div>
+        <div class="company-card" style="opacity: 0.65;">
+          <div class="company-name">Pipefy</div>
+          <div class="company-industry">SaaS · 201-500</div>
+          <div class="company-stats">
+            <span style="color: var(--neutral);">timing · 12/abr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ====================================================================== -->
+<!--                            TAB: LEAD DETAIL                             -->
+<!-- ====================================================================== -->
+<section class="tab-section" id="detail">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Lead Detail</h2>
+      <p>Página que abre ao clicar em uma Pessoa · timeline cronológica + log manual</p>
+    </div>
+  </div>
+
+  <div class="detail-layout">
+
+    <div>
+      <!-- Header -->
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-avatar">RO</div>
+          <div class="detail-header-info">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px; flex-wrap: wrap;">
+              <h1 class="detail-name">Renata Oliveira</h1>
+              <span class="score-pill lead">
+                <i data-lucide="zap" style="width:11px;height:11px;"></i> Lead · 48 pts
+              </span>
+            </div>
+            <p class="detail-headline">CMO at Nuvini · SaaS holding</p>
+            <div class="detail-links">
+              <a href="#" class="detail-link"><i data-lucide="linkedin"></i> linkedin.com/in/renata-oliveira</a>
+              <a href="#" class="detail-link"><i data-lucide="mail"></i> renata@nuvini.com</a>
+              <a href="#" class="detail-link"><i data-lucide="phone"></i> +55 11 9 8765-4321</a>
+              <a href="#" class="detail-link"><i data-lucide="building-2"></i> Nuvini</a>
+            </div>
+            <div class="detail-actions">
+              <button class="btn-primary"><i data-lucide="plus"></i> Log interação</button>
+              <button class="btn-icon"><i data-lucide="arrow-right-circle"></i> Mover status</button>
+              <button class="btn-icon"><i data-lucide="edit"></i> Editar</button>
+              <button class="btn-icon"><i data-lucide="archive"></i> Arquivar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-stats">
+          <div class="detail-stat">
+            <div class="detail-stat-label">Lead score</div>
+            <div class="detail-stat-value">48</div>
+            <div class="detail-stat-meta">faltam 3 pra Quente</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Touchpoints</div>
+            <div class="detail-stat-value">14</div>
+            <div class="detail-stat-meta">em 8 dias</div>
+          </div>
+          <div class="detail-stat">
+            <div class="detail-stat-label">Primeiro toque</div>
+            <div class="detail-stat-value">8d</div>
+            <div class="detail-stat-meta">via LinkedIn</div>
+          </div>
+        </div>
+
+        <h3 style="font-family: 'Nunito Sans'; font-weight: 900; font-size: 15px; color: var(--primary-dark); margin-bottom: 14px;">Timeline</h3>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot blue">
+              <i data-lucide="message-circle"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Você logou: WhatsApp <span class="timeline-score-delta">+15</span></div>
+                <div class="timeline-time">há 12 min</div>
+              </div>
+              <div class="timeline-observation">"Combinamos call quarta 10h. Mostrei número de leads do report e ela demonstrou interesse em entender melhor o modelo CaaS. Falou que budget Q3 tá apertado mas vale conversa."</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot green">
+              <i data-lucide="calendar-check"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Agendou demo no Cal.com <span class="timeline-score-delta">+30</span></div>
+                <div class="timeline-time">há 1h</div>
+              </div>
+              <div class="timeline-meta"><strong>20/mai 10:00</strong> · 30 min · Google Meet</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot">
+              <i data-lucide="file-text"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Submeteu Form Demo <span class="timeline-score-delta">+50</span></div>
+                <div class="timeline-time">há 1h</div>
+              </div>
+              <div class="timeline-meta">UTM: <strong>linkedin / employee-led-growth</strong> · porte 51-200</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot pink">
+              <i data-lucide="linkedin"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Você logou: Mensagem no LinkedIn <span class="timeline-score-delta">+10</span></div>
+                <div class="timeline-time">2d atrás</div>
+              </div>
+              <div class="timeline-observation">"Mandei DM convidando pra ver o report B2B. Ela respondeu que ia dar uma olhada hoje à noite."</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot amber">
+              <i data-lucide="mouse-pointer-click"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Visitou /precos <span class="timeline-score-delta">+5</span></div>
+                <div class="timeline-time">3d atrás</div>
+              </div>
+              <div class="timeline-meta">3 min na página · scroll até o fim</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot orange">
+              <i data-lucide="newspaper"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Baixou Report B2B <span class="timeline-score-delta">+10</span></div>
+                <div class="timeline-time">5d atrás</div>
+              </div>
+              <div class="timeline-meta">Report Employee-Led Growth 2026</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot">
+              <i data-lucide="mail-open"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Abriu email <span class="timeline-score-delta">+1</span></div>
+                <div class="timeline-time">6d atrás</div>
+              </div>
+              <div class="timeline-meta">Newsletter "5 sinais que sua empresa precisa de ELG"</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot blue">
+              <i data-lucide="user-plus"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <div class="timeline-title">Adicionada via extensão Chrome</div>
+                <div class="timeline-time">8d atrás</div>
+              </div>
+              <div class="timeline-meta">Capturada do perfil LinkedIn por <strong>Clara</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log Modal Example -->
+      <div class="log-modal-container">
+        <div class="log-modal-header">
+          <div class="log-modal-title">
+            <i data-lucide="plus-circle"></i> Log interação manual (modal exemplo)
+          </div>
+          <span class="log-weight-preview"><i data-lucide="zap" style="width:11px;height:11px;"></i> +15 pts</span>
+        </div>
+        <div class="log-field">
+          <div class="log-field-label">Tipo de interação</div>
+          <select class="log-field-select">
+            <option>📱 WhatsApp</option>
+            <option>💬 Mensagem no LinkedIn (+10)</option>
+            <option>👀 Engagement no LinkedIn (+5)</option>
+            <option>📧 Email manual (+20)</option>
+            <option>📞 Ligação telefônica (+20)</option>
+            <option>☕ Reunião extra fora Cal.com (+25)</option>
+            <option>🔗 Outro (+5)</option>
+          </select>
+        </div>
+        <div class="log-field">
+          <div class="log-field-label">Observação</div>
+          <textarea class="log-field-textarea" placeholder="Sobre o que vocês conversaram? Próximos passos?">Combinamos call quarta 10h. Mostrei número de leads do report e ela demonstrou interesse em entender melhor o modelo CaaS. Falou que budget Q3 tá apertado mas vale conversa.</textarea>
+        </div>
+        <div class="log-field">
+          <div class="log-field-label">Quando aconteceu</div>
+          <input type="text" class="log-field-input" value="Agora (15/05 14:32)">
+        </div>
+        <div class="log-actions">
+          <button class="log-btn-cancel">Cancelar</button>
+          <button class="log-btn-save">Salvar interação</button>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="side-card">
+        <div class="side-card-title">
+          <i data-lucide="calendar"></i> Próximas reuniões
+        </div>
+        <div class="meeting-item">
+          <div class="meeting-when">Em 5 dias · 20/mai</div>
+          <div class="meeting-title">Demo Boldfy + Renata</div>
+          <div class="meeting-meta">10:00 · 30 min · via Cal.com</div>
+          <a href="#" class="meeting-link">Abrir Google Meet →</a>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card-title">
+          <i data-lucide="tags"></i> Tags do ActiveCampaign
+        </div>
+        <div class="tag-list">
+          <span class="tag">Form: Demo</span>
+          <span class="tag">Segmento: Líderes B2B</span>
+          <span class="tag">Status: Lead</span>
+          <span class="tag">Demo: Aguardando agendamento</span>
+          <span class="tag">utm_source_first: linkedin</span>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card-title">
+          <i data-lucide="building-2"></i> Empresa
+        </div>
+        <div style="padding: 14px; background: var(--bg); border-radius: 10px;">
+          <div style="font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Nuvini</div>
+          <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">SaaS · 51-200 funcionários</div>
+          <div style="font-size: 11px; padding: 6px 10px; background: rgba(245, 158, 11, 0.1); color: #92580E; border-radius: 6px; font-weight: 600;">Em andamento · 3 dias</div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card-title">
+          <i data-lucide="trending-up"></i> Como o score evoluiu
+        </div>
+        <div style="font-family: 'Nunito Sans'; font-weight: 900; font-size: 32px; color: var(--primary); margin-bottom: 4px; line-height: 1;">48</div>
+        <div style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">+48 nos últimos 8 dias</div>
+        <div style="display: flex; gap: 6px; align-items: flex-end; height: 50px;">
+          <div style="flex:1; background: var(--secondary); height: 6%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 12%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 16%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 22%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 30%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 50%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--secondary); height: 60%; border-radius: 4px;"></div>
+          <div style="flex:1; background: var(--primary); height: 100%; border-radius: 4px;"></div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+</section>
+
+<!-- ====================================================================== -->
+<!--                            TAB: ACTIVITY FEED                           -->
+<!-- ====================================================================== -->
+<section class="tab-section" id="feed">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Activity Feed</h2>
+      <p>Tudo que rolou no CRM, em ordem cronológica · filtre por tipo, pessoa, ou empresa</p>
+    </div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Mostrar:</span>
+    <button class="filter-chip active">Tudo</button>
+    <button class="filter-chip">Forms</button>
+    <button class="filter-chip">Cal.com</button>
+    <button class="filter-chip">Email AC</button>
+    <button class="filter-chip">Interações manuais</button>
+    <button class="filter-chip">Status changes</button>
+    <button class="filter-chip">Extensão Chrome</button>
+  </div>
+
+  <div class="feed-container">
+
+    <div class="feed-day">
+      <div class="feed-day-header">Hoje · 15 mai</div>
+
+      <div class="feed-item">
+        <div class="feed-time">14:32</div>
+        <div class="feed-icon" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-pink);"><i data-lucide="message-circle"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>WhatsApp</strong> com <strong>Renata Oliveira</strong> (Nuvini) <span class="timeline-score-delta">+15</span></div>
+          <div class="feed-text-meta">"Combinamos call quarta 10h. Mostrei número de leads do report..."</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">14:18</div>
+        <div class="feed-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);"><i data-lucide="calendar-check"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Renata Oliveira</strong> agendou demo no Cal.com <span class="timeline-score-delta">+30</span></div>
+          <div class="feed-text-meta">20/mai 10:00 · 30 min</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">14:17</div>
+        <div class="feed-icon"><i data-lucide="file-text"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Renata Oliveira</strong> submeteu Form Demo <span class="timeline-score-delta">+50</span></div>
+          <div class="feed-text-meta">UTM: linkedin / employee-led-growth</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">14:10</div>
+        <div class="feed-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);"><i data-lucide="arrow-right-circle"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Nuvini</strong> moveu pra <strong>Em andamento</strong></div>
+          <div class="feed-text-meta">Auto: nova demo agendada · disparou tag "Em conversa" no AC</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">13:42</div>
+        <div class="feed-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--accent-amber);"><i data-lucide="zap"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Carla Bittencourt</strong> (Cubo Itaú) promovida pra <strong>Quente</strong></div>
+          <div class="feed-text-meta">Score atingiu 92 · trigger "Status: Quente" no AC</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">11:24</div>
+        <div class="feed-icon" style="background: rgba(157, 133, 179, 0.1); color: var(--primary);"><i data-lucide="user-plus"></i></div>
+        <div class="feed-content">
+          <div class="feed-text">Você adicionou <strong>Igor Mendonça</strong> (Atrio Lab) via extensão Chrome</div>
+          <div class="feed-text-meta">Capturada do LinkedIn · status inicial: Lead</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">09:18</div>
+        <div class="feed-icon"><i data-lucide="mail-open"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Pedro Camargo</strong> (Lett) abriu email "Quanto custa não fazer ELG" <span class="timeline-score-delta">+1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feed-day">
+      <div class="feed-day-header">Ontem · 14 mai</div>
+
+      <div class="feed-item">
+        <div class="feed-time">19:42</div>
+        <div class="feed-icon" style="background: rgba(157, 133, 179, 0.1); color: var(--primary);"><i data-lucide="linkedin"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Eduardo Hauser</strong> (Kanui) engajou em post da Boldfy <span class="timeline-score-delta">+5</span></div>
+          <div class="feed-text-meta">"Comentou no carrossel sobre Company Pages"</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">16:08</div>
+        <div class="feed-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);"><i data-lucide="trophy"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Kanui</strong> movida pra <strong>Fechado</strong></div>
+          <div class="feed-text-meta">Valor: R$ 6k/mês · 12 meses · trigger "Cliente: True" no AC</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">14:51</div>
+        <div class="feed-icon" style="background: rgba(249, 115, 22, 0.1); color: var(--accent-orange);"><i data-lucide="newspaper"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Laila Tavares</strong> (Hash) baixou Report B2B <span class="timeline-score-delta">+10</span></div>
+          <div class="feed-text-meta">UTM: linkedin / report-launch</div>
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-time">11:32</div>
+        <div class="feed-icon" style="background: rgba(236, 72, 153, 0.1); color: var(--accent-pink);"><i data-lucide="phone"></i></div>
+        <div class="feed-content">
+          <div class="feed-text"><strong>Ligação</strong> com <strong>Mauricio Almeida</strong> (Vtex) <span class="timeline-score-delta">+20</span></div>
+          <div class="feed-text-meta">"15 min. Falou que precisa apresentar pro CMO. Aguardando aprovação."</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ====================================================================== -->
+<!--                            TAB: EXTENSÃO                                -->
+<!-- ====================================================================== -->
+<section class="tab-section" id="ext">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Extensão Chrome</h2>
+      <p>Como funciona quando você abre um perfil no LinkedIn · MVP em sideload, depois Chrome Web Store</p>
+    </div>
+  </div>
+
+  <div class="ext-showcase">
+
+    <div class="ext-section">
+      <h3 style="font-family: 'Nunito Sans'; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 14px;">Como aparece no LinkedIn</h3>
+      <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Botão flutuante injetado no canto superior do perfil. Click → captura, salva, mostra toast.</p>
+
+      <div class="ext-mockup">
+        <div class="ext-browser-bar">
+          <span class="ext-browser-dot"></span>
+          <span class="ext-browser-dot"></span>
+          <span class="ext-browser-dot"></span>
+          <div class="ext-browser-url">linkedin.com/in/igor-mendonca-atriolab</div>
+        </div>
+        <div class="ext-page-content">
+
+          <div class="ext-floating-btn">
+            <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Salvar no Boldfy CRM
+          </div>
+
+          <div class="ext-linkedin-profile">
+            <div class="ext-profile-avatar">IM</div>
+            <div class="ext-profile-info">
+              <h3>Igor Mendonça</h3>
+              <p>Diretor de Marketing at Atrio Lab</p>
+              <div class="ext-profile-meta">São Paulo, Brasil · 500+ conexões</div>
+            </div>
+          </div>
+
+          <div class="ext-toast">
+            <div class="ext-toast-icon"><i data-lucide="check"></i></div>
+            <div class="ext-toast-text">
+              <div class="ext-toast-title">Salvo como Lead</div>
+              <div class="ext-toast-link">Ver no CRM →</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="ext-section">
+      <h3 style="font-family: 'Nunito Sans'; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 14px;">O que rola por baixo</h3>
+
+      <div class="ext-step-list">
+        <div class="ext-step">
+          <div class="ext-step-num">1</div>
+          <div class="ext-step-text"><strong>Scraping do DOM:</strong> captura nome, headline, foto, URL, location e empresa atual.</div>
+        </div>
+        <div class="ext-step">
+          <div class="ext-step-num">2</div>
+          <div class="ext-step-text"><strong>POST autenticado:</strong> manda payload + token (gerado na primeira config) pra <code style="background: var(--secondary); padding: 2px 6px; border-radius: 4px; font-size: 11px;">/api/extension/save</code>.</div>
+        </div>
+        <div class="ext-step">
+          <div class="ext-step-num">3</div>
+          <div class="ext-step-text"><strong>Dedupe + criação:</strong> backend checa se LinkedIn URL já existe. Se sim, atualiza; se não, cria Person + tenta detectar/criar Company.</div>
+        </div>
+        <div class="ext-step">
+          <div class="ext-step-num">4</div>
+          <div class="ext-step-text"><strong>Toast + link:</strong> retorna sucesso, extensão mostra "Salvo" + atalho pra abrir o lead detail no CRM.</div>
+        </div>
+        <div class="ext-step">
+          <div class="ext-step-num">5</div>
+          <div class="ext-step-text"><strong>Bonus right-click:</strong> menu rápido pra logar interação (LinkedIn message, engagement) sem abrir o CRM.</div>
+        </div>
+      </div>
+
+      <div class="alert info" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 18px; padding: 12px 14px; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; font-size: 12px; color: #1E40AF;">
+        <i data-lucide="info" style="width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;"></i>
+        <div><strong>Distribuição:</strong> primeiro sideload (você baixa o .crx e arrasta no chrome://extensions), depois publicação na Chrome Web Store (US$ 5 fee + 1-3 dias de review).</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="detail-card">
+    <h3 style="font-family: 'Nunito Sans'; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 12px;">Auth flow (uma vez só)</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 12px;">
+      <div style="padding: 16px; background: var(--bg); border-radius: 12px;">
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">1. Você instala extensão</div>
+        <div style="color: var(--muted);">Click no ícone → popup "Conectar conta Boldfy" → abre nova aba do CRM</div>
+      </div>
+      <div style="padding: 16px; background: var(--bg); border-radius: 12px;">
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">2. Gera token</div>
+        <div style="color: var(--muted);">Na página /internal/crm/extension-auth, click "Gerar token" → mostra string única "boldfy_ext_xxx"</div>
+      </div>
+      <div style="padding: 16px; background: var(--bg); border-radius: 12px;">
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">3. Cola no popup</div>
+        <div style="color: var(--muted);">Cola o token no popup da extensão → todos os saves futuros usam essa auth</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const parent = chip.parentElement;
+    parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+// Init Lucide icons
+lucide.createIcons();
+</script>
+
+</body>
+</html>

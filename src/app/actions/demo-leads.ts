@@ -11,6 +11,7 @@
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
 import { syncFolkLead } from '@/lib/folk';
+import { recordLeadFromForm } from '@/lib/crm';
 import { DemoLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -96,9 +97,39 @@ export async function sendDemoLeadToNotion(
       console.error('[demo-leads] Error adding note (non-blocking):', err);
     }
 
+    // CRM Boldfy (dual-write) — nosso DB próprio, vai substituir Folk em breve.
+    // Sprint 1 do CRM: começamos escrevendo em paralelo. Sprint 4: removemos Folk.
+    // Falha aqui não bloqueia (graceful degradation).
+    try {
+      await recordLeadFromForm({
+        name: input.nome,
+        email: input.email,
+        phone: input.telefone,
+        jobTitle: input.cargo,
+        companyName: input.empresa,
+        companySize: input.funcionarios,
+        acContactId: contactId,
+        sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
+        sourcePage: input.origem,
+        sourceMethod: 'form_demo',
+        utmCampaign: input.utm_campaign,
+        activityType: 'form_submit_demo',
+        activityData: {
+          form_type: 'demo',
+          origem: input.origem,
+          utm_source: input.utm_source,
+          utm_medium: input.utm_medium,
+          utm_campaign: input.utm_campaign,
+        },
+      });
+    } catch (err) {
+      console.error('[demo-leads] CRM dual-write error (non-blocking):', err);
+    }
+
     // Folk: lead vai como Person status=Lead + Company status=No status.
     // Demo é form 100% B2B → todo lead vai pro Folk sem gate.
     // Failure aqui não bloqueia o sucesso do AC (que é fonte de verdade).
+    // TODO Sprint 4 CRM: remover esse bloco depois da migração do Folk.
     try {
       await syncFolkLead({
         person: {

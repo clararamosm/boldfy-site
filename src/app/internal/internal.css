@@ -1,0 +1,27 @@
+/**
+ * Estilos específicos do /internal (dashboard + CRM).
+ *
+ * Reusa variáveis CSS globais (globals.css) onde possível. Adiciona namespaces
+ * pra evitar leak de styles pra páginas públicas.
+ */
+
+.internal-root {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+}
+
+.internal-main {
+  flex: 1;
+  padding: 28px 32px 60px;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .internal-main {
+    padding: 20px 16px 40px;
+  }
+}

@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard interno — Boldfy (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root {
+  --primary: #CD50F1;
+  --primary-mid: #9840AD;
+  --primary-dark: #5E2A67;
+  --primary-darker: #2D1445;
+  --primary-darkest: #0F0A18;
+  --bg: #FAF7FF;
+  --card: #FFFFFF;
+  --secondary: #F7EEFC;
+  --border: #E4D8ED;
+  --foreground: #45336B;
+  --muted: #9D85B3;
+  --secondary-fg: #7E3FA6;
+  --accent-orange: #F97316;
+  --accent-green: #10B981;
+  --accent-amber: #F59E0B;
+  --accent-pink: #EC4899;
+  --accent-blue: #3B82F6;
+  --neutral: #6B5B8A;
+  --destructive: #EE5A52;
+  --shadow-card: 0 8px 32px rgba(93, 42, 103, .06);
+  --shadow-hover: 0 16px 40px rgba(205, 80, 241, .12);
+  --shadow-btn: 0 8px 24px rgba(205, 80, 241, .28);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--foreground);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.font-headline { font-family: 'Nunito Sans', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+
+/* ============== TOP BAR ============== */
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.topbar-left { display: flex; align-items: center; gap: 24px; }
+.logo {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+.logo .b1 { color: #572D63; }
+.logo .b2 { color: #BD58E7; }
+.topbar-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  background: rgba(205, 80, 241, 0.08);
+  border: 1px solid rgba(205, 80, 241, 0.25);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+.view-switcher {
+  display: flex;
+  background: var(--secondary);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.vs-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.vs-btn:hover { color: var(--primary-dark); }
+.vs-btn.active {
+  background: var(--card);
+  color: var(--primary-dark);
+  box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08);
+}
+.vs-btn i { width: 15px; height: 15px; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.period-selector {
+  display: flex;
+  background: var(--secondary);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.period-selector button {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.period-selector button.active {
+  background: var(--card);
+  color: var(--primary-dark);
+  box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08);
+}
+.last-update {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.last-update .dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; }
+
+/* ============== TABS ============== */
+.tabs-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  position: sticky;
+  top: 73px;
+  z-index: 49;
+}
+.tab-btn {
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--primary-dark); }
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.tab-btn .badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--primary);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+/* ============== MAIN ============== */
+main { padding: 28px 32px 60px; max-width: 1440px; margin: 0 auto; }
+.tab-section { display: none; animation: fadeIn 0.3s ease; }
+.tab-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.section-title { display: flex; flex-direction: column; gap: 4px; }
+.section-title h2 { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 26px; color: var(--primary-dark); letter-spacing: -0.02em; }
+.section-title p { color: var(--muted); font-size: 13px; }
+
+/* ============== KPI CARDS ============== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card:hover { transform: translateY(-4px); border-color: rgba(205, 80, 241, 0.35); box-shadow: var(--shadow-hover); }
+.kpi-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(205, 80, 241, 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.kpi-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
+.kpi-icon.blue { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); }
+.kpi-icon.amber { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); }
+.kpi-icon.orange { background: rgba(249, 115, 22, 0.1); color: var(--accent-orange); }
+.kpi-icon.pink { background: rgba(236, 72, 153, 0.1); color: var(--accent-pink); }
+.kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+.kpi-value { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 28px; color: var(--primary-dark); line-height: 1; margin-bottom: 8px; }
+.kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+.kpi-trend.up { color: var(--accent-green); }
+.kpi-trend.down { color: var(--neutral); }
+.kpi-trend.flat { color: var(--muted); }
+.kpi-trend svg { width: 14px; height: 14px; }
+.kpi-meta { color: var(--muted); font-weight: 500; }
+
+/* ============== CARD ============== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 20px;
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+.card-title { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 16px; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; }
+.card-title svg { width: 18px; height: 18px; color: var(--primary); }
+.card-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-actions { display: flex; gap: 6px; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+.btn-ghost.active { background: rgba(205, 80, 241, 0.08); border-color: var(--primary); color: var(--primary); }
+
+/* ============== GRID ============== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .grid-2, .grid-3, .grid-2-1 { grid-template-columns: 1fr; } }
+
+/* ============== CHART CONTAINER ============== */
+.chart-container { position: relative; height: 260px; }
+.chart-container.small { height: 180px; }
+.chart-container.large { height: 320px; }
+
+/* ============== TABLE ============== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); }
+thead th.right { text-align: right; }
+tbody td { padding: 12px; border-bottom: 1px solid var(--border); }
+tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--secondary); }
+.row-strong { font-weight: 600; color: var(--primary-dark); }
+.row-muted { color: var(--muted); font-size: 12px; }
+.cell-bar { display: flex; align-items: center; gap: 10px; }
+.cell-bar .bar-track { flex: 1; height: 6px; background: var(--secondary); border-radius: 999px; overflow: hidden; }
+.cell-bar .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+.cell-bar .bar-fill.green { background: var(--accent-green); }
+.cell-bar .bar-fill.blue { background: var(--accent-blue); }
+.cell-bar .bar-fill.amber { background: var(--accent-amber); }
+
+/* ============== BADGE / PILL ============== */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  background: rgba(205, 80, 241, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(205, 80, 241, 0.2);
+}
+.pill.green { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.2); }
+.pill.blue { background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.2); }
+.pill.amber { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.2); }
+.pill.orange { background: rgba(249, 115, 22, 0.1); color: var(--accent-orange); border-color: rgba(249, 115, 22, 0.2); }
+.pill.pink { background: rgba(236, 72, 153, 0.1); color: var(--accent-pink); border-color: rgba(236, 72, 153, 0.2); }
+.pill.neutral { background: rgba(107, 91, 138, 0.08); color: var(--neutral); border-color: rgba(107, 91, 138, 0.2); }
+
+/* ============== ALERT ============== */
+.alerts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid;
+  font-size: 13px;
+}
+.alert.warning { background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.25); color: #92580E; }
+.alert.success { background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.25); color: #066B4D; }
+.alert.info { background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.25); color: #1E40AF; }
+.alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert strong { font-weight: 700; }
+
+/* ============== FUNNEL ============== */
+.funnel { display: flex; flex-direction: column; gap: 10px; }
+.funnel-step {
+  display: grid;
+  grid-template-columns: 180px 1fr 80px 80px;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.funnel-step-name { font-weight: 600; color: var(--primary-dark); font-size: 13px; }
+.funnel-step-bar { height: 28px; background: var(--secondary); border-radius: 8px; overflow: hidden; position: relative; }
+.funnel-step-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, #E875FF 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+}
+.funnel-step-count { text-align: right; font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 18px; color: var(--primary-dark); }
+.funnel-step-rate { text-align: right; font-size: 11px; color: var(--muted); font-weight: 600; }
+
+/* ============== LEAD LIST ============== */
+.lead-row {
+  display: grid;
+  grid-template-columns: 1fr 200px 140px 100px 100px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.lead-row:last-child { border-bottom: none; }
+.lead-row:hover { background: var(--secondary); }
+.lead-name { font-weight: 600; color: var(--primary-dark); }
+.lead-email { font-size: 11px; color: var(--muted); }
+.lead-company { display: flex; flex-direction: column; gap: 2px; }
+.lead-company-name { font-weight: 600; }
+.lead-company-meta { font-size: 11px; color: var(--muted); }
+
+/* ============== FORM CARD ============== */
+.form-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.25s ease;
+}
+.form-stat-card:hover { transform: translateY(-3px); border-color: rgba(205, 80, 241, 0.3); box-shadow: var(--shadow-hover); }
+.form-stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.form-stat-title { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 15px; color: var(--primary-dark); }
+.form-stat-value { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 32px; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+.form-stat-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+.form-stat-conv { padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 12px; }
+.form-stat-conv-label { color: var(--muted); }
+.form-stat-conv-value { font-weight: 700; color: var(--accent-green); }
+
+/* ============== ALL DATA ============== */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-state svg { width: 40px; height: 40px; opacity: 0.4; margin-bottom: 12px; }
+.empty-state strong { display: block; color: var(--primary-dark); font-weight: 700; margin-bottom: 4px; }
+
+/* ============== WEB SUMMIT BANNER ============== */
+.ws-banner {
+  background: linear-gradient(135deg, #0F0A18 0%, #2D1445 50%, #5E2A67 100%);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.ws-banner::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 240px; height: 240px;
+  background: var(--primary);
+  filter: blur(120px);
+  opacity: 0.5;
+}
+.ws-banner-content { position: relative; z-index: 1; }
+.ws-banner-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: rgba(205, 80, 241, 0.25);
+  border: 1px solid rgba(205, 80, 241, 0.4);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.ws-banner h2 { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 28px; margin-bottom: 8px; }
+.ws-banner p { color: rgba(255, 255, 255, 0.7); font-size: 14px; max-width: 600px; }
+.ws-countdown { display: flex; gap: 18px; margin-top: 20px; }
+.ws-countdown-item { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 10px 16px; min-width: 70px; text-align: center; }
+.ws-countdown-num { font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 24px; }
+.ws-countdown-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.7; font-weight: 600; }
+
+/* ============== LOGIN MOCK ============== */
+.preview-note {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  color: #92580E;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.preview-note svg { width: 16px; height: 16px; }
+
+/* ============== LINKS BAR (UTM) ============== */
+.utm-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 80px;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.utm-row:last-child { border-bottom: none; }
+.utm-row:hover { background: var(--secondary); }
+.utm-name { font-weight: 600; color: var(--primary-dark); }
+.utm-meta { font-size: 11px; color: var(--muted); }
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 768px) {
+  .topbar { padding: 12px 16px; flex-direction: column; gap: 12px; align-items: flex-start; }
+  .tabs-nav { padding: 0 16px; }
+  main { padding: 20px 16px 60px; }
+  .funnel-step { grid-template-columns: 1fr; gap: 8px; }
+  .lead-row { grid-template-columns: 1fr; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============== TOP BAR ============== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><span class="b1">bold</span><span class="b2">fy</span></div>
+    <div class="view-switcher">
+      <a href="crm-preview.html" class="vs-btn">
+        <i data-lucide="users"></i> CRM
+      </a>
+      <button class="vs-btn active">
+        <i data-lucide="bar-chart-3"></i> Dashboard
+      </button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="period-selector">
+      <button>Hoje</button>
+      <button>7d</button>
+      <button class="active">30d</button>
+      <button>90d</button>
+      <button>Custom</button>
+    </div>
+    <div class="last-update">
+      <span class="dot"></span>
+      Atualizado há 3 min
+    </div>
+  </div>
+</div>
+
+<!-- ============== TABS NAV ============== -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-tab="overview"><i data-lucide="layout-dashboard"></i>Visão geral</button>
+  <button class="tab-btn" data-tab="traffic"><i data-lucide="trending-up"></i>Tráfego</button>
+  <button class="tab-btn" data-tab="forms"><i data-lucide="clipboard-list"></i>Formulários</button>
+  <button class="tab-btn" data-tab="funnel"><i data-lucide="git-pull-request"></i>Funil B2B</button>
+  <button class="tab-btn" data-tab="seo"><i data-lucide="search"></i>SEO</button>
+  <button class="tab-btn" data-tab="linkedin"><i data-lucide="linkedin"></i>LinkedIn</button>
+  <button class="tab-btn" data-tab="shortlinks"><i data-lucide="link"></i>Shortlinks</button>
+  <button class="tab-btn" data-tab="media"><i data-lucide="newspaper"></i>Mídia &amp; PR</button>
+  <button class="tab-btn" data-tab="websummit"><i data-lucide="sparkles"></i>Web Summit Rio<span class="badge">24d</span></button>
+</nav>
+
+<main>
+
+<!-- ============== PREVIEW NOTE ============== -->
+<div class="preview-note">
+  <i data-lucide="eye"></i>
+  <span><strong>Preview navegável</strong> · dados mockados, todos os números são fictícios mas calibrados pra um site B2B com ~1 mês de vida. Use pra validar layout e UX antes da implementação.</span>
+</div>
+
+<!-- ============================================================================== -->
+<!--                              TAB: VISÃO GERAL                                  -->
+<!-- ============================================================================== -->
+<section class="tab-section active" id="overview">
+
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Visão geral</h2>
+      <p>O pulso do site nos últimos 30 dias.</p>
+    </div>
+  </div>
+
+  <div class="alerts">
+    <div class="alert success">
+      <i data-lucide="trending-up"></i>
+      <div><strong>Tráfego de LinkedIn cresceu 47%</strong> vs últimos 30 dias. Driver: post sobre Employee-Led Growth (15/mai) trouxe 41 visitas nas últimas 48h.</div>
+    </div>
+    <div class="alert warning">
+      <i data-lucide="alert-triangle"></i>
+      <div><strong>Form de Proposta sem leads há 9 dias.</strong> Última submissão: 06/mai. Vale checar se o link da calculadora tá funcionando.</div>
+    </div>
+    <div class="alert info">
+      <i data-lucide="info"></i>
+      <div><strong>3 oportunidades paradas em "Em andamento" há 14+ dias</strong> no Folk. Reuniu, deu boa, sem follow-up confirmado.</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="users"></i></div>
+      <div class="kpi-label">Visitas únicas</div>
+      <div class="kpi-value">1.247</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +23% <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="clipboard-check"></i></div>
+      <div class="kpi-label">Leads capturados</div>
+      <div class="kpi-value">89</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +34% <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="briefcase"></i></div>
+      <div class="kpi-label">Oportunidades em pipe</div>
+      <div class="kpi-value">23</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +8 <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon orange"><i data-lucide="trophy"></i></div>
+      <div class="kpi-label">Deals fechados</div>
+      <div class="kpi-value">4</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +2 <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2-1">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="activity"></i>Visitas por canal (30 dias)</div>
+          <div class="card-subtitle">Tendência semanal por fonte de tráfego</div>
+        </div>
+      </div>
+      <div class="chart-container large"><canvas id="overviewChannelsChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="pie-chart"></i>Mix de origens</div>
+      </div>
+      <div class="chart-container large"><canvas id="overviewSourcesChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="zap"></i>Atividade recente</div>
+        <div class="card-subtitle">Eventos importantes das últimas 24h</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Quando</th><th>Tipo</th><th>Detalhe</th><th>Origem</th></tr></thead>
+      <tbody>
+        <tr><td class="row-muted">há 12 min</td><td><span class="pill green">Lead</span></td><td class="row-strong">Renata Oliveira (Nuvini) — Form Demo</td><td><span class="pill blue">LinkedIn</span></td></tr>
+        <tr><td class="row-muted">há 47 min</td><td><span class="pill amber">Demo agendada</span></td><td class="row-strong">Bruno Salgado (Conexa Saúde) — 18/mai 14h</td><td><span class="pill">Direct</span></td></tr>
+        <tr><td class="row-muted">há 2h</td><td><span class="pill">Lead</span></td><td class="row-strong">Igor Mendonça (Atrio Lab) — Form Beta</td><td><span class="pill blue">LinkedIn</span></td></tr>
+        <tr><td class="row-muted">há 3h</td><td><span class="pill orange">Material</span></td><td class="row-strong">Report B2B baixado por Laila Tavares (Hash)</td><td><span class="pill green">Organic</span></td></tr>
+        <tr><td class="row-muted">há 5h</td><td><span class="pill green">Lead</span></td><td class="row-strong">Pedro Camargo (Lett) — Form Demo</td><td><span class="pill blue">LinkedIn</span></td></tr>
+        <tr><td class="row-muted">há 7h</td><td><span class="pill amber">Folk update</span></td><td class="row-strong">Sallve movida pra "Em andamento"</td><td>—</td></tr>
+        <tr><td class="row-muted">há 9h</td><td><span class="pill">Lead</span></td><td class="row-strong">Mariana Lacerda (Olist) — Form Demo</td><td><span class="pill amber">Indicação</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: TRÁFEGO (GA4)                                -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="traffic">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Tráfego</h2>
+      <p>Dados do GA4 — atualizado a cada 15 min</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="users"></i></div>
+      <div class="kpi-label">Usuários únicos</div>
+      <div class="kpi-value">1.247</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +23%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="mouse-pointer-click"></i></div>
+      <div class="kpi-label">Sessões</div>
+      <div class="kpi-value">1.683</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +19%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="clock"></i></div>
+      <div class="kpi-label">Tempo médio</div>
+      <div class="kpi-value">2m 14s</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +18s</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="repeat"></i></div>
+      <div class="kpi-label">Bounce rate</div>
+      <div class="kpi-value">41%</div>
+      <div class="kpi-trend down"><i data-lucide="arrow-down"></i> -6%</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="line-chart"></i>Visitas diárias por canal</div>
+        <div class="card-subtitle">Últimos 30 dias · empilhado por fonte</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-ghost active">Empilhado</button>
+        <button class="btn-ghost">Linhas</button>
+      </div>
+    </div>
+    <div class="chart-container large"><canvas id="trafficDailyChart"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="globe"></i>Top fontes de tráfego</div>
+      </div>
+      <table>
+        <thead><tr><th>Origem</th><th class="right">Sessões</th><th class="right">% total</th></tr></thead>
+        <tbody>
+          <tr><td><strong>LinkedIn</strong> <span class="pill blue">social</span></td><td class="right row-strong">468</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill blue" style="width: 78%;"></div></div>27.8%</div></td></tr>
+          <tr><td><strong>google</strong> <span class="pill green">organic</span></td><td class="right row-strong">312</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill green" style="width: 52%;"></div></div>18.5%</div></td></tr>
+          <tr><td><strong>Direct</strong> <span class="pill neutral">direct</span></td><td class="right row-strong">287</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill" style="width: 48%;"></div></div>17.1%</div></td></tr>
+          <tr><td><strong>linkedin.com</strong> <span class="pill">referral</span></td><td class="right row-strong">189</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill" style="width: 31%;"></div></div>11.2%</div></td></tr>
+          <tr><td><strong>ac email</strong> <span class="pill amber">email</span></td><td class="right row-strong">163</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill amber" style="width: 27%;"></div></div>9.7%</div></td></tr>
+          <tr><td><strong>Indicação</strong> <span class="pill">referral</span></td><td class="right row-strong">142</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill" style="width: 24%;"></div></div>8.4%</div></td></tr>
+          <tr><td><strong>Outros</strong></td><td class="right row-strong">122</td><td class="right"><div class="cell-bar"><div class="bar-track"><div class="bar-fill" style="width: 20%;"></div></div>7.3%</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="file-text"></i>Páginas mais vistas</div>
+      </div>
+      <table>
+        <thead><tr><th>Página</th><th class="right">Views</th><th class="right">Tempo méd.</th></tr></thead>
+        <tbody>
+          <tr><td><div class="row-strong">/</div><div class="row-muted">Home</div></td><td class="right">412</td><td class="right">1m 47s</td></tr>
+          <tr><td><div class="row-strong">/solucoes/software-as-a-service</div><div class="row-muted">SaaS</div></td><td class="right">238</td><td class="right">2m 31s</td></tr>
+          <tr><td><div class="row-strong">/precos</div><div class="row-muted">Preços</div></td><td class="right">189</td><td class="right">3m 12s</td></tr>
+          <tr><td><div class="row-strong">/blog/employee-led-growth</div><div class="row-muted">Blog post</div></td><td class="right">147</td><td class="right">4m 23s</td></tr>
+          <tr><td><div class="row-strong">/para/marketing</div><div class="row-muted">Marketing</div></td><td class="right">123</td><td class="right">2m 8s</td></tr>
+          <tr><td><div class="row-strong">/blog/criadores-de-conteudo</div><div class="row-muted">Blog post</div></td><td class="right">98</td><td class="right">3m 47s</td></tr>
+          <tr><td><div class="row-strong">/solucoes/content-as-a-service</div><div class="row-muted">CaaS</div></td><td class="right">87</td><td class="right">2m 12s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i data-lucide="tags"></i>UTMs com mais sessões</div>
+      <div class="card-subtitle">utm_source / utm_medium / utm_campaign</div>
+    </div>
+    <table>
+      <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th class="right">Sessões</th><th class="right">Leads</th><th class="right">Conv.</th></tr></thead>
+      <tbody>
+        <tr><td class="row-strong">linkedin</td><td>social</td><td>employee-led-growth</td><td class="right">147</td><td class="right">12</td><td class="right"><span class="pill green">8.2%</span></td></tr>
+        <tr><td class="row-strong">linkedin</td><td>social</td><td>clara-perfil-pessoal</td><td class="right">123</td><td class="right">9</td><td class="right"><span class="pill green">7.3%</span></td></tr>
+        <tr><td class="row-strong">linkedin</td><td>social</td><td>case-nuvini</td><td class="right">89</td><td class="right">6</td><td class="right"><span class="pill green">6.7%</span></td></tr>
+        <tr><td class="row-strong">ac-email</td><td>email</td><td>newsletter-mai-2026</td><td class="right">163</td><td class="right">4</td><td class="right"><span class="pill amber">2.5%</span></td></tr>
+        <tr><td class="row-strong">linkedin</td><td>social</td><td>report-launch</td><td class="right">52</td><td class="right">8</td><td class="right"><span class="pill green">15.4%</span></td></tr>
+        <tr><td class="row-strong">indicacao</td><td>referral</td><td>parceiros</td><td class="right">38</td><td class="right">5</td><td class="right"><span class="pill green">13.2%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: FORMULÁRIOS                                   -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="forms">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Formulários</h2>
+      <p>Leads capturados via ActiveCampaign — atualizado a cada 5 min</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="form-stat-card">
+      <div class="form-stat-header">
+        <div class="form-stat-title">Demo</div>
+        <span class="pill">B2B</span>
+      </div>
+      <div class="form-stat-value">31</div>
+      <div class="form-stat-label">Leads em 30 dias</div>
+      <div class="form-stat-conv">
+        <span class="form-stat-conv-label">Conversão visita→lead</span>
+        <span class="form-stat-conv-value">3.4%</span>
+      </div>
+    </div>
+    <div class="form-stat-card">
+      <div class="form-stat-header">
+        <div class="form-stat-title">Beta</div>
+        <span class="pill">B2B</span>
+      </div>
+      <div class="form-stat-value">19</div>
+      <div class="form-stat-label">Leads em 30 dias</div>
+      <div class="form-stat-conv">
+        <span class="form-stat-conv-label">Conversão visita→lead</span>
+        <span class="form-stat-conv-value">5.8%</span>
+      </div>
+    </div>
+    <div class="form-stat-card">
+      <div class="form-stat-header">
+        <div class="form-stat-title">Report</div>
+        <span class="pill orange">Top-funnel</span>
+      </div>
+      <div class="form-stat-value">37</div>
+      <div class="form-stat-label">Leads em 30 dias</div>
+      <div class="form-stat-conv">
+        <span class="form-stat-conv-label">Conversão visita→lead</span>
+        <span class="form-stat-conv-value">12.1%</span>
+      </div>
+    </div>
+    <div class="form-stat-card">
+      <div class="form-stat-header">
+        <div class="form-stat-title">Proposta</div>
+        <span class="pill amber">Bottom-funnel</span>
+      </div>
+      <div class="form-stat-value">2</div>
+      <div class="form-stat-label">Leads em 30 dias</div>
+      <div class="form-stat-conv">
+        <span class="form-stat-conv-label">Conversão visita→lead</span>
+        <span class="form-stat-conv-value">1.1%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="git-fork"></i>Funil de Demo</div>
+        <div class="card-subtitle">Lead → agendou → reuniu</div>
+      </div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-step-name">Form submitted</div>
+          <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 100%;">100%</div></div>
+          <div class="funnel-step-count">31</div>
+          <div class="funnel-step-rate">—</div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-step-name">Agendou no Cal.com</div>
+          <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 68%;">68%</div></div>
+          <div class="funnel-step-count">21</div>
+          <div class="funnel-step-rate">-32%</div>
+        </div>
+        <div class="funnel-step">
+          <div class="funnel-step-name">Reuniu (sem no-show)</div>
+          <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 55%;">55%</div></div>
+          <div class="funnel-step-count">17</div>
+          <div class="funnel-step-rate">-19%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="bar-chart-3"></i>Leads por origem</div>
+      </div>
+      <div class="chart-container"><canvas id="formsOriginChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="list"></i>Últimos leads</div>
+        <div class="card-subtitle">20 mais recentes · clique pra ver detalhe no AC</div>
+      </div>
+    </div>
+    <div>
+      <div class="lead-row" style="background: var(--secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700;">
+        <div>Lead</div><div>Empresa</div><div>Form</div><div>UTM</div><div style="text-align: right;">Quando</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Renata Oliveira</div><div class="lead-email">renata@nuvini.com</div></div>
+        <div class="lead-company"><div class="lead-company-name">Nuvini</div><div class="lead-company-meta">SaaS · 51-200</div></div>
+        <div><span class="pill">Demo</span></div>
+        <div><span class="pill blue">LinkedIn</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 12 min</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Igor Mendonça</div><div class="lead-email">igor@atriolab.com.br</div></div>
+        <div class="lead-company"><div class="lead-company-name">Atrio Lab</div><div class="lead-company-meta">Saúde · 11-50</div></div>
+        <div><span class="pill green">Beta</span></div>
+        <div><span class="pill blue">LinkedIn</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 2h</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Laila Tavares</div><div class="lead-email">laila@hash.com.br</div></div>
+        <div class="lead-company"><div class="lead-company-name">Hash</div><div class="lead-company-meta">Fintech · 201-500</div></div>
+        <div><span class="pill orange">Report</span></div>
+        <div><span class="pill green">Organic</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 3h</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Pedro Camargo</div><div class="lead-email">pedro@lett.digital</div></div>
+        <div class="lead-company"><div class="lead-company-name">Lett</div><div class="lead-company-meta">Martech · 51-200</div></div>
+        <div><span class="pill">Demo</span></div>
+        <div><span class="pill blue">LinkedIn</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 5h</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Mariana Lacerda</div><div class="lead-email">mariana@olist.com</div></div>
+        <div class="lead-company"><div class="lead-company-name">Olist</div><div class="lead-company-meta">E-commerce · 500+</div></div>
+        <div><span class="pill">Demo</span></div>
+        <div><span class="pill amber">Indicação</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 9h</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Caio Bertini</div><div class="lead-email">caio@conexasaude.com.br</div></div>
+        <div class="lead-company"><div class="lead-company-name">Conexa Saúde</div><div class="lead-company-meta">Healthtech · 201-500</div></div>
+        <div><span class="pill orange">Report</span></div>
+        <div><span class="pill blue">LinkedIn</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 14h</div>
+      </div>
+      <div class="lead-row">
+        <div><div class="lead-name">Beatriz Sá</div><div class="lead-email">bia.sa@sallve.com.br</div></div>
+        <div class="lead-company"><div class="lead-company-name">Sallve</div><div class="lead-company-meta">Beauty · 51-200</div></div>
+        <div><span class="pill green">Beta</span></div>
+        <div><span class="pill blue">LinkedIn</span></div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">ontem</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: FUNIL B2B (FOLK)                              -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="funnel">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Funil B2B</h2>
+      <p>Pipeline do Folk — atualizado a cada 5 min</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="users-2"></i></div>
+      <div class="kpi-label">Pessoas (Leads)</div>
+      <div class="kpi-value">47</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +12 <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="flame"></i></div>
+      <div class="kpi-label">Quentes</div>
+      <div class="kpi-value">8</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +3</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i data-lucide="calendar-check"></i></div>
+      <div class="kpi-label">Reuniões marcadas</div>
+      <div class="kpi-value">11</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +4</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="trophy"></i></div>
+      <div class="kpi-label">Fechados</div>
+      <div class="kpi-value">4</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +2</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="filter"></i>Funil de Companies</div>
+        <div class="card-subtitle">Etapas do CRM — taxa de conversão entre etapas</div>
+      </div>
+    </div>
+    <div class="funnel">
+      <div class="funnel-step">
+        <div class="funnel-step-name">No status</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 100%;">100%</div></div>
+        <div class="funnel-step-count">38</div>
+        <div class="funnel-step-rate">—</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Quero prospectar</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 71%;">71%</div></div>
+        <div class="funnel-step-count">27</div>
+        <div class="funnel-step-rate">-29%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Reunião marcada</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 41%;">41%</div></div>
+        <div class="funnel-step-count">11</div>
+        <div class="funnel-step-rate">-59%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Em andamento</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 24%;">24%</div></div>
+        <div class="funnel-step-count">7</div>
+        <div class="funnel-step-rate">-36%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Fechado</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 14%; background: linear-gradient(90deg, #10B981, #34D399);">14%</div></div>
+        <div class="funnel-step-count">4</div>
+        <div class="funnel-step-rate">-43%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Perdido</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 10%; background: linear-gradient(90deg, #6B5B8A, #8E7AAA);">10%</div></div>
+        <div class="funnel-step-count">3</div>
+        <div class="funnel-step-rate">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="flame"></i>Oportunidades quentes</div>
+        <div class="card-subtitle">Reunião marcada + Em andamento</div>
+      </div>
+      <table>
+        <thead><tr><th>Empresa</th><th>Status</th><th class="right">Em dias</th></tr></thead>
+        <tbody>
+          <tr><td><div class="row-strong">Nuvini</div><div class="row-muted">SaaS · 51-200</div></td><td><span class="pill amber">Em andamento</span></td><td class="right">3d</td></tr>
+          <tr><td><div class="row-strong">Conexa Saúde</div><div class="row-muted">Healthtech · 201-500</div></td><td><span class="pill blue">Reunião marcada</span></td><td class="right">1d</td></tr>
+          <tr><td><div class="row-strong">Olist</div><div class="row-muted">E-commerce · 500+</div></td><td><span class="pill amber">Em andamento</span></td><td class="right">7d</td></tr>
+          <tr><td><div class="row-strong">Hash</div><div class="row-muted">Fintech · 201-500</div></td><td><span class="pill blue">Reunião marcada</span></td><td class="right">2d</td></tr>
+          <tr><td><div class="row-strong">Sallve</div><div class="row-muted">Beauty · 51-200</div></td><td><span class="pill amber">Em andamento</span></td><td class="right">14d ⚠</td></tr>
+          <tr><td><div class="row-strong">Lett</div><div class="row-muted">Martech · 51-200</div></td><td><span class="pill blue">Reunião marcada</span></td><td class="right">5d</td></tr>
+          <tr><td><div class="row-strong">Atrio Lab</div><div class="row-muted">Saúde · 11-50</div></td><td><span class="pill amber">Em andamento</span></td><td class="right">16d ⚠</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="bar-chart"></i>Conversão por origem</div>
+        <div class="card-subtitle">Taxa Lead → Fechado, por canal</div>
+      </div>
+      <div class="chart-container"><canvas id="funnelOriginChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: SEO                                          -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="seo">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>SEO</h2>
+      <p>Search Console — dados com delay nativo de 2-3 dias · atualizado a cada 30 min</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="mouse-pointer"></i></div>
+      <div class="kpi-label">Cliques</div>
+      <div class="kpi-value">312</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +41%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i data-lucide="eye"></i></div>
+      <div class="kpi-label">Impressões</div>
+      <div class="kpi-value">4.872</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +28%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="percent"></i></div>
+      <div class="kpi-label">CTR médio</div>
+      <div class="kpi-value">6.4%</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +0.7pp</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="arrow-up-circle"></i></div>
+      <div class="kpi-label">Posição média</div>
+      <div class="kpi-value">12.3</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> ↑ 2.1 pos.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="line-chart"></i>Cliques e impressões (28 dias)</div>
+        <div class="card-subtitle">Tendência diária</div>
+      </div>
+    </div>
+    <div class="chart-container large"><canvas id="seoTrendChart"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="search"></i>Top queries com cliques</div>
+      </div>
+      <table>
+        <thead><tr><th>Query</th><th class="right">Cliques</th><th class="right">Posição</th></tr></thead>
+        <tbody>
+          <tr><td class="row-strong">employee advocacy</td><td class="right">47</td><td class="right">8.2 ↑</td></tr>
+          <tr><td class="row-strong">boldfy</td><td class="right">38</td><td class="right">1.0 →</td></tr>
+          <tr><td class="row-strong">employee led growth</td><td class="right">31</td><td class="right">11.4 ↑</td></tr>
+          <tr><td class="row-strong">o que é employee advocacy</td><td class="right">28</td><td class="right">6.7 ↑</td></tr>
+          <tr><td class="row-strong">marketing de colaboradores</td><td class="right">23</td><td class="right">14.2 ↑</td></tr>
+          <tr><td class="row-strong">criar conteúdo linkedin empresa</td><td class="right">19</td><td class="right">9.8 ↑</td></tr>
+          <tr><td class="row-strong">programa employee advocacy</td><td class="right">17</td><td class="right">12.3 →</td></tr>
+          <tr><td class="row-strong">como engajar funcionarios linkedin</td><td class="right">14</td><td class="right">15.7 ↓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="target"></i>Oportunidades (página 2-3)</div>
+        <div class="card-subtitle">Queries onde aparecemos em pos. 11-30 — fácil subir</div>
+      </div>
+      <table>
+        <thead><tr><th>Query</th><th class="right">Impr.</th><th class="right">Pos.</th></tr></thead>
+        <tbody>
+          <tr><td class="row-strong">advocacy de marca</td><td class="right">412</td><td class="right">11.2</td></tr>
+          <tr><td class="row-strong">linkedin para empresas b2b</td><td class="right">387</td><td class="right">14.7</td></tr>
+          <tr><td class="row-strong">programa de criadores funcionários</td><td class="right">284</td><td class="right">12.8</td></tr>
+          <tr><td class="row-strong">conteudo b2b linkedin</td><td class="right">267</td><td class="right">15.3</td></tr>
+          <tr><td class="row-strong">gamificação marketing</td><td class="right">218</td><td class="right">18.4</td></tr>
+          <tr><td class="row-strong">caas content as a service</td><td class="right">142</td><td class="right">13.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: LINKEDIN                                      -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="linkedin">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>LinkedIn</h2>
+      <p>Funil orgânico baseado em UTM · Website Demographics ainda não desbloqueado (need ~300 únicos/90d, temos ~90)</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i data-lucide="users"></i></div>
+      <div class="kpi-label">Visitas de LinkedIn</div>
+      <div class="kpi-value">468</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +47% <span class="kpi-meta">vs 30d ant.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="clipboard-check"></i></div>
+      <div class="kpi-label">Leads do LinkedIn</div>
+      <div class="kpi-value">29</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +71%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="percent"></i></div>
+      <div class="kpi-label">Conv. visita→lead</div>
+      <div class="kpi-value">6.2%</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +1.4pp</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon orange"><i data-lucide="trophy"></i></div>
+      <div class="kpi-label">Deals do LinkedIn</div>
+      <div class="kpi-value">2</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +2</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="git-fork"></i>Funil completo do LinkedIn</div>
+        <div class="card-subtitle">Visita → Lead → Demo → Reunião → Fechado</div>
+      </div>
+    </div>
+    <div class="funnel">
+      <div class="funnel-step">
+        <div class="funnel-step-name">Visitas (GA4)</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 100%;">100%</div></div>
+        <div class="funnel-step-count">468</div>
+        <div class="funnel-step-rate">—</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Leads (AC)</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 25%;">25%</div></div>
+        <div class="funnel-step-count">29</div>
+        <div class="funnel-step-rate">-94%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Demos agendadas</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 15%;">15%</div></div>
+        <div class="funnel-step-count">11</div>
+        <div class="funnel-step-rate">-62%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Reunião marcada (Folk)</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 10%;">10%</div></div>
+        <div class="funnel-step-count">7</div>
+        <div class="funnel-step-rate">-36%</div>
+      </div>
+      <div class="funnel-step">
+        <div class="funnel-step-name">Fechado</div>
+        <div class="funnel-step-bar"><div class="funnel-step-fill" style="width: 3%; background: linear-gradient(90deg, #10B981, #34D399);">3%</div></div>
+        <div class="funnel-step-count">2</div>
+        <div class="funnel-step-rate">-71%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="megaphone"></i>Top campanhas (utm_campaign)</div>
+        <div class="card-subtitle">Qual peça de conteúdo mais converteu</div>
+      </div>
+      <table>
+        <thead><tr><th>Campanha</th><th class="right">Visitas</th><th class="right">Leads</th><th class="right">Conv.</th></tr></thead>
+        <tbody>
+          <tr><td class="row-strong">report-launch</td><td class="right">52</td><td class="right">8</td><td class="right"><span class="pill green">15.4%</span></td></tr>
+          <tr><td class="row-strong">employee-led-growth</td><td class="right">147</td><td class="right">12</td><td class="right"><span class="pill green">8.2%</span></td></tr>
+          <tr><td class="row-strong">clara-perfil-pessoal</td><td class="right">123</td><td class="right">9</td><td class="right"><span class="pill green">7.3%</span></td></tr>
+          <tr><td class="row-strong">case-nuvini</td><td class="right">89</td><td class="right">6</td><td class="right"><span class="pill green">6.7%</span></td></tr>
+          <tr><td class="row-strong">post-organico-empresa</td><td class="right">38</td><td class="right">2</td><td class="right"><span class="pill amber">5.3%</span></td></tr>
+          <tr><td class="row-strong">(sem utm)</td><td class="right">19</td><td class="right">0</td><td class="right"><span class="pill neutral">0%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i data-lucide="user-check"></i>Leads recentes de LinkedIn</div>
+      </div>
+      <table>
+        <thead><tr><th>Lead</th><th>UTM</th><th>Status Folk</th></tr></thead>
+        <tbody>
+          <tr><td><div class="row-strong">Renata Oliveira</div><div class="row-muted">Nuvini · CMO</div></td><td><span class="pill" style="font-size: 9px;">employee-led-growth</span></td><td><span class="pill amber">Em andamento</span></td></tr>
+          <tr><td><div class="row-strong">Igor Mendonça</div><div class="row-muted">Atrio Lab · Diretor de Mkt</div></td><td><span class="pill" style="font-size: 9px;">case-nuvini</span></td><td><span class="pill">Lead</span></td></tr>
+          <tr><td><div class="row-strong">Pedro Camargo</div><div class="row-muted">Lett · Head Growth</div></td><td><span class="pill" style="font-size: 9px;">report-launch</span></td><td><span class="pill blue">Reunião marcada</span></td></tr>
+          <tr><td><div class="row-strong">Caio Bertini</div><div class="row-muted">Conexa Saúde · CMO</div></td><td><span class="pill" style="font-size: 9px;">report-launch</span></td><td><span class="pill blue">Reunião marcada</span></td></tr>
+          <tr><td><div class="row-strong">Beatriz Sá</div><div class="row-muted">Sallve · CMO</div></td><td><span class="pill" style="font-size: 9px;">clara-perfil-pessoal</span></td><td><span class="pill amber">Em andamento</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="lock"></i>Website Demographics (LinkedIn Insight Tag)</div>
+        <div class="card-subtitle">Bloqueado até atingir ~300 visitas únicas em 90 dias</div>
+      </div>
+    </div>
+    <div class="empty-state">
+      <i data-lucide="lock-keyhole"></i>
+      <strong>~90 únicos de 300 necessários (30%)</strong>
+      <p>Estimado destravar em jul-ago/2026. Quando rolar, esse bloco mostra automaticamente: top empresas visitando, distribuição por cargo, indústrias e senioridade — tudo agregado e anônimo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: SHORTLINKS                                    -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="shortlinks">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Shortlinks</h2>
+      <p>Analytics dos /l/[code] gerados via Vercel KV — atualizado a cada 1 min</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="link"></i></div>
+      <div class="kpi-label">Links ativos</div>
+      <div class="kpi-value">47</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +8</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i data-lucide="mouse-pointer-click"></i></div>
+      <div class="kpi-label">Cliques (30d)</div>
+      <div class="kpi-value">623</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +52%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="trending-up"></i></div>
+      <div class="kpi-label">Click médio/link</div>
+      <div class="kpi-value">13.3</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +3.1</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="flame"></i></div>
+      <div class="kpi-label">Top link (30d)</div>
+      <div class="kpi-value">89</div>
+      <div class="kpi-trend flat"><span class="kpi-meta">/l/elg-report</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="line-chart"></i>Cliques por dia</div>
+      </div>
+    </div>
+    <div class="chart-container"><canvas id="shortlinksChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="list-ordered"></i>Top links da última semana</div>
+      </div>
+    </div>
+    <div>
+      <div class="utm-row" style="background: var(--secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700;">
+        <div>Código → destino</div><div style="text-align: right;">Cliques</div><div style="text-align: right;">Hoje</div><div style="text-align: right;">Criado</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/elg-report</div><div class="utm-meta">→ /materiais/report-employee-led-growth?utm_source=linkedin&utm_campaign=report-launch</div></div>
+        <div style="text-align: right; font-weight: 600;">89</div>
+        <div style="text-align: right; color: var(--accent-green); font-weight: 600;">+14</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 12d</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/case-nuvini</div><div class="utm-meta">→ /blog/case-nuvini?utm_source=linkedin&utm_campaign=case-nuvini</div></div>
+        <div style="text-align: right; font-weight: 600;">67</div>
+        <div style="text-align: right; color: var(--accent-green); font-weight: 600;">+8</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 18d</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/demo-cmo</div><div class="utm-meta">→ /agendar-demo?utm_source=linkedin&utm_content=cmo-targeting</div></div>
+        <div style="text-align: right; font-weight: 600;">52</div>
+        <div style="text-align: right; color: var(--accent-green); font-weight: 600;">+11</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 8d</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/calc-roi</div><div class="utm-meta">→ /ferramentas?utm_source=linkedin&utm_campaign=calc-roi</div></div>
+        <div style="text-align: right; font-weight: 600;">41</div>
+        <div style="text-align: right; color: var(--muted); font-weight: 600;">+3</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 22d</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/precos-sx</div><div class="utm-meta">→ /precos?utm_source=newsletter&utm_campaign=mai-2026</div></div>
+        <div style="text-align: right; font-weight: 600;">38</div>
+        <div style="text-align: right; color: var(--muted); font-weight: 600;">+2</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 9d</div>
+      </div>
+      <div class="utm-row">
+        <div><div class="utm-name">/l/beta-vip</div><div class="utm-meta">→ /beta-test?utm_source=indicacao&utm_content=parceiros</div></div>
+        <div style="text-align: right; font-weight: 600;">28</div>
+        <div style="text-align: right; color: var(--accent-green); font-weight: 600;">+5</div>
+        <div style="text-align: right; color: var(--muted); font-size: 11px;">há 5d</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: MÍDIA & PR                                    -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="media">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Mídia &amp; PR</h2>
+      <p>Tracking de artigos publicados via SaaS de PR + impacto no alcance orgânico</p>
+    </div>
+    <button class="btn-ghost active" style="padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+      <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Cadastrar publicação
+    </button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="newspaper"></i></div>
+      <div class="kpi-label">Artigos publicados</div>
+      <div class="kpi-value">2</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +2 <span class="kpi-meta">no mês</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i data-lucide="users"></i></div>
+      <div class="kpi-label">Visitas via PR</div>
+      <div class="kpi-value">47</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +47 <span class="kpi-meta">vs 0 antes</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="clipboard-check"></i></div>
+      <div class="kpi-label">Leads via PR</div>
+      <div class="kpi-value">4</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> +4 <span class="kpi-meta">8.5% conv.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="search"></i></div>
+      <div class="kpi-label">Busca "boldfy"</div>
+      <div class="kpi-value">+127%</div>
+      <div class="kpi-trend up"><i data-lucide="arrow-up"></i> <span class="kpi-meta">vs antes do 1º artigo</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="search"></i>Branded search com marcadores</div>
+          <div class="card-subtitle">Buscas contendo "boldfy" no Search Console — linhas verticais marcam publicações</div>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="brandedSearchChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="globe"></i>Direct traffic com marcadores</div>
+          <div class="card-subtitle">Quem viu a matéria e foi digitar boldfy.com.br direto</div>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="directTrafficChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="file-text"></i>Artigos publicados</div>
+        <div class="card-subtitle">Cadastre quando o SaaS confirmar a publicação. Tracking começa automático.</div>
+      </div>
+    </div>
+    <div>
+      <div class="utm-row" style="background: var(--secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700; grid-template-columns: 1fr 100px 90px 90px;">
+        <div>Artigo</div><div style="text-align: right;">Cliques</div><div style="text-align: right;">Leads</div><div style="text-align: right;">Veículos</div>
+      </div>
+      <div class="utm-row" style="grid-template-columns: 1fr 100px 90px 90px;">
+        <div>
+          <div class="utm-name">Por que Employee-Led Growth virou prioridade pra B2B em 2026</div>
+          <div class="utm-meta">/l/pr-elg-mai26 · publicado em 28/abr · <a href="#" style="color: var(--primary);">expandir</a></div>
+        </div>
+        <div style="text-align: right; font-weight: 600;">34</div>
+        <div style="text-align: right; font-weight: 600;">3</div>
+        <div style="text-align: right;"><span class="pill">12</span></div>
+      </div>
+      <div class="utm-row" style="grid-template-columns: 1fr 100px 90px 90px;">
+        <div>
+          <div class="utm-name">O fim das Company Pages: por que empresas migram pra criadores internos</div>
+          <div class="utm-meta">/l/pr-criadores-mai26 · publicado em 10/mai · <a href="#" style="color: var(--primary);">expandir</a></div>
+        </div>
+        <div style="text-align: right; font-weight: 600;">13</div>
+        <div style="text-align: right; font-weight: 600;">1</div>
+        <div style="text-align: right;"><span class="pill">7</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="trophy"></i>Top veículos por tráfego</div>
+        <div class="card-subtitle">Domínios detectados via GA4 referrer · cumulativo</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Veículo</th><th>Domínio</th><th class="right">Sessões</th><th class="right">Leads</th><th class="right">Tempo méd.</th></tr></thead>
+      <tbody>
+        <tr><td class="row-strong">Valor Econômico</td><td class="row-muted">valor.globo.com</td><td class="right">18</td><td class="right">2</td><td class="right">3m 12s</td></tr>
+        <tr><td class="row-strong">Exame</td><td class="row-muted">exame.com.br</td><td class="right">12</td><td class="right">1</td><td class="right">2m 48s</td></tr>
+        <tr><td class="row-strong">NeoFeed</td><td class="row-muted">neofeed.com.br</td><td class="right">7</td><td class="right">1</td><td class="right">4m 02s</td></tr>
+        <tr><td class="row-strong">MIT Tech Review BR</td><td class="row-muted">mittechreview.com.br</td><td class="right">4</td><td class="right">0</td><td class="right">2m 14s</td></tr>
+        <tr><td class="row-strong">Pequenas Empresas Grandes Negócios</td><td class="row-muted">revistapegn.globo.com</td><td class="right">3</td><td class="right">0</td><td class="right">1m 37s</td></tr>
+        <tr><td class="row-strong">Outros 14 veículos</td><td class="row-muted">—</td><td class="right">3</td><td class="right">0</td><td class="right">2m 08s</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert info" style="margin-top: 20px;">
+    <i data-lucide="info"></i>
+    <div><strong>Como medir impacto orgânico:</strong> dois sinais principais. (1) Branded search subindo — gente vê matéria, lembra do nome, depois busca direto no Google. (2) Direct traffic subindo — gente vai direto pra <code>boldfy.com.br</code> depois de ler a matéria. Os marcadores nos charts marcam as datas exatas de publicação pra você ver causa-efeito.</div>
+  </div>
+</section>
+
+<!-- ============================================================================== -->
+<!--                              TAB: WEB SUMMIT RIO                                -->
+<!-- ============================================================================== -->
+<section class="tab-section" id="websummit">
+
+  <div class="ws-banner">
+    <div class="ws-banner-content">
+      <span class="ws-banner-tag">View dedicada</span>
+      <h2>Web Summit Rio 2026</h2>
+      <p>Tudo filtrado por <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">utm_campaign=web-summit-rio-2026</code>. Atualiza em tempo real durante e depois da feira.</p>
+      <div class="ws-countdown">
+        <div class="ws-countdown-item">
+          <div class="ws-countdown-num">24</div>
+          <div class="ws-countdown-label">Dias</div>
+        </div>
+        <div class="ws-countdown-item">
+          <div class="ws-countdown-num">15</div>
+          <div class="ws-countdown-label">Horas</div>
+        </div>
+        <div class="ws-countdown-item">
+          <div class="ws-countdown-num">42</div>
+          <div class="ws-countdown-label">Min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alerts">
+    <div class="alert info">
+      <i data-lucide="info"></i>
+      <div><strong>Padrão de UTM da feira:</strong> <code>utm_source=web-summit · utm_medium=event · utm_campaign=web-summit-rio-2026 · utm_content={qr-banner | qr-camiseta | qr-flyer | qr-pitch | qr-stand}</code>. Use nos QR codes, links no pitch deck e materiais distribuídos.</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><i data-lucide="users"></i></div>
+      <div class="kpi-label">Visitas Web Summit</div>
+      <div class="kpi-value">0</div>
+      <div class="kpi-trend flat"><span class="kpi-meta">aguardando evento</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i data-lucide="clipboard-check"></i></div>
+      <div class="kpi-label">Leads gerados</div>
+      <div class="kpi-value">0</div>
+      <div class="kpi-trend flat"><span class="kpi-meta">aguardando evento</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i data-lucide="briefcase"></i></div>
+      <div class="kpi-label">Oportunidades</div>
+      <div class="kpi-value">0</div>
+      <div class="kpi-trend flat"><span class="kpi-meta">aguardando evento</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon orange"><i data-lucide="trophy"></i></div>
+      <div class="kpi-label">Deals fechados</div>
+      <div class="kpi-value">0</div>
+      <div class="kpi-trend flat"><span class="kpi-meta">aguardando evento</span></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="qr-code"></i>QR Codes preparados</div>
+          <div class="card-subtitle">Cada QR vai ter UTM próprio pra rastrear de onde converteu</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Material</th><th>UTM content</th><th>Shortlink</th></tr></thead>
+        <tbody>
+          <tr><td class="row-strong">Banner do stand</td><td><span class="pill" style="font-size: 9px;">qr-banner</span></td><td class="row-muted">/l/ws-banner</td></tr>
+          <tr><td class="row-strong">Camiseta do time</td><td><span class="pill" style="font-size: 9px;">qr-camiseta</span></td><td class="row-muted">/l/ws-camiseta</td></tr>
+          <tr><td class="row-strong">Flyer (500 unidades)</td><td><span class="pill" style="font-size: 9px;">qr-flyer</span></td><td class="row-muted">/l/ws-flyer</td></tr>
+          <tr><td class="row-strong">Pitch deck digital</td><td><span class="pill" style="font-size: 9px;">qr-pitch</span></td><td class="row-muted">/l/ws-pitch</td></tr>
+          <tr><td class="row-strong">Cartões de visita</td><td><span class="pill" style="font-size: 9px;">qr-cartao</span></td><td class="row-muted">/l/ws-cartao</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><i data-lucide="calendar"></i>Conteúdo programado pré/durante/pós</div>
+          <div class="card-subtitle">Posts e ativações com UTM da feira</div>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Quando</th><th>Conteúdo</th><th>Canal</th></tr></thead>
+        <tbody>
+          <tr><td class="row-muted">3/jun</td><td class="row-strong">Post "Vamos pro Web Summit"</td><td><span class="pill blue">LinkedIn</span></td></tr>
+          <tr><td class="row-muted">5/jun</td><td class="row-strong">Newsletter pré-evento</td><td><span class="pill amber">Email</span></td></tr>
+          <tr><td class="row-muted">7/jun</td><td class="row-strong">Stories countdown</td><td><span class="pill pink">Instagram</span></td></tr>
+          <tr><td class="row-muted">8-10/jun</td><td class="row-strong">Daily recap posts</td><td><span class="pill blue">LinkedIn</span></td></tr>
+          <tr><td class="row-muted">12/jun</td><td class="row-strong">Pós-evento: "5 insights"</td><td><span class="pill blue">LinkedIn</span></td></tr>
+          <tr><td class="row-muted">15/jun</td><td class="row-strong">Newsletter follow-up</td><td><span class="pill amber">Email</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><i data-lucide="clock"></i>O que vai aparecer aqui durante o evento</div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border);">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); margin-bottom: 8px;">Tempo real</div>
+        <div style="font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 6px;">Visitas e leads chegando</div>
+        <div style="font-size: 12px; color: var(--muted);">Atualiza a cada 5 min. Vê de qual QR code/material veio cada lead.</div>
+      </div>
+      <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border);">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-green); margin-bottom: 8px;">Por dia da feira</div>
+        <div style="font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 6px;">Performance dia 1, 2, 3</div>
+        <div style="font-size: 12px; color: var(--muted);">Quebra por dia, qual material gerou mais lead, picos de tráfego.</div>
+      </div>
+      <div style="padding: 20px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border);">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-orange); margin-bottom: 8px;">Pós-evento</div>
+        <div style="font-family: 'Nunito Sans', sans-serif; font-weight: 900; font-size: 16px; color: var(--primary-dark); margin-bottom: 6px;">ROI completo</div>
+        <div style="font-size: 12px; color: var(--muted);">Custos × leads × deals fechados. Permanente pra histórico.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+// ============== TABS ==============
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// ============== PERIOD SELECTOR ==============
+document.querySelectorAll('.period-selector button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-selector button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ============== CHARTS ==============
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#9D85B3';
+Chart.defaults.borderColor = '#E4D8ED';
+
+const days30 = Array.from({length: 30}, (_, i) => `${i + 1}/4`).map((_, i) => {
+  const d = new Date(2026, 4, i + 1);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+});
+
+// Overview — Visitas por canal (linha empilhada)
+new Chart(document.getElementById('overviewChannelsChart'), {
+  type: 'line',
+  data: {
+    labels: days30,
+    datasets: [
+      { label: 'LinkedIn', data: [8,9,11,7,12,14,10,16,13,18,15,17,22,19,16,24,21,18,26,23,20,28,25,22,30,27,24,32,29,26], borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 },
+      { label: 'Organic', data: [5,6,8,4,9,7,11,8,12,10,14,9,13,15,11,16,12,17,14,18,13,19,15,20,16,17,18,15,19,16], borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+      { label: 'Direct', data: [6,7,9,5,8,11,7,10,12,8,11,14,9,12,15,10,13,16,11,14,17,12,15,18,13,16,19,14,17,12], borderColor: '#9D85B3', backgroundColor: 'rgba(157, 133, 179, 0.1)', fill: true, tension: 0.4 },
+      { label: 'Email', data: [3,2,4,3,5,2,4,3,6,4,3,5,7,4,6,3,5,8,4,6,9,5,7,4,8,6,5,9,4,7], borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11, weight: '600' } } } },
+    scales: { y: { beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { grid: { display: false } } }
+  }
+});
+
+// Overview — Mix origens (donut)
+new Chart(document.getElementById('overviewSourcesChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['LinkedIn', 'Organic', 'Direct', 'Email', 'Indicação', 'Outros'],
+    datasets: [{ data: [468, 312, 287, 163, 142, 122], backgroundColor: ['#CD50F1', '#10B981', '#9D85B3', '#F59E0B', '#3B82F6', '#E4D8ED'], borderWidth: 0 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: { legend: { position: 'right', labels: { boxWidth: 10, boxHeight: 10, padding: 10, font: { size: 11, weight: '500' } } } }
+  }
+});
+
+// Traffic — Daily stacked bars
+new Chart(document.getElementById('trafficDailyChart'), {
+  type: 'bar',
+  data: {
+    labels: days30,
+    datasets: [
+      { label: 'LinkedIn', data: [8,9,11,7,12,14,10,16,13,18,15,17,22,19,16,24,21,18,26,23,20,28,25,22,30,27,24,32,29,26], backgroundColor: '#3B82F6', borderRadius: 4 },
+      { label: 'Organic', data: [5,6,8,4,9,7,11,8,12,10,14,9,13,15,11,16,12,17,14,18,13,19,15,20,16,17,18,15,19,16], backgroundColor: '#10B981', borderRadius: 4 },
+      { label: 'Direct', data: [6,7,9,5,8,11,7,10,12,8,11,14,9,12,15,10,13,16,11,14,17,12,15,18,13,16,19,14,17,12], backgroundColor: '#9D85B3', borderRadius: 4 },
+      { label: 'Email', data: [3,2,4,3,5,2,4,3,6,4,3,5,7,4,6,3,5,8,4,6,9,5,7,4,8,6,5,9,4,7], backgroundColor: '#F59E0B', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11, weight: '600' } } } },
+    scales: { y: { stacked: true, beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { stacked: true, grid: { display: false } } }
+  }
+});
+
+// Forms — Origin bar
+new Chart(document.getElementById('formsOriginChart'), {
+  type: 'bar',
+  data: {
+    labels: ['LinkedIn', 'Organic', 'Direct', 'Email', 'Indicação'],
+    datasets: [
+      { label: 'Demo', data: [12, 6, 5, 4, 4], backgroundColor: '#CD50F1', borderRadius: 6 },
+      { label: 'Beta', data: [8, 4, 3, 2, 2], backgroundColor: '#10B981', borderRadius: 6 },
+      { label: 'Report', data: [9, 12, 7, 6, 3], backgroundColor: '#F97316', borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11, weight: '600' } } } },
+    scales: { y: { beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { grid: { display: false } } }
+  }
+});
+
+// Funnel — Conversion por origem
+new Chart(document.getElementById('funnelOriginChart'), {
+  type: 'bar',
+  data: {
+    labels: ['LinkedIn', 'Indicação', 'Organic', 'Direct', 'Email'],
+    datasets: [{
+      label: 'Conv. Lead → Fechado (%)',
+      data: [6.9, 12.0, 3.2, 2.4, 0],
+      backgroundColor: ['#CD50F1', '#10B981', '#9D85B3', '#3B82F6', '#F59E0B'],
+      borderRadius: 8
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, grid: { color: '#F0E8F5' }, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } }
+  }
+});
+
+// SEO — Trend
+new Chart(document.getElementById('seoTrendChart'), {
+  type: 'line',
+  data: {
+    labels: Array.from({length: 28}, (_, i) => `${i + 1}`),
+    datasets: [
+      { label: 'Cliques', data: [4,3,5,6,4,7,5,8,6,9,7,11,8,10,12,9,13,11,14,12,15,13,16,14,17,15,18,16], borderColor: '#CD50F1', backgroundColor: 'rgba(205, 80, 241, 0.15)', fill: true, tension: 0.4, yAxisID: 'y' },
+      { label: 'Impressões', data: [82,95,110,98,125,140,118,156,143,168,152,178,165,189,176,202,188,215,201,228,214,241,227,254,240,267,253,280], borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, yAxisID: 'y1' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 10, boxHeight: 10, padding: 12, font: { size: 11, weight: '600' } } } },
+    scales: {
+      y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: '#F0E8F5' }, title: { display: true, text: 'Cliques' } },
+      y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { display: false }, title: { display: true, text: 'Impressões' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Shortlinks — Cliques por dia
+new Chart(document.getElementById('shortlinksChart'), {
+  type: 'bar',
+  data: {
+    labels: days30,
+    datasets: [{ label: 'Cliques', data: [12,15,18,11,22,19,16,24,21,18,27,23,20,29,25,22,31,27,24,33,28,25,35,30,27,37,32,29,38,33], backgroundColor: '#CD50F1', borderRadius: 4 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { grid: { display: false } } }
+  }
+});
+
+// Media — Branded search com marcadores nas datas de publicação
+const brandedSearchData = [3,4,3,5,4,3,5,4,3,5,4,6,5,4,5,6,8,12,15,18,16,14,17,15,13,14,16,18,17,15];
+const brandedSearchPublications = [13, 25]; // index 13 = 28/abr, index 25 = 10/mai
+
+new Chart(document.getElementById('brandedSearchChart'), {
+  type: 'line',
+  data: {
+    labels: days30,
+    datasets: [
+      { label: 'Buscas "boldfy"', data: brandedSearchData, borderColor: '#CD50F1', backgroundColor: 'rgba(205, 80, 241, 0.12)', fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      annotation: {}
+    },
+    scales: { y: { beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { grid: { display: false } } }
+  },
+  plugins: [{
+    id: 'verticalLines',
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+      brandedSearchPublications.forEach((idx, i) => {
+        const x = xAxis.getPixelForValue(idx);
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(x, yAxis.top);
+        ctx.lineTo(x, yAxis.bottom);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#F97316';
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Label
+        ctx.fillStyle = '#F97316';
+        ctx.font = 'bold 9px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('📰 PR', x, yAxis.top + 12);
+        ctx.restore();
+      });
+    }
+  }]
+});
+
+// Media — Direct traffic com marcadores
+const directTrafficData = [12,15,11,14,13,12,15,14,11,13,12,14,13,15,16,18,22,28,31,29,26,24,28,26,23,25,29,32,30,28];
+
+new Chart(document.getElementById('directTrafficChart'), {
+  type: 'line',
+  data: {
+    labels: days30,
+    datasets: [
+      { label: 'Direct traffic', data: directTrafficData, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.12)', fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, grid: { color: '#F0E8F5' } }, x: { grid: { display: false } } }
+  },
+  plugins: [{
+    id: 'verticalLines2',
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+      brandedSearchPublications.forEach((idx) => {
+        const x = xAxis.getPixelForValue(idx);
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(x, yAxis.top);
+        ctx.lineTo(x, yAxis.bottom);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#F97316';
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#F97316';
+        ctx.font = 'bold 9px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('📰 PR', x, yAxis.top + 12);
+        ctx.restore();
+      });
+    }
+  }]
+});
+
+// Init Lucide icons
+lucide.createIcons();
+</script>
+
+</body>
+</html>

@@ -14,6 +14,7 @@
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
 import { syncFolkLead } from '@/lib/folk';
+import { recordLeadFromForm } from '@/lib/crm';
 import { BetaLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -105,7 +106,38 @@ export async function sendBetaLeadToNotion(
       console.error('[beta-leads] Error adding note (non-blocking):', err);
     }
 
+    // CRM Boldfy (dual-write) — nosso DB próprio, vai substituir Folk em breve.
+    try {
+      await recordLeadFromForm({
+        name: input.nome,
+        email: input.email,
+        phone: input.telefone,
+        jobTitle: input.cargo,
+        companyName: input.empresa,
+        companyIndustry: input.setor,
+        companySize: input.colaboradores,
+        acContactId: acId,
+        sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
+        sourcePage: input.origem,
+        sourceMethod: 'form_beta',
+        utmCampaign: input.utm_campaign,
+        activityType: 'form_submit_beta',
+        activityData: {
+          form_type: 'beta',
+          objetivo_principal: input.objetivoPrincipal,
+          como_conheceu: input.comoConheceu,
+          observacoes: input.observacoes,
+          utm_source: input.utm_source,
+          utm_medium: input.utm_medium,
+          utm_campaign: input.utm_campaign,
+        },
+      });
+    } catch (err) {
+      console.error('[beta-leads] CRM dual-write error (non-blocking):', err);
+    }
+
     // Folk: Beta é form 100% B2B → todo lead vai pro Folk como Person Lead.
+    // TODO Sprint 4 CRM: remover esse bloco depois da migração do Folk.
     try {
       await syncFolkLead({
         person: {
