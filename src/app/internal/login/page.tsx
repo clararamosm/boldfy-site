@@ -7,6 +7,7 @@
  */
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
@@ -25,8 +26,7 @@ export default async function LoginPage({ searchParams }: Props) {
     <div className="login-shell">
       <div className="login-card">
         <div className="login-brand">
-          <span className="login-logo-1">bold</span>
-          <span className="login-logo-2">fy</span>
+          <Image src="/images/boldfy-logo.svg" alt="Boldfy" width={110} height={32} priority />
         </div>
         <h1 className="login-title">Área interna</h1>
         <p className="login-subtitle">Acesso restrito.</p>
@@ -54,15 +54,10 @@ export default async function LoginPage({ searchParams }: Props) {
           box-shadow: 0 16px 48px rgba(93, 42, 103, 0.08);
         }
         .login-brand {
-          font-family: var(--font-headline);
-          font-weight: 900;
-          font-size: 28px;
-          letter-spacing: -0.03em;
-          text-align: center;
-          margin-bottom: 18px;
+          display: flex;
+          justify-content: center;
+          margin-bottom: 20px;
         }
-        .login-logo-1 { color: #572D63; }
-        .login-logo-2 { color: #BD58E7; }
         .login-title {
           font-family: var(--font-headline);
           font-weight: 900;

@@ -1,55 +1,60 @@
 /**
  * Server actions do CRM.
  *
- * movePerson(personId, status) — muda status de uma Pessoa + log activity
- * moveCompany(companyId, status) — idem pra Empresa
+ * movePerson(personId, statusId) — muda status (FK) + log activity
+ * moveCompany(companyId, statusId) — idem
  * logManualInteraction(...) — registra interação manual (timeline + score)
- * updatePersonNotes(personId, notes) — edita notas internas
- * archivePerson(personId) — soft delete (archived = true)
+ * archivePerson(personId) — soft delete
  *
- * AC sync bidirecional fica pra Sprint 4 (TODO marcado in-line).
+ * CRUD de statuses fica em ./settings/statuses/actions.ts
  */
 
 'use server';
 
-import { db, people, companies } from '@/db';
+import { db, people, companies, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
+import { invalidateStatusCache } from '@/lib/statuses';
+import { syncPersonStatusToAC, syncCompanyStatusToAC } from '@/lib/ac-sync';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
-const PersonStatusSchema = z.enum(['Ativo', 'Lead', 'Quente']);
-const CompanyStatusSchema = z.enum([
-  'No status', 'Quero prospectar', 'Reunião marcada',
-  'Em andamento', 'Fechado', 'Perdido',
-]);
 const ManualSubtypeSchema = z.enum([
   'linkedin_message', 'linkedin_engagement', 'whatsapp',
   'email_manual', 'phone_call', 'meeting_extra', 'other',
 ]);
 
+const UuidSchema = z.string().uuid();
+
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function movePerson(
-  personId: string,
-  newStatus: string,
-): Promise<ActionResult> {
-  const parsed = PersonStatusSchema.safeParse(newStatus);
-  if (!parsed.success) return { ok: false, error: 'Status inválido.' };
+export async function movePerson(personId: string, newStatusId: string): Promise<ActionResult> {
+  if (!UuidSchema.safeParse(personId).success) return { ok: false, error: 'ID inválido.' };
+  if (!UuidSchema.safeParse(newStatusId).success) return { ok: false, error: 'Status inválido.' };
 
   try {
+    // Valida que o status existe e é do tipo certo
+    const [statusRow] = await db
+      .select()
+      .from(statuses)
+      .where(eq(statuses.id, newStatusId))
+      .limit(1);
+    if (!statusRow || statusRow.kind !== 'person') {
+      return { ok: false, error: 'Status não compatível com Pessoa.' };
+    }
+
     const [prev] = await db
-      .select({ status: people.status })
+      .select({ statusId: people.statusId })
       .from(people)
       .where(eq(people.id, personId))
       .limit(1);
 
     if (!prev) return { ok: false, error: 'Pessoa não encontrada.' };
-    if (prev.status === parsed.data) return { ok: true }; // no-op
+    if (prev.statusId === newStatusId) return { ok: true }; // no-op
 
     await db
       .update(people)
-      .set({ status: parsed.data, updatedAt: new Date() })
+      .set({ statusId: newStatusId, updatedAt: new Date() })
       .where(eq(people.id, personId));
 
     await logActivity({
@@ -57,10 +62,13 @@ export async function movePerson(
       type: 'status_change',
       weight: 0,
       source: 'manual',
-      data: { from: prev.status, to: parsed.data, reason: 'manual' },
+      data: { fromId: prev.statusId, toId: newStatusId, toLabel: statusRow.label, reason: 'manual' },
     });
 
-    // TODO Sprint 4: trigger AC tag sync ("Status: Lead", "Status: Quente")
+    // Sync AC (non-blocking — falha não bloqueia o user)
+    syncPersonStatusToAC(personId, statusRow).catch((err) =>
+      console.error('[movePerson] AC sync error:', err),
+    );
 
     revalidatePath('/internal/crm');
     revalidatePath(`/internal/crm/people/${personId}`);
@@ -72,26 +80,32 @@ export async function movePerson(
   }
 }
 
-export async function moveCompany(
-  companyId: string,
-  newStatus: string,
-): Promise<ActionResult> {
-  const parsed = CompanyStatusSchema.safeParse(newStatus);
-  if (!parsed.success) return { ok: false, error: 'Status inválido.' };
+export async function moveCompany(companyId: string, newStatusId: string): Promise<ActionResult> {
+  if (!UuidSchema.safeParse(companyId).success) return { ok: false, error: 'ID inválido.' };
+  if (!UuidSchema.safeParse(newStatusId).success) return { ok: false, error: 'Status inválido.' };
 
   try {
+    const [statusRow] = await db
+      .select()
+      .from(statuses)
+      .where(eq(statuses.id, newStatusId))
+      .limit(1);
+    if (!statusRow || statusRow.kind !== 'company') {
+      return { ok: false, error: 'Status não compatível com Empresa.' };
+    }
+
     const [prev] = await db
-      .select({ status: companies.status })
+      .select({ statusId: companies.statusId })
       .from(companies)
       .where(eq(companies.id, companyId))
       .limit(1);
 
     if (!prev) return { ok: false, error: 'Empresa não encontrada.' };
-    if (prev.status === parsed.data) return { ok: true };
+    if (prev.statusId === newStatusId) return { ok: true };
 
     await db
       .update(companies)
-      .set({ status: parsed.data, updatedAt: new Date() })
+      .set({ statusId: newStatusId, updatedAt: new Date() })
       .where(eq(companies.id, companyId));
 
     await logActivity({
@@ -99,10 +113,13 @@ export async function moveCompany(
       type: 'status_change',
       weight: 0,
       source: 'manual',
-      data: { from: prev.status, to: parsed.data, entity: 'company', reason: 'manual' },
+      data: { fromId: prev.statusId, toId: newStatusId, toLabel: statusRow.label, entity: 'company', reason: 'manual' },
     });
 
-    // TODO Sprint 4: trigger AC tag sync (ex: "Cliente: True" pra Fechado)
+    // Sync AC (non-blocking)
+    syncCompanyStatusToAC(companyId, statusRow).catch((err) =>
+      console.error('[moveCompany] AC sync error:', err),
+    );
 
     revalidatePath('/internal/crm/empresas');
     revalidatePath(`/internal/crm/companies/${companyId}`);
@@ -181,4 +198,15 @@ export async function archivePerson(personId: string): Promise<ActionResult> {
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: msg };
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Re-exports pra Settings (limpar cache ao mudar)                            */
+/* -------------------------------------------------------------------------- */
+
+export async function refreshStatusCache(): Promise<ActionResult> {
+  invalidateStatusCache();
+  revalidatePath('/internal/crm');
+  revalidatePath('/internal/crm/empresas');
+  return { ok: true };
 }

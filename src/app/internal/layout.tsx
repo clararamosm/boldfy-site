@@ -14,6 +14,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { InternalTopbar } from '@/components/internal/topbar';
+import { CmdK } from '@/components/crm/cmd-k';
 import './internal.css';
 
 export const metadata: Metadata = {
@@ -44,6 +45,7 @@ export default async function InternalLayout({
     <div className="internal-root">
       <InternalTopbar activeView={activeView} />
       <main className="internal-main">{children}</main>
+      <CmdK />
     </div>
   );
 }

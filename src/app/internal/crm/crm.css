@@ -85,6 +85,21 @@
   border-radius: 14px;
   padding: 12px;
   min-height: 400px;
+  transition: background 0.15s ease, outline 0.15s ease;
+}
+.crm-col-dragover {
+  background: rgba(205, 80, 241, 0.12);
+  outline: 2px dashed #CD50F1;
+  outline-offset: -2px;
+}
+.crm-card-dragging {
+  opacity: 0.4;
+}
+.crm-person-card-wrap {
+  cursor: grab;
+}
+.crm-person-card-wrap:active {
+  cursor: grabbing;
 }
 .crm-col-header {
   display: flex;

@@ -1,14 +1,13 @@
 /**
  * CRM — view principal (Pessoas).
  *
- * Kanban 3 colunas: Ativo / Lead / Quente.
- * Cards desenhados com a estrutura validada (score top-right, origin tags).
- *
- * Click no card → /internal/crm/people/[id] (lead detail).
+ * Kanban de N colunas dinâmicas (configuráveis em Settings → Statuses).
+ * Arraste cards entre colunas pra mudar status.
  */
 
 import type { Metadata } from 'next';
-import { getPeopleByStatus } from '@/lib/crm-queries';
+import Link from 'next/link';
+import { getPeopleByStatus, type PeopleByStatus } from '@/lib/crm-queries';
 import { PersonKanban } from '@/components/crm/person-kanban';
 
 export const metadata: Metadata = {
@@ -19,13 +18,12 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function CrmPeoplePage() {
-  let people;
+  let data: PeopleByStatus = [];
   let dbError: string | null = null;
   try {
-    people = await getPeopleByStatus();
+    data = await getPeopleByStatus();
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
-    people = { Ativo: [], Lead: [], Quente: [] };
   }
 
   return (
@@ -34,9 +32,12 @@ export default async function CrmPeoplePage() {
         <div>
           <h1 className="crm-title">Pessoas</h1>
           <p className="crm-subtitle">
-            Pipeline de leads · status promove auto pelo score (Ativo &lt;21 · Lead 21-50 · Quente 51+)
+            Arraste os cards entre colunas pra mudar status · auto-promoção por score nos thresholds definidos
           </p>
         </div>
+        <Link href="/internal/crm/settings/statuses" className="crm-btn">
+          ⚙ Configurar status
+        </Link>
       </div>
 
       {dbError ? (
@@ -47,9 +48,14 @@ export default async function CrmPeoplePage() {
             <code>vercel env pull .env.local</code> e <code>npm run db:push</code>.
           </p>
         </div>
-      ) : null}
-
-      <PersonKanban data={people} />
+      ) : data.length === 0 ? (
+        <div className="crm-empty-db">
+          <strong>Sem colunas configuradas.</strong>
+          <p>Recarrega a página pra criar os statuses padrão automaticamente.</p>
+        </div>
+      ) : (
+        <PersonKanban data={data} />
+      )}
     </div>
   );
 }

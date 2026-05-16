@@ -7,6 +7,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { logout } from '@/app/internal/actions/auth';
 
 type View = 'crm' | 'dashboard' | null;
@@ -15,9 +16,14 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
   return (
     <header className="internal-topbar">
       <div className="topbar-left">
-        <Link href="/internal/dashboard" className="topbar-logo">
-          <span className="logo-1">bold</span>
-          <span className="logo-2">fy</span>
+        <Link href="/internal/dashboard" className="topbar-logo" aria-label="Boldfy — área interna">
+          <Image
+            src="/images/boldfy-logo.svg"
+            alt="Boldfy"
+            width={88}
+            height={26}
+            priority
+          />
         </Link>
         <nav className="view-switcher" aria-label="Trocar entre CRM e Dashboard">
           <Link
@@ -48,6 +54,23 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
       </div>
 
       <div className="topbar-right">
+        <button
+          type="button"
+          onClick={() => {
+            // Dispara o evento de keyboard que abre o CmdK
+            const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true, bubbles: true });
+            window.dispatchEvent(event);
+          }}
+          className="topbar-search"
+          title="Buscar (⌘K)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          Buscar
+          <kbd>⌘K</kbd>
+        </button>
         <form action={logout}>
           <button type="submit" className="topbar-logout" title="Sair">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -75,14 +98,10 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
         }
         .topbar-left { display: flex; align-items: center; gap: 20px; }
         .topbar-logo {
-          font-family: var(--font-headline);
-          font-weight: 900;
-          font-size: 22px;
-          letter-spacing: -0.03em;
+          display: flex;
+          align-items: center;
           text-decoration: none;
         }
-        .logo-1 { color: #572D63; }
-        .logo-2 { color: #BD58E7; }
         .view-switcher {
           display: flex;
           background: #F7EEFC;
@@ -109,7 +128,7 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
           color: #5E2A67;
           box-shadow: 0 1px 3px rgba(93, 42, 103, 0.08);
         }
-        .topbar-logout {
+        .topbar-search, .topbar-logout {
           background: transparent;
           border: 1px solid #E4D8ED;
           padding: 7px 12px;
@@ -123,7 +142,15 @@ export function InternalTopbar({ activeView }: { activeView: View }) {
           gap: 6px;
           font-family: inherit;
         }
-        .topbar-logout:hover { color: #CD50F1; border-color: #CD50F1; }
+        .topbar-search:hover, .topbar-logout:hover { color: #CD50F1; border-color: #CD50F1; }
+        .topbar-search kbd {
+          background: #F7EEFC;
+          color: #9D85B3;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 600;
+        }
         @media (max-width: 640px) {
           .internal-topbar { padding: 12px 16px; }
         }

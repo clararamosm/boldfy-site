@@ -48,6 +48,13 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
         >
           Feed
         </Link>
+        <Link
+          href="/internal/crm/settings/statuses"
+          className={`crm-subnav-link ${isActive('/internal/crm/settings') ? 'active' : ''}`}
+          style={{ marginLeft: 'auto' }}
+        >
+          ⚙ Configurar
+        </Link>
       </nav>
 
       {children}

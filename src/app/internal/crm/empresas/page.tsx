@@ -1,9 +1,10 @@
 /**
- * CRM · Empresas — kanban 6 colunas com rolagem lateral.
+ * CRM · Empresas — kanban de N colunas (rolagem lateral só no kanban).
  */
 
 import type { Metadata } from 'next';
-import { getCompaniesByStatus } from '@/lib/crm-queries';
+import Link from 'next/link';
+import { getCompaniesByStatus, type CompaniesByStatus } from '@/lib/crm-queries';
 import { CompanyKanban } from '@/components/crm/company-kanban';
 
 export const metadata: Metadata = {
@@ -14,16 +15,12 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function CrmCompaniesPage() {
-  let companies;
+  let data: CompaniesByStatus = [];
   let dbError: string | null = null;
   try {
-    companies = await getCompaniesByStatus();
+    data = await getCompaniesByStatus();
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
-    companies = {
-      'No status': [], 'Quero prospectar': [], 'Reunião marcada': [],
-      'Em andamento': [], Fechado: [], Perdido: [],
-    };
   }
 
   return (
@@ -32,9 +29,12 @@ export default async function CrmCompaniesPage() {
         <div>
           <h1 className="crm-title">Empresas</h1>
           <p className="crm-subtitle">
-            Pipeline de oportunidades · 6 etapas · rolagem lateral só no kanban
+            Pipeline de oportunidades · arraste pra mudar etapa · rolagem só no kanban
           </p>
         </div>
+        <Link href="/internal/crm/settings/statuses" className="crm-btn">
+          ⚙ Configurar status
+        </Link>
       </div>
 
       {dbError ? (
@@ -42,9 +42,14 @@ export default async function CrmCompaniesPage() {
           <strong>Postgres não conectado.</strong>
           <p>Roda <code>vercel env pull .env.local</code> e <code>npm run db:push</code>.</p>
         </div>
-      ) : null}
-
-      <CompanyKanban data={companies} />
+      ) : data.length === 0 ? (
+        <div className="crm-empty-db">
+          <strong>Sem colunas configuradas.</strong>
+          <p>Recarrega a página pra criar os statuses padrão automaticamente.</p>
+        </div>
+      ) : (
+        <CompanyKanban data={data} />
+      )}
     </div>
   );
 }

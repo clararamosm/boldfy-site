@@ -24,8 +24,8 @@ import {
   methodVia,
   channelLabel,
 } from '@/lib/crm-format';
-import { statusForScore } from '@/lib/crm';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
+import { TagManager } from '@/components/crm/tag-manager';
 
 export const metadata: Metadata = {
   title: 'Lead',
@@ -48,8 +48,12 @@ export default async function LeadDetailPage({ params }: Props) {
   ]);
 
   const via = methodVia(person.sourceMethod);
-  const scoreTier = statusForScore(person.leadScore);
-  const scoreClass = scoreTier === 'Quente' ? 'quente' : scoreTier === 'Lead' ? 'lead' : '';
+  const statusColor = person.status?.color ?? 'neutral';
+  const scoreClass = statusColor === 'amber' || statusColor === 'orange'
+    ? 'quente'
+    : statusColor === 'blue'
+      ? 'lead'
+      : '';
   const hue = avatarHue(person.email);
 
   return (
@@ -76,7 +80,7 @@ export default async function LeadDetailPage({ params }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
                   <h1 className="crm-detail-name">{person.name}</h1>
                   <span className={`crm-score-pill ${scoreClass}`}>
-                    ⚡ {scoreTier} · {person.leadScore} pts
+                    ⚡ {person.status?.label ?? 'sem status'} · {person.leadScore} pts
                   </span>
                   {via ? (
                     <span className={`crm-via-badge ${via.classKey}`} style={{ margin: 0 }}>
@@ -92,7 +96,7 @@ export default async function LeadDetailPage({ params }: Props) {
 
                 <div className="crm-detail-links">
                   {person.linkedinUrl ? (
-                    <a href={person.linkedinUrl} className="crm-detail-link" target="_blank" rel="noopener">
+                    <a href={person.linkedinUrl} className="crm-detail-link" target="_blank" rel="noopener noreferrer">
                       🔗 LinkedIn
                     </a>
                   ) : null}
@@ -182,7 +186,7 @@ export default async function LeadDetailPage({ params }: Props) {
                   <div className="crm-meeting-title">{m.title}</div>
                   <div className="crm-meeting-meta">{m.durationMin} min</div>
                   {m.meetingUrl ? (
-                    <a href={m.meetingUrl} target="_blank" rel="noopener" style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#CD50F1', fontWeight: 600, textDecoration: 'none' }}>
+                    <a href={m.meetingUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8, fontSize: 11, color: '#CD50F1', fontWeight: 600, textDecoration: 'none' }}>
                       Abrir reunião →
                     </a>
                   ) : null}
@@ -191,19 +195,13 @@ export default async function LeadDetailPage({ params }: Props) {
             )}
           </div>
 
-          {person.acTags && person.acTags.length > 0 ? (
-            <div className="crm-side-card">
-              <div className="crm-side-title">🏷 Tags ActiveCampaign</div>
-              <div className="crm-tag-list">
-                {person.acTags.map((tag) => (
-                  <span key={tag} className="crm-tag">{tag}</span>
-                ))}
-              </div>
-              <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 10, fontStyle: 'italic' }}>
-                Editor de tags (add/remove) vem no Sprint 4.
-              </div>
+          <div className="crm-side-card">
+            <div className="crm-side-title">🏷 Tags ActiveCampaign</div>
+            <TagManager personId={person.id} initialTags={person.acTags ?? []} />
+            <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 10 }}>
+              Tags disparam automations no AC (cadências, listas, emails).
             </div>
-          ) : null}
+          </div>
 
           {person.company ? (
             <div className="crm-side-card">
@@ -215,7 +213,7 @@ export default async function LeadDetailPage({ params }: Props) {
                   {person.company.size ? ` · ${person.company.size}` : ''}
                 </div>
                 <div style={{ fontSize: 11, padding: '4px 8px', background: 'rgba(205, 80, 241, 0.1)', color: '#CD50F1', borderRadius: 6, fontWeight: 600, display: 'inline-block' }}>
-                  Status: {person.company.status}
+                  Empresa
                 </div>
               </Link>
             </div>

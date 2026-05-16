@@ -10,6 +10,9 @@ import {
   findFolkPrimaryCompanyByEmail,
   updateFolkCompanyStatus,
 } from '@/lib/folk';
+import { db, meetings, people } from '@/db';
+import { logActivity } from '@/lib/crm';
+import { eq } from 'drizzle-orm';
 
 /**
  * Webhook receiver pro Cal.com.
@@ -181,6 +184,60 @@ export async function POST(request: NextRequest) {
       const note = `📅 Demo agendada via Cal.com\n\nData: ${startTime}\nTitulo: ${payload.title ?? '-'}\nBooking UID: ${payload.uid ?? '-'}`;
       await addNoteToContact(contactId, note);
 
+      // CRM Boldfy (dual-write) — popula tabela meetings + activity cal_scheduled.
+      // Failure não é crítica — Folk e AC já receberam.
+      try {
+        const personRow = await db.select({ id: people.id })
+          .from(people)
+          .where(eq(people.email, email.toLowerCase()))
+          .limit(1);
+
+        if (personRow[0] && payload.startTime) {
+          // Upsert meeting por cal_event_id (uid)
+          const calEventId = payload.uid;
+          if (calEventId) {
+            const existingMeeting = await db.select({ id: meetings.id })
+              .from(meetings)
+              .where(eq(meetings.calEventId, calEventId))
+              .limit(1);
+
+            if (existingMeeting[0]) {
+              await db.update(meetings).set({
+                title: payload.title ?? 'Demo',
+                scheduledAt: new Date(payload.startTime),
+                status: 'scheduled',
+                updatedAt: new Date(),
+              }).where(eq(meetings.id, existingMeeting[0].id));
+            } else {
+              await db.insert(meetings).values({
+                personId: personRow[0].id,
+                calEventId,
+                title: payload.title ?? 'Demo Boldfy',
+                scheduledAt: new Date(payload.startTime),
+                durationMin: payload.endTime
+                  ? Math.round((new Date(payload.endTime).getTime() - new Date(payload.startTime).getTime()) / 60000)
+                  : 30,
+                status: 'scheduled',
+              });
+            }
+          }
+
+          // Activity (lead score +30)
+          await logActivity({
+            personId: personRow[0].id,
+            type: 'cal_scheduled',
+            source: 'cal',
+            data: {
+              cal_uid: payload.uid,
+              start: payload.startTime,
+              title: payload.title,
+            },
+          });
+        }
+      } catch (crmErr) {
+        console.error('[cal-webhook] CRM dual-write error (non-blocking):', crmErr);
+      }
+
       // Folk: move a primary company do lead pra "Reunião marcada".
       // Failure aqui não é crítica — AC já atualizado, tags no AC são fonte
       // de verdade pra cadência. Folk é dashboard de vendas.
@@ -206,6 +263,29 @@ export async function POST(request: NextRequest) {
           'Demo: Aguardando agendamento',
         ]),
       ]);
+
+      // CRM Boldfy: marca meeting como cancelled + activity
+      try {
+        if (payload.uid) {
+          await db.update(meetings)
+            .set({ status: 'cancelled', updatedAt: new Date() })
+            .where(eq(meetings.calEventId, payload.uid));
+        }
+        const personRow = await db.select({ id: people.id })
+          .from(people)
+          .where(eq(people.email, email.toLowerCase()))
+          .limit(1);
+        if (personRow[0]) {
+          await logActivity({
+            personId: personRow[0].id,
+            type: 'cal_cancelled',
+            source: 'cal',
+            data: { cal_uid: payload.uid },
+          });
+        }
+      } catch (crmErr) {
+        console.error('[cal-webhook] CRM cancel error (non-blocking):', crmErr);
+      }
     } else if (triggerEvent === 'BOOKING_RESCHEDULED') {
       // Demo remarcada → mantem agendada, so atualiza nota
       const startTime = payload.startTime
@@ -217,6 +297,21 @@ export async function POST(request: NextRequest) {
         : 'horario nao informado';
       const note = `🔄 Demo remarcada via Cal.com\n\nNova data: ${startTime}\nTitulo: ${payload.title ?? '-'}`;
       await addNoteToContact(contactId, note);
+
+      // CRM Boldfy: atualiza scheduled_at do meeting
+      try {
+        if (payload.uid && payload.startTime) {
+          await db.update(meetings)
+            .set({
+              scheduledAt: new Date(payload.startTime),
+              status: 'scheduled',
+              updatedAt: new Date(),
+            })
+            .where(eq(meetings.calEventId, payload.uid));
+        }
+      } catch (crmErr) {
+        console.error('[cal-webhook] CRM reschedule error (non-blocking):', crmErr);
+      }
     }
     // Outros triggerEvents (BOOKING_REQUESTED, MEETING_ENDED, etc) ignorados
     // — so reagimos aos 3 acima por enquanto.

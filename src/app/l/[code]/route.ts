@@ -42,5 +42,13 @@ export async function GET(
     redirect('/?l=notfound');
   }
 
+  // Incrementa contador de cliques (fire-and-forget — não bloqueia redirect)
+  // Sprint 3 do Dashboard: usado pelo bloco Shortlinks.
+  kv.incr(`link-clicks:${code}`).catch((err) =>
+    console.warn(`[l-redirect] Falha incrementando contador de ${code}:`, err),
+  );
+  // Salva também último clique pro UI mostrar "ativo recentemente"
+  kv.set(`link-last:${code}`, Date.now()).catch(() => {});
+
   redirect(url);
 }

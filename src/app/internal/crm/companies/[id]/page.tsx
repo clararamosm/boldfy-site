@@ -7,11 +7,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { db, people, activities } from '@/db';
+import { db, people, activities, statuses } from '@/db';
 import { eq, and, isNull, desc } from 'drizzle-orm';
 import { getCompanyById } from '@/lib/crm-queries';
 import { avatarHue, initials, timeAgo, describeActivity, timelineDotClass } from '@/lib/crm-format';
-import { statusForScore } from '@/lib/crm';
 
 export const metadata: Metadata = {
   title: 'Empresa',
@@ -29,7 +28,12 @@ export default async function CompanyDetailPage({ params }: Props) {
   if (!company) notFound();
 
   const [companyPeople, companyActivities] = await Promise.all([
-    db.select().from(people)
+    db.select({
+      person: people,
+      status: statuses,
+    })
+      .from(people)
+      .leftJoin(statuses, eq(people.statusId, statuses.id))
       .where(and(eq(people.companyId, id), eq(people.archived, false), isNull(people.mergedIntoId)))
       .orderBy(desc(people.leadScore)),
     db.select().from(activities)
@@ -54,12 +58,12 @@ export default async function CompanyDetailPage({ params }: Props) {
               {company.website ? (
                 <>
                   {' · '}
-                  <a href={company.website} target="_blank" rel="noopener" style={{ color: '#CD50F1' }}>{company.website}</a>
+                  <a href={company.website} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1' }}>{company.website}</a>
                 </>
               ) : null}
             </p>
             <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'rgba(205, 80, 241, 0.1)', color: '#CD50F1', borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
-              {company.status}
+              {company.status?.label ?? 'sem status'}
             </div>
           </div>
 
@@ -107,10 +111,13 @@ export default async function CompanyDetailPage({ params }: Props) {
           <div className="crm-empty-timeline">Nenhuma pessoa linkada ainda.</div>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
-            {companyPeople.map((p) => {
+            {companyPeople.map(({ person: p, status }) => {
               const hue = avatarHue(p.email);
-              const tier = statusForScore(p.leadScore);
-              const tierClass = tier === 'Quente' ? 'quente' : tier === 'Lead' ? 'lead' : '';
+              const tierClass = status?.color === 'amber' || status?.color === 'orange'
+                ? 'quente'
+                : status?.color === 'blue'
+                  ? 'lead'
+                  : '';
               return (
                 <Link key={p.id} href={`/internal/crm/people/${p.id}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, background: '#FAF7FF', borderRadius: 10, textDecoration: 'none', color: 'inherit' }}>
                   <div className={`crm-avatar hue-${hue}`} style={{ width: 32, height: 32, fontSize: 12 }}>

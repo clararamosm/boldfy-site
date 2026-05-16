@@ -23,18 +23,32 @@ const LP_ROUTES = [
   '/agendar-demo',
 ];
 
+/**
+ * Lista de rotas que são totalmente internas (CRM, dashboard, login interno).
+ * Têm seu próprio chrome (InternalTopbar) e não devem mostrar o do site público.
+ */
+const INTERNAL_ROUTES = ['/internal'];
+
 function isLpRoute(pathname: string): boolean {
   return LP_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+function isInternalRoute(pathname: string): boolean {
+  return INTERNAL_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+}
+
+function shouldHideChrome(pathname: string): boolean {
+  return isLpRoute(pathname) || isInternalRoute(pathname);
+}
+
 export function ConditionalHeader() {
   const pathname = usePathname();
-  if (isLpRoute(pathname)) return null;
+  if (shouldHideChrome(pathname)) return null;
   return <Header />;
 }
 
 export function ConditionalFooter() {
   const pathname = usePathname();
-  if (isLpRoute(pathname)) return null;
+  if (shouldHideChrome(pathname)) return null;
   return <Footer />;
 }

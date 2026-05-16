@@ -1,40 +1,19 @@
 /**
  * Lib core do CRM Boldfy — upserts de Person/Company + log de activities.
  *
- * Usada pelas server actions de form (dual-write: AC + nosso DB) e pela API da
- * extensão Chrome. Mantém regras de negócio centralizadas:
- *
- *   - Dedupe por email (Person) e por nome lower (Company)
- *   - Upsert atomico (transaction)
- *   - Lead score promotion automático (Ativo→Lead→Quente nos thresholds)
- *   - Log de activity inline com cada mutação
- *   - First-touch attribution preservada (não sobrescreve depois do primeiro)
+ * Sprint 3a: Status virou tabela editável (`statuses`). Promoção automática
+ * lê thresholds dinamicamente via lib/statuses.ts.
  *
  * Falhas: NUNCA throw — sempre retorna { ok, ... } pra caller decidir.
- * Erros de DB são logados mas não bloqueiam o fluxo do form.
  */
 
 import { db, people, companies, activities } from '@/db';
 import type { Person, Company, NewActivity } from '@/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
+import { getDefaultStatus, statusForScore, shouldAutoPromote } from './statuses';
 
 /* -------------------------------------------------------------------------- */
-/*  Lead score thresholds (sec 10.2 do SPEC)                                  */
-/* -------------------------------------------------------------------------- */
-
-/** Score >= esse valor promove pra Lead. */
-export const THRESHOLD_LEAD = 21;
-/** Score >= esse valor promove pra Quente. */
-export const THRESHOLD_QUENTE = 51;
-
-export function statusForScore(score: number): 'Ativo' | 'Lead' | 'Quente' {
-  if (score >= THRESHOLD_QUENTE) return 'Quente';
-  if (score >= THRESHOLD_LEAD) return 'Lead';
-  return 'Ativo';
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Pesos pré-definidos por tipo de activity (sec 10.1)                       */
+/*  Pesos pré-definidos por tipo de activity                                  */
 /* -------------------------------------------------------------------------- */
 
 const ACTIVITY_WEIGHTS: Record<string, number> = {
@@ -54,7 +33,7 @@ const ACTIVITY_WEIGHTS: Record<string, number> = {
   cal_attended: 30,
   cal_noshow: -10,
   cal_cancelled: 0,
-  extension_save: 0, // só registra, score começa no 0
+  extension_save: 0,
   linkedin_engagement: 5,
   status_change: 0,
 };
@@ -67,7 +46,7 @@ export function weightForActivity(type: string, subtype?: string): number {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Types pros upserts                                                         */
+/*  Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export type SourceChannel = 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown';
@@ -103,7 +82,6 @@ export type LogActivityInput = {
   companyId?: string;
   type: string;
   subtype?: string;
-  /** Override do peso (caso queira customizar). Se omitido, usa tabela. */
   weight?: number;
   source?: 'web' | 'email' | 'cal' | 'linkedin' | 'manual' | 'system';
   data?: Record<string, unknown>;
@@ -112,12 +90,10 @@ export type LogActivityInput = {
 export type CrmResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /* -------------------------------------------------------------------------- */
-/*  upsertCompany — match case-insensitive por nome                            */
+/*  upsertCompany                                                              */
 /* -------------------------------------------------------------------------- */
 
-export async function upsertCompany(
-  input: UpsertCompanyInput,
-): Promise<CrmResult<Company>> {
+export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResult<Company>> {
   try {
     const name = input.name.trim();
     if (name.length === 0) return { ok: false, error: 'Nome de empresa vazio' };
@@ -129,7 +105,6 @@ export async function upsertCompany(
       .limit(1);
 
     if (existing[0]) {
-      // Enriquece campos vazios sem sobrescrever
       const updates: Partial<Company> = {};
       if (input.industry && !existing[0].industry) updates.industry = input.industry;
       if (input.size && !existing[0].size) updates.size = input.size;
@@ -146,7 +121,7 @@ export async function upsertCompany(
       return { ok: true, data: existing[0] };
     }
 
-    // Cria nova
+    const defaultStatus = await getDefaultStatus('company');
     const [created] = await db
       .insert(companies)
       .values({
@@ -155,6 +130,7 @@ export async function upsertCompany(
         size: input.size,
         website: input.website,
         linkedinUrl: input.linkedinUrl,
+        statusId: defaultStatus?.id ?? null,
         firstTouchAt: new Date(),
       })
       .returning();
@@ -167,7 +143,7 @@ export async function upsertCompany(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  upsertPerson — match por email; enriquece sem sobrescrever first_touch    */
+/*  upsertPerson                                                               */
 /* -------------------------------------------------------------------------- */
 
 export async function upsertPerson(
@@ -185,7 +161,6 @@ export async function upsertPerson(
       .limit(1);
 
     if (existing[0]) {
-      // Enriquece campos vazios (não sobrescreve first_touch ou status)
       const updates: Partial<Person> = { lastTouchAt: new Date() };
       if (input.phone && !existing[0].phone) updates.phone = input.phone;
       if (input.jobTitle && !existing[0].jobTitle) updates.jobTitle = input.jobTitle;
@@ -204,7 +179,7 @@ export async function upsertPerson(
       return { ok: true, data: updated };
     }
 
-    // Cria nova
+    const defaultStatus = await getDefaultStatus('person');
     const [created] = await db
       .insert(people)
       .values({
@@ -217,7 +192,7 @@ export async function upsertPerson(
         headline: input.headline,
         location: input.location,
         companyId,
-        status: 'Ativo',
+        statusId: defaultStatus?.id ?? null,
         leadScore: 0,
         sourceChannel: input.sourceChannel ?? 'unknown',
         sourcePage: input.sourcePage,
@@ -238,12 +213,12 @@ export async function upsertPerson(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  logActivity — adiciona event + recalcula lead score se aplicvel          */
+/*  logActivity — atualiza score + auto-promote status                        */
 /* -------------------------------------------------------------------------- */
 
 export async function logActivity(
   input: LogActivityInput,
-): Promise<CrmResult<{ activityId: string; newScore?: number; newStatus?: string }>> {
+): Promise<CrmResult<{ activityId: string; newScore?: number; newStatusId?: string }>> {
   try {
     const weight = input.weight ?? weightForActivity(input.type, input.subtype);
 
@@ -264,9 +239,8 @@ export async function logActivity(
       .returning({ id: activities.id });
 
     let newScore: number | undefined;
-    let newStatus: string | undefined;
+    let newStatusId: string | undefined;
 
-    // Se tem peso > 0 e tem person associada, atualiza score + status
     if (weight !== 0 && input.personId) {
       const [updated] = await db
         .update(people)
@@ -276,35 +250,33 @@ export async function logActivity(
           updatedAt: new Date(),
         })
         .where(eq(people.id, input.personId))
-        .returning({ leadScore: people.leadScore, status: people.status });
+        .returning({ leadScore: people.leadScore, statusId: people.statusId });
 
       if (updated) {
         newScore = updated.leadScore;
-        const desiredStatus = statusForScore(newScore);
-        // Só promove (nunca demove auto — Clara controla manualmente)
-        if (
-          (updated.status === 'Ativo' && (desiredStatus === 'Lead' || desiredStatus === 'Quente')) ||
-          (updated.status === 'Lead' && desiredStatus === 'Quente')
-        ) {
-          await db
-            .update(people)
-            .set({ status: desiredStatus, updatedAt: new Date() })
-            .where(eq(people.id, input.personId));
-          newStatus = desiredStatus;
+        const desiredStatus = await statusForScore(newScore);
+        if (desiredStatus) {
+          const shouldPromote = await shouldAutoPromote(updated.statusId, desiredStatus.id);
+          if (shouldPromote) {
+            await db
+              .update(people)
+              .set({ statusId: desiredStatus.id, updatedAt: new Date() })
+              .where(eq(people.id, input.personId));
+            newStatusId = desiredStatus.id;
 
-          // Log o status_change como activity também (auditoria)
-          await db.insert(activities).values({
-            personId: input.personId,
-            type: 'status_change',
-            weight: 0,
-            source: 'system',
-            data: { from: updated.status, to: desiredStatus, reason: 'auto_score_threshold' },
-          });
+            await db.insert(activities).values({
+              personId: input.personId,
+              type: 'status_change',
+              weight: 0,
+              source: 'system',
+              data: { fromId: updated.statusId, toId: desiredStatus.id, reason: 'auto_score_threshold' },
+            });
+          }
         }
       }
     }
 
-    return { ok: true, data: { activityId: activity.id, newScore, newStatus } };
+    return { ok: true, data: { activityId: activity.id, newScore, newStatusId } };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[crm.logActivity] failed:', msg);
@@ -313,38 +285,26 @@ export async function logActivity(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Wrapper alto-nível pros server actions de form                             */
+/*  recordLeadFromForm — wrapper alto-nível pros server actions de form        */
 /* -------------------------------------------------------------------------- */
 
 export type RecordLeadInput = {
-  // Person
   name: string;
   email: string;
   phone?: string;
   jobTitle?: string;
-  // Company
   companyName?: string;
   companyIndustry?: string;
   companySize?: string;
-  // Tracking
   acContactId?: string;
   sourceChannel?: SourceChannel;
   sourcePage?: string;
   sourceMethod: SourceMethod;
   utmCampaign?: string;
-  // Activity
-  activityType: string; // ex: 'form_submit_demo'
+  activityType: string;
   activityData?: Record<string, unknown>;
 };
 
-/**
- * Atomicamente: cria/atualiza Company (se fornecida) → cria/atualiza Person →
- * registra activity. Usada pelas server actions de form.
- *
- * Sempre retorna { ok: true } mesmo que algumas partes falhem (graceful
- * degradation — não bloqueia o submit do form se o nosso DB falhar). Erros
- * vão pro log.
- */
 export async function recordLeadFromForm(
   input: RecordLeadInput,
 ): Promise<CrmResult<{ personId: string; companyId?: string }>> {

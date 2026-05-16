@@ -276,6 +276,62 @@ export async function addTagsToExistingContact(
  *
  * Silencioso: se a tag nao existe ou o contato nao tem ela, retorna sem erro.
  */
+/**
+ * Lista todas as tags do contato (nomes). Usado no tag manager UI do CRM.
+ * Retorna [] se contato não tem tags ou se houve erro.
+ */
+export async function getContactTags(contactId: string): Promise<string[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  try {
+    const listRes = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/contactTags`,
+      { headers: acHeaders() },
+    );
+    if (!listRes.ok) return [];
+    const listData = await listRes.json();
+    const associations = (listData.contactTags ?? []) as Array<{ tag: string }>;
+    const tagIds = associations.map((a) => a.tag);
+    if (tagIds.length === 0) return [];
+
+    // Resolve nomes de tag em paralelo (Promise.all)
+    const tagNames = await Promise.all(
+      tagIds.map(async (tagId) => {
+        try {
+          const res = await fetch(`${AC_API_URL}/api/3/tags/${tagId}`, { headers: acHeaders() });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data?.tag?.tag ?? null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    return tagNames.filter((t): t is string => typeof t === 'string');
+  } catch (err) {
+    console.error('[activecampaign] getContactTags failed:', err);
+    return [];
+  }
+}
+
+/**
+ * Lista todas as tags existentes na conta AC (paginated). Cap em 100 pra UI
+ * não estourar — Clara provavelmente tem dezenas, não centenas.
+ */
+export async function listAllTags(): Promise<string[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  try {
+    const res = await fetch(`${AC_API_URL}/api/3/tags?limit=100`, { headers: acHeaders() });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const tags = (data?.tags ?? []) as Array<{ tag: string }>;
+    return tags.map((t) => t.tag).filter((t): t is string => typeof t === 'string').sort();
+  } catch (err) {
+    console.error('[activecampaign] listAllTags failed:', err);
+    return [];
+  }
+}
+
 export async function removeTagFromContact(
   contactId: string,
   tagName: string,

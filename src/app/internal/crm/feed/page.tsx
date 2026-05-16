@@ -102,7 +102,7 @@ export default async function CrmFeedPage() {
                         ) : null}
                       </div>
                       {observation ? (
-                        <div className="crm-feed-text-meta" style={{ marginTop: 4, fontStyle: 'italic' }}>"{observation}"</div>
+                        <div className="crm-feed-text-meta" style={{ marginTop: 4, fontStyle: 'italic' }}>&ldquo;{observation}&rdquo;</div>
                       ) : null}
                     </div>
                   </div>

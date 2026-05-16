@@ -24,7 +24,7 @@ import * as schema from './schema';
 if (!process.env.DATABASE_URL) {
   // Permitido durante build em ambientes sem env (typecheck, lint). Em runtime,
   // qualquer query vai dar erro descritivo, capturado pelo try/catch nas pages.
-  // eslint-disable-next-line no-console
+   
   console.warn('[db] DATABASE_URL ausente. Rodar `vercel env pull .env.local` se for dev local.');
 }
 
