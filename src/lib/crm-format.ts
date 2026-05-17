@@ -194,7 +194,10 @@ export function methodVia(method: string | null | undefined): { label: string; c
     case 'form_report': return { label: 'via Form Report', classKey: 'form' };
     case 'form_proposta': return { label: 'via Form Proposta', classKey: 'form' };
     case 'manual': return { label: 'via Manual', classKey: 'manual' };
-    case 'imported_folk': return { label: 'importado do Folk', classKey: 'imported' };
+    // Equivalente histórico de extension_linkedin (Folk era usado pra capturar
+    // contatos do LinkedIn antes da extensão Boldfy existir). Rendizado como
+    // "via LinkedIn (legado)" pra refletir o uso real, não a fonte técnica.
+    case 'imported_folk': return { label: 'via LinkedIn (legado)', classKey: 'linkedin' };
     default: return null;
   }
 }

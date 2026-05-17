@@ -26,7 +26,6 @@ import {
   routeSegments,
   tipoLeadFromIntencao,
 } from '@/lib/ac-tags';
-import { syncFolkLead } from '@/lib/folk';
 import { recordLeadFromForm } from '@/lib/crm';
 import { ReportLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
@@ -128,50 +127,9 @@ export async function sendReportLead(
     });
 
     /* ---------------------------------------------------------------- */
-    /*  2. Folk: SÓ se intenção é marca-empresa (gate ICP B2B)           */
-    /* ---------------------------------------------------------------- */
-    // Report gera 3 tipos de leads (ICP B2B / Agência / Criador). Só os
-    // ICP B2B viram leads de vendas — esses entram no Folk como Ativo
-    // (só baixou material, ainda não preencheu form B2B). Os outros 2
-    // tipos ficam só no AC pra cadência editorial.
-    if (input.intencaoUso === 'marca-empresa' && acContactId) {
-      try {
-        await syncFolkLead({
-          person: {
-            email: input.email,
-            firstName,
-            lastName,
-            status: 'Ativo',
-            customFields: {
-              form_origem: 'Report B2B',
-              ac_contact_id: acContactId,
-              ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-              ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-              ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-            },
-          },
-          // Só cria company se empresa foi informada — senão Folk Enrich
-          // pode preencher depois a partir do email (Clara paga conta de Enrich).
-          ...(empresaInformada
-            ? {
-                company: {
-                  name: empresaInformada,
-                  customFields: {
-                    origem: 'Report B2B',
-                  },
-                },
-              }
-            : {}),
-        });
-      } catch (err) {
-        console.error('[report-leads] Folk sync error (non-blocking):', err);
-      }
-    }
-
-    /* ---------------------------------------------------------------- */
-    /*  2.5 CRM Boldfy — SÓ líderes B2B (intencaoUso=marca-empresa).    */
-    /*       Mesmo gate do Folk: agências e criadores individuais       */
-    /*       ficam só no AC pra cadência editorial.                     */
+    /*  2. CRM Boldfy — SÓ líderes B2B (intencaoUso=marca-empresa).     */
+    /*     Agências e criadores individuais ficam só no AC pra cadência */
+    /*     editorial. Folk legacy removido em mai/2026.                 */
     /* ---------------------------------------------------------------- */
     if (acContactId && input.intencaoUso === 'marca-empresa') {
       try {

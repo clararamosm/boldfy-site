@@ -12,7 +12,6 @@
 import type { ProposalData } from '@/lib/notion-crm';
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
-import { syncFolkLead } from '@/lib/folk';
 import { recordLeadFromForm } from '@/lib/crm';
 import { ProposalLeadSchema, parseInput } from './_schemas';
 import { buildProposalUrl } from '@/lib/proposal-token';
@@ -429,36 +428,9 @@ export async function sendProposalLeadToNotion(
           .join('\n');
         await addNoteToContact(acContactId, note);
 
-        // Folk: simulador é o lead mais qualificado — Person status=Lead.
-        // A URL da proposta vai como campo customizado pra Clara abrir direto.
-        try {
-          await syncFolkLead({
-            person: {
-              email: input.email,
-              firstName,
-              lastName,
-              jobTitle: input.cargo,
-              status: 'Lead',
-              customFields: {
-                form_origem: 'Simulador',
-                ac_contact_id: acContactId,
-                ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-                ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-                ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-              },
-            },
-            company: {
-              name: input.empresa,
-              customFields: {
-                origem: 'Simulador',
-              },
-            },
-          });
-        } catch (folkErr) {
-          console.error('[proposal-leads] Folk sync error (non-blocking):', folkErr);
-        }
+        // Folk legacy removido em mai/2026 — CRM Boldfy é a fonte única daqui.
 
-        // CRM Boldfy (dual-write) — Simulador é lead super qualificado.
+        // CRM Boldfy — Simulador é lead super qualificado.
         try {
           await recordLeadFromForm({
             name: input.nome,

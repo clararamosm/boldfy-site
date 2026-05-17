@@ -27,10 +27,10 @@ export default async function StatusesSettingsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <Link href="/internal/crm" className="crm-btn">← Voltar pro CRM</Link>
         <Link href="/internal/crm/settings/import" className="crm-btn">↓ Importar do AC</Link>
-        <Link href="/internal/crm/settings/import-folk" className="crm-btn">↓ Importar do Folk</Link>
+        <Link href="/internal/crm/settings/danger-zone" className="crm-btn" style={{ background: '#FEE', color: '#C0392B', border: '1px solid rgba(192, 57, 43, 0.3)' }}>⚠ Danger zone</Link>
       </div>
 
       <div className="crm-header">

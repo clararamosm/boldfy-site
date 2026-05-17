@@ -13,7 +13,6 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
-import { syncFolkLead } from '@/lib/folk';
 import { recordLeadFromForm } from '@/lib/crm';
 import { BetaLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
@@ -71,15 +70,6 @@ export async function sendBetaLeadToNotion(
       console.warn('[beta-leads] AC syncContact returned null — verificar env vars.');
       return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
     }
-
-    /* -------------------------------------------------------------- */
-    /*  Folk (TODO — próxima etapa)                                    */
-    /* -------------------------------------------------------------- */
-    // await syncFolkLead({
-    //   person: { nome, email, telefone, cargo },
-    //   company: { nome: input.empresa, setor: input.setor, porte: input.colaboradores },
-    //   status: 'Lead', // Beta é form B2B → entra direto como Lead
-    // });
 
     const note = [
       `🧪 Inscrição no Programa Beta`,
@@ -140,37 +130,7 @@ export async function sendBetaLeadToNotion(
       console.error('[beta-leads] CRM dual-write error (non-blocking):', err);
     }
 
-    // Folk: Beta é form 100% B2B → todo lead vai pro Folk como Person Lead.
-    // TODO Sprint 4 CRM: remover esse bloco depois da migração do Folk.
-    try {
-      await syncFolkLead({
-        person: {
-          email: input.email,
-          firstName,
-          lastName,
-          phone: input.telefone,
-          jobTitle: input.cargo,
-          status: 'Lead',
-          customFields: {
-            form_origem: 'Beta',
-            ac_contact_id: acId,
-            ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-            ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-            ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-          },
-        },
-        company: {
-          name: input.empresa,
-          industry: input.setor,
-          customFields: {
-            origem: 'Beta',
-            porte: input.colaboradores,
-          },
-        },
-      });
-    } catch (err) {
-      console.error('[beta-leads] Folk sync error (non-blocking):', err);
-    }
+    // Folk legacy removido em mai/2026 — CRM Boldfy é fonte única daqui.
 
     return { success: true };
   } catch (error) {

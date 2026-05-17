@@ -10,7 +10,6 @@
 
 import { syncContact, addNoteToContact } from '@/lib/activecampaign';
 import { buildACTags } from '@/lib/ac-tags';
-import { syncFolkLead } from '@/lib/folk';
 import { recordLeadFromForm } from '@/lib/crm';
 import { DemoLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
@@ -129,38 +128,7 @@ export async function sendDemoLeadToNotion(
       console.error('[demo-leads] CRM dual-write error (non-blocking):', err);
     }
 
-    // Folk: lead vai como Person status=Lead + Company status=No status.
-    // Demo é form 100% B2B → todo lead vai pro Folk sem gate.
-    // Failure aqui não bloqueia o sucesso do AC (que é fonte de verdade).
-    // TODO Sprint 4 CRM: remover esse bloco depois da migração do Folk.
-    try {
-      await syncFolkLead({
-        person: {
-          email: input.email,
-          firstName,
-          lastName,
-          phone: input.telefone,
-          jobTitle: input.cargo,
-          status: 'Lead',
-          customFields: {
-            form_origem: 'Demo',
-            ac_contact_id: contactId,
-            ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-            ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-            ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-          },
-        },
-        company: {
-          name: input.empresa,
-          customFields: {
-            origem: 'Demo',
-            porte: input.funcionarios,
-          },
-        },
-      });
-    } catch (err) {
-      console.error('[demo-leads] Folk sync error (non-blocking):', err);
-    }
+    // Folk legacy removido em mai/2026 — CRM Boldfy é fonte única daqui.
 
     return { success: true };
   } catch (error) {
