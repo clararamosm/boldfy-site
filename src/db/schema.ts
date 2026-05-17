@@ -244,6 +244,30 @@ export const prArticles = pgTable('pr_articles', {
 });
 
 /* -------------------------------------------------------------------------- */
+/*  campaigns — iniciativas de GTM (Web Summit, lançamento, etc)              */
+/* -------------------------------------------------------------------------- */
+/**
+ * Cada linha vira uma "campanha" exibida em /internal/dashboard/campanhas.
+ * O drill-down [slug] cruza com people.firstTouchCampaign pra puxar leads.
+ *
+ * `slug` é a chave humana usada na URL — e também o valor exato em utm_campaign.
+ * (Se quiser separar slug da URL do utm, futuro: adicionar coluna `utm_campaign` separada.)
+ */
+export const campaigns = pgTable('campaigns', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(), // ex: 'web-summit-rio-2026' (= utm_campaign)
+  name: text('name').notNull(),           // ex: 'Web Summit Rio 2026'
+  objective: text('objective').notNull(),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+  channels: text('channels').array().notNull(), // ['Eventos', 'LinkedIn', 'PR']
+  shortlinks: text('shortlinks').array(),       // ['ws-card', 'ws-keynote', ...]
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
 /*  extension_tokens                                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -353,5 +377,7 @@ export type ExtensionToken = typeof extensionTokens.$inferSelect;
 export type NewExtensionToken = typeof extensionTokens.$inferInsert;
 export type PrArticle = typeof prArticles.$inferSelect;
 export type NewPrArticle = typeof prArticles.$inferInsert;
+export type CampaignRow = typeof campaigns.$inferSelect;
+export type NewCampaignRow = typeof campaigns.$inferInsert;
 export type GoogleOauthToken = typeof googleOauthTokens.$inferSelect;
 export type NewGoogleOauthToken = typeof googleOauthTokens.$inferInsert;

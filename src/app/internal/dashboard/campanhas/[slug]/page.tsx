@@ -13,7 +13,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { db, people, companies, statuses } from '@/db';
 import { eq, and, isNull, desc, count, sql } from 'drizzle-orm';
-import { getCampaignBySlug, getCampaignStatus, CAMPAIGNS } from '@/data/campaigns';
+import { getCampaignBySlug, getCampaignStatus, listCampaigns } from '@/lib/campaigns';
 import { FunnelStages, BOLDFY_PALETTE } from '@/components/dashboard/charts';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
 import { Settings2, FileText, Calendar, Trophy, BarChart3, Users, StickyNote } from 'lucide-react';
@@ -25,15 +25,16 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export function generateStaticParams() {
-  return CAMPAIGNS.map((c) => ({ slug: c.slug }));
+export async function generateStaticParams() {
+  const all = await listCampaigns();
+  return all.map((c) => ({ slug: c.slug }));
 }
 
 type Params = Promise<{ slug: string }>;
 
 export default async function CampaignDetailPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const campaign = getCampaignBySlug(slug);
+  const campaign = await getCampaignBySlug(slug);
   if (!campaign) notFound();
 
   const status = getCampaignStatus(campaign);

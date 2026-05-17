@@ -413,6 +413,136 @@
   .dash-section-nav-link { flex-shrink: 0; }
 }
 
+/* Filtro de período inline (por gráfico) */
+.chart-period-filter {
+  display: inline-flex;
+  gap: 1px;
+  background: #F0E6F7;
+  padding: 2px;
+  border-radius: 6px;
+}
+.chart-period-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9D85B3;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.chart-period-btn:hover { color: #5E2A67; }
+.chart-period-btn.active {
+  background: #FFFFFF;
+  color: #CD50F1;
+  box-shadow: 0 1px 3px rgba(93, 42, 103, 0.1);
+}
+
+/* ---------------------------------------------------------------- */
+/*  Modal de nova campanha                                           */
+/* ---------------------------------------------------------------- */
+.campanha-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 16, 51, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.campanha-modal {
+  background: #FFFFFF;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 540px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(93, 42, 103, 0.25);
+}
+.campanha-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #F0E6F7;
+}
+.campanha-modal-header h2 {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: 18px;
+  color: #5E2A67;
+  margin: 0;
+}
+.campanha-modal-close {
+  background: transparent;
+  border: none;
+  color: #9D85B3;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.campanha-modal-close:hover { background: #FAF7FF; color: #5E2A67; }
+.campanha-modal-form {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.campanha-modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.campanha-modal-form label > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #45336B;
+}
+.campanha-modal-form input,
+.campanha-modal-form textarea {
+  padding: 9px 11px;
+  border: 1px solid #E4D8ED;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2A1A40;
+  background: #FFFFFF;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.campanha-modal-form input:focus,
+.campanha-modal-form textarea:focus {
+  border-color: #CD50F1;
+}
+.campanha-modal-form textarea { resize: vertical; min-height: 60px; }
+.campanha-modal-form small {
+  font-size: 11px;
+  color: #9D85B3;
+  margin-top: 2px;
+}
+.channel-chip {
+  padding: 5px 10px;
+  border: 1px solid #E4D8ED;
+  background: #FFFFFF;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #45336B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.channel-chip:hover { border-color: #CD50F1; }
+.channel-chip.active {
+  background: #F7EEFC;
+  color: #CD50F1;
+  border-color: #CD50F1;
+}
+
 /* Header com título + filtro lado-a-lado nos cards de gráfico */
 .dash-card-header {
   display: flex;

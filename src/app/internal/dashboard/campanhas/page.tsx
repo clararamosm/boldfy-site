@@ -12,11 +12,12 @@ import Link from 'next/link';
 import { kv } from '@vercel/kv';
 import { db, people, companies, statuses, prArticles } from '@/db';
 import { eq, and, isNull, count, sql, desc } from 'drizzle-orm';
-import { CAMPAIGNS, getCampaignStatus, type Campaign } from '@/data/campaigns';
+import { listCampaigns, getCampaignStatus, type Campaign } from '@/lib/campaigns';
+import { NewCampaignButton } from './new-campaign-button';
 import { timeAgo } from '@/lib/crm-format';
 import { isGa4Configured, getTopUtms, getTrafficByDay } from '@/lib/ga4';
 import { TimelineMarkers } from '@/components/dashboard/charts';
-import { Megaphone, Link2, Newspaper, FileText, Users, Lightbulb, Plus } from 'lucide-react';
+import { Megaphone, Link2, Newspaper, FileText, Users, Lightbulb } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Campanhas',
@@ -96,7 +97,8 @@ async function getShortlinks(): Promise<ShortlinkRow[]> {
 }
 
 export default async function CampanhasPage() {
-  const stats = await Promise.all(CAMPAIGNS.map((c) => getCampaignStats(c)));
+  const campaignsList = await listCampaigns();
+  const stats = await Promise.all(campaignsList.map((c) => getCampaignStats(c)));
   const shortlinks = await getShortlinks();
   const now = new Date();
 
@@ -131,21 +133,13 @@ export default async function CampanhasPage() {
             <div className="dash-card-title"><Megaphone /> Todas as campanhas</div>
             <div className="dash-card-subtitle">Iniciativas com janela, objetivo, UTM e KPIs próprios</div>
           </div>
-          <button
-            type="button"
-            className="crm-btn crm-btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            title="Em breve: form pra criar campanha sem editar código. Por enquanto, edita src/data/campaigns.ts"
-            disabled
-          >
-            <Plus size={14} /> Nova campanha
-          </button>
+          <NewCampaignButton />
         </div>
-        {CAMPAIGNS.length === 0 ? (
+        {campaignsList.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhuma campanha cadastrada.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {CAMPAIGNS.map((c, i) => {
+            {campaignsList.map((c, i) => {
               const status = getCampaignStatus(c, now);
               const s = stats[i];
               const start = new Date(`${c.startDate}T00:00:00`);

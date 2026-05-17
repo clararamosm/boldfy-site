@@ -30,6 +30,7 @@ import {
   BOLDFY_PALETTE,
   BOLDFY_PURPLES,
 } from '@/components/dashboard/charts';
+import { ChartWithPeriod } from '@/components/dashboard/chart-with-period';
 import {
   GitMerge,
   TrendingUp,
@@ -137,14 +138,21 @@ export default async function DashboardOverviewPage() {
           <div className="bento-title"><TrendingUp /> Atividade diária cruzada</div>
           <div className="bento-subtitle">Visitas (GA4) × Forms (CRM) × Reuniões — últimos 28d</div>
           <div className="bento-content">
-            <MultiLineChart
-              dates={activity28.map((a) => a.date)}
-              series={[
-                { key: 'visitas', label: 'Visitas', color: '#CD50F1', data: activity28.map((a) => a.visitas) },
-                { key: 'forms', label: 'Forms', color: '#3B82F6', data: activity28.map((a) => a.forms) },
-                { key: 'reunioes', label: 'Reuniões', color: '#10B981', data: activity28.map((a) => a.reunioes) },
-              ]}
-              height={260}
+            <ChartWithPeriod
+              fullData={activity28}
+              defaultDays={28}
+              storageKey="atividade-cruzada"
+              render={(filtered) => (
+                <MultiLineChart
+                  dates={filtered.map((a) => a.date)}
+                  series={[
+                    { key: 'visitas', label: 'Visitas', color: '#CD50F1', data: filtered.map((a) => a.visitas) },
+                    { key: 'forms', label: 'Forms', color: '#3B82F6', data: filtered.map((a) => a.forms) },
+                    { key: 'reunioes', label: 'Reuniões', color: '#10B981', data: filtered.map((a) => a.reunioes) },
+                  ]}
+                  height={240}
+                />
+              )}
             />
           </div>
         </div>

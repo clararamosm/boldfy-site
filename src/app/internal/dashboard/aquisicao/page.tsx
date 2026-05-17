@@ -38,6 +38,7 @@ import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 import { SectionNav } from '@/components/dashboard/section-nav';
+import { ChartWithPeriod } from '@/components/dashboard/chart-with-period';
 import {
   MultiLineChart,
   StackedAreaChart,
@@ -236,9 +237,13 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
                 <div className="dash-card-subtitle">Hover pra ver detalhe diário</div>
               </div>
             </div>
-            <DailyLineChart
-              data={dailyTraffic.map((d) => ({ date: d.date, a: d.sessions, b: d.users }))}
-              labels={{ a: 'Sessões', b: 'Usuários' }}
+            <ChartWithPeriod
+              fullData={dailyTraffic.map((d) => ({ date: d.date, a: d.sessions, b: d.users }))}
+              defaultDays={days}
+              storageKey="trafego-sessoes-usuarios"
+              render={(filtered) => (
+                <DailyLineChart data={filtered} labels={{ a: 'Sessões', b: 'Usuários' }} />
+              )}
             />
           </div>
 
@@ -327,9 +332,13 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
           <div className="dash-card">
             <div className="dash-card-title"><TrendingUp /> Cliques × Impressões por dia</div>
-            <DailyLineChart
-              data={seoDaily.map((d) => ({ date: d.date, a: d.clicks, b: d.impressions }))}
-              labels={{ a: 'Cliques', b: 'Impressões' }}
+            <ChartWithPeriod
+              fullData={seoDaily.map((d) => ({ date: d.date, a: d.clicks, b: d.impressions }))}
+              defaultDays={days}
+              storageKey="seo-cliques-impressoes"
+              render={(filtered) => (
+                <DailyLineChart data={filtered} labels={{ a: 'Cliques', b: 'Impressões' }} />
+              )}
             />
           </div>
 
