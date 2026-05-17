@@ -36,9 +36,10 @@ import {
 } from '@/lib/dashboard-queries';
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
-import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
+// DailyLineChart agora é usado via DailyLineCard wrapper (client) — render
+// function não pode atravessar boundary Server→Client (RSC limitation).
 import { SectionNav } from '@/components/dashboard/section-nav';
-import { ChartWithPeriod } from '@/components/dashboard/chart-with-period';
+import { DailyLineCard } from '@/components/dashboard/daily-line-card';
 import { SectionHeader } from '@/components/dashboard/section-header';
 import {
   StackedAreaChart,
@@ -223,13 +224,11 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
                 <div className="dash-card-subtitle">Hover pra ver detalhe diário</div>
               </div>
             </div>
-            <ChartWithPeriod
+            <DailyLineCard
               fullData={dailyTraffic.map((d) => ({ date: d.date, a: d.sessions, b: d.users }))}
+              labels={{ a: 'Sessões', b: 'Usuários' }}
               defaultDays={days}
               storageKey="trafego-sessoes-usuarios"
-              render={(filtered) => (
-                <DailyLineChart data={filtered} labels={{ a: 'Sessões', b: 'Usuários' }} />
-              )}
             />
           </div>
 
@@ -318,13 +317,11 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
           <div className="dash-card">
             <div className="dash-card-title"><TrendingUp /> Cliques × Impressões por dia</div>
-            <ChartWithPeriod
+            <DailyLineCard
               fullData={seoDaily.map((d) => ({ date: d.date, a: d.clicks, b: d.impressions }))}
+              labels={{ a: 'Cliques', b: 'Impressões' }}
               defaultDays={days}
               storageKey="seo-cliques-impressoes"
-              render={(filtered) => (
-                <DailyLineChart data={filtered} labels={{ a: 'Cliques', b: 'Impressões' }} />
-              )}
             />
           </div>
 

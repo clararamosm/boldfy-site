@@ -22,15 +22,13 @@ import { getTopQueries } from '@/lib/search-console';
 import { channelLabel, timeAgo } from '@/lib/crm-format';
 import {
   Sparkline,
-  MultiLineChart,
   SourcedFunnel,
   StackedAreaChart,
   DonutChart,
   HeatmapChart,
-  BOLDFY_PALETTE,
   BOLDFY_PURPLES,
 } from '@/components/dashboard/charts';
-import { ChartWithPeriod } from '@/components/dashboard/chart-with-period';
+import { MultiLineCard } from '@/components/dashboard/multi-line-card';
 import {
   GitMerge,
   TrendingUp,
@@ -138,21 +136,16 @@ export default async function DashboardOverviewPage() {
           <div className="bento-title"><TrendingUp /> Atividade diária cruzada</div>
           <div className="bento-subtitle">Visitas (GA4) × Forms (CRM) × Reuniões — últimos 28d</div>
           <div className="bento-content">
-            <ChartWithPeriod
+            <MultiLineCard
               fullData={activity28}
+              series={[
+                { key: 'visitas', label: 'Visitas', color: '#CD50F1' },
+                { key: 'forms', label: 'Forms', color: '#3B82F6' },
+                { key: 'reunioes', label: 'Reuniões', color: '#10B981' },
+              ]}
               defaultDays={28}
+              height={240}
               storageKey="atividade-cruzada"
-              render={(filtered) => (
-                <MultiLineChart
-                  dates={filtered.map((a) => a.date)}
-                  series={[
-                    { key: 'visitas', label: 'Visitas', color: '#CD50F1', data: filtered.map((a) => a.visitas) },
-                    { key: 'forms', label: 'Forms', color: '#3B82F6', data: filtered.map((a) => a.forms) },
-                    { key: 'reunioes', label: 'Reuniões', color: '#10B981', data: filtered.map((a) => a.reunioes) },
-                  ]}
-                  height={240}
-                />
-              )}
             />
           </div>
         </div>
