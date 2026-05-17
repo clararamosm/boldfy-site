@@ -197,3 +197,27 @@ export async function getBrandedQueries(days = 28): Promise<SeoQueryRow[]> {
   const all = await getTopQueries(days, 100);
   return all.filter((q) => q.query.toLowerCase().includes('boldfy'));
 }
+
+export type SeoDailyPoint = { date: string; clicks: number; impressions: number; ctr: number; position: number };
+
+/**
+ * Série diária de cliques + impressões pro gráfico de linha.
+ * SC tem delay de 2-3 dias, então a janela vai até `dateNDaysAgo(2)`.
+ */
+export async function getSeoByDay(days = 28): Promise<SeoDailyPoint[]> {
+  const rows = await querySearchAnalytics({
+    startDate: dateNDaysAgo(days),
+    endDate: dateNDaysAgo(2),
+    dimensions: ['date'],
+    rowLimit: 1000, // SC volta 1 row por dia; até 180 dias bate aqui tranquilo
+  });
+  return rows
+    .map((r) => ({
+      date: r.keys?.[0] ?? '', // SC já manda 'YYYY-MM-DD'
+      clicks: r.clicks,
+      impressions: r.impressions,
+      ctr: r.ctr,
+      position: r.position,
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+}

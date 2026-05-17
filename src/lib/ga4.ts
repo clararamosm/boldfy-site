@@ -253,6 +253,32 @@ export async function getTopPages(days = 30, limit = 10): Promise<PageRow[]> {
   }));
 }
 
+export type DailyPoint = { date: string; sessions: number; users: number };
+
+/**
+ * Série diária de sessões + usuários únicos pro gráfico de linha.
+ * `date` no formato YYYY-MM-DD (já parseável pelo Date).
+ */
+export async function getTrafficByDay(days = 28): Promise<DailyPoint[]> {
+  const report = await runReport({
+    dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+    dimensions: [{ name: 'date' }],
+    metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+    orderBys: [{ dimension: { dimensionName: 'date' } }],
+  });
+  if (!report?.rows) return [];
+
+  return report.rows.map((row) => {
+    const raw = row.dimensionValues[0]?.value ?? ''; // GA4 manda 'YYYYMMDD'
+    const date = raw.length === 8 ? `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}` : raw;
+    return {
+      date,
+      sessions: parseInt(row.metricValues[0]?.value ?? '0', 10),
+      users: parseInt(row.metricValues[1]?.value ?? '0', 10),
+    };
+  });
+}
+
 export type UtmRow = { source: string; medium: string; campaign: string; sessions: number };
 
 export async function getTopUtms(days = 30, limit = 15): Promise<UtmRow[]> {

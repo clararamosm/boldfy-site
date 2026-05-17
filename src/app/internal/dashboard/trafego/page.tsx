@@ -12,7 +12,10 @@ import {
   getTrafficByChannel,
   getTopPages,
   getTopUtms,
+  getTrafficByDay,
 } from '@/lib/ga4';
+import { PeriodFilter, parsePeriod } from '@/components/dashboard/period-filter';
+import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Tráfego',
@@ -34,7 +37,12 @@ function formatPct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
-export default async function DashboardTrafegoPage() {
+type SearchParams = Promise<{ period?: string }>;
+
+export default async function DashboardTrafegoPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const days = parsePeriod(params.period);
+
   if (!isGa4Configured()) {
     return (
       <div>
@@ -73,11 +81,12 @@ export default async function DashboardTrafegoPage() {
     );
   }
 
-  const [summary, channels, pages, utms] = await Promise.all([
-    getTrafficSummary(30),
-    getTrafficByChannel(30),
-    getTopPages(30, 10),
-    getTopUtms(30, 15),
+  const [summary, channels, pages, utms, daily] = await Promise.all([
+    getTrafficSummary(days),
+    getTrafficByChannel(days),
+    getTopPages(days, 10),
+    getTopUtms(days, 15),
+    getTrafficByDay(days),
   ]);
 
   if (!summary) {
@@ -105,8 +114,9 @@ export default async function DashboardTrafegoPage() {
       <div className="dash-header">
         <div>
           <h1 className="dash-title">Tráfego</h1>
-          <p className="dash-subtitle">GA4 · últimos 30 dias · cache 15 min</p>
+          <p className="dash-subtitle">GA4 · últimos {days} dias</p>
         </div>
+        <PeriodFilter />
       </div>
 
       <div className="dash-kpi-grid">
@@ -131,6 +141,19 @@ export default async function DashboardTrafegoPage() {
           <div className="dash-kpi-label">Bounce rate</div>
           <div className="dash-kpi-value">{formatPct(summary.bounceRate)}</div>
         </div>
+      </div>
+
+      <div className="dash-card">
+        <div className="dash-card-header">
+          <div>
+            <div className="dash-card-title">📈 Sessões × Usuários por dia</div>
+            <div className="dash-card-subtitle">Hover pra ver o detalhe de cada dia</div>
+          </div>
+        </div>
+        <DailyLineChart
+          data={daily.map((d) => ({ date: d.date, a: d.sessions, b: d.users }))}
+          labels={{ a: 'Sessões', b: 'Usuários' }}
+        />
       </div>
 
       <div className="dash-card">
