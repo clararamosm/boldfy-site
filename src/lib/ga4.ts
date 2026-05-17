@@ -201,16 +201,18 @@ export async function getTrafficSummary(days = 30): Promise<TrafficSummary | nul
   });
   if (!report) return null;
 
-  const totals = report.totals?.[0]?.metricValues;
-  if (!totals) return null;
+  // GA4 quando request não tem `dimensions` devolve o aggregate em `rows[0]`,
+  // não em `totals`. Tenta `totals` primeiro (caso a API mude) e cai pra `rows[0]`.
+  const values = report.totals?.[0]?.metricValues ?? report.rows?.[0]?.metricValues;
+  if (!values) return null;
 
   return {
-    sessions: parseInt(totals[0]?.value ?? '0', 10),
-    totalUsers: parseInt(totals[1]?.value ?? '0', 10),
-    newUsers: parseInt(totals[2]?.value ?? '0', 10),
-    screenPageViews: parseInt(totals[3]?.value ?? '0', 10),
-    averageSessionDuration: parseFloat(totals[4]?.value ?? '0'),
-    bounceRate: parseFloat(totals[5]?.value ?? '0'),
+    sessions: parseInt(values[0]?.value ?? '0', 10),
+    totalUsers: parseInt(values[1]?.value ?? '0', 10),
+    newUsers: parseInt(values[2]?.value ?? '0', 10),
+    screenPageViews: parseInt(values[3]?.value ?? '0', 10),
+    averageSessionDuration: parseFloat(values[4]?.value ?? '0'),
+    bounceRate: parseFloat(values[5]?.value ?? '0'),
   };
 }
 
