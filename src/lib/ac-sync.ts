@@ -1,105 +1,258 @@
 /**
- * Sync simples Nosso CRM → ActiveCampaign.
+ * Sync Nosso CRM → ActiveCampaign.
  *
- * Quando muda status no CRM, adiciona tag "Status: <label>" no contato AC.
- * Sem retry queue por enquanto (Sprint 3c implementa) — falha apenas loga.
+ * Quando muda status no CRM, atualiza tag "Status: <label>" no contato AC
+ * (e remove tags antigas do mesmo prefixo). Tags são gatilho de automações
+ * no AC (cadências, listas, segmentação).
+ *
+ * Mai/2026 ciclo 3.2 — Refator de robustez:
+ *  - Idempotência (no-op se tag certa já está lá)
+ *  - Otimização: lê tags atuais do AC e calcula diff (em vez de tentar
+ *    remover N tags brute force, remove só as que existem)
+ *  - Retry com backoff exponencial (3 tentativas: 1s, 2s, 4s)
+ *  - Fallback alternate_emails quando email primário não acha no AC
+ *  - Activity de auditoria no CRM (ac_sync_ok ou ac_sync_failed)
  *
  * Convenção de tag:
- *   Person status → tag "Status: Ativo" | "Status: Lead" | "Status: Quente" (default)
- *   Company status → tag "Pipeline: Fechado" pra is_terminal+color=green
- *                     tag "Pipeline: Perdido" pra is_terminal+não-green
- *                     senão, tag "Pipeline: <label>"
- *
- * Tags antigas com mesmo prefixo são removidas pra evitar acúmulo (ex: lead
- * que era "Status: Lead" agora vira "Status: Quente" — remove a antiga).
+ *   Person status → "Status: <label>"   (ex: "Status: Ativo", "Status: Quente")
+ *   Company status → "Pipeline: <label>" (ex: "Pipeline: Quero prospectar")
  */
 
-import { findContactByEmail, addTagsToExistingContact, removeTagFromContact } from './activecampaign';
-import { db, people, statuses } from '@/db';
-import { eq } from 'drizzle-orm';
+import {
+  findContactByEmail,
+  getContactTags,
+  addTagsToExistingContact,
+  removeTagFromContact,
+} from './activecampaign';
+import { db, people, activities, statuses } from '@/db';
+import { eq, sql } from 'drizzle-orm';
 import type { Status } from '@/db';
 
 const PERSON_TAG_PREFIX = 'Status: ';
 const COMPANY_TAG_PREFIX = 'Pipeline: ';
 
+/* -------------------------------------------------------------------------- */
+/*  Retry helper                                                              */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Sincroniza tag no AC quando status de Person muda.
- * No-op silencioso se a pessoa não tem ac_contact_id.
+ * Retry com backoff exponencial pra calls do AC. Total max ~7s (1+2+4).
+ * Retorna result da última tentativa (ok=true) ou null se todas falharam.
  */
-export async function syncPersonStatusToAC(personId: string, newStatus: Status): Promise<void> {
-  try {
-    const [p] = await db
-      .select({ acContactId: people.acContactId, email: people.email })
-      .from(people)
-      .where(eq(people.id, personId))
-      .limit(1);
-
-    if (!p) return;
-
-    // Resolve contactId — preferir o que já temos cacheado
-    let contactId = p.acContactId ?? null;
-    if (!contactId) {
-      contactId = await findContactByEmail(p.email);
-      if (!contactId) {
-        console.warn('[ac-sync] Person não tem AC contact:', p.email);
-        return;
+async function retry<T>(fn: () => Promise<T>, label: string, attempts = 3): Promise<T | null> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === attempts - 1) {
+        console.error(`[ac-sync] ${label} failed after ${attempts} attempts:`, err);
+        return null;
       }
+      const wait = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+      await new Promise((r) => setTimeout(r, wait));
     }
+  }
+  return null;
+}
 
-    // Remove tags antigas do mesmo prefixo
-    const allPersonStatuses = await db
-      .select({ label: statuses.label })
-      .from(statuses)
-      .where(eq(statuses.kind, 'person'));
+/* -------------------------------------------------------------------------- */
+/*  Contact resolver com fallback alternate_emails                            */
+/* -------------------------------------------------------------------------- */
 
-    await Promise.allSettled(
-      allPersonStatuses
-        .filter((s) => s.label !== newStatus.label)
-        .map((s) => removeTagFromContact(contactId!, `${PERSON_TAG_PREFIX}${s.label}`)),
-    );
+async function resolveContactId(personId: string): Promise<{ contactId: string; email: string } | null> {
+  const [p] = await db
+    .select({
+      acContactId: people.acContactId,
+      email: people.email,
+      metadata: people.metadata,
+    })
+    .from(people)
+    .where(eq(people.id, personId))
+    .limit(1);
 
-    // Adiciona a nova
-    await addTagsToExistingContact(contactId, [`${PERSON_TAG_PREFIX}${newStatus.label}`]);
+  if (!p) return null;
+
+  // Preferência: contactId cacheado em people.acContactId
+  if (p.acContactId) return { contactId: p.acContactId, email: p.email };
+
+  // Tenta email primário
+  let cid = await retry(() => findContactByEmail(p.email), 'findContactByEmail(primary)');
+  if (cid) return { contactId: cid, email: p.email };
+
+  // Fallback: alternate_emails em metadata (populado por Cal webhook e Folk import)
+  const m = p.metadata as { alternate_emails?: string[] } | null;
+  const alternates = m?.alternate_emails ?? [];
+  for (const altEmail of alternates) {
+    cid = await retry(() => findContactByEmail(altEmail), `findContactByEmail(alt:${altEmail})`);
+    if (cid) return { contactId: cid, email: altEmail };
+  }
+
+  return null;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Log activity de auditoria do sync                                         */
+/* -------------------------------------------------------------------------- */
+
+async function logSyncActivity(
+  personId: string | null,
+  companyId: string | null,
+  ok: boolean,
+  data: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await db.insert(activities).values({
+      personId,
+      companyId,
+      type: ok ? 'ac_sync_ok' : 'ac_sync_failed',
+      weight: 0,
+      source: 'system',
+      data,
+    });
   } catch (err) {
-    console.error('[ac-sync] syncPersonStatusToAC failed:', err);
+    console.error('[ac-sync] failed to log audit activity:', err);
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Diff de tags + apply                                                       */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Sincroniza tag no AC quando status de Company muda. Encontra TODAS as
- * pessoas da company e adiciona tag pipeline em cada uma (porque AC só tem
- * conceito de contato, não empresa).
+ * Calcula e aplica diff de tags pra um contato:
+ *  - Lê tags atuais do AC
+ *  - Identifica tags com prefixo que NÃO são a nova → remove
+ *  - Se a nova ainda não está → adiciona
+ *
+ * Retorna { added, removed } pra auditoria. Idempotente: se tag certa já
+ * existe e nenhuma antiga existe, retorna { added: 0, removed: 0 } sem call.
+ */
+async function applyTagDiff(
+  contactId: string,
+  prefix: string,
+  newTag: string,
+): Promise<{ added: number; removed: number; tagsRead: boolean }> {
+  const currentTags = await retry(() => getContactTags(contactId), `getContactTags(${contactId})`);
+  if (currentTags === null) {
+    return { added: 0, removed: 0, tagsRead: false };
+  }
+
+  const oldTagsWithPrefix = currentTags.filter((t) => t.startsWith(prefix) && t !== newTag);
+  const hasNewAlready = currentTags.includes(newTag);
+
+  // Remove antigas em paralelo
+  let removedCount = 0;
+  if (oldTagsWithPrefix.length > 0) {
+    const results = await Promise.allSettled(
+      oldTagsWithPrefix.map((t) => retry(() => removeTagFromContact(contactId, t), `removeTag(${t})`)),
+    );
+    removedCount = results.filter((r) => r.status === 'fulfilled' && r.value !== null).length;
+  }
+
+  // Adiciona nova (só se não tem)
+  let addedCount = 0;
+  if (!hasNewAlready) {
+    const r = await retry(() => addTagsToExistingContact(contactId, [newTag]), `addTag(${newTag})`);
+    if (r !== null) addedCount = 1;
+  }
+
+  return { added: addedCount, removed: removedCount, tagsRead: true };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Public APIs                                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Sync de status de Person → tag no AC. No-op silencioso se a pessoa não
+ * tem contato no AC. Loga activity de auditoria sempre.
+ */
+export async function syncPersonStatusToAC(personId: string, newStatus: Status): Promise<void> {
+  const resolved = await resolveContactId(personId);
+  if (!resolved) {
+    await logSyncActivity(personId, null, false, {
+      reason: 'no_ac_contact',
+      newStatus: newStatus.label,
+    });
+    return;
+  }
+
+  // Cacheia acContactId no people pra próxima sync ser direto
+  if (resolved.contactId) {
+    await db.update(people)
+      .set({ acContactId: resolved.contactId, updatedAt: new Date() })
+      .where(sql`${people.id} = ${personId} AND ${people.acContactId} IS NULL`);
+  }
+
+  const newTag = `${PERSON_TAG_PREFIX}${newStatus.label}`;
+  const diff = await applyTagDiff(resolved.contactId, PERSON_TAG_PREFIX, newTag);
+
+  const ok = diff.tagsRead && (diff.added > 0 || diff.removed > 0
+    // No-op (já estava certo) também conta como sucesso
+    || (diff.added === 0 && diff.removed === 0));
+
+  await logSyncActivity(personId, null, ok, {
+    reason: ok ? 'applied' : 'failed_to_apply',
+    newStatus: newStatus.label,
+    newTag,
+    added: diff.added,
+    removed: diff.removed,
+    contactId: resolved.contactId,
+    matchedEmail: resolved.email,
+  });
+}
+
+/**
+ * Sync de status de Company → tag no AC. Atualiza TODAS as pessoas linkadas
+ * (AC só tem conceito de contato, não empresa). Cada pessoa fica com tag
+ * "Pipeline: <label>".
+ *
+ * Falha em uma pessoa não bloqueia as outras. Activity de auditoria
+ * por pessoa.
  */
 export async function syncCompanyStatusToAC(companyId: string, newStatus: Status): Promise<void> {
-  try {
-    const peopleRows = await db
-      .select({ acContactId: people.acContactId, email: people.email })
-      .from(people)
-      .where(eq(people.companyId, companyId));
+  const peopleRows = await db
+    .select({ id: people.id })
+    .from(people)
+    .where(eq(people.companyId, companyId));
 
-    if (peopleRows.length === 0) return;
+  if (peopleRows.length === 0) {
+    await logSyncActivity(null, companyId, false, {
+      reason: 'no_people_linked',
+      newStatus: newStatus.label,
+    });
+    return;
+  }
 
-    const allCompanyStatuses = await db
-      .select({ label: statuses.label })
-      .from(statuses)
-      .where(eq(statuses.kind, 'company'));
+  const newTag = `${COMPANY_TAG_PREFIX}${newStatus.label}`;
 
-    for (const p of peopleRows) {
-      let contactId = p.acContactId ?? null;
-      if (!contactId) {
-        contactId = await findContactByEmail(p.email);
-        if (!contactId) continue;
-      }
-
-      await Promise.allSettled(
-        allCompanyStatuses
-          .filter((s) => s.label !== newStatus.label)
-          .map((s) => removeTagFromContact(contactId!, `${COMPANY_TAG_PREFIX}${s.label}`)),
-      );
-
-      await addTagsToExistingContact(contactId, [`${COMPANY_TAG_PREFIX}${newStatus.label}`]);
+  for (const p of peopleRows) {
+    const resolved = await resolveContactId(p.id);
+    if (!resolved) {
+      await logSyncActivity(p.id, companyId, false, {
+        reason: 'no_ac_contact',
+        newStatus: newStatus.label,
+      });
+      continue;
     }
-  } catch (err) {
-    console.error('[ac-sync] syncCompanyStatusToAC failed:', err);
+
+    if (resolved.contactId) {
+      await db.update(people)
+        .set({ acContactId: resolved.contactId, updatedAt: new Date() })
+        .where(sql`${people.id} = ${p.id} AND ${people.acContactId} IS NULL`);
+    }
+
+    const diff = await applyTagDiff(resolved.contactId, COMPANY_TAG_PREFIX, newTag);
+    const ok = diff.tagsRead;
+
+    await logSyncActivity(p.id, companyId, ok, {
+      reason: ok ? 'applied' : 'failed_to_apply',
+      newStatus: newStatus.label,
+      newTag,
+      added: diff.added,
+      removed: diff.removed,
+      contactId: resolved.contactId,
+      matchedEmail: resolved.email,
+    });
   }
 }
