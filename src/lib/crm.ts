@@ -116,10 +116,58 @@ export type CrmResult<T> = { ok: true; data: T } | { ok: false; error: string };
 /*  upsertCompany                                                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Blacklist de strings que aparecem no campo "empresa" do AC mas NÃO são
+ * empresas reais — são tipos de lead que usuários digitaram errado quando
+ * preencheram o form Report (ex: marcou "Profissional Individual" no select
+ * de intenção mas também escreveu "Profissional Individual" no input de
+ * empresa). Bug de dado histórico; defesa aqui pra evitar criar entries
+ * fantasma de empresa que poluem o kanban.
+ *
+ * Comparação case-insensitive, trim antes.
+ */
+const COMPANY_NAME_BLACKLIST = new Set([
+  'agência / consultor',
+  'agencia / consultor',
+  'agência',
+  'agencia',
+  'profissional individual',
+  'profissionais individuais',
+  'líder b2b',
+  'lider b2b',
+  'líderes b2b',
+  'lideres b2b',
+  'icp b2b',
+  'criador',
+  'criadores',
+  'parceiro',
+  'parceiros',
+  'parceiros estratégicos',
+  'parceiros estrategicos',
+  'newsletter',
+  'newsletter boldfy',
+  'n/a',
+  'na',
+  'nao tenho',
+  'não tenho',
+  'pessoa física',
+  'pessoa fisica',
+  '-',
+  '—',
+  '–',
+]);
+
 export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResult<Company>> {
   try {
     const name = input.name.trim();
     if (name.length === 0) return { ok: false, error: 'Nome de empresa vazio' };
+
+    // Defesa contra valores não-empresa que vazaram do campo "empresa" do AC.
+    // Comparação case-insensitive.
+    if (COMPANY_NAME_BLACKLIST.has(name.toLowerCase())) {
+      console.warn(`[crm.upsertCompany] Skipping non-company name: "${name}"`);
+      return { ok: false, error: `Nome "${name}" está na blacklist (não é empresa real)` };
+    }
 
     const existing = await db
       .select()

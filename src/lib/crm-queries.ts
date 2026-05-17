@@ -127,6 +127,12 @@ export type CompanyWithDetails = Company & {
   status: Status | null;
   peopleCount: number;
   topScore: number;
+  /**
+   * Nomes dos primeiros 5 leads (por score desc), separados por vírgula.
+   * Exibido na tabela de empresas pra detectar dupes/empresas órfãs.
+   * Pode ser null se a empresa não tem pessoas linkadas.
+   */
+  peopleNames: string | null;
 };
 
 export type CompaniesByStatus = {
@@ -148,6 +154,21 @@ export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters 
         status: statuses,
         peopleCount: sql<number>`(SELECT COUNT(*)::int FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL)`,
         topScore: sql<number>`COALESCE((SELECT MAX(lead_score) FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL), 0)`,
+        // Lista os primeiros 5 nomes de pessoas vinculadas (pra exibir
+        // direto na tabela e detectar dupes/órfãs). string_agg com ORDER BY
+        // garante ordem estável. LIMIT via subquery pq string_agg não tem
+        // limit nativo do Postgres.
+        peopleNames: sql<string | null>`(
+          SELECT string_agg(name, ', ' ORDER BY name)
+          FROM (
+            SELECT name FROM people
+            WHERE company_id = ${companies.id}
+              AND archived = FALSE
+              AND merged_into_id IS NULL
+            ORDER BY lead_score DESC
+            LIMIT 5
+          ) AS top5
+        )`,
       })
       .from(companies)
       .leftJoin(statuses, eq(companies.statusId, statuses.id))
@@ -166,6 +187,7 @@ export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters 
       status: row.status,
       peopleCount: row.peopleCount,
       topScore: row.topScore,
+      peopleNames: row.peopleNames,
     };
     const targetCol = row.company.statusId
       ? byId.get(row.company.statusId)
@@ -185,6 +207,17 @@ export async function getCompanyById(id: string): Promise<CompanyWithDetails | n
       status: statuses,
       peopleCount: sql<number>`(SELECT COUNT(*)::int FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL)`,
       topScore: sql<number>`COALESCE((SELECT MAX(lead_score) FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL), 0)`,
+      peopleNames: sql<string | null>`(
+        SELECT string_agg(name, ', ' ORDER BY name)
+        FROM (
+          SELECT name FROM people
+          WHERE company_id = ${companies.id}
+            AND archived = FALSE
+            AND merged_into_id IS NULL
+          ORDER BY lead_score DESC
+          LIMIT 5
+        ) AS top5
+      )`,
     })
     .from(companies)
     .leftJoin(statuses, eq(companies.statusId, statuses.id))
@@ -196,6 +229,7 @@ export async function getCompanyById(id: string): Promise<CompanyWithDetails | n
     status: rows[0].status,
     peopleCount: rows[0].peopleCount,
     topScore: rows[0].topScore,
+    peopleNames: rows[0].peopleNames,
   };
 }
 

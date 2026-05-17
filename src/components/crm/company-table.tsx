@@ -123,6 +123,9 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
                 <Th label="Porte" col="size" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
                 <Th label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
                 <Th label="Leads" col="peopleCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
+                <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3' }}>
+                  Pessoas vinculadas
+                </th>
                 <Th label="Top score" col="topScore" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
                 <Th label="Atualizada" col="updatedAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
               </tr>
@@ -130,7 +133,7 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
+                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
                     Nenhuma empresa bate com os filtros.
                   </td>
                 </tr>
@@ -148,6 +151,16 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
                       {c.status ? <StatusPill label={c.status.label} color={c.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}
                     </td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.peopleCount}</td>
+                    <td style={{ padding: '10px 14px', color: '#45336B', fontSize: 12, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.peopleNames ?? 'Nenhuma pessoa vinculada'}>
+                      {c.peopleNames ? (
+                        <>
+                          {c.peopleNames}
+                          {c.peopleCount > 5 ? <span style={{ color: '#9D85B3' }}> +{c.peopleCount - 5}</span> : null}
+                        </>
+                      ) : (
+                        <span style={{ color: '#C0392B', fontSize: 11, fontStyle: 'italic' }}>⚠ órfã</span>
+                      )}
+                    </td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.topScore}</td>
                     <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
                       {c.updatedAt ? timeAgo(c.updatedAt) : '—'}
