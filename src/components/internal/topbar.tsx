@@ -1,8 +1,9 @@
 /**
- * Topbar fixo do /internal — logo + toggler CRM/Dashboard + busca + logout.
+ * Topbar fixo do /internal — logo + tag de área interna + menu de pages + busca + logout.
  *
- * Toggler: segmented control com indicator deslizante (estilo Apple).
- * Layout: tudo numa linha só, compacto.
+ * Menu: simples lista de links (CRM / Dashboard / Catálogo), sem segmented control.
+ * Tag "interno · não indexado" deixa claro pro próprio usuário que tudo dali
+ * pra dentro é privado e fora dos robots/sitemap.
  */
 
 'use client';
@@ -12,9 +13,14 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/app/internal/actions/auth';
 
+const MENU = [
+  { href: '/internal/crm', label: 'CRM', match: '/internal/crm' },
+  { href: '/internal/dashboard', label: 'Dashboard', match: '/internal/dashboard' },
+  { href: '/internal/catalogo', label: 'Catálogo', match: '/internal/catalogo' },
+] as const;
+
 export function InternalTopbar() {
   const pathname = usePathname() ?? '';
-  const activeView: 'crm' | 'dashboard' = pathname.startsWith('/internal/crm') ? 'crm' : 'dashboard';
 
   function openCmdK() {
     const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true, bubbles: true });
@@ -28,21 +34,24 @@ export function InternalTopbar() {
           <Image src="/images/boldfy-logo.svg" alt="Boldfy" width={84} height={24} priority />
         </Link>
 
-        <nav className="view-toggler" aria-label="Trocar entre CRM e Dashboard">
-          <Link
-            href="/internal/crm"
-            className={`toggler-btn ${activeView === 'crm' ? 'active' : ''}`}
-            aria-current={activeView === 'crm' ? 'page' : undefined}
-          >
-            CRM
-          </Link>
-          <Link
-            href="/internal/dashboard"
-            className={`toggler-btn ${activeView === 'dashboard' ? 'active' : ''}`}
-            aria-current={activeView === 'dashboard' ? 'page' : undefined}
-          >
-            Dashboard
-          </Link>
+        <span className="topbar-private-tag" title="Todas as páginas abaixo desse caminho não vão pro Google (noindex)">
+          interno · não indexado
+        </span>
+
+        <nav className="topbar-menu" aria-label="Áreas internas">
+          {MENU.map((item) => {
+            const active = pathname === item.match || pathname.startsWith(`${item.match}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`topbar-menu-link ${active ? 'active' : ''}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
@@ -84,7 +93,7 @@ export function InternalTopbar() {
         .topbar-left {
           display: flex;
           align-items: center;
-          gap: 18px;
+          gap: 14px;
           min-width: 0;
         }
         .topbar-logo {
@@ -93,37 +102,47 @@ export function InternalTopbar() {
           flex-shrink: 0;
         }
 
-        /* === TOGGLER (botões separados, sem container fancy) === */
-        .view-toggler {
+        /* Tag pequena indicando que toda essa área é privada e fora do índice do Google */
+        .topbar-private-tag {
           display: inline-flex;
-          gap: 6px;
+          align-items: center;
+          padding: 3px 9px;
+          background: rgba(157, 133, 179, 0.12);
+          color: #6B5B8A;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          border-radius: 6px;
+          border: 1px solid rgba(157, 133, 179, 0.2);
+          white-space: nowrap;
+          cursor: help;
         }
-        .toggler-btn {
-          padding: 8px 18px;
+
+        /* Menu — lista limpa de links, sem segmented control */
+        .topbar-menu {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          margin-left: 6px;
+        }
+        .topbar-menu-link {
+          padding: 7px 14px;
           font-size: 13px;
           font-weight: 600;
           color: #9D85B3;
           text-decoration: none;
           transition: all 0.15s ease;
           border-radius: 8px;
-          text-align: center;
           white-space: nowrap;
-          background: #F7EEFC;
-          border: 1px solid transparent;
         }
-        .toggler-btn:hover {
+        .topbar-menu-link:hover {
           color: #5E2A67;
-          background: rgba(205, 80, 241, 0.08);
+          background: #FAF5FE;
         }
-        .toggler-btn.active {
-          background: #CD50F1;
-          color: #FFFFFF;
-          border-color: #CD50F1;
-          box-shadow: 0 4px 12px rgba(205, 80, 241, 0.25);
-        }
-        .toggler-btn.active:hover {
-          background: #9840AD;
-          color: #FFFFFF;
+        .topbar-menu-link.active {
+          color: #CD50F1;
+          background: #F7EEFC;
         }
 
         /* === RIGHT side compacto === */
@@ -164,12 +183,15 @@ export function InternalTopbar() {
           font-family: inherit;
         }
 
+        @media (max-width: 900px) {
+          .topbar-private-tag { display: none; }
+        }
         @media (max-width: 720px) {
           .internal-topbar { padding: 10px 14px; gap: 10px; }
-          .topbar-left { gap: 10px; }
+          .topbar-left { gap: 8px; }
           .topbar-icon-btn span { display: none; }
           .topbar-icon-btn kbd { display: none; }
-          .toggler-btn { min-width: 64px; padding: 6px 12px; }
+          .topbar-menu-link { padding: 6px 10px; font-size: 12px; }
         }
       `}</style>
     </header>
