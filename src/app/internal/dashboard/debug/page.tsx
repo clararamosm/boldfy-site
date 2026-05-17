@@ -89,8 +89,8 @@ export default async function DebugDashboardPage() {
     GOOGLE_SERVICE_ACCOUNT_JSON: !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
   };
 
-  // eslint-disable-next-line react-hooks/purity -- Server Component force-dynamic, sempre re-rendered
-  const nowMs = Date.now();
+  const { nowMs: nowMsHelper } = await import('@/lib/now');
+  const nowMs = nowMsHelper();
   let oauthToken: {
     email: string;
     expiresAt: Date;

@@ -39,19 +39,16 @@ import { parsePeriod } from '@/components/dashboard/period-utils';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 import { SectionNav } from '@/components/dashboard/section-nav';
 import { ChartWithPeriod } from '@/components/dashboard/chart-with-period';
+import { SectionHeader } from '@/components/dashboard/section-header';
 import {
-  MultiLineChart,
   StackedAreaChart,
   ScatterChart,
-  TimelineMarkers,
-  BOLDFY_PALETTE,
   BOLDFY_PURPLES,
 } from '@/components/dashboard/charts';
 import {
   Globe2,
   Search,
   Briefcase,
-  Newspaper,
   Radio,
   TrendingUp,
   Microscope,
@@ -69,6 +66,7 @@ import {
   Users,
 } from 'lucide-react';
 import { timeAgo } from '@/lib/crm-format';
+import { safeBlock as safeBlockShared } from '@/lib/safe-block';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Aquisição',
@@ -81,21 +79,9 @@ type SearchParams = Promise<{ period?: string }>;
 
 function pct(v: number): string { return `${(v * 100).toFixed(2)}%`; }
 
-/**
- * Wrapper de safety pra cada bloco de await Promise.all. Se um bloco quebra,
- * loga com tag identificável (vai pro Vercel runtime log) e retorna fallback.
- *
- * Sem isso, qualquer exception não tratada propaga pro Server Component render
- * e quebra a página inteira com o erro genérico "specific message omitted".
- */
-async function safeBlock<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    console.error(`[aquisicao] block "${name}" failed:`, err);
-    return fallback;
-  }
-}
+// safeBlock vem de @/lib/safe-block (compartilhado entre as pages do dashboard)
+const safeBlock = <T,>(name: string, fn: () => Promise<T>, fallback: T) =>
+  safeBlockShared('aquisicao', name, fn, fallback);
 
 export default async function AquisicaoPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -570,22 +556,6 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Sub-components                                                             */
-/* -------------------------------------------------------------------------- */
-
-function SectionHeader({ icon: Icon, title, subtitle }: { icon?: React.ComponentType<{ size?: number }>; title: string; subtitle?: string }) {
-  return (
-    <div style={{ margin: '36px 0 12px 0', paddingTop: 18, borderTop: '1px solid #E4D8ED' }}>
-      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-        {Icon ? <Icon size={22} /> : null}
-        {title}
-      </h2>
-      {subtitle ? <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 4 }}>{subtitle}</div> : null}
     </div>
   );
 }

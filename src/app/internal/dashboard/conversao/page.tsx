@@ -30,6 +30,9 @@ import {
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
 import { SectionNav } from '@/components/dashboard/section-nav';
+import { SectionHeader } from '@/components/dashboard/section-header';
+import { safeBlock as safeBlockShared } from '@/lib/safe-block';
+import { daysAgo } from '@/lib/now';
 import {
   FunnelStages,
   HeatmapChart,
@@ -74,18 +77,16 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-async function safeBlock<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
-  try { return await fn(); }
-  catch (err) { console.error(`[conversao] block "${name}" failed:`, err); return fallback; }
-}
+// safeBlock vem de @/lib/safe-block (compartilhado entre as pages do dashboard)
+const safeBlock = <T,>(name: string, fn: () => Promise<T>, fallback: T) =>
+  safeBlockShared('conversao', name, fn, fallback);
 
 type SearchParams = Promise<{ period?: string }>;
 
 export default async function ConversaoPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const days = parsePeriod(params.period);
-  // eslint-disable-next-line react-hooks/purity -- Server Component force-dynamic
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const since = daysAgo(days);
 
   const funnel = await safeBlock('funnel', () => getUnifiedFunnel(days), { sources: [], stages: [] } as Awaited<ReturnType<typeof getUnifiedFunnel>>);
   const sankey = await safeBlock('sankey', () => getSourceToStatusSankey(), [] as Awaited<ReturnType<typeof getSourceToStatusSankey>>);
@@ -371,14 +372,3 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   );
 }
 
-function SectionHeader({ icon: Icon, title, subtitle }: { icon?: React.ComponentType<{ size?: number }>; title: string; subtitle?: string }) {
-  return (
-    <div style={{ margin: '36px 0 12px 0', paddingTop: 18, borderTop: '1px solid #E4D8ED' }}>
-      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-        {Icon ? <Icon size={22} /> : null}
-        {title}
-      </h2>
-      {subtitle ? <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 4 }}>{subtitle}</div> : null}
-    </div>
-  );
-}
