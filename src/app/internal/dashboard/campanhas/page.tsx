@@ -18,6 +18,7 @@ import { EditCampaignButton } from './edit-campaign-button';
 import { timeAgo } from '@/lib/crm-format';
 import { isGa4Configured, getTopUtms, getTrafficByDay } from '@/lib/ga4';
 import { TimelineMarkers } from '@/components/dashboard/charts';
+import { safeBlock } from '@/lib/safe-block';
 import { Megaphone, Link2, Newspaper, FileText, Users, Lightbulb } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -98,26 +99,35 @@ async function getShortlinks(): Promise<ShortlinkRow[]> {
 }
 
 export default async function CampanhasPage() {
-  const campaignsList = await listCampaigns();
-  const stats = await Promise.all(campaignsList.map((c) => getCampaignStats(c)));
-  const shortlinks = await getShortlinks();
+  // Cada bloco em safeBlock pra evitar que uma query quebre a page inteira
+  const campaignsList = await safeBlock('campanhas', 'listCampaigns', () => listCampaigns(), []);
+  const stats = await safeBlock(
+    'campanhas',
+    'campaignStats',
+    () => Promise.all(campaignsList.map((c) => getCampaignStats(c))),
+    campaignsList.map(() => ({ leads: 0, reunioes: 0, fechados: 0 })),
+  );
+  const shortlinks = await safeBlock('campanhas', 'shortlinks', () => getShortlinks(), []);
   const now = new Date();
 
   // Mídia & PR — migrado de /aquisicao
   const [articles, prLeadsRow, prUtms, dailyTraffic] = await Promise.all([
-    db.select().from(prArticles).orderBy(desc(prArticles.publishedAt)).limit(20).catch(() => []),
-    db.select({ n: count() }).from(people)
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'pr'))).catch(() => [{ n: 0 }]),
-    isGa4Configured() ? getTopUtms(30, 50).catch(() => []) : Promise.resolve([]),
-    isGa4Configured() ? getTrafficByDay(30).catch(() => []) : Promise.resolve([]),
+    safeBlock('campanhas', 'prArticles', () => db.select().from(prArticles).orderBy(desc(prArticles.publishedAt)).limit(20), []),
+    safeBlock('campanhas', 'prLeads', () =>
+      db.select({ n: count() }).from(people)
+        .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'pr'))),
+      [{ n: 0 }],
+    ),
+    isGa4Configured() ? safeBlock('campanhas', 'topUtms', () => getTopUtms(30, 50), []) : Promise.resolve([]),
+    isGa4Configured() ? safeBlock('campanhas', 'trafficByDay', () => getTrafficByDay(30), []) : Promise.resolve([]),
   ]);
   const prLeadsCount = prLeadsRow[0]?.n ?? 0;
-  const prSessions = prUtms.filter((u) => u.source.toLowerCase() === 'pr').reduce((a, u) => a + u.sessions, 0);
-  const organicSeries = dailyTraffic.map((d) => d.sessions);
-  const articleMarkers = articles
+  const prSessions = (prUtms ?? []).filter((u) => (u.source ?? '').toLowerCase() === 'pr').reduce((a, u) => a + (u.sessions ?? 0), 0);
+  const organicSeries = (dailyTraffic ?? []).map((d) => d.sessions ?? 0);
+  const articleMarkers = (articles ?? [])
     .filter((a) => a.publishedAt && !isNaN(new Date(a.publishedAt).getTime()))
     .map((a) => ({ date: new Date(a.publishedAt).toISOString().split('T')[0], label: a.title }))
-    .filter((m) => dailyTraffic.some((d) => d.date === m.date));
+    .filter((m) => (dailyTraffic ?? []).some((d) => d.date === m.date));
 
   return (
     <div>
@@ -146,7 +156,7 @@ export default async function CampanhasPage() {
               const start = new Date(`${c.startDate}T00:00:00`);
               const end = c.endDate ? new Date(`${c.endDate}T23:59:59`) : null;
               const cvr = s.leads > 0 ? ((s.fechados / s.leads) * 100).toFixed(1) : '—';
-              const totalTouchpoints = c.channels.reduce((a, ch) => a + ch.touchpoints.length, 0);
+              const totalTouchpoints = (c.channels ?? []).reduce((a, ch) => a + ((ch.touchpoints ?? []).length), 0);
 
               return (
                 <div key={c.slug} style={{ position: 'relative' }}>
@@ -169,9 +179,9 @@ export default async function CampanhasPage() {
                     <div style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 16, color: '#5E2A67' }}>{c.name}</div>
                     <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 2 }}>{c.objective}</div>
                     <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                      {c.channels.map((ch) => (
+                      {(c.channels ?? []).map((ch) => (
                         <span key={ch.name} className="dash-pill">
-                          {ch.name}{ch.touchpoints.length > 0 ? ` · ${ch.touchpoints.length}` : ''}
+                          {ch.name}{(ch.touchpoints ?? []).length > 0 ? ` · ${(ch.touchpoints ?? []).length}` : ''}
                         </span>
                       ))}
                       {totalTouchpoints > 0 ? (
@@ -277,12 +287,12 @@ export default async function CampanhasPage() {
       <div className="dash-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
           <div className="dash-card-title"><Link2 /> Links rastreáveis</div>
-          <Link href="/internal/dashboard/utm" className="dash-card-action" style={{ fontSize: 12, color: '#CD50F1', fontWeight: 700, textDecoration: 'none' }}>
+          <Link href="/internal/utm" className="dash-card-action" style={{ fontSize: 12, color: '#CD50F1', fontWeight: 700, textDecoration: 'none' }}>
             🔗 Gerar novo link UTM →
           </Link>
         </div>
         <div className="dash-card-subtitle">
-          Links UTM são criados em <Link href="/internal/dashboard/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
+          Links UTM são criados em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
           Shortlinks (KV) servem como alias curto pros UTMs em mídias com limite de caracteres ·
           <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code>
         </div>
