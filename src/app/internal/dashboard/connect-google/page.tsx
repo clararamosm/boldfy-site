@@ -95,7 +95,7 @@ export default async function ConnectGooglePage({ searchParams }: { searchParams
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <a href="/api/auth/google/start" className="crm-btn">🔄 Reconectar (refresh)</a>
-              <Link href="/internal/dashboard/trafego" className="crm-btn crm-btn-primary">Ir pro Tráfego →</Link>
+              <Link href="/internal/dashboard/aquisicao" className="crm-btn crm-btn-primary">Ir pra Aquisição →</Link>
             </div>
           </div>
         ) : (

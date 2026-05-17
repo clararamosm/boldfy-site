@@ -1,16 +1,34 @@
 /**
- * Dashboard · Visão Geral.
+ * Dashboard · Visão Geral (bento box cross-channel).
  *
- * KPIs agregados do CRM (lê do nosso Postgres) + alertas + atividade recente.
- * Os números aqui são dados reais — não precisam de Google Cloud ou outros
- * setups externos. Só precisa do db:push aplicado.
+ * Report do dia a dia da empresa. Tudo cross-channel — não silo. Cada bento
+ * mostra um pedaço da história integrada (visitas + leads + reuniões + SEO).
+ *
+ * Layout: CSS Grid 6 colunas com bentos em spans variados.
  */
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { db, people, companies, activities, statuses } from '@/db';
-import { eq, and, isNull, desc, count, gte, sql } from 'drizzle-orm';
-import { describeActivity, timeAgo } from '@/lib/crm-format';
+import {
+  getActivityByDay,
+  getUnifiedFunnel,
+  getLeadsByOrigin,
+  getConversionHeatmap,
+  getStackedTrafficByChannel,
+  getLast5Leads,
+  getBentoSnapshot,
+} from '@/lib/dashboard-queries';
+import { getTopQueries } from '@/lib/search-console';
+import { channelLabel, timeAgo } from '@/lib/crm-format';
+import {
+  Sparkline,
+  MultiLineChart,
+  SankeyFunnel,
+  StackedAreaChart,
+  DonutChart,
+  HeatmapChart,
+  BOLDFY_PALETTE,
+} from '@/components/dashboard/charts';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Visão Geral',
@@ -19,170 +37,213 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-async function getKpis() {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  const [
-    totalPeople,
-    totalCompanies,
-    newPeople30d,
-    quentes,
-    reunioesMarcadas,
-    fechados,
-  ] = await Promise.all([
-    db.select({ n: count() }).from(people).where(and(eq(people.archived, false), isNull(people.mergedIntoId))),
-    db.select({ n: count() }).from(companies),
-    db.select({ n: count() }).from(people).where(and(
-      eq(people.archived, false),
-      isNull(people.mergedIntoId),
-      gte(people.createdAt, thirtyDaysAgo),
-    )),
-    // Quentes: usa label "Quente" se existir, senão último por sort_order
-    db.select({ n: count() }).from(people)
-      .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(and(
-        eq(people.archived, false),
-        isNull(people.mergedIntoId),
-        sql`${statuses.label} = 'Quente'`,
-      )),
-    db.select({ n: count() }).from(companies)
-      .leftJoin(statuses, eq(companies.statusId, statuses.id))
-      .where(sql`${statuses.label} = 'Reunião marcada'`),
-    db.select({ n: count() }).from(companies)
-      .leftJoin(statuses, eq(companies.statusId, statuses.id))
-      .where(sql`${statuses.label} = 'Fechado'`),
-  ]);
-
-  return {
-    totalPeople: totalPeople[0]?.n ?? 0,
-    totalCompanies: totalCompanies[0]?.n ?? 0,
-    newPeople30d: newPeople30d[0]?.n ?? 0,
-    quentes: quentes[0]?.n ?? 0,
-    reunioesMarcadas: reunioesMarcadas[0]?.n ?? 0,
-    fechados: fechados[0]?.n ?? 0,
-  };
+function deltaPill(deltaPct: number | null): { className: string; arrow: string; text: string } | null {
+  if (deltaPct === null) return null;
+  if (Math.abs(deltaPct) < 1) return { className: '', arrow: '→', text: 'estável' };
+  if (deltaPct > 0) return { className: 'up', arrow: '↑', text: `+${deltaPct.toFixed(0)}%` };
+  return { className: 'down', arrow: '↓', text: `${deltaPct.toFixed(0)}%` };
 }
 
-async function getRecentActivity(limit = 8) {
-  return db
-    .select({
-      activity: activities,
-      person: { id: people.id, name: people.name },
-      company: { id: companies.id, name: companies.name },
-    })
-    .from(activities)
-    .leftJoin(people, eq(activities.personId, people.id))
-    .leftJoin(companies, eq(activities.companyId, companies.id))
-    .orderBy(desc(activities.createdAt))
-    .limit(limit);
-}
+const SOURCE_LABELS: Record<string, string> = {
+  linkedin: 'LinkedIn',
+  organic: 'Orgânico',
+  direct: 'Direto',
+  email: 'Email',
+  indicacao: 'Indicação',
+  pr: 'PR',
+  manual: 'Manual',
+  unknown: 'Não atribuído',
+};
 
 export default async function DashboardOverviewPage() {
-  let kpis: Awaited<ReturnType<typeof getKpis>> = { totalPeople: 0, totalCompanies: 0, newPeople30d: 0, quentes: 0, reunioesMarcadas: 0, fechados: 0 };
-  let recent: Awaited<ReturnType<typeof getRecentActivity>> = [];
-  let dbError: string | null = null;
-  try {
-    [kpis, recent] = await Promise.all([getKpis(), getRecentActivity()]);
-  } catch (err) {
-    dbError = err instanceof Error ? err.message : String(err);
-  }
+  const [snapshot, activity28, funnel, origin, heatmap, stacked, topQueries, lastLeads] = await Promise.all([
+    getBentoSnapshot().catch(() => null),
+    getActivityByDay(28).catch(() => []),
+    getUnifiedFunnel(30).catch(() => []),
+    getLeadsByOrigin(30).catch(() => []),
+    getConversionHeatmap(90).catch(() => Array.from({ length: 7 }, () => Array(24).fill(0))),
+    getStackedTrafficByChannel(28).catch(() => ({ data: [], channels: [] })),
+    getTopQueries(7, 3).catch(() => []),
+    getLast5Leads(5).catch(() => []),
+  ]);
 
   return (
     <div>
       <div className="dash-header">
         <div>
           <h1 className="dash-title">Visão Geral</h1>
-          <p className="dash-subtitle">O pulso do site e do pipeline · dados em tempo real</p>
+          <p className="dash-subtitle">O pulso integrado do GTM · visitas + forms + reuniões + SEO + LinkedIn</p>
         </div>
       </div>
 
-      {dbError ? (
-        <div className="dash-setup-needed">
-          <strong>Postgres não conectado.</strong>
-          <p>Roda <code>vercel env pull .env.local</code> e <code>npm run db:push</code>.</p>
-          <p style={{ fontSize: 11, marginTop: 8 }}>{dbError}</p>
-        </div>
-      ) : null}
+      <div className="bento-grid">
+        {/* Linha 1: 4 KPIs (1×1 cada) */}
+        {snapshot ? (
+          <>
+            <KpiBento label="Visitas 7d" value={snapshot.visitas.value} deltaPct={snapshot.visitas.deltaPct} sparkline={snapshot.visitas.sparkline} color="#CD50F1" />
+            <KpiBento label="Forms 7d" value={snapshot.forms.value} deltaPct={snapshot.forms.deltaPct} sparkline={snapshot.forms.sparkline} color="#3B82F6" />
+            <KpiBento label="Reuniões 7d" value={snapshot.reunioes.value} deltaPct={snapshot.reunioes.deltaPct} sparkline={snapshot.reunioes.sparkline} color="#10B981" />
+            <div className="bento bento-span-3">
+              <div className="bento-label">Top canal da semana</div>
+              {snapshot.topCanal ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginTop: 4 }}>
+                    <span className="bento-pill" style={{ fontSize: 16, padding: '6px 14px' }}>{snapshot.topCanal.channel}</span>
+                    <span className="bento-value" style={{ fontSize: 28 }}>{snapshot.topCanal.sessions.toLocaleString('pt-BR')}</span>
+                    <span style={{ color: '#9D85B3', fontSize: 12 }}>sessões</span>
+                    {snapshot.topCanal.deltaPct !== null ? (
+                      <span className={`bento-delta ${(snapshot.topCanal.deltaPct ?? 0) >= 0 ? 'up' : 'down'}`}>
+                        {(snapshot.topCanal.deltaPct ?? 0) >= 0 ? '↑' : '↓'} {Math.abs(snapshot.topCanal.deltaPct ?? 0).toFixed(0)}% vs semana anterior
+                      </span>
+                    ) : null}
+                  </div>
+                  <div style={{ marginTop: 'auto', color: '#9D85B3', fontSize: 11 }}>GA4 · últimos 7 dias</div>
+                </>
+              ) : (
+                <div style={{ color: '#9D85B3', fontSize: 13, paddingTop: 24 }}>Configure GA4 em <Link href="/internal/dashboard/connect-google" style={{ color: '#CD50F1' }}>/connect-google</Link></div>
+              )}
+            </div>
+          </>
+        ) : null}
 
-      <div className="dash-kpi-grid">
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon">👤</div>
-          <div className="dash-kpi-label">Pessoas no CRM</div>
-          <div className="dash-kpi-value">{kpis.totalPeople}</div>
-          <div className="dash-kpi-meta">
-            {kpis.newPeople30d > 0 ? <>+{kpis.newPeople30d} nos últimos 30d</> : 'sem novas no mês'}
+        {/* Funil unificado (sankey) — 6 colunas × 3 linhas */}
+        <div className="bento bento-span-6 bento-row-3">
+          <div className="bento-title">
+            🌊 Funil unificado cross-channel
+            <span style={{ fontSize: 11, color: '#9D85B3', fontWeight: 600 }}>últimos 30 dias</span>
+          </div>
+          <div className="bento-subtitle">Impressões SEO → Visitas → Forms → MQL/Quente → Reuniões → Fechados</div>
+          <div className="bento-content" style={{ display: 'flex', alignItems: 'center' }}>
+            <SankeyFunnel stages={funnel.map((s) => ({ key: s.key, label: s.label, count: s.count }))} />
           </div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">🏢</div>
-          <div className="dash-kpi-label">Empresas</div>
-          <div className="dash-kpi-value">{kpis.totalCompanies}</div>
+
+        {/* Atividade diária cruzada — 4 colunas × 3 linhas */}
+        <div className="bento bento-span-4 bento-row-3">
+          <div className="bento-title">📈 Atividade diária cruzada</div>
+          <div className="bento-subtitle">Visitas (GA4) × Forms (CRM) × Reuniões — últimos 28d</div>
+          <div className="bento-content">
+            <MultiLineChart
+              dates={activity28.map((a) => a.date)}
+              series={[
+                { key: 'visitas', label: 'Visitas', color: '#CD50F1', data: activity28.map((a) => a.visitas) },
+                { key: 'forms', label: 'Forms', color: '#3B82F6', data: activity28.map((a) => a.forms) },
+                { key: 'reunioes', label: 'Reuniões', color: '#10B981', data: activity28.map((a) => a.reunioes) },
+              ]}
+              height={260}
+            />
+          </div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon amber">🔥</div>
-          <div className="dash-kpi-label">Leads quentes</div>
-          <div className="dash-kpi-value">{kpis.quentes}</div>
-          <div className="dash-kpi-meta">aguardando outreach</div>
+
+        {/* Origem dos leads (donut) — 2 colunas × 3 linhas */}
+        <div className="bento bento-span-2 bento-row-3">
+          <div className="bento-title">🎯 Origem dos leads</div>
+          <div className="bento-subtitle">últimos 30d por canal</div>
+          <div className="bento-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DonutChart
+              data={origin.map((o) => ({ key: o.source, value: o.count }))}
+              labelMap={SOURCE_LABELS}
+              size={160}
+              thickness={24}
+            />
+          </div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon orange">📅</div>
-          <div className="dash-kpi-label">Reuniões marcadas</div>
-          <div className="dash-kpi-value">{kpis.reunioesMarcadas}</div>
+
+        {/* Stacked area canais — 4 colunas × 3 linhas */}
+        <div className="bento bento-span-4 bento-row-3">
+          <div className="bento-title">📡 Visitas por canal (28d)</div>
+          <div className="bento-subtitle">Como cada canal contribuiu pro tráfego total</div>
+          <div className="bento-content">
+            <StackedAreaChart
+              dates={stacked.data.map((d) => d.date)}
+              series={stacked.channels.map((c, i) => ({
+                key: c,
+                label: c,
+                color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],
+                data: stacked.data.map((d) => Number(d[c] ?? 0)),
+              }))}
+              height={260}
+            />
+          </div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon green">🏆</div>
-          <div className="dash-kpi-label">Fechados</div>
-          <div className="dash-kpi-value">{kpis.fechados}</div>
+
+        {/* Heatmap dia × hora — 2 colunas × 3 linhas */}
+        <div className="bento bento-span-2 bento-row-3">
+          <div className="bento-title">🔥 Quando convertemos</div>
+          <div className="bento-subtitle">Forms preenchidos · 90d · dia × hora</div>
+          <div className="bento-content">
+            <HeatmapChart matrix={heatmap} />
+          </div>
+        </div>
+
+        {/* Top queries SEO (semana) — 2 colunas × 2 linhas */}
+        <div className="bento bento-span-2 bento-row-2">
+          <div className="bento-title">🔍 Top queries (7d)</div>
+          <div className="bento-subtitle">Search Console</div>
+          <div className="bento-content bento-list">
+            {topQueries.length === 0 ? (
+              <div style={{ color: '#9D85B3', fontSize: 12, padding: 12 }}>Sem queries no período.</div>
+            ) : topQueries.map((q) => (
+              <div key={q.query} className="bento-list-item">
+                <span className="name">{q.query}</span>
+                <span className="meta">{q.clicks} clk · pos {q.position.toFixed(1)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Last 5 leads — 2 colunas × 2 linhas */}
+        <div className="bento bento-span-4 bento-row-2">
+          <div className="bento-title">👥 Últimos leads</div>
+          <div className="bento-subtitle">Live feed do CRM</div>
+          <div className="bento-content bento-list">
+            {lastLeads.length === 0 ? (
+              <div style={{ color: '#9D85B3', fontSize: 12, padding: 12 }}>Sem leads ainda.</div>
+            ) : lastLeads.map((l) => (
+              <Link key={l.id} href={`/internal/crm/people/${l.id}`} className="bento-list-item" style={{ textDecoration: 'none' }}>
+                <span className="name">{l.name}</span>
+                <span className="meta">{l.companyName ?? '—'}</span>
+                <span className="bento-pill" style={{ fontSize: 10, padding: '2px 6px' }}>{channelLabel(l.source)}</span>
+                <span className="meta">{timeAgo(l.createdAt)}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="dash-card">
-        <div className="dash-card-title">⚡ Atividade recente</div>
-        <div className="dash-card-subtitle">Últimas {recent.length} activities do CRM</div>
-        {recent.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>
-            Sem atividade ainda. Submete um form de teste no site pra começar.
-          </div>
-        ) : (
-          <table className="dash-table">
-            <thead>
-              <tr>
-                <th>Quando</th>
-                <th>Evento</th>
-                <th>Lead</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recent.map((r) => {
-                const desc = describeActivity(r.activity.type, r.activity.data as Record<string, unknown> | null);
-                return (
-                  <tr key={r.activity.id}>
-                    <td className="muted" style={{ width: 110 }}>{timeAgo(r.activity.createdAt)}</td>
-                    <td>
-                      <span style={{ marginRight: 6 }}>{desc.icon}</span>
-                      {desc.text}
-                      {r.activity.weight > 0 ? (
-                        <span style={{ marginLeft: 6, padding: '1px 6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
-                          +{r.activity.weight}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td>
-                      {r.person?.id ? (
-                        <Link href={`/internal/crm/people/${r.person.id}`} className="strong" style={{ textDecoration: 'none', color: '#5E2A67' }}>
-                          {r.person.name}
-                        </Link>
-                      ) : '—'}
-                      {r.company?.id ? (
-                        <span className="muted"> · {r.company.name}</span>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 12, color: '#5E2A67' }}>
+        <div>
+          📊 Mais detalhes: <Link href="/internal/dashboard/aquisicao" style={{ color: '#CD50F1', fontWeight: 700, marginLeft: 6 }}>Aquisição</Link>
+          <span style={{ margin: '0 8px' }}>·</span>
+          <Link href="/internal/dashboard/conversao" style={{ color: '#CD50F1', fontWeight: 700 }}>Conversão</Link>
+          <span style={{ margin: '0 8px' }}>·</span>
+          <Link href="/internal/dashboard/campanhas" style={{ color: '#CD50F1', fontWeight: 700 }}>Campanhas</Link>
+        </div>
+        <Link href="/internal/dashboard/debug" style={{ color: '#9D85B3', fontSize: 11 }}>Debug</Link>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Bento Components inline (small, page-specific)                            */
+/* -------------------------------------------------------------------------- */
+
+function KpiBento({ label, value, deltaPct, sparkline, color }: {
+  label: string;
+  value: number;
+  deltaPct: number | null;
+  sparkline: number[];
+  color: string;
+}) {
+  const delta = deltaPill(deltaPct);
+  return (
+    <div className="bento bento-span-1">
+      <div className="bento-label">{label}</div>
+      <div className="bento-value">{value.toLocaleString('pt-BR')}</div>
+      {delta ? <div className={`bento-delta ${delta.className}`}>{delta.arrow} {delta.text}</div> : null}
+      <div className="bento-sparkline-wrap">
+        <Sparkline data={sparkline} color={color} height={32} />
       </div>
     </div>
   );

@@ -89,6 +89,8 @@ export default async function DebugDashboardPage() {
     GOOGLE_SERVICE_ACCOUNT_JSON: !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
   };
 
+  // eslint-disable-next-line react-hooks/purity -- Server Component force-dynamic, sempre re-rendered
+  const nowMs = Date.now();
   let oauthToken: {
     email: string;
     expiresAt: Date;
@@ -105,13 +107,14 @@ export default async function DebugDashboardPage() {
       .orderBy(desc(googleOauthTokens.createdAt))
       .limit(1);
     if (rows[0]) {
+      const expiresAt = rows[0].expiresAt;
       oauthToken = {
         email: rows[0].email,
-        expiresAt: rows[0].expiresAt,
+        expiresAt,
         scopes: rows[0].scopes,
         accessTokenLen: rows[0].accessToken.length,
         refreshTokenLen: rows[0].refreshToken.length,
-        minutesUntilExpiry: Math.round((rows[0].expiresAt.getTime() - Date.now()) / 60000),
+        minutesUntilExpiry: Math.round((expiresAt.getTime() - nowMs) / 60000),
       };
     }
   } catch (err) {

@@ -330,3 +330,150 @@
   margin-bottom: 12px;
 }
 
+/* ---------------------------------------------------------------- */
+/*  Bento grid (Visão Geral)                                         */
+/* ---------------------------------------------------------------- */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: 120px;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.bento {
+  background: #FFFFFF;
+  border: 1px solid #E4D8ED;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 6px 24px rgba(93, 42, 103, 0.05);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.bento:hover {
+  border-color: rgba(205, 80, 241, 0.3);
+  box-shadow: 0 12px 32px rgba(205, 80, 241, 0.1);
+}
+.bento-span-1 { grid-column: span 1; }
+.bento-span-2 { grid-column: span 2; }
+.bento-span-3 { grid-column: span 3; }
+.bento-span-4 { grid-column: span 4; }
+.bento-span-6 { grid-column: span 6; }
+.bento-row-1 { grid-row: span 1; }
+.bento-row-2 { grid-row: span 2; }
+.bento-row-3 { grid-row: span 3; }
+.bento-row-4 { grid-row: span 4; }
+
+.bento-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9D85B3;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.bento-value {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: 32px;
+  color: #5E2A67;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.bento-delta {
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(157, 133, 179, 0.1);
+  color: #6B5B8A;
+}
+.bento-delta.up { background: rgba(16, 185, 129, 0.1); color: #066B4D; }
+.bento-delta.down { background: rgba(238, 90, 82, 0.1); color: #C0392B; }
+.bento-sparkline-wrap {
+  margin-top: auto;
+  margin-bottom: -4px;
+}
+.bento-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-headline);
+  font-weight: 900;
+  font-size: 14px;
+  color: #5E2A67;
+  margin-bottom: 4px;
+}
+.bento-subtitle {
+  font-size: 11px;
+  color: #9D85B3;
+  margin-bottom: 10px;
+}
+.bento-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Responsivo: <900px vira 3 colunas, <600px vira 2 */
+@media (max-width: 1100px) {
+  .bento-grid { grid-template-columns: repeat(4, 1fr); }
+  .bento-span-6 { grid-column: span 4; }
+  .bento-span-4 { grid-column: span 4; }
+}
+@media (max-width: 720px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .bento-span-3, .bento-span-4, .bento-span-6 { grid-column: span 2; }
+}
+
+/* Pill compact pra Top canal / Top query bento */
+.bento-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #F7EEFC;
+  color: #7E3FA6;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bento-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bento-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #FAF7FF;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.bento-list-item:hover { background: #F7EEFC; }
+.bento-list-item .name {
+  font-weight: 600;
+  color: #5E2A67;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bento-list-item .meta {
+  font-size: 11px;
+  color: #9D85B3;
+  white-space: nowrap;
+}
+
