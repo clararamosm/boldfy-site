@@ -77,6 +77,22 @@ type SearchParams = Promise<{ period?: string }>;
 
 function pct(v: number): string { return `${(v * 100).toFixed(2)}%`; }
 
+/**
+ * Wrapper de safety pra cada bloco de await Promise.all. Se um bloco quebra,
+ * loga com tag identificável (vai pro Vercel runtime log) e retorna fallback.
+ *
+ * Sem isso, qualquer exception não tratada propaga pro Server Component render
+ * e quebra a página inteira com o erro genérico "specific message omitted".
+ */
+async function safeBlock<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error(`[aquisicao] block "${name}" failed:`, err);
+    return fallback;
+  }
+}
+
 export default async function AquisicaoPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const days = parsePeriod(params.period);
@@ -84,63 +100,70 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
   const ga4Configured = isGa4Configured();
   const scConfigured = isSearchConsoleConfigured();
 
-  // Tráfego (GA4)
-  const [trafficSummary, channels, topPages, topUtms, dailyTraffic] = await Promise.all([
-    ga4Configured ? getTrafficSummary(days).catch(() => null) : Promise.resolve(null),
-    ga4Configured ? getTrafficByChannel(days).catch(() => []) : Promise.resolve([]),
-    ga4Configured ? getTopPages(days, 12).catch(() => []) : Promise.resolve([]),
-    ga4Configured ? getTopUtms(days, 20).catch(() => []) : Promise.resolve([]),
-    ga4Configured ? getTrafficByDay(days).catch(() => []) : Promise.resolve([]),
-  ]);
+  // Tráfego (GA4) — cada query isolada em safeBlock pra capturar e logar erro
+  const trafficSummary = await safeBlock('ga4.summary', () => ga4Configured ? getTrafficSummary(days) : Promise.resolve(null), null);
+  const channels = await safeBlock('ga4.channels', () => ga4Configured ? getTrafficByChannel(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByChannel>>);
+  const topPages = await safeBlock('ga4.pages', () => ga4Configured ? getTopPages(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPages>>);
+  const topUtms = await safeBlock('ga4.utms', () => ga4Configured ? getTopUtms(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopUtms>>);
+  const dailyTraffic = await safeBlock('ga4.daily', () => ga4Configured ? getTrafficByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByDay>>);
 
   // SEO (SC)
-  const [seoSummary, queries, seoPages, opportunities, seoDaily, brandedQs, lowCtr, gaps, scatter] = await Promise.all([
-    scConfigured ? getSeoSummary(days).catch(() => null) : Promise.resolve(null),
-    scConfigured ? getTopQueries(days, 20).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getTopPagesSeo(days, 12).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getRankingOpportunities(days, 12).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getSeoByDay(days).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getBrandedQueries(days).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getLowCtrForPosition(days, 30).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getTopicGaps(days, 20).catch(() => []) : Promise.resolve([]),
-    scConfigured ? getQueriesScatter(days, 80).catch(() => []) : Promise.resolve([]),
-  ]);
+  const seoSummary = await safeBlock('sc.summary', () => scConfigured ? getSeoSummary(days) : Promise.resolve(null), null);
+  const queries = await safeBlock('sc.queries', () => scConfigured ? getTopQueries(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopQueries>>);
+  const seoPages = await safeBlock('sc.pages', () => scConfigured ? getTopPagesSeo(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPagesSeo>>);
+  const opportunities = await safeBlock('sc.opps', () => scConfigured ? getRankingOpportunities(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getRankingOpportunities>>);
+  const seoDaily = await safeBlock('sc.daily', () => scConfigured ? getSeoByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getSeoByDay>>);
+  const brandedQs = await safeBlock('sc.branded', () => scConfigured ? getBrandedQueries(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getBrandedQueries>>);
+  const lowCtr = await safeBlock('sc.lowctr', () => scConfigured ? getLowCtrForPosition(days, 30) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getLowCtrForPosition>>);
+  const gaps = await safeBlock('sc.gaps', () => scConfigured ? getTopicGaps(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopicGaps>>);
+  const scatter = await safeBlock('sc.scatter', () => scConfigured ? getQueriesScatter(days, 80) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getQueriesScatter>>);
 
   // LinkedIn (UTM + CRM)
   const liUtmSessions = topUtms.filter((u) => u.source.toLowerCase().includes('linkedin')).reduce((a, u) => a + u.sessions, 0);
   const liChannelSessions = channels.find((c) => c.channel.toLowerCase().includes('social') || c.channel.toLowerCase().includes('linkedin'))?.sessions ?? 0;
   const liVisits = liChannelSessions || liUtmSessions;
 
-  const [liLeads, liCampaigns] = await Promise.all([
-    db.select({ person: people, company: companies, status: statuses })
+  // db.select chain com `.catch()` direto pode não ser tratado por Promise.all
+  // se Drizzle não expõe Promise compatível. Wrap em safeBlock.
+  const liLeads = await safeBlock('li_leads', async () => {
+    return db.select({ person: people, company: companies, status: statuses })
       .from(people)
       .leftJoin(companies, eq(people.companyId, companies.id))
       .leftJoin(statuses, eq(people.statusId, statuses.id))
       .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'linkedin')))
       .orderBy(desc(people.createdAt))
-      .limit(10)
-      .catch(() => []),
-    db.select({ campaign: people.firstTouchCampaign, n: count() })
+      .limit(10);
+  }, [] as Array<{ person: typeof people.$inferSelect; company: typeof companies.$inferSelect | null; status: typeof statuses.$inferSelect | null }>);
+
+  const liCampaigns = await safeBlock('li_campaigns', async () => {
+    return db.select({ campaign: people.firstTouchCampaign, n: count() })
       .from(people)
       .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'linkedin')))
       .groupBy(people.firstTouchCampaign)
       .orderBy(desc(count()))
-      .limit(8)
-      .catch(() => []),
-  ]);
+      .limit(8);
+  }, [] as Array<{ campaign: string | null; n: number }>);
+
   const liCvr = liVisits > 0 ? (liLeads.length / liVisits) * 100 : 0;
 
   // Mídia & PR
-  const [articles, prLeadsRow] = await Promise.all([
-    db.select().from(prArticles).orderBy(desc(prArticles.publishedAt)).limit(20).catch(() => []),
-    db.select({ n: count() }).from(people).where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'pr'))).catch(() => [{ n: 0 }]),
-  ]);
-  const prLeadsCount = prLeadsRow[0]?.n ?? 0;
+  const articles = await safeBlock('articles', async () => {
+    return db.select().from(prArticles).orderBy(desc(prArticles.publishedAt)).limit(20);
+  }, [] as Array<typeof prArticles.$inferSelect>);
+
+  const prLeadsCount = await safeBlock('pr_leads', async () => {
+    const row = await db.select({ n: count() }).from(people)
+      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'pr')));
+    return row[0]?.n ?? 0;
+  }, 0);
+
   const prSessions = topUtms.filter((u) => u.source.toLowerCase() === 'pr').reduce((a, u) => a + u.sessions, 0);
 
   // Timeline mídia: GA4 organic + markers de publicações
   const organicSeries = dailyTraffic.map((d) => d.sessions);
+  // Defensive: filter inválidos antes de Date()
   const articleMarkers = articles
+    .filter((a) => a.publishedAt && !isNaN(new Date(a.publishedAt).getTime()))
     .map((a) => ({ date: new Date(a.publishedAt).toISOString().split('T')[0], label: a.title }))
     .filter((m) => dailyTraffic.some((d) => d.date === m.date));
 

@@ -84,44 +84,41 @@ const FORM_META: Record<string, { label: string; Icon: React.ComponentType<{ siz
 
 type SearchParams = Promise<{ period?: string }>;
 
+async function safeBlock<T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+  try { return await fn(); }
+  catch (err) { console.error(`[conversao] block "${name}" failed:`, err); return fallback; }
+}
+
 export default async function ConversaoPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const days = parsePeriod(params.period);
   // eslint-disable-next-line react-hooks/purity -- Server Component force-dynamic
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const [funnel, sankey, stuck, scoreDist, velocity, cohort, stageTime, formCvr, heatmap, allStatuses, recentLeads] = await Promise.all([
-    getUnifiedFunnel(days).catch(() => ({ sources: [], stages: [] })),
-    getSourceToStatusSankey().catch(() => []),
-    getStuckLeads(7).catch(() => []),
-    getScoreDistributionByChannel().catch(() => []),
-    getVelocityByChannel().catch(() => []),
-    getCohortMatrix(6).catch(() => []),
-    getTimePerStage().catch(() => []),
-    getFormConversionRate(days).catch(() => []),
-    getConversionHeatmap(90).catch(() => Array.from({ length: 7 }, () => Array(24).fill(0))),
-    getStatuses('company').catch(() => []),
-    db.select({
-      person: people,
-      company: companies,
-      status: statuses,
-    })
-    .from(people)
-    .leftJoin(companies, eq(people.companyId, companies.id))
-    .leftJoin(statuses, eq(people.statusId, statuses.id))
-    .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since)))
-    .orderBy(desc(people.createdAt))
-    .limit(15)
-    .catch(() => []),
-  ]);
+  const funnel = await safeBlock('funnel', () => getUnifiedFunnel(days), { sources: [], stages: [] } as Awaited<ReturnType<typeof getUnifiedFunnel>>);
+  const sankey = await safeBlock('sankey', () => getSourceToStatusSankey(), [] as Awaited<ReturnType<typeof getSourceToStatusSankey>>);
+  const stuck = await safeBlock('stuck', () => getStuckLeads(7), [] as Awaited<ReturnType<typeof getStuckLeads>>);
+  const scoreDist = await safeBlock('scoreDist', () => getScoreDistributionByChannel(), [] as Awaited<ReturnType<typeof getScoreDistributionByChannel>>);
+  const velocity = await safeBlock('velocity', () => getVelocityByChannel(), [] as Awaited<ReturnType<typeof getVelocityByChannel>>);
+  const cohort = await safeBlock('cohort', () => getCohortMatrix(6), [] as Awaited<ReturnType<typeof getCohortMatrix>>);
+  const stageTime = await safeBlock('stageTime', () => getTimePerStage(), [] as Awaited<ReturnType<typeof getTimePerStage>>);
+  const formCvr = await safeBlock('formCvr', () => getFormConversionRate(days), [] as Awaited<ReturnType<typeof getFormConversionRate>>);
+  const heatmap = await safeBlock('heatmap', () => getConversionHeatmap(90), Array.from({ length: 7 }, () => Array(24).fill(0)) as number[][]);
+  const allStatuses = await safeBlock('statuses', () => getStatuses('company'), [] as Awaited<ReturnType<typeof getStatuses>>);
 
-  // Pipeline empresas
-  const [pipelineCounts] = await Promise.all([
-    db.select({ statusId: companies.statusId, n: count() })
-      .from(companies)
-      .groupBy(companies.statusId)
-      .catch(() => []),
-  ]);
+  const recentLeads = await safeBlock('recentLeads', () => db.select({
+    person: people,
+    company: companies,
+    status: statuses,
+  })
+  .from(people)
+  .leftJoin(companies, eq(people.companyId, companies.id))
+  .leftJoin(statuses, eq(people.statusId, statuses.id))
+  .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since)))
+  .orderBy(desc(people.createdAt))
+  .limit(15), [] as Array<{ person: typeof people.$inferSelect; company: typeof companies.$inferSelect | null; status: typeof statuses.$inferSelect | null }>);
+
+  const pipelineCounts = await safeBlock('pipelineCounts', () => db.select({ statusId: companies.statusId, n: count() }).from(companies).groupBy(companies.statusId), [] as Array<{ statusId: string | null; n: number }>);
   const countByStatus = new Map(pipelineCounts.map((r) => [r.statusId, r.n]));
   const pipeline = allStatuses.map((s) => ({
     label: s.label,
