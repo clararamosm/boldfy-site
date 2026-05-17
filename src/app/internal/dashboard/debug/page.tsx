@@ -160,7 +160,7 @@ export default async function DebugDashboardPage() {
       </div>
 
       <div className="dash-card">
-        <div className="dash-card-title">📊 GA4 raw response</div>
+        <div className="dash-card-title">GA4 raw response</div>
         <div style={{ marginBottom: 8, fontSize: 13, color: ga4Result.ok ? '#10B981' : '#EE5A52' }}>
           {ga4Result.ok ? `✓ HTTP ${ga4Result.status} OK` : `❌ ${ga4Result.error ?? `HTTP ${ga4Result.status}`}`}
         </div>
@@ -170,7 +170,7 @@ export default async function DebugDashboardPage() {
       </div>
 
       <div className="dash-card">
-        <div className="dash-card-title">🔍 Search Console raw response</div>
+        <div className="dash-card-title">Search Console raw response</div>
         <div style={{ marginBottom: 8, fontSize: 13, color: scResult.ok ? '#10B981' : '#EE5A52' }}>
           {scResult.ok ? `✓ HTTP ${scResult.status} OK` : `❌ ${scResult.error ?? `HTTP ${scResult.status}`}`}
         </div>

@@ -35,6 +35,24 @@ import {
   BOLDFY_PALETTE,
 } from '@/components/dashboard/charts';
 import { channelLabel, timeAgo, methodVia } from '@/lib/crm-format';
+import {
+  FileText,
+  Flame,
+  Calendar,
+  Trophy,
+  Target,
+  GitMerge,
+  BarChart3,
+  Snail,
+  Zap,
+  CalendarRange,
+  Timer,
+  ClipboardList,
+  Lightbulb,
+  Flame as FlameIcon,
+  Users,
+  Workflow,
+} from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Conversão',
@@ -54,11 +72,13 @@ const SOURCE_LABELS: Record<string, string> = {
   unknown: 'Não atribuído',
 };
 
-const FORM_META: Record<string, { label: string; emoji: string }> = {
-  demo: { label: 'Demo', emoji: '🎯' },
-  beta: { label: 'Beta', emoji: '🧪' },
-  report: { label: 'Report B2B', emoji: '📥' },
-  proposta: { label: 'Proposta', emoji: '💼' },
+import { Target as TargetIcon, FlaskConical, Download, Briefcase as BriefcaseIcon } from 'lucide-react';
+
+const FORM_META: Record<string, { label: string; Icon: React.ComponentType<{ size?: number }> }> = {
+  demo: { label: 'Demo', Icon: TargetIcon },
+  beta: { label: 'Beta', Icon: FlaskConical },
+  report: { label: 'Report B2B', Icon: Download },
+  proposta: { label: 'Proposta', Icon: BriefcaseIcon },
 };
 
 type SearchParams = Promise<{ period?: string }>;
@@ -129,24 +149,24 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* ========================================================== */}
       <div className="dash-kpi-grid">
         <div className="dash-kpi">
-          <div className="dash-kpi-icon">📋</div>
+          <div className="dash-kpi-icon"><FileText /></div>
           <div className="dash-kpi-label">Leads no período</div>
           <div className="dash-kpi-value">{totalLeadsPeriod}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon amber">🔥</div>
+          <div className="dash-kpi-icon amber"><Flame /></div>
           <div className="dash-kpi-label">MQL / Quente</div>
           <div className="dash-kpi-value">{totalMql}</div>
           <div className="dash-kpi-meta">{totalLeadsPeriod > 0 ? `${((totalMql / totalLeadsPeriod) * 100).toFixed(0)}% dos leads` : '—'}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">📅</div>
+          <div className="dash-kpi-icon blue"><Calendar /></div>
           <div className="dash-kpi-label">Reuniões</div>
           <div className="dash-kpi-value">{totalReunioes}</div>
           <div className="dash-kpi-meta">{totalMql > 0 ? `${((totalReunioes / totalMql) * 100).toFixed(0)}% dos MQL` : '—'}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon green">🏆</div>
+          <div className="dash-kpi-icon green"><Trophy /></div>
           <div className="dash-kpi-label">Fechados</div>
           <div className="dash-kpi-value">{totalFechados}</div>
           <div className="dash-kpi-meta">{totalReunioes > 0 ? `${((totalFechados / totalReunioes) * 100).toFixed(0)}% das reuniões` : '—'}</div>
@@ -156,11 +176,11 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* ========================================================== */}
       {/*  SECTION: FUNIL B2B                                        */}
       {/* ========================================================== */}
-      <SectionHeader title="📊 Funil B2B" subtitle="Drop-off por estágio · sankey origem → status · velocidade por canal" />
+      <SectionHeader icon={BarChart3} title="Funil B2B" subtitle="Drop-off por estágio · sankey origem → status · velocidade por canal" />
 
       {/* Funil clássico com drop-off */}
       <div className="dash-card">
-        <div className="dash-card-title">🎯 Funil de qualificação (drop-off por etapa)</div>
+        <div className="dash-card-title"><Target /> Funil de qualificação (drop-off por etapa)</div>
         <div className="dash-card-subtitle">Cross-channel: SEO + LinkedIn + Direct + outros → Cliente</div>
         <FunnelStages stages={funnel.map((s, i) => ({
           label: s.label,
@@ -171,7 +191,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
 
       {/* Sankey origem → status */}
       <div className="dash-card">
-        <div className="dash-card-title">🌊 Sankey: Origem → Status atual</div>
+        <div className="dash-card-title"><Workflow /> Sankey: Origem → Status atual</div>
         <div className="dash-card-subtitle">Quais canais alimentam quais estágios do funil</div>
         <SankeyFlow
           edges={sankey}
@@ -181,14 +201,14 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
 
       {/* Pipeline de Empresas */}
       <div className="dash-card">
-        <div className="dash-card-title">📊 Pipeline de Empresas (etapas configuráveis)</div>
+        <div className="dash-card-title"><GitMerge /> Pipeline de Empresas (etapas configuráveis)</div>
         <div className="dash-card-subtitle">Counts por etapa · arrasta em <Link href="/internal/crm/companies" style={{ color: '#CD50F1' }}>/crm/companies</Link></div>
         <FunnelStages stages={pipeline} />
       </div>
 
       {/* 💡 INSIGHT: Leads parados */}
       <div className="dash-card">
-        <div className="dash-card-title">🐌 Leads parados há mais de 7 dias</div>
+        <div className="dash-card-title"><Snail /> Leads parados há mais de 7 dias</div>
         <div className="dash-card-subtitle">Sem update no status — risco de esfriar</div>
         {stuck.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#10B981', fontSize: 13 }}>✓ Nenhum lead parado. Pipeline saudável.</div>
@@ -214,7 +234,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* 💡 INSIGHT: Velocidade por canal */}
       {velocity.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">⚡ Velocidade por canal — lead → primeira reunião</div>
+          <div className="dash-card-title"><Zap /> Velocidade por canal — lead → primeira reunião</div>
           <div className="dash-card-subtitle">Quanto tempo cada canal leva pra converter (média dias)</div>
           <BarCompareChart
             data={velocity.map((v) => ({ label: `${SOURCE_LABELS[v.channel] ?? v.channel} (${v.n})` }))}
@@ -228,7 +248,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* 💡 INSIGHT: Score distribution por canal */}
       {scoreDist.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">📊 Score distribution por canal</div>
+          <div className="dash-card-title"><BarChart3 /> Score distribution por canal</div>
           <div className="dash-card-subtitle">Box plot: min · Q1 · mediana · Q3 · max · n = lead count</div>
           <BoxPlotByChannel rows={scoreDist} channelLabel={(c) => SOURCE_LABELS[c] ?? c} />
         </div>
@@ -237,7 +257,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* 💡 INSIGHT: Cohort retention */}
       {cohort.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">📅 Cohort retention — leads → reunião</div>
+          <div className="dash-card-title"><CalendarRange /> Cohort retention — leads → reunião</div>
           <div className="dash-card-subtitle">% de leads de cada mês que viraram reunião em 7/14/30 dias</div>
           <CohortMatrix rows={cohort.map((c) => ({
             month: c.month,
@@ -254,7 +274,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* 💡 INSIGHT: Tempo médio entre stages */}
       {stageTime.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">⏱️ Tempo médio entre status</div>
+          <div className="dash-card-title"><Timer /> Tempo médio entre status</div>
           <div className="dash-card-subtitle">Baseado em activities tipo status_change · só transições com ≥2 ocorrências</div>
           <table className="dash-table">
             <thead><tr><th>De</th><th>→</th><th>Para</th><th className="right">Média (dias)</th><th className="right">N</th></tr></thead>
@@ -276,11 +296,11 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       {/* ========================================================== */}
       {/*  SECTION: FORMS                                            */}
       {/* ========================================================== */}
-      <SectionHeader title="📝 Forms" subtitle="Taxa de conversão por form + padrão de quando convertem" />
+      <SectionHeader icon={ClipboardList} title="Forms" subtitle="Taxa de conversão por form + padrão de quando convertem" />
 
       {/* 💡 Form conversion rate */}
       <div className="dash-card">
-        <div className="dash-card-title">💡 Conversion rate por form (visitas da page → submissão)</div>
+        <div className="dash-card-title"><Lightbulb /> Conversion rate por form (visitas da page → submissão)</div>
         <div className="dash-card-subtitle">Cruzamento GA4 page views × CRM submissions</div>
         {formCvr.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem submissões no período (ou GA4 não configurado).</div>
@@ -290,7 +310,13 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
             <tbody>
               {formCvr.map((f) => (
                 <tr key={f.form}>
-                  <td className="strong">{FORM_META[f.form]?.emoji ?? '📋'} {FORM_META[f.form]?.label ?? f.form}</td>
+                  <td className="strong" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {(() => {
+                      const Icon = FORM_META[f.form]?.Icon ?? FileText;
+                      return <Icon size={14} />;
+                    })()}
+                    {FORM_META[f.form]?.label ?? f.form}
+                  </td>
                   <td className="right">{f.submissions}</td>
                   <td className="right muted">{f.pageViews?.toLocaleString('pt-BR') ?? '—'}</td>
                   <td className="right">
@@ -309,14 +335,14 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
 
       {/* Heatmap conversões */}
       <div className="dash-card">
-        <div className="dash-card-title">🔥 Heatmap dia × hora — quando convertemos</div>
+        <div className="dash-card-title"><FlameIcon /> Heatmap dia × hora — quando convertemos</div>
         <div className="dash-card-subtitle">Forms preenchidos · 90d · padrão de comportamento</div>
         <HeatmapChart matrix={heatmap} />
       </div>
 
       {/* Leads recentes do período */}
       <div className="dash-card">
-        <div className="dash-card-title">👥 Leads recentes no período</div>
+        <div className="dash-card-title"><Users /> Leads recentes no período</div>
         {recentLeads.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem leads no período.</div>
         ) : (
@@ -347,10 +373,13 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   );
 }
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeader({ icon: Icon, title, subtitle }: { icon?: React.ComponentType<{ size?: number }>; title: string; subtitle?: string }) {
   return (
     <div style={{ margin: '36px 0 12px 0', paddingTop: 18, borderTop: '1px solid #E4D8ED' }}>
-      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0 }}>{title}</h2>
+      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        {Icon ? <Icon size={22} /> : null}
+        {title}
+      </h2>
       {subtitle ? <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 4 }}>{subtitle}</div> : null}
     </div>
   );

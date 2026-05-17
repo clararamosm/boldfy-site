@@ -29,6 +29,19 @@ import {
   HeatmapChart,
   BOLDFY_PALETTE,
 } from '@/components/dashboard/charts';
+import {
+  GitMerge,
+  TrendingUp,
+  Target,
+  Radio,
+  Flame,
+  Search,
+  Users,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  BarChart3,
+} from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Visão Geral',
@@ -37,11 +50,11 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-function deltaPill(deltaPct: number | null): { className: string; arrow: string; text: string } | null {
+function deltaPill(deltaPct: number | null): { className: string; Icon: typeof ArrowUpRight; text: string } | null {
   if (deltaPct === null) return null;
-  if (Math.abs(deltaPct) < 1) return { className: '', arrow: '→', text: 'estável' };
-  if (deltaPct > 0) return { className: 'up', arrow: '↑', text: `+${deltaPct.toFixed(0)}%` };
-  return { className: 'down', arrow: '↓', text: `${deltaPct.toFixed(0)}%` };
+  if (Math.abs(deltaPct) < 1) return { className: '', Icon: Minus, text: 'estável' };
+  if (deltaPct > 0) return { className: 'up', Icon: ArrowUpRight, text: `+${deltaPct.toFixed(0)}%` };
+  return { className: 'down', Icon: ArrowDownRight, text: `${deltaPct.toFixed(0)}%` };
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -93,7 +106,7 @@ export default async function DashboardOverviewPage() {
                     <span style={{ color: '#9D85B3', fontSize: 12 }}>sessões</span>
                     {snapshot.topCanal.deltaPct !== null ? (
                       <span className={`bento-delta ${(snapshot.topCanal.deltaPct ?? 0) >= 0 ? 'up' : 'down'}`}>
-                        {(snapshot.topCanal.deltaPct ?? 0) >= 0 ? '↑' : '↓'} {Math.abs(snapshot.topCanal.deltaPct ?? 0).toFixed(0)}% vs semana anterior
+                        {(snapshot.topCanal.deltaPct ?? 0) >= 0 ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />} {Math.abs(snapshot.topCanal.deltaPct ?? 0).toFixed(0)}% vs semana anterior
                       </span>
                     ) : null}
                   </div>
@@ -109,8 +122,8 @@ export default async function DashboardOverviewPage() {
         {/* Funil unificado (sankey) — 6 colunas × 3 linhas */}
         <div className="bento bento-span-6 bento-row-3">
           <div className="bento-title">
-            🌊 Funil unificado cross-channel
-            <span style={{ fontSize: 11, color: '#9D85B3', fontWeight: 600 }}>últimos 30 dias</span>
+            <GitMerge /> Funil unificado cross-channel
+            <span style={{ fontSize: 11, color: '#9D85B3', fontWeight: 600, marginLeft: 'auto' }}>últimos 30 dias</span>
           </div>
           <div className="bento-subtitle">Impressões SEO → Visitas → Forms → MQL/Quente → Reuniões → Fechados</div>
           <div className="bento-content" style={{ display: 'flex', alignItems: 'center' }}>
@@ -120,7 +133,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Atividade diária cruzada — 4 colunas × 3 linhas */}
         <div className="bento bento-span-4 bento-row-3">
-          <div className="bento-title">📈 Atividade diária cruzada</div>
+          <div className="bento-title"><TrendingUp /> Atividade diária cruzada</div>
           <div className="bento-subtitle">Visitas (GA4) × Forms (CRM) × Reuniões — últimos 28d</div>
           <div className="bento-content">
             <MultiLineChart
@@ -137,7 +150,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Origem dos leads (donut) — 2 colunas × 3 linhas */}
         <div className="bento bento-span-2 bento-row-3">
-          <div className="bento-title">🎯 Origem dos leads</div>
+          <div className="bento-title"><Target /> Origem dos leads</div>
           <div className="bento-subtitle">últimos 30d por canal</div>
           <div className="bento-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <DonutChart
@@ -151,7 +164,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Stacked area canais — 4 colunas × 3 linhas */}
         <div className="bento bento-span-4 bento-row-3">
-          <div className="bento-title">📡 Visitas por canal (28d)</div>
+          <div className="bento-title"><Radio /> Visitas por canal (28d)</div>
           <div className="bento-subtitle">Como cada canal contribuiu pro tráfego total</div>
           <div className="bento-content">
             <StackedAreaChart
@@ -169,7 +182,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Heatmap dia × hora — 2 colunas × 3 linhas */}
         <div className="bento bento-span-2 bento-row-3">
-          <div className="bento-title">🔥 Quando convertemos</div>
+          <div className="bento-title"><Flame /> Quando convertemos</div>
           <div className="bento-subtitle">Forms preenchidos · 90d · dia × hora</div>
           <div className="bento-content">
             <HeatmapChart matrix={heatmap} />
@@ -178,7 +191,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Top queries SEO (semana) — 2 colunas × 2 linhas */}
         <div className="bento bento-span-2 bento-row-2">
-          <div className="bento-title">🔍 Top queries (7d)</div>
+          <div className="bento-title"><Search /> Top queries (7d)</div>
           <div className="bento-subtitle">Search Console</div>
           <div className="bento-content bento-list">
             {topQueries.length === 0 ? (
@@ -194,7 +207,7 @@ export default async function DashboardOverviewPage() {
 
         {/* Last 5 leads — 2 colunas × 2 linhas */}
         <div className="bento bento-span-4 bento-row-2">
-          <div className="bento-title">👥 Últimos leads</div>
+          <div className="bento-title"><Users /> Últimos leads</div>
           <div className="bento-subtitle">Live feed do CRM</div>
           <div className="bento-content bento-list">
             {lastLeads.length === 0 ? (
@@ -213,7 +226,7 @@ export default async function DashboardOverviewPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 12, color: '#5E2A67' }}>
         <div>
-          📊 Mais detalhes: <Link href="/internal/dashboard/aquisicao" style={{ color: '#CD50F1', fontWeight: 700, marginLeft: 6 }}>Aquisição</Link>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart3 size={14} /> Mais detalhes:</span> <Link href="/internal/dashboard/aquisicao" style={{ color: '#CD50F1', fontWeight: 700, marginLeft: 6 }}>Aquisição</Link>
           <span style={{ margin: '0 8px' }}>·</span>
           <Link href="/internal/dashboard/conversao" style={{ color: '#CD50F1', fontWeight: 700 }}>Conversão</Link>
           <span style={{ margin: '0 8px' }}>·</span>
@@ -241,7 +254,7 @@ function KpiBento({ label, value, deltaPct, sparkline, color }: {
     <div className="bento bento-span-1">
       <div className="bento-label">{label}</div>
       <div className="bento-value">{value.toLocaleString('pt-BR')}</div>
-      {delta ? <div className={`bento-delta ${delta.className}`}>{delta.arrow} {delta.text}</div> : null}
+      {delta ? <div className={`bento-delta ${delta.className}`}><delta.Icon size={11} /> {delta.text}</div> : null}
       <div className="bento-sparkline-wrap">
         <Sparkline data={sparkline} color={color} height={32} />
       </div>

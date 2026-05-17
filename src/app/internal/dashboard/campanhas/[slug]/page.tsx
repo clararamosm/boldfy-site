@@ -16,6 +16,7 @@ import { eq, and, isNull, desc, count, sql } from 'drizzle-orm';
 import { getCampaignBySlug, getCampaignStatus, CAMPAIGNS } from '@/data/campaigns';
 import { FunnelStages, BOLDFY_PALETTE } from '@/components/dashboard/charts';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
+import { Settings2, FileText, Calendar, Trophy, BarChart3, Users, StickyNote } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Campanha',
@@ -82,14 +83,14 @@ export default async function CampaignDetailPage({ params }: { params: Params })
       </div>
 
       {campaign.notes ? (
-        <div style={{ padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 13, color: '#45336B', marginBottom: 20 }}>
-          📝 {campaign.notes}
+        <div style={{ padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 13, color: '#45336B', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <StickyNote size={16} style={{ flexShrink: 0, marginTop: 2 }} /> {campaign.notes}
         </div>
       ) : null}
 
       {/* Setup */}
       <div className="dash-card">
-        <div className="dash-card-title">⚙️ Setup</div>
+        <div className="dash-card-title"><Settings2 /> Setup</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <SetupItem label="Objetivo" value={campaign.objective} />
           <SetupItem label="UTM campaign" value={<code style={{ background: '#F7EEFC', padding: '2px 8px', borderRadius: 4 }}>{campaign.utmCampaign}</code>} />
@@ -112,18 +113,18 @@ export default async function CampaignDetailPage({ params }: { params: Params })
       {/* KPIs */}
       <div className="dash-kpi-grid">
         <div className="dash-kpi">
-          <div className="dash-kpi-icon">📋</div>
+          <div className="dash-kpi-icon"><FileText /></div>
           <div className="dash-kpi-label">Leads gerados</div>
           <div className="dash-kpi-value">{totalLeads}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">📅</div>
+          <div className="dash-kpi-icon blue"><Calendar /></div>
           <div className="dash-kpi-label">Reuniões</div>
           <div className="dash-kpi-value">{reunioes}</div>
           <div className="dash-kpi-meta">{totalLeads > 0 ? `${((reunioes / totalLeads) * 100).toFixed(0)}% conv` : '—'}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon green">🏆</div>
+          <div className="dash-kpi-icon green"><Trophy /></div>
           <div className="dash-kpi-label">Fechados</div>
           <div className="dash-kpi-value">{fechados}</div>
           <div className="dash-kpi-meta">CVR final {cvr}%</div>
@@ -132,7 +133,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
 
       {/* Breakdown por status */}
       <div className="dash-card">
-        <div className="dash-card-title">📊 Distribuição por status</div>
+        <div className="dash-card-title"><BarChart3 /> Distribuição por status</div>
         <div className="dash-card-subtitle">Onde os leads dessa campanha estão hoje</div>
         {statusBreakdown.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhum lead atribuído a essa campanha ainda.</div>
@@ -147,7 +148,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
 
       {/* Leads */}
       <div className="dash-card">
-        <div className="dash-card-title">👥 Leads dessa campanha</div>
+        <div className="dash-card-title"><Users /> Leads dessa campanha</div>
         {leads.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>
             Nenhum lead com <code>utm_campaign={campaign.utmCampaign}</code> ainda.

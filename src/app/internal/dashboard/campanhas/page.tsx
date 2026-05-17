@@ -14,6 +14,7 @@ import { db, people, companies, statuses } from '@/db';
 import { eq, and, isNull, count, sql } from 'drizzle-orm';
 import { CAMPAIGNS, getCampaignStatus, type Campaign } from '@/data/campaigns';
 import { timeAgo } from '@/lib/crm-format';
+import { Megaphone, Link2 } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Campanhas',
@@ -107,7 +108,7 @@ export default async function CampanhasPage() {
       </div>
 
       <div className="dash-card">
-        <div className="dash-card-title">📣 Todas as campanhas</div>
+        <div className="dash-card-title"><Megaphone /> Todas as campanhas</div>
         <div className="dash-card-subtitle">Editar em <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>src/data/campaigns.ts</code></div>
         {CAMPAIGNS.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhuma campanha cadastrada.</div>
@@ -177,7 +178,7 @@ export default async function CampanhasPage() {
 
       {/* ====== Shortlinks ====== */}
       <div className="dash-card">
-        <div className="dash-card-title">🔗 Shortlinks</div>
+        <div className="dash-card-title"><Link2 /> Shortlinks</div>
         <div className="dash-card-subtitle">Links curtos do KV — usar em campanhas pontuais. <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code></div>
         {shortlinks.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem shortlinks no KV.</div>

@@ -42,6 +42,27 @@ import {
   TimelineMarkers,
   BOLDFY_PALETTE,
 } from '@/components/dashboard/charts';
+import {
+  Globe2,
+  Search,
+  Briefcase,
+  Newspaper,
+  Radio,
+  TrendingUp,
+  Microscope,
+  Lightbulb,
+  PenTool,
+  Target,
+  Tag,
+  FileText,
+  MousePointer,
+  Eye,
+  BarChart3,
+  MapPin,
+  Megaphone,
+  User,
+  Users,
+} from 'lucide-react';
 import { timeAgo } from '@/lib/crm-format';
 
 export const metadata: Metadata = {
@@ -139,25 +160,25 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ========================================================== */}
       <div className="dash-kpi-grid">
         <div className="dash-kpi">
-          <div className="dash-kpi-icon">🌐</div>
+          <div className="dash-kpi-icon"><Globe2 /></div>
           <div className="dash-kpi-label">Visitas totais</div>
           <div className="dash-kpi-value">{trafficSummary?.totalUsers.toLocaleString('pt-BR') ?? '—'}</div>
           <div className="dash-kpi-meta">{ga4Configured ? `${trafficSummary?.newUsers.toLocaleString('pt-BR') ?? 0} novos` : 'configure GA4'}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">🔍</div>
+          <div className="dash-kpi-icon blue"><Search /></div>
           <div className="dash-kpi-label">Cliques SEO</div>
           <div className="dash-kpi-value">{seoSummary?.clicks.toLocaleString('pt-BR') ?? '—'}</div>
           <div className="dash-kpi-meta">{scConfigured ? `${seoSummary?.impressions.toLocaleString('pt-BR') ?? 0} impr` : 'configure SC'}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon amber">💼</div>
+          <div className="dash-kpi-icon amber"><Briefcase /></div>
           <div className="dash-kpi-label">Visitas LinkedIn</div>
           <div className="dash-kpi-value">{liVisits.toLocaleString('pt-BR')}</div>
           <div className="dash-kpi-meta">{liLeads.length} leads · CVR {liCvr.toFixed(1)}%</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon orange">📰</div>
+          <div className="dash-kpi-icon orange"><Newspaper /></div>
           <div className="dash-kpi-label">Visitas PR</div>
           <div className="dash-kpi-value">{prSessions.toLocaleString('pt-BR')}</div>
           <div className="dash-kpi-meta">{prLeadsCount} leads · {articles.length} artigos</div>
@@ -169,7 +190,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ========================================================== */}
       {dailyTraffic.length > 0 && channels.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">📡 Visitas por canal ao longo do tempo</div>
+          <div className="dash-card-title"><Radio /> Visitas por canal ao longo do tempo</div>
           <div className="dash-card-subtitle">Como cada canal contribuiu pro tráfego no período · stacked area</div>
           <StackedAreaChart
             dates={dailyTraffic.map((d) => d.date)}
@@ -187,14 +208,14 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: TRÁFEGO (GA4)                                        */}
       {/* ============================================================== */}
-      <SectionHeader title="🌐 Tráfego (GA4)" />
+      <SectionHeader icon={Globe2} title="Tráfego (GA4)" />
 
       {ga4Configured ? (
         <>
           <div className="dash-card">
             <div className="dash-card-header">
               <div>
-                <div className="dash-card-title">📈 Sessões × Usuários por dia</div>
+                <div className="dash-card-title"><TrendingUp /> Sessões × Usuários por dia</div>
                 <div className="dash-card-subtitle">Hover pra ver detalhe diário</div>
               </div>
             </div>
@@ -205,7 +226,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">📡 Canais de tráfego</div>
+            <div className="dash-card-title"><Radio /> Canais de tráfego</div>
             <table className="dash-table">
               <thead><tr><th>Canal</th><th className="right">Sessões</th><th className="right">Usuários</th><th className="right">% total</th></tr></thead>
               <tbody>
@@ -222,7 +243,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">📄 Páginas mais vistas</div>
+            <div className="dash-card-title"><FileText /> Páginas mais vistas</div>
             <table className="dash-table">
               <thead><tr><th>Página</th><th className="right">Page views</th><th className="right">Sessões</th></tr></thead>
               <tbody>
@@ -238,7 +259,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">🏷 Top UTMs</div>
+            <div className="dash-card-title"><Tag /> Top UTMs</div>
             <table className="dash-table">
               <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th className="right">Sessões</th></tr></thead>
               <tbody>
@@ -259,35 +280,35 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: SEO (Search Console) — clássico + INSIGHTS           */}
       {/* ============================================================== */}
-      <SectionHeader title="🔍 SEO (Search Console)" subtitle="Dados clássicos + insights além das plataformas" />
+      <SectionHeader icon={Search} title="SEO (Search Console)" subtitle="Dados clássicos + insights além das plataformas" />
 
       {scConfigured ? (
         <>
           <div className="dash-kpi-grid">
             <div className="dash-kpi">
-              <div className="dash-kpi-icon">🖱</div>
+              <div className="dash-kpi-icon"><MousePointer /></div>
               <div className="dash-kpi-label">Cliques</div>
               <div className="dash-kpi-value">{seoSummary?.clicks.toLocaleString('pt-BR') ?? 0}</div>
             </div>
             <div className="dash-kpi">
-              <div className="dash-kpi-icon blue">👁</div>
+              <div className="dash-kpi-icon blue"><Eye /></div>
               <div className="dash-kpi-label">Impressões</div>
               <div className="dash-kpi-value">{seoSummary?.impressions.toLocaleString('pt-BR') ?? 0}</div>
             </div>
             <div className="dash-kpi">
-              <div className="dash-kpi-icon amber">📊</div>
+              <div className="dash-kpi-icon amber"><BarChart3 /></div>
               <div className="dash-kpi-label">CTR médio</div>
               <div className="dash-kpi-value">{seoSummary ? pct(seoSummary.ctr) : '—'}</div>
             </div>
             <div className="dash-kpi">
-              <div className="dash-kpi-icon green">📍</div>
+              <div className="dash-kpi-icon green"><MapPin /></div>
               <div className="dash-kpi-label">Posição média</div>
               <div className="dash-kpi-value">{seoSummary ? seoSummary.position.toFixed(1) : '—'}</div>
             </div>
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">📈 Cliques × Impressões por dia</div>
+            <div className="dash-card-title"><TrendingUp /> Cliques × Impressões por dia</div>
             <DailyLineChart
               data={seoDaily.map((d) => ({ date: d.date, a: d.clicks, b: d.impressions }))}
               labels={{ a: 'Cliques', b: 'Impressões' }}
@@ -295,7 +316,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">🔬 Scatter de queries (oportunidades em uma única vista)</div>
+            <div className="dash-card-title"><Microscope /> Scatter de queries (oportunidades em uma única vista)</div>
             <div className="dash-card-subtitle">
               <strong>X = posição (esquerda = melhor)</strong> · <strong>Y = impressões</strong> · <strong>tamanho da bolha = cliques</strong>.
               Bolhas grandes embaixo à direita = alta exposição em posição ruim → pauta de conteúdo.
@@ -312,7 +333,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
           {/* 💡 INSIGHT 1: Low CTR for position */}
           <div className="dash-card">
-            <div className="dash-card-title">💡 CTR abaixo do esperado pra posição</div>
+            <div className="dash-card-title"><Lightbulb /> CTR abaixo do esperado pra posição</div>
             <div className="dash-card-subtitle">
               Queries onde já ranqueamos bem mas o CTR está significativamente abaixo do benchmark do Google.
               Otimizar title/meta description tem alto ROI.
@@ -340,7 +361,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
           {/* 💡 INSIGHT 2: Topic gaps */}
           <div className="dash-card">
-            <div className="dash-card-title">🕳️ Topic gaps — queries com volume sem página dedicada</div>
+            <div className="dash-card-title"><PenTool /> Topic gaps — queries com volume sem página dedicada</div>
             <div className="dash-card-subtitle">
               Aparecemos com impressões mas posição &gt; 30. Possível pauta de conteúdo dedicado.
             </div>
@@ -365,7 +386,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
           {/* Clássico: oportunidades pos 11-30 */}
           <div className="dash-card">
-            <div className="dash-card-title">🎯 Quick wins (pos 11-30)</div>
+            <div className="dash-card-title"><Target /> Quick wins (pos 11-30)</div>
             <div className="dash-card-subtitle">Já temos volume, falta subir pra primeira página</div>
             {opportunities.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem oportunidades claras.</div>
@@ -387,7 +408,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">🔍 Top queries com cliques</div>
+            <div className="dash-card-title"><Search /> Top queries com cliques</div>
             <table className="dash-table">
               <thead><tr><th>Query</th><th className="right">Cliques</th><th className="right">Impressões</th><th className="right">CTR</th><th className="right">Pos.</th></tr></thead>
               <tbody>
@@ -405,7 +426,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">📄 Páginas com mais cliques (SEO)</div>
+            <div className="dash-card-title"><FileText /> Páginas com mais cliques (SEO)</div>
             <table className="dash-table">
               <thead><tr><th>Página</th><th className="right">Cliques</th><th className="right">Impressões</th><th className="right">Pos.</th></tr></thead>
               <tbody>
@@ -422,7 +443,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           </div>
 
           <div className="dash-card">
-            <div className="dash-card-title">🏷️ Queries de marca (branded)</div>
+            <div className="dash-card-title"><Tag /> Queries de marca (branded)</div>
             <div className="dash-card-subtitle">Buscas contendo &ldquo;boldfy&rdquo; — sinal de awareness</div>
             {brandedQs.length === 0 ? (
               <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem queries de marca no período.</div>
@@ -450,28 +471,28 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: LinkedIn (UTM)                                       */}
       {/* ============================================================== */}
-      <SectionHeader title="💼 LinkedIn (via UTM)" subtitle="Website Demographics ainda bloqueado (~300 únicos/90d pra desbloquear)" />
+      <SectionHeader icon={Briefcase} title="LinkedIn (via UTM)" subtitle="Website Demographics ainda bloqueado (~300 únicos/90d pra desbloquear)" />
 
       <div className="dash-kpi-grid">
         <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">👥</div>
+          <div className="dash-kpi-icon blue"><Users /></div>
           <div className="dash-kpi-label">Visitas LinkedIn</div>
           <div className="dash-kpi-value">{liVisits.toLocaleString('pt-BR')}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon green">📋</div>
+          <div className="dash-kpi-icon green"><FileText /></div>
           <div className="dash-kpi-label">Leads LinkedIn</div>
           <div className="dash-kpi-value">{liLeads.length}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon amber">🎯</div>
+          <div className="dash-kpi-icon amber"><Target /></div>
           <div className="dash-kpi-label">CVR LinkedIn</div>
           <div className="dash-kpi-value">{liVisits > 0 ? `${liCvr.toFixed(1)}%` : '—'}</div>
         </div>
       </div>
 
       <div className="dash-card">
-        <div className="dash-card-title">📣 Top campanhas LinkedIn (utm_campaign)</div>
+        <div className="dash-card-title"><Megaphone /> Top campanhas LinkedIn (utm_campaign)</div>
         {liCampaigns.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem leads do LinkedIn ainda.</div>
         ) : (
@@ -490,7 +511,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       </div>
 
       <div className="dash-card">
-        <div className="dash-card-title">👤 Leads recentes do LinkedIn</div>
+        <div className="dash-card-title"><User /> Leads recentes do LinkedIn</div>
         {liLeads.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem leads ainda.</div>
         ) : (
@@ -517,21 +538,21 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: Mídia & PR                                           */}
       {/* ============================================================== */}
-      <SectionHeader title="📰 Mídia & PR" subtitle="Artigos publicados + correlação com spike orgânico" />
+      <SectionHeader icon={Newspaper} title="Mídia & PR" subtitle="Artigos publicados + correlação com spike orgânico" />
 
       <div className="dash-kpi-grid">
         <div className="dash-kpi">
-          <div className="dash-kpi-icon">📰</div>
+          <div className="dash-kpi-icon"><Newspaper /></div>
           <div className="dash-kpi-label">Artigos publicados</div>
           <div className="dash-kpi-value">{articles.length}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon blue">👥</div>
+          <div className="dash-kpi-icon blue"><Users /></div>
           <div className="dash-kpi-label">Visitas PR (utm_source=pr)</div>
           <div className="dash-kpi-value">{prSessions.toLocaleString('pt-BR')}</div>
         </div>
         <div className="dash-kpi">
-          <div className="dash-kpi-icon green">📋</div>
+          <div className="dash-kpi-icon green"><FileText /></div>
           <div className="dash-kpi-label">Leads via PR</div>
           <div className="dash-kpi-value">{prLeadsCount}</div>
         </div>
@@ -540,7 +561,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* 💡 INSIGHT: Timeline com markers de publicações */}
       {dailyTraffic.length > 0 && articles.length > 0 ? (
         <div className="dash-card">
-          <div className="dash-card-title">💡 Correlação publicações × spike orgânico</div>
+          <div className="dash-card-title"><Lightbulb /> Correlação publicações × spike orgânico</div>
           <div className="dash-card-subtitle">Linha = sessões totais · marcadores vermelhos = publicações de PR</div>
           <TimelineMarkers
             dates={dailyTraffic.map((d) => d.date)}
@@ -554,7 +575,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       ) : null}
 
       <div className="dash-card">
-        <div className="dash-card-title">📄 Artigos cadastrados</div>
+        <div className="dash-card-title"><FileText /> Artigos cadastrados</div>
         <div className="dash-card-subtitle">CRUD inline temporariamente removido — adicione novos artigos via SQL direto no Neon ou aguarde migração pra <Link href="/internal/dashboard/campanhas" style={{ color: '#CD50F1' }}>Campanhas</Link></div>
         {articles.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem artigos cadastrados ainda.</div>
@@ -581,10 +602,13 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 /*  Sub-components                                                             */
 /* -------------------------------------------------------------------------- */
 
-function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeader({ icon: Icon, title, subtitle }: { icon?: React.ComponentType<{ size?: number }>; title: string; subtitle?: string }) {
   return (
     <div style={{ margin: '36px 0 12px 0', paddingTop: 18, borderTop: '1px solid #E4D8ED' }}>
-      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0 }}>{title}</h2>
+      <h2 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        {Icon ? <Icon size={22} /> : null}
+        {title}
+      </h2>
       {subtitle ? <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 4 }}>{subtitle}</div> : null}
     </div>
   );
