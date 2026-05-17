@@ -10,8 +10,9 @@
 
 import { db, people, companies, meetings, statuses } from '@/db';
 import { eq, and, isNull, sql, desc, gte, count } from 'drizzle-orm';
-import { getTrafficByDay, getTrafficByChannel, isGa4Configured } from './ga4';
-import { getTopQueries, getSeoByDay, isSearchConsoleConfigured, type SeoQueryRow } from './search-console';
+import { getTrafficByDay, getTrafficByChannel, getTrafficByDayAndChannel, getTopUtms, isGa4Configured } from './ga4';
+import { getTopQueries, getSeoByDay, getSeoSummary, isSearchConsoleConfigured, type SeoQueryRow } from './search-console';
+import { getContactCountSince } from './activecampaign';
 
 /* -------------------------------------------------------------------------- */
 /*  Atividade diária cruzada (visitas × forms × reuniões)                     */
@@ -79,91 +80,146 @@ export async function getActivityByDay(days = 28): Promise<DailyActivityPoint[]>
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Funil unificado cross-channel (sankey-friendly)                            */
+/*  Funil unificado cross-channel — com múltiplas origens                     */
 /* -------------------------------------------------------------------------- */
 
-export type UnifiedFunnelStage = {
-  key: 'impressoes' | 'visitas' | 'forms' | 'mql' | 'reunioes' | 'fechados';
+/**
+ * Origens que alimentam o topo do funil (cliques que viraram visitas).
+ * Cada uma vem de uma fonte diferente — proxy quando a plataforma não expõe
+ * "cliques" diretamente.
+ */
+export type FunnelSource = {
+  key: string;        // 'seo' | 'linkedin' | 'manual' | 'pr' | 'outros'
   label: string;
-  count: number;
-  bySource?: Record<string, number>; // breakdown por canal quando relevante
+  clicks: number;     // cliques REAIS quando temos (SEO via SC), proxy quando não (LinkedIn via UTM sessions)
+  proxy: boolean;     // true se é proxy (LinkedIn sessions ≠ cliques reais)
 };
 
-export async function getUnifiedFunnel(days = 30): Promise<UnifiedFunnelStage[]> {
+export type FunnelStage = {
+  key: 'cliques' | 'visitas' | 'forms_total' | 'forms_b2b' | 'mql' | 'reunioes' | 'fechados';
+  label: string;
+  help?: string;
+  count: number;
+};
+
+export type UnifiedFunnelV2 = {
+  sources: FunnelSource[];
+  stages: FunnelStage[];
+};
+
+export async function getUnifiedFunnel(days = 30): Promise<UnifiedFunnelV2> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  // Stage 1: Impressões (SEO)
-  let impressoes = 0;
+  // --- Origens (cliques pra cada canal) ---
+  const sources: FunnelSource[] = [];
+
+  // SEO: cliques reais do Search Console
   if (isSearchConsoleConfigured()) {
     try {
-      const seo = await getSeoByDay(days);
-      impressoes = seo.reduce((a, r) => a + r.impressions, 0);
-    } catch { /* ignore */ }
-  }
-
-  // Stage 2: Visitas (GA4)
-  let visitas = 0;
-  const visitasBySource: Record<string, number> = {};
-  if (isGa4Configured()) {
-    try {
-      const channels = await getTrafficByChannel(days);
-      visitas = channels.reduce((a, c) => a + c.sessions, 0);
-      for (const c of channels) {
-        visitasBySource[c.channel] = c.sessions;
+      const seoSum = await getSeoSummary(days);
+      if (seoSum) {
+        sources.push({ key: 'seo', label: 'SEO orgânico', clicks: seoSum.clicks, proxy: false });
       }
     } catch { /* ignore */ }
   }
 
-  // Stage 3-6: CRM
-  let forms = 0, mql = 0, reunioes = 0, fechados = 0;
-  const formsBySource: Record<string, number> = {};
+  // LinkedIn + Manual + Outros: proxy via GA4 (sessions com utm_source / channel)
+  let liVisits = 0;
+  let manualVisits = 0; // direct + utm_source=manual
+  let outrosVisits = 0; // tudo que não é seo/linkedin/manual
+  let totalVisits = 0;
+  const visitsByChannel: Record<string, number> = {};
+  if (isGa4Configured()) {
+    try {
+      const [channels, utms] = await Promise.all([
+        getTrafficByChannel(days),
+        getTopUtms(days, 50),
+      ]);
+      totalVisits = channels.reduce((a, c) => a + c.sessions, 0);
+      for (const c of channels) {
+        visitsByChannel[c.channel] = c.sessions;
+      }
+
+      // LinkedIn: via utm_source contendo 'linkedin' OU channel 'social'
+      const liUtm = utms.filter((u) => u.source.toLowerCase().includes('linkedin')).reduce((a, u) => a + u.sessions, 0);
+      const liChannel = channels.find((c) => c.channel.toLowerCase().includes('linkedin'))?.sessions ?? 0;
+      liVisits = Math.max(liUtm, liChannel);
+
+      // Manual: utm_source=manual OU direct
+      const manualUtm = utms.filter((u) => u.source.toLowerCase() === 'manual').reduce((a, u) => a + u.sessions, 0);
+      const directChannel = channels.find((c) => c.channel.toLowerCase().includes('direct'))?.sessions ?? 0;
+      manualVisits = manualUtm + directChannel;
+
+      outrosVisits = totalVisits - liVisits - manualVisits - (visitsByChannel['Organic Search'] ?? 0);
+      if (outrosVisits < 0) outrosVisits = 0;
+    } catch { /* ignore */ }
+  }
+
+  if (liVisits > 0) {
+    sources.push({ key: 'linkedin', label: 'LinkedIn', clicks: liVisits, proxy: true });
+  }
+  if (manualVisits > 0) {
+    sources.push({ key: 'manual', label: 'Manual / Direct', clicks: manualVisits, proxy: true });
+  }
+  if (outrosVisits > 0) {
+    sources.push({ key: 'outros', label: 'Outros canais', clicks: outrosVisits, proxy: true });
+  }
+
+  // --- Stages do funil ---
+  const totalCliques = sources.reduce((a, s) => a + s.clicks, 0);
+
+  // Forms totais: AC tem TODOS (mesmo os não-B2B). CRM tem só B2B.
+  let formsTotal = 0;
   try {
-    const formsRows = await db
-      .select({ source: people.sourceChannel, n: count() })
-      .from(people)
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since)))
-      .groupBy(people.sourceChannel);
-    forms = formsRows.reduce((a, r) => a + r.n, 0);
-    for (const r of formsRows) {
-      formsBySource[r.source ?? 'unknown'] = r.n;
-    }
+    formsTotal = await getContactCountSince(days);
+  } catch { /* ignore */ }
 
-    const [mqlRow] = await db
-      .select({ n: count() })
-      .from(people)
-      .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(and(
-        eq(people.archived, false),
-        isNull(people.mergedIntoId),
-        sql`${statuses.label} IN ('Quente', 'MQL', 'Líderes B2B')`,
-        gte(people.createdAt, since),
-      ));
-    mql = mqlRow?.n ?? 0;
-
-    const [reuRow] = await db
-      .select({ n: count() })
-      .from(meetings)
-      .where(gte(meetings.scheduledAt, since));
-    reunioes = reuRow?.n ?? 0;
-
-    const [fechRow] = await db
-      .select({ n: count() })
-      .from(companies)
-      .leftJoin(statuses, eq(companies.statusId, statuses.id))
-      .where(and(sql`${statuses.label} = 'Fechado'`, gte(companies.updatedAt, since)));
-    fechados = fechRow?.n ?? 0;
+  // Forms B2B = people no CRM (já filtrados na entrada)
+  let formsB2b = 0;
+  let mql = 0;
+  let reunioes = 0;
+  let fechados = 0;
+  try {
+    const [b2bRow, mqlRow, reuRow, fechRow] = await Promise.all([
+      db.select({ n: count() }).from(people)
+        .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since))),
+      db.select({ n: count() }).from(people)
+        .leftJoin(statuses, eq(people.statusId, statuses.id))
+        .where(and(
+          eq(people.archived, false),
+          isNull(people.mergedIntoId),
+          sql`${statuses.label} IN ('Quente', 'MQL', 'Líderes B2B')`,
+          gte(people.createdAt, since),
+        )),
+      db.select({ n: count() }).from(meetings)
+        .where(gte(meetings.scheduledAt, since)),
+      db.select({ n: count() }).from(companies)
+        .leftJoin(statuses, eq(companies.statusId, statuses.id))
+        .where(and(sql`${statuses.label} = 'Fechado'`, gte(companies.updatedAt, since))),
+    ]);
+    formsB2b = b2bRow[0]?.n ?? 0;
+    mql = mqlRow[0]?.n ?? 0;
+    reunioes = reuRow[0]?.n ?? 0;
+    fechados = fechRow[0]?.n ?? 0;
   } catch (err) {
     console.error('[dashboard-queries] getUnifiedFunnel db error:', err);
   }
 
-  return [
-    { key: 'impressoes', label: 'Impressões SEO', count: impressoes },
-    { key: 'visitas', label: 'Visitas', count: visitas, bySource: visitasBySource },
-    { key: 'forms', label: 'Forms preenchidos', count: forms, bySource: formsBySource },
+  // Se AC retornou 0 mas temos B2B no CRM, AC provavelmente não tá configurado.
+  // Garante consistência: formsTotal nunca menor que formsB2b.
+  if (formsTotal < formsB2b) formsTotal = formsB2b;
+
+  const stages: FunnelStage[] = [
+    { key: 'cliques', label: 'Cliques totais', help: 'soma das origens', count: totalCliques },
+    { key: 'visitas', label: 'Visitas no site', help: 'GA4 sessões', count: totalVisits },
+    { key: 'forms_total', label: 'Forms preenchidos', help: 'todos no AC', count: formsTotal },
+    { key: 'forms_b2b', label: 'Líderes B2B', help: 'qualificados pro CRM', count: formsB2b },
     { key: 'mql', label: 'MQL / Quente', count: mql },
     { key: 'reunioes', label: 'Reuniões', count: reunioes },
     { key: 'fechados', label: 'Fechados', count: fechados },
   ];
+
+  return { sources, stages };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -247,27 +303,37 @@ export async function getStackedTrafficByChannel(days = 28): Promise<{ data: Sta
   if (!isGa4Configured()) return { data: [], channels: [] };
 
   try {
-    const [daily, channels] = await Promise.all([
-      getTrafficByDay(days),
-      getTrafficByChannel(days),
-    ]);
-    if (daily.length === 0 || channels.length === 0) return { data: [], channels: [] };
+    const rows = await getTrafficByDayAndChannel(days);
+    if (rows.length === 0) return { data: [], channels: [] };
 
-    const top5 = channels.slice(0, 5);
-    const restTotal = channels.slice(5).reduce((a, c) => a + c.sessions, 0);
-    const totalAll = channels.reduce((a, c) => a + c.sessions, 0) || 1;
+    // Top 5 canais por sessions agregadas (resto vira "Outros")
+    const totalByChannel = new Map<string, number>();
+    for (const r of rows) {
+      totalByChannel.set(r.channel, (totalByChannel.get(r.channel) ?? 0) + r.sessions);
+    }
+    const sorted = Array.from(totalByChannel.entries()).sort((a, b) => b[1] - a[1]);
+    const top5 = sorted.slice(0, 5).map(([c]) => c);
+    const otherChannels = new Set(sorted.slice(5).map(([c]) => c));
+    const hasOthers = otherChannels.size > 0;
+    const channelNames = [...top5, ...(hasOthers ? ['Outros'] : [])];
 
-    const channelNames = top5.map((c) => c.channel);
-    if (restTotal > 0) channelNames.push('Outros');
+    // Build matrix: date → channel → sessions
+    const byDate = new Map<string, Record<string, number>>();
+    for (const r of rows) {
+      if (!byDate.has(r.date)) byDate.set(r.date, {});
+      const bucket = r.channel === '' || otherChannels.has(r.channel) ? 'Outros' : r.channel;
+      const entry = byDate.get(r.date)!;
+      entry[bucket] = (entry[bucket] ?? 0) + r.sessions;
+    }
 
-    const data: StackedPoint[] = daily.map((d) => {
-      const pt: StackedPoint = { date: d.date };
-      for (const c of top5) {
-        pt[c.channel] = Math.round((d.sessions * c.sessions) / totalAll);
-      }
-      if (restTotal > 0) pt['Outros'] = Math.round((d.sessions * restTotal) / totalAll);
-      return pt;
-    });
+    // Sort by date asc + fill missing channels with 0
+    const data: StackedPoint[] = Array.from(byDate.entries())
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([date, channels]) => {
+        const pt: StackedPoint = { date };
+        for (const c of channelNames) pt[c] = channels[c] ?? 0;
+        return pt;
+      });
 
     return { data, channels: channelNames };
   } catch (err) {
@@ -645,6 +711,8 @@ export type CohortRow = { month: string; total: number; reu7d: number; reu14d: n
 
 export async function getCohortMatrix(monthsBack = 6): Promise<CohortRow[]> {
   try {
+    // Use make_interval pra parametrizar safely — sql.raw em INTERVAL com aspas dava
+    // problema de serialização no Drizzle (causa de 500 em runtime).
     const rows = await db.execute(sql`
       WITH leads AS (
         SELECT
@@ -654,7 +722,7 @@ export async function getCohortMatrix(monthsBack = 6): Promise<CohortRow[]> {
         FROM people p
         WHERE p.archived = FALSE
           AND p.merged_into_id IS NULL
-          AND p.created_at >= NOW() - INTERVAL '${sql.raw(`${monthsBack} months`)}'
+          AND p.created_at >= NOW() - make_interval(months => ${monthsBack})
       ),
       meets AS (
         SELECT l.cohort_month,

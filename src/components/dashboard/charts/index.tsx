@@ -63,7 +63,7 @@ export function Sparkline({
   color?: string;
   fill?: boolean;
 }) {
-  if (data.length === 0) return <div style={{ width, height }} />;
+  if (data.length === 0) return <div style={{ width: '100%', height }} />;
   const max = Math.max(...data, 1);
   const stepX = data.length > 1 ? width / (data.length - 1) : 0;
   const points = data
@@ -72,8 +72,14 @@ export function Sparkline({
   const path = `M${points.replaceAll(' ', ' L')}`;
   const areaPath = `${path} L${width.toFixed(1)},${height} L0,${height} Z`;
 
+  // viewBox + preserveAspectRatio="none" garante que o sparkline preenche a largura
+  // do container (parent é flex/grid item de largura variável).
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{ display: 'block', width: '100%', height }}
+    >
       {fill && <path d={areaPath} fill={color} opacity={0.12} />}
       <path d={path} fill="none" stroke={color} strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
@@ -270,7 +276,7 @@ export function StackedAreaChart({
             <text key={d} x={PAD.left + i * stepX} y={height - 6} fontSize={10} fill="#9D85B3" textAnchor="middle" fontFamily="system-ui">{formatDateShort(d)}</text>
           ) : null)}
           {areaPaths.map((p, i) => (
-            <path key={series[i].key} d={p} fill={series[i].color} opacity={0.8} />
+            <path key={series[i].key} d={p} fill={series[i].color} opacity={0.85} stroke="#FFFFFF" strokeWidth={0.8} />
           ))}
           {hoverIdx !== null && (
             <line x1={PAD.left + hoverIdx * stepX} y1={PAD.top} x2={PAD.left + hoverIdx * stepX} y2={PAD.top + innerH} stroke="#FFFFFF" strokeWidth={1.5} opacity={0.85} />
@@ -582,6 +588,191 @@ export function SankeyFunnel({ stages, colors }: {
             </g>
           ))}
         </svg>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  <SourcedFunnel> — origens (esquerda) → funil de stages (direita)          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Funil com múltiplas origens convergindo na primeira stage.
+ * Layout:
+ *   ┌─ Origem A ─╮
+ *   ├─ Origem B ─┤
+ *   ┝────────────┼──→ Stage 1 (Cliques) → Stage 2 → Stage 3 → ... → Stage N
+ *   ├─ Origem C ─┤
+ *   └─ Origem D ─╯
+ */
+export function SourcedFunnel({
+  sources,
+  stages,
+}: {
+  sources: { key: string; label: string; clicks: number; proxy?: boolean }[];
+  stages: { key: string; label: string; help?: string; count: number }[];
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  if (stages.length < 2) return null;
+
+  const W = 1000;
+  const H = 340;
+  const padL = 16;
+  const padR = 16;
+  const padT = 36;
+  const padB = 56;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  // Layout horizontal: sources ocupam ~30% à esquerda, funil ocupa o resto
+  const sourcesW = sources.length > 0 ? innerW * 0.22 : 0;
+  const funnelStartX = padL + sourcesW + 30;
+  const funnelW = padL + innerW - funnelStartX;
+
+  const totalClicks = sources.reduce((a, s) => a + s.clicks, 0) || 1;
+  const stageW = 14;
+  const stageGap = stages.length > 1 ? (funnelW - stages.length * stageW) / (stages.length - 1) : 0;
+  const palette = BOLDFY_PALETTE;
+
+  const max = Math.max(...stages.map((s) => s.count), 1);
+  const minH = 8;
+
+  const stageNodes = stages.map((s, i) => {
+    const x = funnelStartX + i * (stageW + stageGap);
+    const h = Math.max((s.count / max) * innerH, minH);
+    const y = padT + (innerH - h) / 2;
+    return { ...s, x, y, h, color: '#7E3FA6' };
+  });
+
+  // Origens stacked à esquerda (cada uma ocupa altura proporcional ao seu peso)
+  let yCursor = padT;
+  const sourceNodes = sources.map((s, i) => {
+    const h = Math.max((s.clicks / totalClicks) * (innerH * 0.85), 14);
+    const node = {
+      ...s,
+      x: padL,
+      y: yCursor,
+      h,
+      color: palette[i % palette.length],
+    };
+    yCursor += h + 6;
+    return node;
+  });
+
+  // Connectors origem → primeira stage
+  const firstStage = stageNodes[0];
+  let firstStageOffset = 0;
+  const sourceToFunnel = sourceNodes.map((src) => {
+    const x1 = src.x + 90; // após o label
+    const y1Top = src.y;
+    const y1Bot = src.y + src.h;
+    const x2 = firstStage.x;
+    // dividir o primeiro stage proporcionalmente
+    const ratio = src.clicks / totalClicks;
+    const segH = firstStage.h * ratio;
+    const y2Top = firstStage.y + firstStageOffset;
+    const y2Bot = y2Top + segH;
+    firstStageOffset += segH;
+    const mx = (x1 + x2) / 2;
+    const path = `
+      M${x1},${y1Top}
+      C${mx},${y1Top} ${mx},${y2Top} ${x2},${y2Top}
+      L${x2},${y2Bot}
+      C${mx},${y2Bot} ${mx},${y1Bot} ${x1},${y1Bot}
+      Z`;
+    return { path, color: src.color, key: src.key };
+  });
+
+  // Connectors entre stages (cor única, sem split por origem — pra simplicidade)
+  const stageConnectors = stageNodes.slice(0, -1).map((n, i) => {
+    const next = stageNodes[i + 1];
+    const x1 = n.x + stageW;
+    const x2 = next.x;
+    const mx = (x1 + x2) / 2;
+    const path = `
+      M${x1},${n.y}
+      C${mx},${n.y} ${mx},${next.y} ${x2},${next.y}
+      L${x2},${next.y + next.h}
+      C${mx},${next.y + next.h} ${mx},${n.y + n.h} ${x1},${n.y + n.h}
+      Z`;
+    return { path };
+  });
+
+  return (
+    <div className="dash-chart">
+      <div className="dash-chart-svg-wrap">
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', display: 'block' }}>
+          {/* Header origens */}
+          {sources.length > 0 ? (
+            <text x={padL} y={padT - 14} fontSize={11} fontWeight={700} fill="#9D85B3" fontFamily="system-ui" style={{ textTransform: 'uppercase' }}>
+              Origens (cliques)
+            </text>
+          ) : null}
+          <text x={funnelStartX} y={padT - 14} fontSize={11} fontWeight={700} fill="#9D85B3" fontFamily="system-ui">
+            Funil de conversão
+          </text>
+
+          {/* Connectors source → stage 1 */}
+          {sourceToFunnel.map((c) => (
+            <path key={c.key} d={c.path} fill={c.color} opacity={0.4} />
+          ))}
+
+          {/* Source nodes (caixinhas à esquerda) */}
+          {sourceNodes.map((s, i) => (
+            <g key={s.key}>
+              <rect x={s.x} y={s.y} width={86} height={s.h} fill={s.color} rx={6} opacity={0.9} />
+              <text x={s.x + 8} y={s.y + 14} fontSize={11} fontWeight={700} fill="#FFFFFF" fontFamily="system-ui">
+                {s.label}{s.proxy ? '*' : ''}
+              </text>
+              <text x={s.x + 8} y={s.y + 28} fontSize={11} fill="#FFFFFF" fontFamily="system-ui" opacity={0.85}>
+                {s.clicks.toLocaleString('pt-BR')}
+              </text>
+            </g>
+          ))}
+          {sources.length === 0 ? (
+            <text x={padL} y={padT + innerH / 2} fontSize={12} fill="#9D85B3" fontFamily="system-ui">
+              (Conecta GA4 + SC pra ver origens)
+            </text>
+          ) : null}
+
+          {/* Stage connectors */}
+          {stageConnectors.map((c, i) => (
+            <path key={i} d={c.path} fill="#7E3FA6" opacity={hoverIdx === null || hoverIdx === i || hoverIdx === i + 1 ? 0.3 : 0.12} />
+          ))}
+
+          {/* Stage nodes */}
+          {stageNodes.map((n, i) => {
+            const prevCount = i === 0 ? totalClicks : stages[i - 1].count;
+            const convPct = prevCount > 0 ? (n.count / prevCount) * 100 : 0;
+            return (
+              <g key={n.key} onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)} style={{ cursor: 'pointer' }}>
+                <rect x={n.x} y={n.y} width={stageW} height={n.h} fill={n.color} rx={2} />
+                <text x={n.x + stageW / 2} y={padT - 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="#5E2A67" fontFamily="system-ui">
+                  {n.label}
+                </text>
+                {n.help ? (
+                  <text x={n.x + stageW / 2} y={padT + 8} textAnchor="middle" fontSize={9} fill="#9D85B3" fontFamily="system-ui">
+                    {n.help}
+                  </text>
+                ) : null}
+                <text x={n.x + stageW / 2} y={H - padB + 14} textAnchor="middle" fontSize={13} fontWeight={900} fill="#5E2A67" fontFamily="system-ui">
+                  {n.count.toLocaleString('pt-BR')}
+                </text>
+                {i > 0 ? (
+                  <text x={n.x + stageW / 2} y={H - padB + 28} textAnchor="middle" fontSize={9} fill={convPct < 20 ? '#EE5A52' : '#9D85B3'} fontFamily="system-ui">
+                    {convPct.toFixed(1)}%
+                  </text>
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+        {sources.some((s) => s.proxy) ? (
+          <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 8, paddingLeft: 4 }}>
+            * proxy via sessions (cliques exatos só pra SEO via Search Console)
+          </div>
+        ) : null}
       </div>
     </div>
   );

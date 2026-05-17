@@ -90,7 +90,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   const [funnel, sankey, stuck, scoreDist, velocity, cohort, stageTime, formCvr, heatmap, allStatuses, recentLeads] = await Promise.all([
-    getUnifiedFunnel(days).catch(() => []),
+    getUnifiedFunnel(days).catch(() => ({ sources: [], stages: [] })),
     getSourceToStatusSankey().catch(() => []),
     getStuckLeads(7).catch(() => []),
     getScoreDistributionByChannel().catch(() => []),
@@ -129,10 +129,10 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   }));
 
   // Estatísticas top
-  const totalLeadsPeriod = (funnel.find((f) => f.key === 'forms')?.count) ?? 0;
-  const totalMql = (funnel.find((f) => f.key === 'mql')?.count) ?? 0;
-  const totalReunioes = (funnel.find((f) => f.key === 'reunioes')?.count) ?? 0;
-  const totalFechados = (funnel.find((f) => f.key === 'fechados')?.count) ?? 0;
+  const totalLeadsPeriod = (funnel.stages.find((f) => f.key === 'forms_b2b')?.count) ?? 0;
+  const totalMql = (funnel.stages.find((f) => f.key === 'mql')?.count) ?? 0;
+  const totalReunioes = (funnel.stages.find((f) => f.key === 'reunioes')?.count) ?? 0;
+  const totalFechados = (funnel.stages.find((f) => f.key === 'fechados')?.count) ?? 0;
 
   return (
     <div>
@@ -182,7 +182,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
       <div className="dash-card">
         <div className="dash-card-title"><Target /> Funil de qualificação (drop-off por etapa)</div>
         <div className="dash-card-subtitle">Cross-channel: SEO + LinkedIn + Direct + outros → Cliente</div>
-        <FunnelStages stages={funnel.map((s, i) => ({
+        <FunnelStages stages={funnel.stages.map((s, i) => ({
           label: s.label,
           count: s.count,
           color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],

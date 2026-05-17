@@ -23,7 +23,7 @@ import { channelLabel, timeAgo } from '@/lib/crm-format';
 import {
   Sparkline,
   MultiLineChart,
-  SankeyFunnel,
+  SourcedFunnel,
   StackedAreaChart,
   DonutChart,
   HeatmapChart,
@@ -72,7 +72,7 @@ export default async function DashboardOverviewPage() {
   const [snapshot, activity28, funnel, origin, heatmap, stacked, topQueries, lastLeads] = await Promise.all([
     getBentoSnapshot().catch(() => null),
     getActivityByDay(28).catch(() => []),
-    getUnifiedFunnel(30).catch(() => []),
+    getUnifiedFunnel(30).catch(() => ({ sources: [], stages: [] })),
     getLeadsByOrigin(30).catch(() => []),
     getConversionHeatmap(90).catch(() => Array.from({ length: 7 }, () => Array(24).fill(0))),
     getStackedTrafficByChannel(28).catch(() => ({ data: [], channels: [] })),
@@ -125,9 +125,9 @@ export default async function DashboardOverviewPage() {
             <GitMerge /> Funil unificado cross-channel
             <span style={{ fontSize: 11, color: '#9D85B3', fontWeight: 600, marginLeft: 'auto' }}>últimos 30 dias</span>
           </div>
-          <div className="bento-subtitle">Impressões SEO → Visitas → Forms → MQL/Quente → Reuniões → Fechados</div>
+          <div className="bento-subtitle">Origens (cliques) → Visitas → Forms totais → Líderes B2B → MQL → Reuniões → Fechados</div>
           <div className="bento-content" style={{ display: 'flex', alignItems: 'center' }}>
-            <SankeyFunnel stages={funnel.map((s) => ({ key: s.key, label: s.label, count: s.count }))} />
+            <SourcedFunnel sources={funnel.sources} stages={funnel.stages} />
           </div>
         </div>
 

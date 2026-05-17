@@ -251,6 +251,32 @@ async function findOrCreateTag(tagName: string): Promise<string | null> {
  * Usado pelos webhooks que recebem email do lead (tipo Cal.com) e precisam
  * achar o contato existente pra atualizar tags.
  */
+/**
+ * Conta total de contatos no AC criados nos últimos N dias.
+ * Usa filtro `filters[created_after]` da API. Retorna 0 se AC não configurado.
+ *
+ * Importante pro funil: nem todos os contatos do AC entram no CRM —
+ * o CRM filtra Líderes B2B via tag. Pra ter visão real do volume total de
+ * leads gerados pelos forms, precisa contar do AC.
+ */
+export async function getContactCountSince(daysAgo: number): Promise<number> {
+  if (!AC_API_URL || !AC_API_KEY) return 0;
+  try {
+    const dateStr = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const url = `${AC_API_URL}/api/3/contacts?filters[created_after]=${dateStr}&limit=1`;
+    const res = await fetch(url, { headers: acHeaders() });
+    if (!res.ok) {
+      console.error('[activecampaign] getContactCountSince failed:', res.status);
+      return 0;
+    }
+    const data = (await res.json()) as { meta?: { total?: string | number } };
+    return parseInt(String(data.meta?.total ?? '0'), 10);
+  } catch (err) {
+    console.error('[activecampaign] getContactCountSince error:', err);
+    return 0;
+  }
+}
+
 export async function findContactByEmail(email: string): Promise<string | null> {
   if (!AC_API_URL || !AC_API_KEY) return null;
 

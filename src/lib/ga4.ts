@@ -279,6 +279,33 @@ export async function getTrafficByDay(days = 28): Promise<DailyPoint[]> {
   });
 }
 
+export type ChannelByDayRow = { date: string; channel: string; sessions: number };
+
+/**
+ * Série diária por canal — usado pro stacked area.
+ * Dimensões: date + sessionDefaultChannelGroup numa única call.
+ */
+export async function getTrafficByDayAndChannel(days = 28): Promise<ChannelByDayRow[]> {
+  const report = await runReport({
+    dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+    dimensions: [{ name: 'date' }, { name: 'sessionDefaultChannelGroup' }],
+    metrics: [{ name: 'sessions' }],
+    orderBys: [{ dimension: { dimensionName: 'date' } }],
+    limit: '10000',
+  });
+  if (!report?.rows) return [];
+
+  return report.rows.map((row) => {
+    const raw = row.dimensionValues[0]?.value ?? '';
+    const date = raw.length === 8 ? `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}` : raw;
+    return {
+      date,
+      channel: row.dimensionValues[1]?.value ?? 'unknown',
+      sessions: parseInt(row.metricValues[0]?.value ?? '0', 10),
+    };
+  });
+}
+
 export type UtmRow = { source: string; medium: string; campaign: string; sessions: number };
 
 export async function getTopUtms(days = 30, limit = 15): Promise<UtmRow[]> {
