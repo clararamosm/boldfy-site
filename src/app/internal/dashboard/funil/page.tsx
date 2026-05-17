@@ -14,24 +14,24 @@ import { getStatuses } from '@/lib/statuses';
 import {
   getUnifiedFunnel,
   getStuckLeads,
-  // BISECT: importa mas não usa ainda
-  // getSourceToStatusSankey,
+  getSourceToStatusSankey,
+  // BISECT step 2 ativo:
   // getVelocityByChannel,
   // getScoreDistributionByChannel,
   // getCohortMatrix,
 } from '@/lib/dashboard-queries';
 import {
   FunnelStages,
+  SankeyFlow,
   BOLDFY_PALETTE,
-  // BISECT: importa mas não usa ainda
-  // SankeyFlow,
+  // BISECT:
   // BoxPlotByChannel,
   // CohortMatrix,
   // BarCompareChart,
 } from '@/components/dashboard/charts';
 import {
-  FileText, Flame, Calendar, Trophy, Target, GitMerge, Snail,
-  // Workflow, Zap, BarChart3, CalendarRange,
+  FileText, Flame, Calendar, Trophy, Target, GitMerge, Snail, Workflow,
+  // Zap, BarChart3, CalendarRange,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -43,18 +43,19 @@ export const dynamic = 'force-dynamic';
 
 const DAYS = 30;
 
-// const SOURCE_LABELS: Record<string, string> = {
-//   linkedin: 'LinkedIn', organic: 'Orgânico', direct: 'Direto',
-//   email: 'Email', indicacao: 'Indicação', pr: 'PR',
-//   manual: 'Manual', unknown: 'Não atribuído',
-// };
+const SOURCE_LABELS: Record<string, string> = {
+  linkedin: 'LinkedIn', organic: 'Orgânico', direct: 'Direto',
+  email: 'Email', indicacao: 'Indicação', pr: 'PR',
+  manual: 'Manual', unknown: 'Não atribuído',
+};
 
 export default async function FunilPage() {
-  const [funnel, stuck, allStatuses, pipelineCounts] = await Promise.all([
+  const [funnel, stuck, allStatuses, pipelineCounts, sankey] = await Promise.all([
     getUnifiedFunnel(DAYS).catch(() => ({ sources: [], stages: [] })),
     getStuckLeads(7).catch(() => []),
     getStatuses('company').catch(() => []),
     db.select({ statusId: companies.statusId, n: count() }).from(companies).groupBy(companies.statusId).catch(() => []),
+    getSourceToStatusSankey().catch(() => []),
   ]);
 
   const countByStatus = new Map(pipelineCounts.map((r) => [r.statusId, r.n]));
@@ -109,6 +110,14 @@ export default async function FunilPage() {
           label: s.label, count: s.count, color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],
         }))} />
       </div>
+
+      {/* BISECT step 2: SankeyFlow */}
+      {sankey.length > 0 ? (
+        <div className="dash-card">
+          <div className="dash-card-title"><Workflow /> Sankey: Origem → Status atual</div>
+          <SankeyFlow edges={sankey} sourceLabels={SOURCE_LABELS} />
+        </div>
+      ) : null}
 
       <div className="dash-card">
         <div className="dash-card-title"><GitMerge /> Pipeline de Empresas</div>
