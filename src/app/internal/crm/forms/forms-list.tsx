@@ -11,8 +11,8 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import type { PersonRow, FormType } from './page';
-import { FORM_LABELS } from './page';
+import type { PersonRow, FormType } from './shared';
+import { FORM_LABELS } from './shared';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
 
 type Props = {

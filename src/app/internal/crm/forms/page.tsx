@@ -21,6 +21,10 @@ import { eq, desc, asc, and, like, gte, sql, type SQL } from 'drizzle-orm';
 import { FormsList } from './forms-list';
 import { FormsFilters } from './forms-filters';
 import { getStatuses } from '@/lib/statuses';
+import type { FormType, PersonRow } from './shared';
+// re-export pra compat com código existente que importa de './page'
+export type { FormType, PersonRow } from './shared';
+export { FORM_LABELS } from './shared';
 
 export const metadata: Metadata = {
   title: 'CRM · Formulários',
@@ -28,39 +32,6 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-export type FormType = 'form_submit_demo' | 'form_submit_beta' | 'form_submit_report' | 'form_submit_proposta';
-
-export const FORM_LABELS: Record<FormType, string> = {
-  form_submit_demo: 'Demo',
-  form_submit_beta: 'Beta',
-  form_submit_report: 'Report',
-  form_submit_proposta: 'Proposta',
-};
-
-/**
- * 1 row por pessoa. forms é array dos forms preenchidos (de-dup).
- * lastFormAt é a data da activity mais recente entre os forms — pra sort.
- * personMetadata fica disponível pra extrair url_proposta, etc.
- */
-export type PersonRow = {
-  person: {
-    id: string;
-    name: string;
-    email: string;
-    sourceChannel: string | null;
-    sourcePage: string | null;
-    acTags: string[] | null;
-    statusLabel: string | null;
-    statusColor: string | null;
-    jobTitle: string | null;
-    metadata: Record<string, unknown> | null;
-  };
-  company: { id: string; name: string } | null;
-  forms: FormType[];
-  lastFormAt: Date;
-  firstFormAt: Date;
-};
 
 type Params = {
   period: 'all' | '7d' | '30d' | '90d';

@@ -12,7 +12,7 @@
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
-import type { FormType } from './page';
+import type { FormType } from './shared';
 
 type Props = {
   statuses: Array<{ id: string; label: string; color: string | null }>;
