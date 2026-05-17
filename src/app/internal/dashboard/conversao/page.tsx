@@ -77,9 +77,9 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-// safeBlock vem de @/lib/safe-block (compartilhado entre as pages do dashboard)
-const safeBlock = <T,>(name: string, fn: () => Promise<T>, fallback: T) =>
-  safeBlockShared('conversao', name, fn, fallback);
+// Usa safeBlockShared direto com scope 'conversao' — wrapper local com <T,> generic
+// arrow estava possivelmente sendo mal-interpretado pelo bundler Next 16 (gera 500
+// silencioso em produção). Pattern direto é robusto.
 
 type SearchParams = Promise<{ period?: string }>;
 
@@ -88,18 +88,18 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   const days = parsePeriod(params.period);
   const since = daysAgo(days);
 
-  const funnel = await safeBlock('funnel', () => getUnifiedFunnel(days), { sources: [], stages: [] } as Awaited<ReturnType<typeof getUnifiedFunnel>>);
-  const sankey = await safeBlock('sankey', () => getSourceToStatusSankey(), [] as Awaited<ReturnType<typeof getSourceToStatusSankey>>);
-  const velocity = await safeBlock('velocity', () => getVelocityByChannel(), [] as Awaited<ReturnType<typeof getVelocityByChannel>>);
-  const scoreDist = await safeBlock('scoreDist', () => getScoreDistributionByChannel(), [] as Awaited<ReturnType<typeof getScoreDistributionByChannel>>);
-  const cohort = await safeBlock('cohort', () => getCohortMatrix(6), [] as Awaited<ReturnType<typeof getCohortMatrix>>);
-  const stuck = await safeBlock('stuck', () => getStuckLeads(7), [] as Awaited<ReturnType<typeof getStuckLeads>>);
-  const stageTime = await safeBlock('stageTime', () => getTimePerStage(), [] as Awaited<ReturnType<typeof getTimePerStage>>);
-  const formCvr = await safeBlock('formCvr', () => getFormConversionRate(days), [] as Awaited<ReturnType<typeof getFormConversionRate>>);
-  const heatmap = await safeBlock('heatmap', () => getConversionHeatmap(90), Array.from({ length: 7 }, () => Array(24).fill(0)) as number[][]);
-  const allStatuses = await safeBlock('statuses', () => getStatuses('company'), [] as Awaited<ReturnType<typeof getStatuses>>);
+  const funnel = await safeBlockShared('conversao', 'funnel', () => getUnifiedFunnel(days), { sources: [], stages: [] } as Awaited<ReturnType<typeof getUnifiedFunnel>>);
+  const sankey = await safeBlockShared('conversao', 'sankey', () => getSourceToStatusSankey(), [] as Awaited<ReturnType<typeof getSourceToStatusSankey>>);
+  const velocity = await safeBlockShared('conversao', 'velocity', () => getVelocityByChannel(), [] as Awaited<ReturnType<typeof getVelocityByChannel>>);
+  const scoreDist = await safeBlockShared('conversao', 'scoreDist', () => getScoreDistributionByChannel(), [] as Awaited<ReturnType<typeof getScoreDistributionByChannel>>);
+  const cohort = await safeBlockShared('conversao', 'cohort', () => getCohortMatrix(6), [] as Awaited<ReturnType<typeof getCohortMatrix>>);
+  const stuck = await safeBlockShared('conversao', 'stuck', () => getStuckLeads(7), [] as Awaited<ReturnType<typeof getStuckLeads>>);
+  const stageTime = await safeBlockShared('conversao', 'stageTime', () => getTimePerStage(), [] as Awaited<ReturnType<typeof getTimePerStage>>);
+  const formCvr = await safeBlockShared('conversao', 'formCvr', () => getFormConversionRate(days), [] as Awaited<ReturnType<typeof getFormConversionRate>>);
+  const heatmap = await safeBlockShared('conversao', 'heatmap', () => getConversionHeatmap(90), Array.from({ length: 7 }, () => Array(24).fill(0)) as number[][]);
+  const allStatuses = await safeBlockShared('conversao', 'statuses', () => getStatuses('company'), [] as Awaited<ReturnType<typeof getStatuses>>);
 
-  const recentLeads = await safeBlock('recentLeads', () => db.select({
+  const recentLeads = await safeBlockShared('conversao', 'recentLeads', () => db.select({
     person: people, company: companies, status: statuses,
   })
   .from(people)
@@ -109,7 +109,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   .orderBy(desc(people.createdAt))
   .limit(15), [] as Array<{ person: typeof people.$inferSelect; company: typeof companies.$inferSelect | null; status: typeof statuses.$inferSelect | null }>);
 
-  const pipelineCounts = await safeBlock('pipelineCounts', () => db.select({ statusId: companies.statusId, n: count() }).from(companies).groupBy(companies.statusId), [] as Array<{ statusId: string | null; n: number }>);
+  const pipelineCounts = await safeBlockShared('conversao', 'pipelineCounts', () => db.select({ statusId: companies.statusId, n: count() }).from(companies).groupBy(companies.statusId), [] as Array<{ statusId: string | null; n: number }>);
   const countByStatus = new Map(pipelineCounts.map((r) => [r.statusId, r.n]));
   const pipeline = allStatuses.map((s) => ({
     label: s.label,

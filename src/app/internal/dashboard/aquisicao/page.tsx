@@ -80,9 +80,8 @@ type SearchParams = Promise<{ period?: string }>;
 
 function pct(v: number): string { return `${(v * 100).toFixed(2)}%`; }
 
-// safeBlock vem de @/lib/safe-block (compartilhado entre as pages do dashboard)
-const safeBlock = <T,>(name: string, fn: () => Promise<T>, fallback: T) =>
-  safeBlockShared('aquisicao', name, fn, fallback);
+// Usa safeBlockShared direto com scope 'aquisicao' — wrapper local com <T,> generic
+// arrow estava possivelmente sendo mal-interpretado pelo bundler Next 16.
 
 export default async function AquisicaoPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -92,22 +91,22 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
   const scConfigured = isSearchConsoleConfigured();
 
   // Tráfego (GA4) — cada query isolada em safeBlock pra capturar e logar erro
-  const trafficSummary = await safeBlock('ga4.summary', () => ga4Configured ? getTrafficSummary(days) : Promise.resolve(null), null);
-  const channels = await safeBlock('ga4.channels', () => ga4Configured ? getTrafficByChannel(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByChannel>>);
-  const topPages = await safeBlock('ga4.pages', () => ga4Configured ? getTopPages(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPages>>);
-  const topUtms = await safeBlock('ga4.utms', () => ga4Configured ? getTopUtms(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopUtms>>);
-  const dailyTraffic = await safeBlock('ga4.daily', () => ga4Configured ? getTrafficByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByDay>>);
+  const trafficSummary = await safeBlockShared('aquisicao', 'ga4.summary', () => ga4Configured ? getTrafficSummary(days) : Promise.resolve(null), null);
+  const channels = await safeBlockShared('aquisicao', 'ga4.channels', () => ga4Configured ? getTrafficByChannel(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByChannel>>);
+  const topPages = await safeBlockShared('aquisicao', 'ga4.pages', () => ga4Configured ? getTopPages(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPages>>);
+  const topUtms = await safeBlockShared('aquisicao', 'ga4.utms', () => ga4Configured ? getTopUtms(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopUtms>>);
+  const dailyTraffic = await safeBlockShared('aquisicao', 'ga4.daily', () => ga4Configured ? getTrafficByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTrafficByDay>>);
 
   // SEO (SC)
-  const seoSummary = await safeBlock('sc.summary', () => scConfigured ? getSeoSummary(days) : Promise.resolve(null), null);
-  const queries = await safeBlock('sc.queries', () => scConfigured ? getTopQueries(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopQueries>>);
-  const seoPages = await safeBlock('sc.pages', () => scConfigured ? getTopPagesSeo(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPagesSeo>>);
-  const opportunities = await safeBlock('sc.opps', () => scConfigured ? getRankingOpportunities(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getRankingOpportunities>>);
-  const seoDaily = await safeBlock('sc.daily', () => scConfigured ? getSeoByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getSeoByDay>>);
-  const brandedQs = await safeBlock('sc.branded', () => scConfigured ? getBrandedQueries(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getBrandedQueries>>);
-  const lowCtr = await safeBlock('sc.lowctr', () => scConfigured ? getLowCtrForPosition(days, 30) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getLowCtrForPosition>>);
-  const gaps = await safeBlock('sc.gaps', () => scConfigured ? getTopicGaps(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopicGaps>>);
-  const scatter = await safeBlock('sc.scatter', () => scConfigured ? getQueriesScatter(days, 80) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getQueriesScatter>>);
+  const seoSummary = await safeBlockShared('aquisicao', 'sc.summary', () => scConfigured ? getSeoSummary(days) : Promise.resolve(null), null);
+  const queries = await safeBlockShared('aquisicao', 'sc.queries', () => scConfigured ? getTopQueries(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopQueries>>);
+  const seoPages = await safeBlockShared('aquisicao', 'sc.pages', () => scConfigured ? getTopPagesSeo(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopPagesSeo>>);
+  const opportunities = await safeBlockShared('aquisicao', 'sc.opps', () => scConfigured ? getRankingOpportunities(days, 12) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getRankingOpportunities>>);
+  const seoDaily = await safeBlockShared('aquisicao', 'sc.daily', () => scConfigured ? getSeoByDay(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getSeoByDay>>);
+  const brandedQs = await safeBlockShared('aquisicao', 'sc.branded', () => scConfigured ? getBrandedQueries(days) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getBrandedQueries>>);
+  const lowCtr = await safeBlockShared('aquisicao', 'sc.lowctr', () => scConfigured ? getLowCtrForPosition(days, 30) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getLowCtrForPosition>>);
+  const gaps = await safeBlockShared('aquisicao', 'sc.gaps', () => scConfigured ? getTopicGaps(days, 20) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getTopicGaps>>);
+  const scatter = await safeBlockShared('aquisicao', 'sc.scatter', () => scConfigured ? getQueriesScatter(days, 80) : Promise.resolve([]), [] as Awaited<ReturnType<typeof getQueriesScatter>>);
 
   // LinkedIn (UTM + CRM)
   const liUtmSessions = topUtms.filter((u) => u.source.toLowerCase().includes('linkedin')).reduce((a, u) => a + u.sessions, 0);
@@ -116,7 +115,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
   // db.select chain com `.catch()` direto pode não ser tratado por Promise.all
   // se Drizzle não expõe Promise compatível. Wrap em safeBlock.
-  const liLeads = await safeBlock('li_leads', async () => {
+  const liLeads = await safeBlockShared('aquisicao', 'li_leads', async () => {
     return db.select({ person: people, company: companies, status: statuses })
       .from(people)
       .leftJoin(companies, eq(people.companyId, companies.id))
@@ -126,7 +125,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       .limit(10);
   }, [] as Array<{ person: typeof people.$inferSelect; company: typeof companies.$inferSelect | null; status: typeof statuses.$inferSelect | null }>);
 
-  const liCampaigns = await safeBlock('li_campaigns', async () => {
+  const liCampaigns = await safeBlockShared('aquisicao', 'li_campaigns', async () => {
     return db.select({ campaign: people.firstTouchCampaign, n: count() })
       .from(people)
       .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'linkedin')))
