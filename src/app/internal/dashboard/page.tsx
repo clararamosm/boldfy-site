@@ -228,10 +228,17 @@ export default async function DashboardOverviewPage() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 12, color: '#5E2A67' }}>
         <div>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart3 size={14} /> Mais detalhes:</span> <Link href="/internal/dashboard/aquisicao" style={{ color: '#CD50F1', fontWeight: 700, marginLeft: 6 }}>Aquisição</Link>
-          <span style={{ margin: '0 8px' }}>·</span>
-          <Link href="/internal/dashboard/conversao" style={{ color: '#CD50F1', fontWeight: 700 }}>Conversão</Link>
-          <span style={{ margin: '0 8px' }}>·</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><BarChart3 size={14} /> Drill-down:</span>
+          {' '}<Link href="/internal/dashboard/trafego" style={{ color: '#CD50F1', fontWeight: 700, marginLeft: 6 }}>Tráfego</Link>
+          <span style={{ margin: '0 6px' }}>·</span>
+          <Link href="/internal/dashboard/seo" style={{ color: '#CD50F1', fontWeight: 700 }}>SEO</Link>
+          <span style={{ margin: '0 6px' }}>·</span>
+          <Link href="/internal/dashboard/linkedin" style={{ color: '#CD50F1', fontWeight: 700 }}>LinkedIn</Link>
+          <span style={{ margin: '0 6px' }}>·</span>
+          <Link href="/internal/dashboard/forms" style={{ color: '#CD50F1', fontWeight: 700 }}>Forms</Link>
+          <span style={{ margin: '0 6px' }}>·</span>
+          <Link href="/internal/dashboard/funil" style={{ color: '#CD50F1', fontWeight: 700 }}>Funil B2B</Link>
+          <span style={{ margin: '0 6px' }}>·</span>
           <Link href="/internal/dashboard/campanhas" style={{ color: '#CD50F1', fontWeight: 700 }}>Campanhas</Link>
         </div>
         <Link href="/internal/dashboard/debug" style={{ color: '#9D85B3', fontSize: 11 }}>Debug</Link>

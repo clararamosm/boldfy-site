@@ -12,8 +12,11 @@ import { usePathname } from 'next/navigation';
 
 const TABS = [
   { href: '/internal/dashboard', label: 'Visão geral', match: 'exact' },
-  { href: '/internal/dashboard/aquisicao', label: 'Aquisição', match: 'prefix' },
-  { href: '/internal/dashboard/conversao', label: 'Conversão', match: 'prefix' },
+  { href: '/internal/dashboard/trafego', label: 'Tráfego', match: 'prefix' },
+  { href: '/internal/dashboard/seo', label: 'SEO', match: 'prefix' },
+  { href: '/internal/dashboard/linkedin', label: 'LinkedIn', match: 'prefix' },
+  { href: '/internal/dashboard/forms', label: 'Forms', match: 'prefix' },
+  { href: '/internal/dashboard/funil', label: 'Funil B2B', match: 'prefix' },
   { href: '/internal/dashboard/campanhas', label: 'Campanhas', match: 'prefix' },
 ] as const;
 
