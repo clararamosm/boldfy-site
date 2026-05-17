@@ -35,11 +35,15 @@ const DEFAULT_PERSON_STATUSES: Array<{
   // definida por sourceMethod (forms beta/demo/proposta entram direto em Quente).
   { label: 'Lead', color: 'pink', sortOrder: 2, scoreThresholdMin: 21, isDefault: false, isTerminal: false },
   { label: 'Quente', color: 'amber', sortOrder: 3, scoreThresholdMin: 50, isDefault: false, isTerminal: false },
-  // Etapa de vendas — preenchida via Cal.com webhook ou movimento manual
+  // Etapas de vendas — preenchidas via Cal.com webhook ou movimento manual.
+  // "Em andamento" é o degrau acima de "Reunião marcada": pessoa que já
+  // marcou demo e segue preenchendo forms (Beta/Proposta) sobe pra cá
+  // (em vez de ficar parada em Reunião marcada como antes).
   { label: 'Reunião marcada', color: 'purple', sortOrder: 4, scoreThresholdMin: null, isDefault: false, isTerminal: false },
+  { label: 'Em andamento', color: 'orange', sortOrder: 5, scoreThresholdMin: null, isDefault: false, isTerminal: false },
   // Etapas terminais — só movimento manual, sem auto-promotion
-  { label: 'Fechado', color: 'green', sortOrder: 5, scoreThresholdMin: null, isDefault: false, isTerminal: true },
-  { label: 'Perdido', color: 'gray', sortOrder: 6, scoreThresholdMin: null, isDefault: false, isTerminal: true },
+  { label: 'Fechado', color: 'green', sortOrder: 6, scoreThresholdMin: null, isDefault: false, isTerminal: true },
+  { label: 'Perdido', color: 'gray', sortOrder: 7, scoreThresholdMin: null, isDefault: false, isTerminal: true },
 ];
 
 const DEFAULT_COMPANY_STATUSES: Array<{
@@ -190,46 +194,91 @@ export async function getStatusByLabel(
 }
 
 /**
- * Target de coluna pra cada sourceMethod de pessoa, definido em palavras
- * (label). Resolvido em tempo de execução via getStatusByLabel — então
- * funciona mesmo se a Clara renomear/reordenar via UI, desde que o label
- * exato exista. Se não existir, cai pra default (Ativo) — comportamento
- * defensivo.
+ * Cadeia de promoção por sourceMethod — lista ordenada de labels, da menos
+ * pra mais avançada. classifyByMethod escolhe o PRIMEIRO target da cadeia
+ * que seja MAIS avançado que o status atual da pessoa (não-terminal).
  *
- * Regra do produto (mai/2026):
- *   - form_report             → Ativo (lead frio que acumula score)
- *   - form_beta               → Quente (sinal forte de intenção)
- *   - form_demo               → Quente
- *   - form_proposta           → Quente
- *   - extension_linkedin      → LinkedIn Lead (captura intencional via extensão)
- *   - imported_folk (legado)  → LinkedIn Lead (equivalente histórico)
- *   - manual                  → Ativo
+ * Por que cadeia em vez de target único:
+ *   Ex: pessoa em "Reunião marcada" preenche form Beta. Target original
+ *   seria "Quente" — não promove (Reunião marcada > Quente). Antes ficava
+ *   parada, só logava activity. Agora com cadeia ['Quente', 'Em andamento'],
+ *   o segundo elemento é maior que Reunião marcada → promove pra Em andamento.
  *
- * NÃO-REGRESSÃO: chamadores devem comparar sortOrder com status atual antes
- * de aplicar (via shouldAutoPromote). Se já está em Reunião marcada, form
- * Beta NÃO regride pra Quente.
+ * Regras do produto (mai/2026 ciclo 2):
+ *   - form_report             → ['Ativo']                       (lead frio, só acumula score)
+ *   - form_beta               → ['Quente', 'Em andamento']      (sinal forte; promove em cadeia)
+ *   - form_demo               → []                              (relevado — Cal webhook salta direto pra Reunião marcada)
+ *   - form_proposta           → ['Quente', 'Em andamento']
+ *   - extension_linkedin      → ['LinkedIn Lead']               (captura intencional via extensão)
+ *   - imported_folk (legado)  → ['LinkedIn Lead']               (equivalente histórico)
+ *   - manual                  → ['Ativo']
+ *
+ * NÃO-REGRESSÃO permanece: nunca volta pra status menor. Se nenhum label da
+ * cadeia é mais avançado que o atual → retorna null (chamador mantém estado).
+ *
+ * Por que form_demo é vazio:
+ *   Quem preenche o form de Demo geralmente marca reunião no Cal logo em
+ *   seguida (next step do funil). O webhook do Cal salta direto pra
+ *   "Reunião marcada" — promover pra Quente no meio causaria flicker visual
+ *   sem ganho real. Activity de form_submit_demo continua sendo logada na
+ *   timeline (fica evidente que o form foi preenchido).
+ *   Edge case (preenche demo mas não marca reunião): fica em Ativo, mas a
+ *   activity tá lá pra revisão manual.
  */
 export type SourceMethodForClassify =
   | 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta'
   | 'extension_linkedin' | 'imported_folk' | 'manual';
 
-const METHOD_TO_LABEL: Record<SourceMethodForClassify, string> = {
-  form_report: 'Ativo',
-  form_beta: 'Quente',
-  form_demo: 'Quente',
-  form_proposta: 'Quente',
-  extension_linkedin: 'LinkedIn Lead',
-  imported_folk: 'LinkedIn Lead',
-  manual: 'Ativo',
+const METHOD_TO_LADDER: Record<SourceMethodForClassify, string[]> = {
+  form_report: ['Ativo'],
+  form_beta: ['Quente', 'Em andamento'],
+  form_demo: [],
+  form_proposta: ['Quente', 'Em andamento'],
+  extension_linkedin: ['LinkedIn Lead'],
+  imported_folk: ['LinkedIn Lead'],
+  manual: ['Ativo'],
 };
 
 /**
- * Resolve a coluna alvo de uma pessoa baseado em sourceMethod. Retorna o
- * Status row se a coluna existir, ou null como fallback (chamador decide
- * o que fazer — geralmente manter default).
+ * Resolve a coluna alvo de uma pessoa baseado em sourceMethod E status atual.
+ *
+ * Percorre a cadeia (METHOD_TO_LADDER) e retorna o PRIMEIRO Status cujo
+ * sortOrder seja maior que o atual e que não seja terminal. Retorna null
+ * se nenhum se aplica (pessoa em terminal, ou cadeia toda menor que current).
+ *
+ * @param method - sourceMethod da pessoa
+ * @param currentStatusSortOrder - sortOrder do status atual da pessoa (null se sem status)
  */
-export async function classifyByMethod(method: SourceMethodForClassify): Promise<Status | null> {
-  const label = METHOD_TO_LABEL[method];
-  if (!label) return null;
-  return getStatusByLabel('person', label);
+/**
+ * True se o sourceMethod tem cadeia de promoção definida (com pelo menos
+ * 1 elemento). False pra métodos intencionalmente sem classificação
+ * (ex: form_demo — Cal webhook cuida do salto).
+ *
+ * Caller usa pra decidir se a activity de skip deve ser logada como
+ * 'no_regression' (cadeia não promoveu) ou 'no_classification_by_design'
+ * (cadeia vazia de propósito).
+ */
+export function hasClassificationLadder(method: SourceMethodForClassify): boolean {
+  const ladder = METHOD_TO_LADDER[method];
+  return Array.isArray(ladder) && ladder.length > 0;
+}
+
+export async function classifyByMethod(
+  method: SourceMethodForClassify,
+  currentStatusSortOrder: number | null = null,
+): Promise<Status | null> {
+  const ladder = METHOD_TO_LADDER[method];
+  if (!ladder || ladder.length === 0) return null;
+
+  const all = await getStatuses('person');
+  for (const label of ladder) {
+    const target = all.find((s) => s.label.toLowerCase() === label.toLowerCase());
+    if (!target) continue;
+    if (target.isTerminal) continue;
+    // Se pessoa não tem status OU target é mais avançado → escolhe esse
+    if (currentStatusSortOrder === null || target.sortOrder > currentStatusSortOrder) {
+      return target;
+    }
+  }
+  return null; // ninguém da cadeia promove → mantém status atual
 }

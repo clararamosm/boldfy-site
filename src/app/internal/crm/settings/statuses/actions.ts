@@ -195,6 +195,7 @@ export async function addSuggestedB2BPack(): Promise<ActionResult> {
   const pack: Array<{ label: string; color: string; scoreThresholdMin: number | null; isTerminal: boolean }> = [
     { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: null, isTerminal: false },
     { label: 'Reunião marcada', color: 'purple', scoreThresholdMin: null, isTerminal: false },
+    { label: 'Em andamento', color: 'orange', scoreThresholdMin: null, isTerminal: false },
     { label: 'Fechado', color: 'green', scoreThresholdMin: null, isTerminal: true },
     { label: 'Perdido', color: 'gray', scoreThresholdMin: null, isTerminal: true },
   ];

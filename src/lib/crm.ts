@@ -10,7 +10,7 @@
 import { db, people, companies, activities } from '@/db';
 import type { Person, Company, NewActivity } from '@/db';
 import { eq, sql } from 'drizzle-orm';
-import { getDefaultStatus, statusForScore, shouldAutoPromote, classifyByMethod, getStatuses } from './statuses';
+import { getDefaultStatus, statusForScore, shouldAutoPromote, classifyByMethod, getStatuses, hasClassificationLadder } from './statuses';
 import { syncCompanyFromPeople } from './crm-sync';
 
 /* -------------------------------------------------------------------------- */
@@ -401,9 +401,6 @@ export async function classifyPersonBySourceMethod(
   sourceMethod: SourceMethod,
 ): Promise<void> {
   try {
-    const target = await classifyByMethod(sourceMethod);
-    if (!target) return; // target label não existe nas colunas — não classifica
-
     const [current] = await db
       .select({ statusId: people.statusId })
       .from(people)
@@ -414,12 +411,39 @@ export async function classifyPersonBySourceMethod(
     const all = await getStatuses('person');
     const currentStatus = current.statusId ? all.find((s) => s.id === current.statusId) : null;
 
-    // Se a pessoa não tem status OU current é menos avançado que target → promove
-    const shouldChange = !currentStatus
-      || (!currentStatus.isTerminal && target.sortOrder > currentStatus.sortOrder);
+    // Pessoa em terminal (Fechado/Perdido) — nunca mexe. Loga skip.
+    if (currentStatus?.isTerminal) {
+      await db.insert(activities).values({
+        personId,
+        type: 'classification_skipped',
+        weight: 0,
+        source: 'system',
+        data: { reason: 'is_terminal', sourceMethod, currentStatus: currentStatus.label },
+      });
+      return;
+    }
 
-    if (!shouldChange) {
-      // Não-regressão: já está num status >= target. Loga só pra auditoria.
+    // Método sem cadeia de classificação (ex: form_demo) — Cal webhook é
+    // quem cuida do próximo passo. Loga skip com reason explícito.
+    if (!hasClassificationLadder(sourceMethod as Parameters<typeof hasClassificationLadder>[0])) {
+      await db.insert(activities).values({
+        personId,
+        type: 'classification_skipped',
+        weight: 0,
+        source: 'system',
+        data: { reason: 'no_classification_by_design', sourceMethod, currentStatus: currentStatus?.label ?? null },
+      });
+      return;
+    }
+
+    // Resolve target via cadeia de promoção. Passa o sortOrder atual pra
+    // classifyByMethod decidir qual elo da cadeia se aplica (Quente vs
+    // Em andamento etc).
+    const target = await classifyByMethod(sourceMethod, currentStatus?.sortOrder ?? null);
+
+    if (!target) {
+      // Cadeia toda menor que current — não promove (não regride).
+      // Activity de auditoria pra timeline mostrar que o form foi processado.
       await db.insert(activities).values({
         personId,
         type: 'classification_skipped',
@@ -429,7 +453,6 @@ export async function classifyPersonBySourceMethod(
           reason: 'no_regression',
           sourceMethod,
           currentStatus: currentStatus?.label ?? null,
-          targetStatus: target.label,
         },
       });
       return;
