@@ -15,12 +15,6 @@ import {
   getLowCtrForPosition,
   getTopicGaps,
   getQueriesScatter,
-  getSourceToStatusSankey,
-  getStuckLeads,
-  getScoreDistributionByChannel,
-  getVelocityByChannel,
-  getCohortMatrix,
-  getTimePerStage,
   getFormConversionRate,
 } from '@/lib/dashboard-queries';
 import { getTrafficByDayAndChannel, getTrafficByDay, getTrafficByChannel, getTopUtms, getTopPages, getTrafficSummary } from '@/lib/ga4';
@@ -73,12 +67,6 @@ export default async function DebugQueriesPage() {
     check('dq.getLowCtrForPosition(28)', () => getLowCtrForPosition(28)),
     check('dq.getTopicGaps(28)', () => getTopicGaps(28)),
     check('dq.getQueriesScatter(28)', () => getQueriesScatter(28)),
-    check('dq.getSourceToStatusSankey()', () => getSourceToStatusSankey()),
-    check('dq.getStuckLeads(7)', () => getStuckLeads(7)),
-    check('dq.getScoreDistributionByChannel()', () => getScoreDistributionByChannel()),
-    check('dq.getVelocityByChannel()', () => getVelocityByChannel()),
-    check('dq.getCohortMatrix(6)', () => getCohortMatrix(6)),
-    check('dq.getTimePerStage()', () => getTimePerStage()),
     check('dq.getFormConversionRate(30)', () => getFormConversionRate(30)),
   ]);
 

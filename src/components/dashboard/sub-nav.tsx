@@ -1,5 +1,5 @@
 /**
- * Sub-nav do Dashboard (9 abas).
+ * Sub-nav do Dashboard (6 abas).
  *
  * Client component — usa usePathname() pra detectar aba ativa corretamente
  * em navegação client-side.
@@ -16,7 +16,6 @@ const TABS = [
   { href: '/internal/dashboard/seo', label: 'SEO', match: 'prefix' },
   { href: '/internal/dashboard/linkedin', label: 'LinkedIn', match: 'prefix' },
   { href: '/internal/dashboard/forms', label: 'Forms', match: 'prefix' },
-  { href: '/internal/dashboard/funil', label: 'Funil B2B', match: 'prefix' },
   { href: '/internal/dashboard/campanhas', label: 'Campanhas', match: 'prefix' },
 ] as const;
 

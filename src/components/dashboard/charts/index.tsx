@@ -26,10 +26,7 @@ export { HeatmapChart } from './heatmap-chart';
 export { FunnelStages } from './funnel-stages';
 export { SankeyFunnel } from './sankey-funnel';
 export { SourcedFunnel } from './sourced-funnel';
-export { SankeyFlow } from './sankey-flow';
 export { ScatterChart } from './scatter-chart';
 export { BulletChart } from './bullet-chart';
-export { CohortMatrix } from './cohort-matrix';
-export { BarCompareChart } from './bar-compare-chart';
 export { TimelineMarkers } from './timeline-markers';
-export { BoxPlotByChannel } from './box-plot-by-channel';
+// Removidos junto com /funil: SankeyFlow, CohortMatrix, BarCompareChart, BoxPlotByChannel.
