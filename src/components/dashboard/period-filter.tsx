@@ -9,20 +9,10 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
+import { PERIODS } from './period-utils';
 
-const PERIODS = [
-  { value: '7', label: '7 dias' },
-  { value: '28', label: '28 dias' },
-  { value: '90', label: '3 meses' },
-  { value: '180', label: '6 meses' },
-] as const;
-
-export type Period = '7' | '28' | '90' | '180';
-
-export function parsePeriod(raw: string | undefined): number {
-  const n = parseInt(raw ?? '28', 10);
-  return [7, 28, 90, 180].includes(n) ? n : 28;
-}
+// parsePeriod foi MOVIDO pra ./period-utils.ts pra poder ser importado de
+// Server Components sem o 'use client' contaminar o bundle.
 
 export function PeriodFilter() {
   const router = useRouter();

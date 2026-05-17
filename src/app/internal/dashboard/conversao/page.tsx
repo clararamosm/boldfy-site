@@ -25,7 +25,8 @@ import {
   getConversionHeatmap,
   getUnifiedFunnel,
 } from '@/lib/dashboard-queries';
-import { PeriodFilter, parsePeriod } from '@/components/dashboard/period-filter';
+import { PeriodFilter } from '@/components/dashboard/period-filter';
+import { parsePeriod } from '@/components/dashboard/period-utils';
 import {
   FunnelStages,
   SankeyFlow,
