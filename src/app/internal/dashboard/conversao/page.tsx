@@ -22,10 +22,22 @@ import {
   getTimePerStage,
   getFormConversionRate,
   getConversionHeatmap,
+  getSourceToStatusSankey,
+  getVelocityByChannel,
+  getScoreDistributionByChannel,
+  getCohortMatrix,
 } from '@/lib/dashboard-queries';
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
-import { FunnelStages, HeatmapChart, BOLDFY_PALETTE } from '@/components/dashboard/charts';
+import {
+  FunnelStages,
+  HeatmapChart,
+  SankeyFlow,
+  BarCompareChart,
+  BoxPlotByChannel,
+  CohortMatrix,
+  BOLDFY_PALETTE,
+} from '@/components/dashboard/charts';
 import { channelLabel, timeAgo, methodVia } from '@/lib/crm-format';
 import {
   FileText,
@@ -41,6 +53,9 @@ import {
   Lightbulb,
   Flame as FlameIcon,
   Users,
+  Workflow,
+  Zap,
+  CalendarRange,
 } from 'lucide-react';
 import { Target as TargetIcon, FlaskConical, Download, Briefcase as BriefcaseIcon } from 'lucide-react';
 
@@ -72,6 +87,10 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   const funnel = await safeBlock('funnel', () => getUnifiedFunnel(days), { sources: [], stages: [] } as Awaited<ReturnType<typeof getUnifiedFunnel>>);
+  const sankey = await safeBlock('sankey', () => getSourceToStatusSankey(), [] as Awaited<ReturnType<typeof getSourceToStatusSankey>>);
+  const velocity = await safeBlock('velocity', () => getVelocityByChannel(), [] as Awaited<ReturnType<typeof getVelocityByChannel>>);
+  const scoreDist = await safeBlock('scoreDist', () => getScoreDistributionByChannel(), [] as Awaited<ReturnType<typeof getScoreDistributionByChannel>>);
+  const cohort = await safeBlock('cohort', () => getCohortMatrix(6), [] as Awaited<ReturnType<typeof getCohortMatrix>>);
   const stuck = await safeBlock('stuck', () => getStuckLeads(7), [] as Awaited<ReturnType<typeof getStuckLeads>>);
   const stageTime = await safeBlock('stageTime', () => getTimePerStage(), [] as Awaited<ReturnType<typeof getTimePerStage>>);
   const formCvr = await safeBlock('formCvr', () => getFormConversionRate(days), [] as Awaited<ReturnType<typeof getFormConversionRate>>);
@@ -153,6 +172,22 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
         }))} />
       </div>
 
+      {/* Sankey origem → status */}
+      {sankey.length > 0 ? (
+        <div className="dash-card">
+          <div className="dash-card-title"><Workflow /> Sankey: Origem → Status atual</div>
+          <div className="dash-card-subtitle">Quais canais alimentam quais estágios do funil</div>
+          <SankeyFlow
+            edges={sankey}
+            sourceLabels={{
+              linkedin: 'LinkedIn', organic: 'Orgânico', direct: 'Direto',
+              email: 'Email', indicacao: 'Indicação', pr: 'PR',
+              manual: 'Manual', unknown: 'Não atribuído',
+            }}
+          />
+        </div>
+      ) : null}
+
       {/* Pipeline de Empresas — TESTADO (FunnelStages) */}
       <div className="dash-card">
         <div className="dash-card-title"><GitMerge /> Pipeline de Empresas (etapas configuráveis)</div>
@@ -182,6 +217,46 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
           </table>
         )}
       </div>
+
+      {/* Velocidade por canal (BarCompare) */}
+      {velocity.length > 0 ? (
+        <div className="dash-card">
+          <div className="dash-card-title"><Zap /> Velocidade por canal — lead → primeira reunião</div>
+          <div className="dash-card-subtitle">Quanto tempo cada canal leva pra converter (média dias)</div>
+          <BarCompareChart
+            data={velocity.map((v) => ({ label: `${v.channel} (${v.n})` }))}
+            series={[
+              { key: 'avg', label: 'Média dias', color: '#CD50F1', values: velocity.map((v) => Math.round(v.avgDays * 10) / 10) },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {/* Score distribution por canal (box plot) */}
+      {scoreDist.length > 0 ? (
+        <div className="dash-card">
+          <div className="dash-card-title"><BarChart3 /> Score distribution por canal</div>
+          <div className="dash-card-subtitle">Box plot: min · Q1 · mediana · Q3 · max · n = lead count</div>
+          <BoxPlotByChannel rows={scoreDist} channelLabel={(c) => c} />
+        </div>
+      ) : null}
+
+      {/* Cohort retention */}
+      {cohort.length > 0 ? (
+        <div className="dash-card">
+          <div className="dash-card-title"><CalendarRange /> Cohort retention — leads → reunião</div>
+          <div className="dash-card-subtitle">% de leads de cada mês que viraram reunião em 7/14/30 dias</div>
+          <CohortMatrix rows={cohort.map((c) => ({
+            month: c.month,
+            total: c.total,
+            values: [
+              { label: '7d', value: c.reu7d },
+              { label: '14d', value: c.reu14d },
+              { label: '30d', value: c.reu30d },
+            ],
+          }))} />
+        </div>
+      ) : null}
 
       {/* Tempo entre stages — só table */}
       {stageTime.length > 0 ? (
@@ -277,10 +352,6 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
         )}
       </div>
 
-      <div style={{ padding: 14, background: 'rgba(245, 158, 11, 0.06)', borderRadius: 10, fontSize: 12, color: '#92580E', marginTop: 18 }}>
-        ⚠️ Restantes pendentes pra restaurar (estão escondidos pra debug): Sankey origem→status, Velocidade por canal (bar compare), Score distribution (box plot), Cohort retention (matrix).
-        Vou adicionar 1 por 1 nos próximos commits pra ver qual era o culpado do 500.
-      </div>
     </div>
   );
 }

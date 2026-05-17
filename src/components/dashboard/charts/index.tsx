@@ -944,7 +944,9 @@ export function SankeyFlow({ edges, sourceLabels, targetLabels }: {
   for (const s of sources) srcOffset[s] = 0;
   for (const t of targets) tgtOffset[t] = 0;
 
-  const flows = edges
+  // [...edges] evita mutar o array que veio como prop (React Server Component
+  // não permite mutar inputs — pode ser causa de erro genérico em runtime).
+  const flows = [...edges]
     .sort((a, b) => b.weight - a.weight)
     .map((e, ei) => {
       const s = srcPos[e.from];
