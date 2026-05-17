@@ -5,26 +5,30 @@
 
 'use client';
 
-import { useState, useActionState, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPersonManual } from '@/app/internal/crm/actions';
-
-type State = { ok: true; personId?: string } | { ok: false; error: string } | null;
 
 export function AddPersonButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<State, FormData>(
-    async (_prev, formData) => createPersonManual(_prev, formData),
-    null,
-  );
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (state?.ok && state.personId) {
-      setOpen(false);
-      router.push(`/internal/crm/people/${state.personId}`);
-    }
-  }, [state, router]);
+  // useTransition + callback resolve sucesso direto (sem useEffect detectando
+  // mudança de state — pattern que o React 19 Compiler flagga como erro).
+  function formAction(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      const result = await createPersonManual(null, formData);
+      if (result?.ok && result.personId) {
+        setOpen(false);
+        router.push(`/internal/crm/people/${result.personId}`);
+      } else if (result && !result.ok) {
+        setError(result.error);
+      }
+    });
+  }
 
   if (!open) {
     return (
@@ -75,8 +79,8 @@ export function AddPersonButton() {
               <input name="phone" maxLength={40} className="apb-input" placeholder="+55 11 9 9999-9999" />
             </label>
 
-            {state && !state.ok ? (
-              <p className="apb-error">{state.error}</p>
+            {error ? (
+              <p className="apb-error">{error}</p>
             ) : null}
 
             <div className="apb-actions">

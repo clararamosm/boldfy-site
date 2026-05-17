@@ -4,26 +4,28 @@
 
 'use client';
 
-import { useState, useActionState, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createCompanyManual } from '@/app/internal/crm/actions';
-
-type State = { ok: true; companyId?: string } | { ok: false; error: string } | null;
 
 export function AddCompanyButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState<State, FormData>(
-    async (_prev, formData) => createCompanyManual(_prev, formData),
-    null,
-  );
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (state?.ok && state.companyId) {
-      setOpen(false);
-      router.push(`/internal/crm/companies/${state.companyId}`);
-    }
-  }, [state, router]);
+  function formAction(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      const result = await createCompanyManual(null, formData);
+      if (result?.ok && result.companyId) {
+        setOpen(false);
+        router.push(`/internal/crm/companies/${result.companyId}`);
+      } else if (result && !result.ok) {
+        setError(result.error);
+      }
+    });
+  }
 
   if (!open) {
     return (
@@ -70,8 +72,8 @@ export function AddCompanyButton() {
               <input name="linkedinUrl" type="url" className="apb-input" placeholder="https://linkedin.com/company/nubank" />
             </label>
 
-            {state && !state.ok ? (
-              <p className="apb-error">{state.error}</p>
+            {error ? (
+              <p className="apb-error">{error}</p>
             ) : null}
 
             <div className="apb-actions">

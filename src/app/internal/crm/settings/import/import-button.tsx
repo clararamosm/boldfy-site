@@ -25,10 +25,12 @@ export function ImportButton() {
   const [elapsed, setElapsed] = useState(0);
   const startedAt = useRef<number | null>(null);
 
-  // Timer enquanto pending
+  // Timer enquanto pending — setState no effect é necessário (UX de contagem
+  // de segundos em tempo real). Não tem como modelar isso sem o sync setState.
   useEffect(() => {
     if (!pending) {
       startedAt.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset do timer
       setElapsed(0);
       return;
     }

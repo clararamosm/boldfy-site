@@ -40,11 +40,15 @@ export function ChartWithPeriod<T extends WithDate>({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // setState no effect aqui é INTENCIONAL: hidratar preferência de localStorage
+    // só após mount (SSR-safe). Sem ele, hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     if (storageKey) {
       const saved = localStorage.getItem(`chart-period:${storageKey}`);
       if (saved) {
         const n = parseInt(saved, 10);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (PERIOD_OPTIONS.some((p) => p.value === n)) setDays(n);
       }
     }
