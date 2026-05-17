@@ -14,7 +14,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { db, activities, people, companies, statuses } from '@/db';
-import { eq, desc, asc, and, like, gte, sql, inArray, type SQL } from 'drizzle-orm';
+import { eq, desc, asc, and, like, gte, sql, type SQL } from 'drizzle-orm';
 import { FormsList } from './forms-list';
 import { FormsFilters } from './forms-filters';
 import { getStatuses } from '@/lib/statuses';
@@ -30,6 +30,7 @@ export type FormType = 'form_submit_demo' | 'form_submit_beta' | 'form_submit_re
 
 export type FormSubmission = {
   activityId: string;
+  formType: FormType;
   createdAt: Date;
   data: Record<string, unknown> | null;
   personMetadata: Record<string, unknown> | null;
@@ -138,6 +139,7 @@ async function getSubmissionsFiltered(params: Params): Promise<{
 
   const allSubmissions: FormSubmission[] = rows.map((row) => ({
     activityId: row.activityId,
+    formType: row.type as FormType,
     createdAt: row.createdAt,
     data: row.data as Record<string, unknown> | null,
     personMetadata: row.personMetadata as Record<string, unknown> | null,
@@ -168,22 +170,16 @@ async function getSubmissionsFiltered(params: Params): Promise<{
     form_submit_proposta: 0,
   };
 
-  for (const row of rows) {
-    const t = row.type as FormType;
-    if (!byForm[t]) continue;
-    counts[t]++;
+  for (const sub of allSubmissions) {
+    if (!byForm[sub.formType]) continue;
+    counts[sub.formType]++;
+    byForm[sub.formType].push(sub);
   }
 
-  // Paginação aplicada por form (não global) — cada sublist tem own page state
+  // Paginação aplicada por form (não global). Cada sublist mostra os X
+  // primeiros após sort. Paginação independente por form viria via params
+  // nomeados (?demoPage=2) — por enquanto offset/pageSize vale pra todas.
   const offset = (params.page - 1) * params.pageSize;
-  for (const row of allSubmissions) {
-    const t = row.type as FormType;
-    if (!byForm[t]) continue;
-    byForm[t].push(row);
-  }
-  // Pra simplificar Fase 2: cada form mostra OS X primeiros após sort.
-  // Paginação real por form viria via params nomeados (?demoPage=2). Por
-  // enquanto o offset/pageSize aplica em CADA form independentemente.
   for (const t of Object.keys(byForm) as FormType[]) {
     byForm[t] = byForm[t].slice(offset, offset + params.pageSize);
   }
