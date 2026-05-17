@@ -26,6 +26,9 @@ import {
   getContactEmailEvents,
   getContactPageViews,
   getContactNotes,
+  getContactListIds,
+  getAllListsById,
+  getContactGeo,
   parseFormNote,
 } from '@/lib/activecampaign';
 import { upsertPerson, upsertCompany, logActivity, weightForActivity, classifyPersonBySourceMethod } from '@/lib/crm';
@@ -138,11 +141,16 @@ export async function importFromAC(): Promise<Result> {
           const tags = await getContactTags(c.id);
           bySegment[detectSegment(tags)]++;
 
-          const [fields, emailEvents, pageViews, notes] = await Promise.all([
+          // Puxa custom fields, events, page views, notas, listas e geo EM
+          // PARALELO. +2 calls vs antes (listas + geo). Geo é best-effort
+          // silencioso (vem null se conta AC não tem geo tracking).
+          const [fields, emailEvents, pageViews, notes, listIds, geo] = await Promise.all([
             getContactFieldValues(c.id),
             getContactEmailEvents(c.id),
             getContactPageViews(c.id),
             getContactNotes(c.id),
+            getContactListIds(c.id),
+            getContactGeo(c.id),
           ]);
 
           // Parse das notas — extrai Intenção, Empresa, Opt-in newsletter, Origem
@@ -233,11 +241,28 @@ export async function importFromAC(): Promise<Result> {
             origem_lp: formDataFromNotes['origem'] ?? null,
           };
 
+          // Resolve listIds → list names (mapa cacheado globalmente, 1 call/import)
+          const listsById = await getAllListsById();
+          const listNames = listIds.map((id) => listsById.get(id) ?? id).filter(Boolean);
+
+          // Last engagement: deriva dos email events que já buscamos (max tstamp
+          // de open/click). Não precisa call extra.
+          const lastEngagementTs = emailEvents.length > 0
+            ? emailEvents.reduce((max, e) => (e.tstamp > max ? e.tstamp : max), emailEvents[0].tstamp)
+            : null;
+
+          // location: city/state pra mostrar no card Contato; country pra
+          // segmentação regional. Vem null se conta AC não tem geo tracking.
+          const locationStr = geo && (geo.city || geo.state)
+            ? [geo.city, geo.state].filter(Boolean).join(', ')
+            : null;
+
           // Resetar score pra recalcular do zero (substituir = true)
           await db
             .update(people)
             .set({
               acTags: tags,
+              ...(locationStr ? { location: locationStr } : {}),
               metadata: {
                 ac_custom_fields: fields,
                 form_data: mergedFormData,
@@ -246,6 +271,16 @@ export async function importFromAC(): Promise<Result> {
                   ac_contact_id: c.id,
                   ac_imported_at: new Date().toISOString(),
                   notes_count: sortedNotes.length,
+                },
+                // Mai/2026 ciclo 3.1 — dados extras do AC pra debug e display
+                ac_extra: {
+                  udate: c.udate,
+                  bounced_hard: c.bounced_hard === '1',
+                  bounced_soft: c.bounced_soft === '1',
+                  bounced_date: c.bounced_date,
+                  last_engagement_at: lastEngagementTs,
+                  ac_lists: listNames,
+                  geo: geo,
                 },
               } as Record<string, unknown>,
               leadScore: 0, // reset pra recalcular via activities

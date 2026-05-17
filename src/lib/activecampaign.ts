@@ -319,7 +319,7 @@ export async function addTagsToExistingContact(
  * Lista TODOS os contatos do AC paginados. Usado pra importação inicial.
  * Yields lotes de 100. Atenção: pode ser lento se a base é grande.
  */
-export async function* listAllContacts(): AsyncGenerator<Array<{
+export type ACContactRaw = {
   id: string;
   email: string;
   firstName: string;
@@ -331,7 +331,15 @@ export async function* listAllContacts(): AsyncGenerator<Array<{
    * timestamp do import.
    */
   cdate: string;
-}>> {
+  /** Última modificação no AC. Útil pra detectar contatos "esquecidos". */
+  udate: string | null;
+  /** Email bounce flags. AC retorna como string "0"/"1". */
+  bounced_soft: string | null;
+  bounced_hard: string | null;
+  bounced_date: string | null;
+};
+
+export async function* listAllContacts(): AsyncGenerator<ACContactRaw[]> {
   if (!AC_API_URL || !AC_API_KEY) return;
   let offset = 0;
   const limit = 100;
@@ -342,7 +350,7 @@ export async function* listAllContacts(): AsyncGenerator<Array<{
         { headers: acHeaders() },
       );
       if (!res.ok) break;
-      const data = await res.json() as { contacts?: Array<{ id: string; email: string; firstName: string; lastName: string; phone: string; cdate: string }> };
+      const data = await res.json() as { contacts?: ACContactRaw[] };
       const contacts = data.contacts ?? [];
       if (contacts.length === 0) break;
       yield contacts;
@@ -352,6 +360,83 @@ export async function* listAllContacts(): AsyncGenerator<Array<{
       console.error('[activecampaign] listAllContacts error:', err);
       break;
     }
+  }
+}
+
+/**
+ * Pega as listas (lists/cohorts) que o contato está. Espelha a tag
+ * "Segmento: X" mas vem da fonte de verdade. Endpoint:
+ *   /api/3/contactLists?filters[contact]={contactId}&filters[status]=1
+ * Status=1 = "subscribed" (filtra unsubscribed).
+ *
+ * Retorna array de listIds. Pra resolver pros nomes, usa getListsById.
+ */
+export async function getContactListIds(contactId: string): Promise<string[]> {
+  if (!AC_API_URL || !AC_API_KEY) return [];
+  try {
+    const res = await fetch(
+      `${AC_API_URL}/api/3/contactLists?filters[contact]=${contactId}&filters[status]=1`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return [];
+    const data = await res.json() as { contactLists?: Array<{ list: string }> };
+    return (data.contactLists ?? []).map((cl) => cl.list);
+  } catch (err) {
+    console.error('[activecampaign] getContactListIds error:', err);
+    return [];
+  }
+}
+
+/** Cache de listIds → list names (uma chamada pra TODA a base, não por contato). */
+let listsCache: Map<string, string> | null = null;
+let listsCacheExpires = 0;
+const LISTS_CACHE_TTL_MS = 10 * 60 * 1000;
+
+export async function getAllListsById(): Promise<Map<string, string>> {
+  if (listsCache && listsCacheExpires > Date.now()) return listsCache;
+  if (!AC_API_URL || !AC_API_KEY) return new Map();
+  try {
+    const res = await fetch(`${AC_API_URL}/api/3/lists?limit=100`, { headers: acHeaders() });
+    if (!res.ok) return new Map();
+    const data = await res.json() as { lists?: Array<{ id: string; name: string }> };
+    const map = new Map<string, string>();
+    for (const l of data.lists ?? []) map.set(l.id, l.name);
+    listsCache = map;
+    listsCacheExpires = Date.now() + LISTS_CACHE_TTL_MS;
+    return map;
+  } catch (err) {
+    console.error('[activecampaign] getAllListsById error:', err);
+    return new Map();
+  }
+}
+
+/**
+ * Geo info do contato (city, state, country). Pode vir vazio se a conta AC
+ * não tem geo tracking ativo. Endpoint:
+ *   /api/3/contacts/{id}/geoIps  (retorna histórico de IPs geo-localizados)
+ * Pegamos o mais recente.
+ */
+export async function getContactGeo(contactId: string): Promise<{ city: string | null; state: string | null; country: string | null } | null> {
+  if (!AC_API_URL || !AC_API_KEY) return null;
+  try {
+    const res = await fetch(
+      `${AC_API_URL}/api/3/contacts/${contactId}/geoIps`,
+      { headers: acHeaders() },
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as { geoIps?: Array<{ ip4: string; tstamp: string; geoAddressId: string }>, geoAddresses?: Array<{ id: string; city: string; state: string; country2: string; tstamp: string }> };
+    // geoAddresses traz os endereços resolvidos. Pega o mais recente.
+    const addrs = data.geoAddresses ?? [];
+    if (addrs.length === 0) return null;
+    const latest = addrs.reduce((max, a) => (a.tstamp > max.tstamp ? a : max), addrs[0]);
+    return {
+      city: latest.city || null,
+      state: latest.state || null,
+      country: latest.country2 || null,
+    };
+  } catch (err) {
+    console.error('[activecampaign] getContactGeo error:', err);
+    return null;
   }
 }
 

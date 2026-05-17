@@ -101,6 +101,27 @@ export default async function LeadDetailPage({ params }: Props) {
                     </a>
                   ) : null}
                   <a href={`mailto:${person.email}`} className="crm-detail-link">✉ {person.email}</a>
+                  {/* Pill de bounce ao lado do email se AC marcou como bounce */}
+                  {(() => {
+                    const m = person.metadata as Record<string, unknown> | null;
+                    const ext = m?.ac_extra as { bounced_hard?: boolean; bounced_soft?: boolean; bounced_date?: string | null } | undefined;
+                    if (!ext) return null;
+                    if (ext.bounced_hard) {
+                      return (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(192, 57, 43, 0.12)', color: '#C0392B', borderRadius: 999, fontSize: 11, fontWeight: 700 }} title={ext.bounced_date ? `desde ${ext.bounced_date}` : undefined}>
+                          ⚠ Bounce hard
+                        </span>
+                      );
+                    }
+                    if (ext.bounced_soft) {
+                      return (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(245, 158, 11, 0.12)', color: '#92580E', borderRadius: 999, fontSize: 11, fontWeight: 700 }} title={ext.bounced_date ? `desde ${ext.bounced_date}` : undefined}>
+                          ⚠ Bounce soft
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
                   {person.phone ? (
                     <a href={`tel:${person.phone}`} className="crm-detail-link">📞 {person.phone}</a>
                   ) : null}
@@ -109,8 +130,11 @@ export default async function LeadDetailPage({ params }: Props) {
                       🏢 {person.company.name}
                     </Link>
                   ) : null}
-                  {/* Canal/página removidos daqui em mai/2026 ciclo 3 — agora
-                      vivem no card Jornada abaixo. */}
+                  {person.location ? (
+                    <span className="crm-detail-link" title="Localização (AC geo)">
+                      🌎 {person.location}
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="crm-detail-actions">
@@ -171,6 +195,17 @@ export default async function LeadDetailPage({ params }: Props) {
                       </span>
                     ) : null}
                   </div>
+                  {/* Last engagement (deriva de email opens/clicks no AC) */}
+                  {(() => {
+                    const m = person.metadata as Record<string, unknown> | null;
+                    const ext = m?.ac_extra as { last_engagement_at?: string | null } | undefined;
+                    if (!ext?.last_engagement_at) return null;
+                    return (
+                      <div style={{ marginTop: 8, fontSize: 11, color: '#9D85B3' }}>
+                        Última interação email: <strong style={{ color: '#5E2A67' }}>{timeAgo(new Date(ext.last_engagement_at))}</strong>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
@@ -350,6 +385,29 @@ export default async function LeadDetailPage({ params }: Props) {
               Tags disparam automations no AC (cadências, listas, emails).
             </div>
           </div>
+
+          {/* Listas AC — fonte de verdade dos segmentos (paralelo às tags) */}
+          {(() => {
+            const m = person.metadata as Record<string, unknown> | null;
+            const ext = m?.ac_extra as { ac_lists?: string[] } | undefined;
+            const lists = ext?.ac_lists ?? [];
+            if (lists.length === 0) return null;
+            return (
+              <div className="crm-side-card">
+                <div className="crm-side-title">📬 Listas AC (subscribed)</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {lists.map((list) => (
+                    <span key={list} style={{ display: 'inline-block', padding: '3px 8px', background: '#FAF7FF', color: '#45336B', borderRadius: 999, fontSize: 11, fontWeight: 500 }}>
+                      {list}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 10 }}>
+                  Listas onde o contato está como &ldquo;subscribed&rdquo;. Source of truth dos segmentos.
+                </div>
+              </div>
+            );
+          })()}
 
           {person.company ? (
             <div className="crm-side-card">
