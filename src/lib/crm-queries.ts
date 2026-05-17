@@ -7,8 +7,25 @@
 
 import { db, people, companies, activities, meetings, statuses } from '@/db';
 import type { Person, Company, Activity, Meeting, Status } from '@/db';
-import { and, eq, isNull, desc, sql, count, gte } from 'drizzle-orm';
+import { and, eq, isNull, desc, sql, count, gte, type SQL } from 'drizzle-orm';
 import { getStatuses } from './statuses';
+
+/**
+ * Filtros opcionais aplicáveis tanto em getPeopleByStatus quanto em
+ * getCompaniesByStatus. URL searchParams → server → query.
+ */
+export type CrmFilters = {
+  period?: 'all' | '7d' | '30d' | '90d';
+  statusId?: string | null;
+  canal?: string | null;
+  pagina?: string | null;
+};
+
+function periodCutoff(period?: CrmFilters['period']): Date | null {
+  if (!period || period === 'all') return null;
+  const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Pessoas                                                                    */
@@ -24,7 +41,32 @@ export type PeopleByStatus = {
   people: PersonWithDetails[];
 }[];
 
-export async function getPeopleByStatus(perColumn = 100): Promise<PeopleByStatus> {
+/**
+ * Tag AC que define o gate visual do kanban de pessoas. Só Líderes B2B
+ * aparecem no kanban — outros segmentos (Profissional Individual, Parceiro,
+ * Newsletter) ficam só na aba Formulários, evitando ruído no pipeline B2B.
+ *
+ * Implementado como filtro SQL pra performance: SELECT já vem reduzido,
+ * sem precisar filtrar em memória.
+ */
+const KANBAN_B2B_TAG = 'Segmento: Líderes B2B';
+
+export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {}): Promise<PeopleByStatus> {
+  const filterClauses: SQL[] = [
+    eq(people.archived, false),
+    isNull(people.mergedIntoId),
+    // Gate B2B no kanban — only Líderes B2B (mai/2026 ciclo 3)
+    sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+  ];
+
+  const cutoff = periodCutoff(filters.period);
+  if (cutoff) filterClauses.push(gte(people.createdAt, cutoff));
+  if (filters.statusId) filterClauses.push(eq(people.statusId, filters.statusId));
+  if (filters.canal) {
+    filterClauses.push(eq(people.sourceChannel, filters.canal as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown'));
+  }
+  if (filters.pagina) filterClauses.push(eq(people.sourcePage, filters.pagina));
+
   const [allStatuses, rows] = await Promise.all([
     getStatuses('person'),
     db
@@ -32,7 +74,7 @@ export async function getPeopleByStatus(perColumn = 100): Promise<PeopleByStatus
       .from(people)
       .leftJoin(companies, eq(people.companyId, companies.id))
       .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId)))
+      .where(and(...filterClauses))
       .orderBy(desc(people.lastTouchAt), desc(people.createdAt)),
   ]);
 
@@ -92,7 +134,12 @@ export type CompaniesByStatus = {
   companies: CompanyWithDetails[];
 }[];
 
-export async function getCompaniesByStatus(perColumn = 100): Promise<CompaniesByStatus> {
+export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters = {}): Promise<CompaniesByStatus> {
+  const filterClauses: SQL[] = [];
+  const cutoff = periodCutoff(filters.period);
+  if (cutoff) filterClauses.push(gte(companies.createdAt, cutoff));
+  if (filters.statusId) filterClauses.push(eq(companies.statusId, filters.statusId));
+
   const [allStatuses, rows] = await Promise.all([
     getStatuses('company'),
     db
@@ -104,6 +151,7 @@ export async function getCompaniesByStatus(perColumn = 100): Promise<CompaniesBy
       })
       .from(companies)
       .leftJoin(statuses, eq(companies.statusId, statuses.id))
+      .where(filterClauses.length > 0 ? and(...filterClauses) : undefined)
       .orderBy(desc(companies.updatedAt)),
   ]);
 

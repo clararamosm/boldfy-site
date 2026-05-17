@@ -102,21 +102,24 @@ export function routeSegments(params: {
 
 /**
  * Valor do campo customizado `tipo_lead` derivado da intenção declarada.
- * Substitui as tags `ICP:`/`Persona:` (mais ruído que sinal — cada lead
- * ganhava 1 tag de classificação que ninguém usava em filtro).
  *
- * Uso principal: gate do If/Else da cadência do Report — agora compara
- * `Campo tipo_lead = "ICP B2B"` em vez de `Tag ICP: Empresa B2B existe`.
+ * Mai/2026 ciclo 3 — REFORMULADO:
+ *   Antes retornava "ICP B2B", "Agência", "Criador" — labels diferentes dos
+ *   segmentos correspondentes ("Líderes B2B", "Parceiros estratégicos",
+ *   "Profissionais Individuais"). Causava confusão (duas classificações
+ *   paralelas pra mesma coisa).
  *
- * Migration nota: o If/Else da automação no AC precisa ser atualizado
- * MANUALMENTE pra usar esse campo antes deste código entrar em produção.
- * Caso contrário, leads novos não passarão pelo gate (e ninguém recebe
- * E2-E5).
+ *   Agora retorna o MESMO label do segmento (singular). Elimina conceito
+ *   duplicado "ICP B2B" — se a pessoa é Líder B2B, ponto.
+ *
+ * Migration nota: o If/Else da automação no AC continua comparando o campo
+ * tipo_lead. Atualizar o gate no AC pra comparar com 'Líder B2B' (novo)
+ * em vez de 'ICP B2B' (antigo). Ver §7.16 do spec.
  */
 export function tipoLeadFromIntencao(intencaoUso?: IntencaoUso): string | undefined {
-  if (intencaoUso === 'marca-empresa') return 'ICP B2B';
-  if (intencaoUso === 'marca-clientes') return 'Agência';
-  if (intencaoUso === 'marca-pessoal') return 'Criador';
+  if (intencaoUso === 'marca-empresa') return 'Líder B2B';
+  if (intencaoUso === 'marca-clientes') return 'Parceiro';
+  if (intencaoUso === 'marca-pessoal') return 'Profissional Individual';
   return undefined;
 }
 

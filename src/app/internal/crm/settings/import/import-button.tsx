@@ -5,12 +5,25 @@ import { useRouter } from 'next/navigation';
 import { importFromAC } from './actions';
 
 type Result =
-  | { ok: true; imported: number; updated: number; skippedNotB2B: number; errors: number; activitiesCreated: number }
+  | {
+      ok: true;
+      imported: number;
+      updated: number;
+      errors: number;
+      activitiesCreated: number;
+      bySegment: {
+        liderB2B: number;
+        parceiro: number;
+        profissionalIndividual: number;
+        newsletterOnly: number;
+        semSegmento: number;
+      };
+    }
   | { ok: false; error: string }
   | null;
 
-// Estimativa: ~6s por lead (4 calls de API + sleep). Pra 150 leads = ~15 min.
-const ESTIMATED_SECONDS = 900;
+// Estimativa: ~10s por lead (4 calls de API + sleep). Pra 160 leads = ~27 min.
+const ESTIMATED_SECONDS = 1600;
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -55,7 +68,7 @@ export function ImportButton() {
   }, [pending]);
 
   function handleImport() {
-    if (!confirm('Importar todos os contatos do AC pro nosso CRM? Pode demorar ~15 min pra 150 leads. NÃO feche a aba durante.')) return;
+    if (!confirm('Importar TODOS os contatos do AC pro nosso CRM (sem filtro de segmento)? Pode demorar ~25 min pra 160 leads. NÃO feche a aba durante.')) return;
     setResult(null);
     startTransition(async () => {
       const r = await importFromAC();
@@ -102,9 +115,10 @@ export function ImportButton() {
             />
           </div>
           <div style={{ fontSize: 11, color: '#9D85B3', marginTop: 8, lineHeight: 1.5 }}>
-            Pra cada lead B2B: puxa custom fields, tags, email events (opens/clicks),
-            page views (VGO) e cria activities datadas. Score se reconstrói automático
-            a partir das activities importadas.
+            Pra cada lead: puxa custom fields, tags, email events (opens/clicks),
+            page views (VGO) e cria activities datadas (1 por form preenchido).
+            Score se reconstrói automático. Kanban filtra só Líderes B2B; aba
+            Formulários mostra todos os segmentos.
           </div>
 
           <style>{`
@@ -128,12 +142,21 @@ export function ImportButton() {
         <div style={{ marginTop: 16, padding: 14, background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: 10, color: '#066B4D', fontSize: 13 }}>
           <strong>✓ Importação enriquecida concluída.</strong>
           <ul style={{ marginTop: 6, paddingLeft: 20 }}>
-            <li><strong>{result.imported}</strong> líderes B2B novos no CRM</li>
+            <li><strong>{result.imported}</strong> contatos novos no CRM</li>
             <li><strong>{result.updated}</strong> atualizados (já existiam, refresh com dados novos)</li>
-            <li><strong>{result.skippedNotB2B}</strong> não-B2B pulados (continuam só no AC)</li>
             <li><strong>{result.activitiesCreated}</strong> activities criadas (forms + emails + page views = timeline reconstruída)</li>
             {result.errors > 0 ? <li><strong>{result.errors}</strong> erros (ver logs Vercel)</li> : null}
           </ul>
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(6, 107, 77, 0.15)' }}>
+            <strong style={{ fontSize: 12 }}>Por segmento:</strong>
+            <ul style={{ marginTop: 4, paddingLeft: 20, fontSize: 12 }}>
+              <li>Líder B2B: <strong>{result.bySegment.liderB2B}</strong> (vão pro kanban)</li>
+              <li>Parceiro: <strong>{result.bySegment.parceiro}</strong></li>
+              <li>Profissional Individual: <strong>{result.bySegment.profissionalIndividual}</strong></li>
+              <li>Só newsletter: <strong>{result.bySegment.newsletterOnly}</strong></li>
+              <li>Sem segmento: <strong>{result.bySegment.semSegmento}</strong></li>
+            </ul>
+          </div>
         </div>
       ) : null}
 

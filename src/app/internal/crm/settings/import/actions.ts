@@ -33,11 +33,27 @@ import { db, people } from '@/db';
 import { eq } from 'drizzle-orm';
 
 type Result =
-  | { ok: true; imported: number; updated: number; skippedNotB2B: number; errors: number; activitiesCreated: number }
+  | {
+      ok: true;
+      imported: number;
+      updated: number;
+      errors: number;
+      activitiesCreated: number;
+      /**
+       * Mai/2026 ciclo 3 — agora importa TODOS os contatos (gate B2B removido).
+       * Pra debug, conta por segmento principal detectado nas tags.
+       */
+      bySegment: {
+        liderB2B: number;
+        parceiro: number;
+        profissionalIndividual: number;
+        newsletterOnly: number;
+        semSegmento: number;
+      };
+    }
   | { ok: false; error: string };
 
 const SLEEP_MS = 200;
-const B2B_TAG = 'Segmento: Líderes B2B';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -53,25 +69,46 @@ function pageViewActivityType(url: string): { type: string; weight: number } {
 }
 
 /**
- * Determina source method a partir das tags AC.
+ * Determina source method a partir das tags AC. Lead pode ter MÚLTIPLOS forms;
+ * sourceMethod é único então pega o mais "avançado" no funil
+ * (proposta > demo > beta > report). Activities individuais são criadas pra
+ * cada form preenchido — ver activityTypesForFormTags.
  */
 function inferSourceMethod(tags: string[]): 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta' | 'manual' {
+  if (tags.some((t) => t.includes('Form: Simulador') || t.includes('Form: Proposta'))) return 'form_proposta';
   if (tags.some((t) => t.includes('Form: Demo'))) return 'form_demo';
   if (tags.some((t) => t.includes('Form: Beta'))) return 'form_beta';
   if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return 'form_report';
-  if (tags.some((t) => t.includes('Form: Simulador') || t.includes('Form: Proposta'))) return 'form_proposta';
   return 'manual';
 }
 
 /**
- * Pesos por tag de Form (pra retroatividade do score quando importar).
+ * TODOS os forms preenchidos pelo lead, derivados das tags AC. Cria
+ * activities sintéticas — uma por form — pra timeline mostrar histórico
+ * completo de cada form que tocou aquele lead.
+ *
+ * Sem duplicar: se o AC tem tag "Form: Demo", cria 1 activity form_submit_demo
+ * (não 1 por menção). Pesos seguem ACTIVITY_WEIGHTS em lib/crm.ts.
  */
-function activityTypeForFormTag(tags: string[]): { type: string; weight: number } | null {
-  if (tags.some((t) => t.includes('Form: Demo'))) return { type: 'form_submit_demo', weight: 50 };
-  if (tags.some((t) => t.includes('Form: Beta'))) return { type: 'form_submit_beta', weight: 25 };
-  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return { type: 'form_submit_report', weight: 10 };
-  if (tags.some((t) => t.includes('Simulador') || t.includes('Proposta'))) return { type: 'form_submit_proposta', weight: 50 };
-  return null;
+function activityTypesForFormTags(tags: string[]): Array<{ type: string; weight: number }> {
+  const acts: Array<{ type: string; weight: number }> = [];
+  if (tags.some((t) => t.includes('Form: Demo'))) acts.push({ type: 'form_submit_demo', weight: 50 });
+  if (tags.some((t) => t.includes('Form: Beta'))) acts.push({ type: 'form_submit_beta', weight: 25 });
+  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) acts.push({ type: 'form_submit_report', weight: 10 });
+  if (tags.some((t) => t.includes('Simulador') || t.includes('Proposta'))) acts.push({ type: 'form_submit_proposta', weight: 50 });
+  return acts;
+}
+
+/**
+ * Detecta segmento principal pra contador de debug. Hierarquia:
+ * Líder B2B > Parceiro > Profissional Individual > Newsletter only > Nenhum.
+ */
+function detectSegment(tags: string[]): 'liderB2B' | 'parceiro' | 'profissionalIndividual' | 'newsletterOnly' | 'semSegmento' {
+  if (tags.includes('Segmento: Líderes B2B')) return 'liderB2B';
+  if (tags.includes('Segmento: Parceiros estratégicos')) return 'parceiro';
+  if (tags.includes('Segmento: Profissionais Individuais')) return 'profissionalIndividual';
+  if (tags.includes('Segmento: Newsletter Boldfy')) return 'newsletterOnly';
+  return 'semSegmento';
 }
 
 export async function importFromAC(): Promise<Result> {
@@ -81,22 +118,26 @@ export async function importFromAC(): Promise<Result> {
 
   let imported = 0;
   let updated = 0;
-  let skippedNotB2B = 0;
   let errors = 0;
   let activitiesCreated = 0;
+  const bySegment = {
+    liderB2B: 0,
+    parceiro: 0,
+    profissionalIndividual: 0,
+    newsletterOnly: 0,
+    semSegmento: 0,
+  };
 
   try {
     for await (const batch of listAllContacts()) {
       for (const c of batch) {
         try {
-          // Pega tags primeiro — pra aplicar gate B2B antes de chamadas pesadas
+          // Gate B2B removido em mai/2026 ciclo 3 — todos os 160 leads entram
+          // no CRM. Kanban filtra visualmente por acTags em getPeopleByStatus.
+          // Aba Forms mostra todos.
           const tags = await getContactTags(c.id);
-          if (!tags.includes(B2B_TAG)) {
-            skippedNotB2B++;
-            continue;
-          }
+          bySegment[detectSegment(tags)]++;
 
-          // Agora puxa o resto (mais chamadas, mas só pros B2B)
           const [fields, emailEvents, pageViews, notes] = await Promise.all([
             getContactFieldValues(c.id),
             getContactEmailEvents(c.id),
@@ -212,9 +253,12 @@ export async function importFromAC(): Promise<Result> {
             })
             .where(eq(people.id, p.data.id));
 
-          // 1) Activity sintética de "form submit" baseada na tag (data desconhecida → usa first_touch_at)
-          const formActivity = activityTypeForFormTag(tags);
-          if (formActivity) {
+          // 1) Activities sintéticas — UMA por form preenchido (lead pode ter
+          // preenchido Report + Beta + Demo, todos vão pra timeline).
+          // Antes de mai/2026 ciclo 3 criava só 1 — bug que escondia múltiplas
+          // submissões do mesmo lead na aba Formulários.
+          const formActivities = activityTypesForFormTags(tags);
+          for (const formActivity of formActivities) {
             await logActivity({
               personId: p.data.id,
               companyId,
@@ -296,7 +340,7 @@ export async function importFromAC(): Promise<Result> {
       await sleep(SLEEP_MS);
     }
 
-    return { ok: true, imported, updated, skippedNotB2B, errors, activitiesCreated };
+    return { ok: true, imported, updated, errors, activitiesCreated, bySegment };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
