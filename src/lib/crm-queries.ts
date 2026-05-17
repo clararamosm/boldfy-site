@@ -374,13 +374,32 @@ export async function getUpcomingMeetingsForCompany(companyId: string): Promise<
 /*  CRM Counts (usado em topbar/visão geral)                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Contagens pra exibir na sub-nav do CRM.
+ *
+ * totalPeople reflete só os LÍDERES B2B (mesmo gate visual do kanban —
+ * filtro por acTags). Não-B2B (Profissional Individual, Parceiro,
+ * Newsletter) ficam de fora do contador pra não causar confusão entre
+ * número exibido vs cards visíveis. Esses outros segmentos aparecem só
+ * na aba Formulários (que tem contador próprio).
+ *
+ * totalCompanies não filtra — todas as empresas do DB contam (alinhado
+ * com getCompaniesByStatus que também não filtra).
+ *
+ * totalActivities é global pro feed (não filtra).
+ */
 export async function getCrmCounts(): Promise<{
   totalPeople: number;
   totalCompanies: number;
   totalActivities: number;
 }> {
   const [p, c, a] = await Promise.all([
-    db.select({ n: count() }).from(people).where(and(eq(people.archived, false), isNull(people.mergedIntoId))),
+    db.select({ n: count() }).from(people).where(and(
+      eq(people.archived, false),
+      isNull(people.mergedIntoId),
+      // Gate B2B — mesmo de getPeopleByStatus
+      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+    )),
     db.select({ n: count() }).from(companies),
     db.select({ n: count() }).from(activities),
   ]);
