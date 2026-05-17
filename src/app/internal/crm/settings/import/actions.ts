@@ -28,7 +28,7 @@ import {
   getContactNotes,
   parseFormNote,
 } from '@/lib/activecampaign';
-import { upsertPerson, upsertCompany, logActivity, weightForActivity } from '@/lib/crm';
+import { upsertPerson, upsertCompany, logActivity, weightForActivity, classifyPersonBySourceMethod } from '@/lib/crm';
 import { db, people } from '@/db';
 import { eq } from 'drizzle-orm';
 
@@ -151,6 +151,16 @@ export async function importFromAC(): Promise<Result> {
             .limit(1);
           const wasExisting = !!existing[0];
 
+          // cdate do AC = quando o contato foi criado lá originalmente.
+          // Pra leads importados, isso é o firstTouchAt real — quando a
+          // pessoa baixou o primeiro material, abriu o primeiro email, etc.
+          // Sem isso, todo lead importado fica com firstTouchAt = data do
+          // re-import, o que distorce análises temporais.
+          const cdateParsed = c.cdate ? new Date(c.cdate) : undefined;
+          const firstTouchAt = cdateParsed && !Number.isNaN(cdateParsed.getTime())
+            ? cdateParsed
+            : undefined;
+
           const p = await upsertPerson({
             name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email,
             email: c.email,
@@ -161,6 +171,7 @@ export async function importFromAC(): Promise<Result> {
             sourceMethod,
             firstTouchCampaign: fields['utm_campaign_first'],
             firstTouchSource: fields['utm_source_first'],
+            firstTouchAt,
           }, companyId);
 
           if (!p.ok) {
@@ -266,6 +277,12 @@ export async function importFromAC(): Promise<Result> {
               page_views_imported: recentPageViews.length,
             },
           });
+
+          // 5) Classifica por sourceMethod (regra mai/2026):
+          // forms beta/demo/proposta vão direto pra Quente mesmo sem o score
+          // ter atingido o threshold; report fica em Ativo (acumula score).
+          // Não-regressão respeitada — não baixa se já está em status mais avançado.
+          await classifyPersonBySourceMethod(p.data.id, sourceMethod);
           activitiesCreated++;
 
           if (wasExisting) updated++;

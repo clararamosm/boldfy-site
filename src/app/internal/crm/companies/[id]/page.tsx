@@ -40,6 +40,7 @@ import {
 } from '@/lib/crm-format';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { StatusChanger } from '@/components/crm/status-changer';
+import { CompanyEditForm } from '@/components/crm/company-edit-form';
 
 export const metadata: Metadata = {
   title: 'Empresa',
@@ -163,8 +164,23 @@ export default async function CompanyDetailPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="crm-detail-actions">
+            {/* Ações: marginTop dedicado pra não colar no status pill / KPIs acima */}
+            <div className="crm-detail-actions" style={{ marginTop: 20, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               <a href="#log-form" className="crm-btn crm-btn-primary">+ Log interação</a>
+              <CompanyEditForm
+                companyId={company.id}
+                initial={{
+                  name: company.name,
+                  industry: company.industry,
+                  size: company.size,
+                  website: company.website,
+                  linkedinUrl: company.linkedinUrl,
+                  description: company.description,
+                  internalNotes: company.internalNotes,
+                  nextAction: company.nextAction,
+                  estimatedValue: company.estimatedValue,
+                }}
+              />
             </div>
           </div>
 

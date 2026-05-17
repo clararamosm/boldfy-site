@@ -15,6 +15,7 @@ import { db, people, companies, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
 import { invalidateStatusCache } from '@/lib/statuses';
 import { syncPersonStatusToAC, syncCompanyStatusToAC } from '@/lib/ac-sync';
+import { syncCompanyFromPeople, propagateTerminalToCompanyPeople } from '@/lib/crm-sync';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -70,7 +71,15 @@ export async function movePerson(personId: string, newStatusId: string): Promise
       console.error('[movePerson] AC sync error:', err),
     );
 
+    // Sync da empresa linkada (se houver) — pessoa mudou, empresa pode promover
+    const [personRow] = await db.select({ companyId: people.companyId }).from(people).where(eq(people.id, personId)).limit(1);
+    if (personRow?.companyId) {
+      await syncCompanyFromPeople(personRow.companyId);
+      revalidatePath(`/internal/crm/companies/${personRow.companyId}`);
+    }
+
     revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/empresas');
     revalidatePath(`/internal/crm/people/${personId}`);
     return { ok: true };
   } catch (err) {
@@ -120,6 +129,13 @@ export async function moveCompany(companyId: string, newStatusId: string): Promi
     syncCompanyStatusToAC(companyId, statusRow).catch((err) =>
       console.error('[moveCompany] AC sync error:', err),
     );
+
+    // Empresa terminal → propaga pra pessoas linkadas (Fechado/Perdido).
+    // Empresa não-terminal NÃO toca pessoas (são agregação, mantêm autonomia).
+    if (statusRow.isTerminal) {
+      await propagateTerminalToCompanyPeople(companyId, newStatusId);
+      revalidatePath('/internal/crm');
+    }
 
     revalidatePath('/internal/crm/empresas');
     revalidatePath(`/internal/crm/companies/${companyId}`);
@@ -277,6 +293,116 @@ export async function createPersonManual(_prev: unknown, formData: FormData): Pr
     return { ok: true, personId: p.data.id };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Edit Company — atualiza campos básicos via page de detalhe                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Separa uma URL em website vs LinkedIn corporativo automaticamente.
+ *
+ * Hoje é comum o usuário colar o link do LinkedIn da empresa no campo
+ * "website" (ou vice-versa) — esse helper detecta `linkedin.com/company/`
+ * e roteia pro campo certo. Aceita URLs sem protocolo (auto-prefix https://).
+ */
+function classifyUrl(input: string | undefined | null): { website?: string; linkedinUrl?: string } {
+  if (!input) return {};
+  const trimmed = input.trim();
+  if (trimmed.length === 0) return {};
+  const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const u = new URL(withProto);
+    const host = u.hostname.toLowerCase();
+    if (host.includes('linkedin.com')) {
+      return { linkedinUrl: withProto };
+    }
+    return { website: withProto };
+  } catch {
+    return {}; // URL malformada — ignora silenciosamente
+  }
+}
+
+const UpdateCompanySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1, 'Nome obrigatório').max(200).optional(),
+  industry: z.string().trim().max(120).optional().or(z.literal('')),
+  size: z.string().trim().max(60).optional().or(z.literal('')),
+  // URL "principal": pode ser website ou LinkedIn — classifyUrl roteia
+  primaryUrl: z.string().trim().max(500).optional().or(z.literal('')),
+  // URL explícita LinkedIn (quando user quer setar os 2 separadamente)
+  linkedinExplicit: z.string().trim().max(500).optional().or(z.literal('')),
+  description: z.string().trim().max(5000).optional().or(z.literal('')),
+  internalNotes: z.string().trim().max(5000).optional().or(z.literal('')),
+  nextAction: z.string().trim().max(500).optional().or(z.literal('')),
+  estimatedValue: z.string().trim().max(20).optional().or(z.literal('')),
+});
+
+export type UpdateCompanyState = ActionResult | null;
+
+export async function updateCompany(_prev: UpdateCompanyState, formData: FormData): Promise<UpdateCompanyState> {
+  const parsed = UpdateCompanySchema.safeParse({
+    id: formData.get('id'),
+    name: formData.get('name') || undefined,
+    industry: formData.get('industry') ?? '',
+    size: formData.get('size') ?? '',
+    primaryUrl: formData.get('primaryUrl') ?? '',
+    linkedinExplicit: formData.get('linkedinExplicit') ?? '',
+    description: formData.get('description') ?? '',
+    internalNotes: formData.get('internalNotes') ?? '',
+    nextAction: formData.get('nextAction') ?? '',
+    estimatedValue: formData.get('estimatedValue') ?? '',
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Dados inválidos' };
+  }
+
+  try {
+    // Resolve URL primária: classifica em website OU linkedinUrl.
+    const classified = classifyUrl(parsed.data.primaryUrl);
+    // Se user também forneceu linkedinExplicit, sobrescreve (intenção explícita ganha).
+    let linkedinUrl = classified.linkedinUrl ?? null;
+    let website = classified.website ?? null;
+    if (parsed.data.linkedinExplicit && parsed.data.linkedinExplicit.length > 0) {
+      const overrideClassified = classifyUrl(parsed.data.linkedinExplicit);
+      linkedinUrl = overrideClassified.linkedinUrl ?? overrideClassified.website ?? linkedinUrl;
+    }
+
+    // estimatedValue: string vazia → null, senão parse decimal
+    let estimatedValueParsed: string | null = null;
+    if (parsed.data.estimatedValue && parsed.data.estimatedValue.length > 0) {
+      const num = Number(parsed.data.estimatedValue.replace(/\./g, '').replace(',', '.'));
+      if (!Number.isNaN(num) && num >= 0) {
+        estimatedValueParsed = num.toFixed(2);
+      }
+    }
+
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+    if (parsed.data.industry !== undefined) updates.industry = parsed.data.industry || null;
+    if (parsed.data.size !== undefined) updates.size = parsed.data.size || null;
+    if (website !== null) updates.website = website;
+    else if (parsed.data.primaryUrl === '' && parsed.data.linkedinExplicit === '') {
+      // Limpar quando os dois forem explicitamente vazios
+      updates.website = null;
+      updates.linkedinUrl = null;
+    }
+    if (linkedinUrl !== null) updates.linkedinUrl = linkedinUrl;
+    if (parsed.data.description !== undefined) updates.description = parsed.data.description || null;
+    if (parsed.data.internalNotes !== undefined) updates.internalNotes = parsed.data.internalNotes || null;
+    if (parsed.data.nextAction !== undefined) updates.nextAction = parsed.data.nextAction || null;
+    updates.estimatedValue = estimatedValueParsed;
+
+    await db.update(companies).set(updates).where(eq(companies.id, parsed.data.id));
+
+    revalidatePath(`/internal/crm/companies/${parsed.data.id}`);
+    revalidatePath('/internal/crm/empresas');
+    return { ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[updateCompany] failed:', msg);
+    return { ok: false, error: msg };
   }
 }
 

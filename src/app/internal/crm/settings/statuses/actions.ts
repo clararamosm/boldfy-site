@@ -184,32 +184,104 @@ export async function deleteStatus(id: string): Promise<ActionResult> {
  * Adiciona pack de statuses B2B sugeridos pra Pessoas. Idempotent — só
  * cria os que não existem ainda (compara por label LOWER).
  *
- * Pack completo (instalações antigas só precisam clicar pra completar):
+ * Pack atual (mai/2026 — alinhado com lib/statuses.ts):
+ *   - LinkedIn Lead (azul)             — captado via extensão LinkedIn (ou legado imported_folk).
+ *                                        SEM scoreThresholdMin — entra só por sourceMethod
  *   - Reunião marcada (roxo)           — agendou demo via Cal.com (auto-promove)
  *   - Fechado (verde, terminal)        — virou cliente
  *   - Perdido (cinza, terminal)        — não rolou
- *   - LinkedIn Lead (azul, score 5)    — captado via extensão LinkedIn (fase 2)
  */
 export async function addSuggestedB2BPack(): Promise<ActionResult> {
   const pack: Array<{ label: string; color: string; scoreThresholdMin: number | null; isTerminal: boolean }> = [
+    { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: null, isTerminal: false },
     { label: 'Reunião marcada', color: 'purple', scoreThresholdMin: null, isTerminal: false },
     { label: 'Fechado', color: 'green', scoreThresholdMin: null, isTerminal: true },
     { label: 'Perdido', color: 'gray', scoreThresholdMin: null, isTerminal: true },
-    { label: 'LinkedIn Lead', color: 'blue', scoreThresholdMin: 5, isTerminal: false },
+  ];
+
+  try {
+    const existing = await db
+      .select({ id: statuses.id, label: statuses.label, scoreThresholdMin: statuses.scoreThresholdMin })
+      .from(statuses)
+      .where(eq(statuses.kind, 'person'));
+
+    const existingMap = new Map(existing.map((s) => [s.label.toLowerCase(), s]));
+
+    const [maxRow] = await db
+      .select({ max: sql<number>`COALESCE(MAX(${statuses.sortOrder}), -1)::int` })
+      .from(statuses)
+      .where(eq(statuses.kind, 'person'));
+    let nextOrder = (maxRow?.max ?? -1) + 1;
+
+    const toAdd = pack.filter((p) => !existingMap.has(p.label.toLowerCase()));
+
+    // Fix curto: se LinkedIn Lead já existe COM scoreThresholdMin antigo (5),
+    // zera o threshold pra alinhar com regra nova (entra só por sourceMethod).
+    const linkedinLeadExisting = existingMap.get('linkedin lead');
+    if (linkedinLeadExisting && linkedinLeadExisting.scoreThresholdMin !== null) {
+      await db
+        .update(statuses)
+        .set({ scoreThresholdMin: null, updatedAt: new Date() })
+        .where(eq(statuses.id, linkedinLeadExisting.id));
+    }
+
+    if (toAdd.length > 0) {
+      await db.insert(statuses).values(
+        toAdd.map((p) => ({
+          kind: 'person' as const,
+          label: p.label,
+          color: p.color,
+          sortOrder: nextOrder++,
+          scoreThresholdMin: p.scoreThresholdMin,
+          isDefault: false,
+          isTerminal: p.isTerminal,
+        })),
+      );
+    }
+
+    invalidateStatusCache();
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/settings/statuses');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Pack de statuses sugeridos pra Empresas. Espelha DEFAULT_COMPANY_STATUSES
+ * de lib/statuses.ts. Idempotent.
+ *
+ * Colunas (mai/2026):
+ *   - No status (cinza, default)           — empresa criada como placeholder (pessoa fez form)
+ *   - Quero prospectar (azul)              — Clara decidiu prospectar (via extensão LinkedIn ou manual)
+ *   - Reunião marcada (roxo)               — pessoa da empresa agendou demo
+ *   - Em andamento (âmbar)                 — fase intermediária pós-reunião
+ *   - Fechado (verde, terminal)            — virou cliente
+ *   - Perdido (neutro, terminal)           — não rolou
+ */
+export async function addSuggestedCompanyPack(): Promise<ActionResult> {
+  const pack: Array<{ label: string; color: string; isTerminal: boolean; isDefault: boolean }> = [
+    { label: 'No status', color: 'gray', isTerminal: false, isDefault: true },
+    { label: 'Quero prospectar', color: 'blue', isTerminal: false, isDefault: false },
+    { label: 'Reunião marcada', color: 'purple', isTerminal: false, isDefault: false },
+    { label: 'Em andamento', color: 'amber', isTerminal: false, isDefault: false },
+    { label: 'Fechado', color: 'green', isTerminal: true, isDefault: false },
+    { label: 'Perdido', color: 'neutral', isTerminal: true, isDefault: false },
   ];
 
   try {
     const existing = await db
       .select({ label: statuses.label })
       .from(statuses)
-      .where(eq(statuses.kind, 'person'));
+      .where(eq(statuses.kind, 'company'));
 
     const existingLower = new Set(existing.map((s) => s.label.toLowerCase()));
 
     const [maxRow] = await db
       .select({ max: sql<number>`COALESCE(MAX(${statuses.sortOrder}), -1)::int` })
       .from(statuses)
-      .where(eq(statuses.kind, 'person'));
+      .where(eq(statuses.kind, 'company'));
     let nextOrder = (maxRow?.max ?? -1) + 1;
 
     const toAdd = pack.filter((p) => !existingLower.has(p.label.toLowerCase()));
@@ -220,18 +292,19 @@ export async function addSuggestedB2BPack(): Promise<ActionResult> {
 
     await db.insert(statuses).values(
       toAdd.map((p) => ({
-        kind: 'person' as const,
+        kind: 'company' as const,
         label: p.label,
         color: p.color,
         sortOrder: nextOrder++,
-        scoreThresholdMin: p.scoreThresholdMin,
-        isDefault: false,
+        scoreThresholdMin: null,
+        // Só seta isDefault se NÃO houver default existente (evita conflito)
+        isDefault: p.isDefault && !existing.some((e) => e.label.toLowerCase() === 'no status'),
         isTerminal: p.isTerminal,
       })),
     );
 
     invalidateStatusCache();
-    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/empresas');
     revalidatePath('/internal/crm/settings/statuses');
     return { ok: true };
   } catch (err) {

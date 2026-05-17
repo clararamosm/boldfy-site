@@ -24,15 +24,22 @@ const DEFAULT_PERSON_STATUSES: Array<{
   isDefault: boolean;
   isTerminal: boolean;
 }> = [
-  // Etapas iniciais — promoção automática por score
+  // LinkedIn Lead vem por sourceMethod, não por score — pessoas capturadas pela
+  // extensão LinkedIn (ou legado imported_folk com sourceMethod equivalente).
+  // Fica DEPOIS de Ativo porque tem mais "intenção" mas score zero por
+  // enquanto. NÃO tem scoreThresholdMin pra evitar que qualquer lead com
+  // score >= X caia aqui — só entra explicitamente via classifyByMethod.
   { label: 'Ativo', color: 'neutral', sortOrder: 0, scoreThresholdMin: 0, isDefault: true, isTerminal: false },
-  { label: 'Lead', color: 'blue', sortOrder: 1, scoreThresholdMin: 21, isDefault: false, isTerminal: false },
-  { label: 'Quente', color: 'amber', sortOrder: 2, scoreThresholdMin: 51, isDefault: false, isTerminal: false },
-  // Etapas de vendas — preenchidas via Cal.com webhook ou movimento manual
-  { label: 'Reunião marcada', color: 'purple', sortOrder: 3, scoreThresholdMin: null, isDefault: false, isTerminal: false },
+  { label: 'LinkedIn Lead', color: 'blue', sortOrder: 1, scoreThresholdMin: null, isDefault: false, isTerminal: false },
+  // Lead e Quente continuam por score, mas a entrada inicial agora também é
+  // definida por sourceMethod (forms beta/demo/proposta entram direto em Quente).
+  { label: 'Lead', color: 'pink', sortOrder: 2, scoreThresholdMin: 21, isDefault: false, isTerminal: false },
+  { label: 'Quente', color: 'amber', sortOrder: 3, scoreThresholdMin: 50, isDefault: false, isTerminal: false },
+  // Etapa de vendas — preenchida via Cal.com webhook ou movimento manual
+  { label: 'Reunião marcada', color: 'purple', sortOrder: 4, scoreThresholdMin: null, isDefault: false, isTerminal: false },
   // Etapas terminais — só movimento manual, sem auto-promotion
-  { label: 'Fechado', color: 'green', sortOrder: 4, scoreThresholdMin: null, isDefault: false, isTerminal: true },
-  { label: 'Perdido', color: 'gray', sortOrder: 5, scoreThresholdMin: null, isDefault: false, isTerminal: true },
+  { label: 'Fechado', color: 'green', sortOrder: 5, scoreThresholdMin: null, isDefault: false, isTerminal: true },
+  { label: 'Perdido', color: 'gray', sortOrder: 6, scoreThresholdMin: null, isDefault: false, isTerminal: true },
 ];
 
 const DEFAULT_COMPANY_STATUSES: Array<{
@@ -163,4 +170,66 @@ export async function shouldAutoPromote(
   if (desired.isTerminal) return false;
   if (!current) return true; // pessoa sem status → promove pro desired
   return desired.sortOrder > current.sortOrder;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Lookups por label e por sourceMethod                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Busca status por label (case-insensitive). Usado pelas regras de
+ * classificação que querem mirar uma coluna específica por nome.
+ */
+export async function getStatusByLabel(
+  kind: 'person' | 'company',
+  label: string,
+): Promise<Status | null> {
+  const all = await getStatuses(kind);
+  const lower = label.toLowerCase();
+  return all.find((s) => s.label.toLowerCase() === lower) ?? null;
+}
+
+/**
+ * Target de coluna pra cada sourceMethod de pessoa, definido em palavras
+ * (label). Resolvido em tempo de execução via getStatusByLabel — então
+ * funciona mesmo se a Clara renomear/reordenar via UI, desde que o label
+ * exato exista. Se não existir, cai pra default (Ativo) — comportamento
+ * defensivo.
+ *
+ * Regra do produto (mai/2026):
+ *   - form_report             → Ativo (lead frio que acumula score)
+ *   - form_beta               → Quente (sinal forte de intenção)
+ *   - form_demo               → Quente
+ *   - form_proposta           → Quente
+ *   - extension_linkedin      → LinkedIn Lead (captura intencional via extensão)
+ *   - imported_folk (legado)  → LinkedIn Lead (equivalente histórico)
+ *   - manual                  → Ativo
+ *
+ * NÃO-REGRESSÃO: chamadores devem comparar sortOrder com status atual antes
+ * de aplicar (via shouldAutoPromote). Se já está em Reunião marcada, form
+ * Beta NÃO regride pra Quente.
+ */
+export type SourceMethodForClassify =
+  | 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta'
+  | 'extension_linkedin' | 'imported_folk' | 'manual';
+
+const METHOD_TO_LABEL: Record<SourceMethodForClassify, string> = {
+  form_report: 'Ativo',
+  form_beta: 'Quente',
+  form_demo: 'Quente',
+  form_proposta: 'Quente',
+  extension_linkedin: 'LinkedIn Lead',
+  imported_folk: 'LinkedIn Lead',
+  manual: 'Ativo',
+};
+
+/**
+ * Resolve a coluna alvo de uma pessoa baseado em sourceMethod. Retorna o
+ * Status row se a coluna existir, ou null como fallback (chamador decide
+ * o que fazer — geralmente manter default).
+ */
+export async function classifyByMethod(method: SourceMethodForClassify): Promise<Status | null> {
+  const label = METHOD_TO_LABEL[method];
+  if (!label) return null;
+  return getStatusByLabel('person', label);
 }

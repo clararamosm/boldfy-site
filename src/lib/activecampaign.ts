@@ -325,6 +325,12 @@ export async function* listAllContacts(): AsyncGenerator<Array<{
   firstName: string;
   lastName: string;
   phone: string;
+  /**
+   * Created date no AC (ISO 8601). Fonte de verdade pra firstTouchAt do CRM
+   * quando importando — vira a data real do primeiro contato em vez do
+   * timestamp do import.
+   */
+  cdate: string;
 }>> {
   if (!AC_API_URL || !AC_API_KEY) return;
   let offset = 0;
@@ -336,7 +342,7 @@ export async function* listAllContacts(): AsyncGenerator<Array<{
         { headers: acHeaders() },
       );
       if (!res.ok) break;
-      const data = await res.json() as { contacts?: Array<{ id: string; email: string; firstName: string; lastName: string; phone: string }> };
+      const data = await res.json() as { contacts?: Array<{ id: string; email: string; firstName: string; lastName: string; phone: string; cdate: string }> };
       const contacts = data.contacts ?? [];
       if (contacts.length === 0) break;
       yield contacts;

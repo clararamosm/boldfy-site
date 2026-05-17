@@ -202,6 +202,32 @@ export default async function LeadDetailPage({ params }: Props) {
             </div>
           ) : null}
 
+          {/* Card Proposta destacado — quando lead preencheu form Proposta, a
+              URL do HTML da proposta + valor mensal ficam no header da sidebar
+              pra acesso rápido durante atendimento. */}
+          {(() => {
+            const m = person.metadata as Record<string, unknown> | null;
+            const cf = m?.ac_custom_fields as Record<string, string | undefined> | undefined;
+            const urlProposta = cf?.url_proposta;
+            const totalMensal = cf?.total_mensal_proposta;
+            if (!urlProposta && !totalMensal) return null;
+            return (
+              <div className="crm-side-card" style={{ borderLeft: '3px solid #10B981', background: 'rgba(16, 185, 129, 0.04)' }}>
+                <div className="crm-side-title">💰 Proposta gerada</div>
+                {totalMensal ? (
+                  <div style={{ fontSize: 18, fontFamily: 'var(--font-headline)', fontWeight: 900, color: '#10B981', marginBottom: 8 }}>
+                    R$ {totalMensal}<span style={{ fontSize: 11, fontWeight: 500, color: '#9D85B3' }}>/mês</span>
+                  </div>
+                ) : null}
+                {urlProposta ? (
+                  <a href={urlProposta} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 12px', background: '#10B981', color: '#FFFFFF', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                    Abrir proposta →
+                  </a>
+                ) : null}
+              </div>
+            );
+          })()}
+
           {/* Dados de form (vindos do AC custom fields ou direto) */}
           {(() => {
             const m = person.metadata as Record<string, unknown> | null;
@@ -226,7 +252,7 @@ export default async function LeadDetailPage({ params }: Props) {
             const m = person.metadata as Record<string, unknown> | null;
             const cf = m?.ac_custom_fields as Record<string, string | undefined> | undefined;
             if (!cf) return null;
-            const shown = new Set(['empresa', 'cargo', 'porte', 'colaboradores', 'funcionarios', 'setor', 'industry', 'utm_source_first', 'utm_medium_first', 'utm_campaign_first', 'objetivo_principal', 'como_conheceu', 'intencao_uso', 'tipo_de_lead', 'observacoes', 'job_title']);
+            const shown = new Set(['empresa', 'cargo', 'porte', 'colaboradores', 'funcionarios', 'setor', 'industry', 'utm_source_first', 'utm_medium_first', 'utm_campaign_first', 'objetivo_principal', 'como_conheceu', 'intencao_uso', 'tipo_de_lead', 'observacoes', 'job_title', 'url_proposta', 'total_mensal_proposta']);
             const extras = Object.entries(cf).filter(([k, v]) => v && !shown.has(k));
             if (extras.length === 0) return null;
             return (
