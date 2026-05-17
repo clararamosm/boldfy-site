@@ -276,6 +276,38 @@ export const campaigns = pgTable('campaigns', {
 });
 
 /* -------------------------------------------------------------------------- */
+/*  utm_links — histórico do UTM Generator (mai/2026)                          */
+/* -------------------------------------------------------------------------- */
+/**
+ * Cada linha = 1 link UTM gerado via /internal/dashboard/utm.
+ *
+ * Substitui o localStorage do gerador HTML legado. Permite:
+ *   - Cross-device (Clara vê os mesmos links do celular)
+ *   - Cruzar com GA4 (sessions/conversions por utm_campaign)
+ *   - Vincular com campanhas existentes (campaigns.slug = utmCampaign)
+ *
+ * `shortCode` é nullable — só preenchido se o user gerou shortlink
+ * (campo opcional, requer Vercel KV). URL completo gerado fica em `fullUrl`
+ * pra dispensar reconstrução. `label` é nome amigável opcional.
+ */
+export const utmLinks = pgTable('utm_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  label: text('label'),
+  baseUrl: text('base_url').notNull(),
+  utmSource: text('utm_source').notNull(),
+  utmMedium: text('utm_medium').notNull(),
+  utmCampaign: text('utm_campaign').notNull(),
+  utmContent: text('utm_content'),
+  utmTerm: text('utm_term'),
+  fullUrl: text('full_url').notNull(),
+  shortCode: text('short_code'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index('idx_utm_links_campaign').on(t.utmCampaign),
+  index('idx_utm_links_created_at').on(t.createdAt),
+]);
+
+/* -------------------------------------------------------------------------- */
 /*  extension_tokens                                                           */
 /* -------------------------------------------------------------------------- */
 

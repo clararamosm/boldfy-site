@@ -273,10 +273,19 @@ export default async function CampanhasPage() {
         )}
       </div>
 
-      {/* ====== Shortlinks ====== */}
+      {/* ====== Links rastreáveis (UTM + Shortlinks) ====== */}
       <div className="dash-card">
-        <div className="dash-card-title"><Link2 /> Shortlinks</div>
-        <div className="dash-card-subtitle">Links curtos do KV — usar em campanhas pontuais. <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+          <div className="dash-card-title"><Link2 /> Links rastreáveis</div>
+          <Link href="/internal/dashboard/utm" className="dash-card-action" style={{ fontSize: 12, color: '#CD50F1', fontWeight: 700, textDecoration: 'none' }}>
+            🔗 Gerar novo link UTM →
+          </Link>
+        </div>
+        <div className="dash-card-subtitle">
+          Links UTM são criados em <Link href="/internal/dashboard/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
+          Shortlinks (KV) servem como alias curto pros UTMs em mídias com limite de caracteres ·
+          <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code>
+        </div>
         {shortlinks.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem shortlinks no KV.</div>
         ) : (
