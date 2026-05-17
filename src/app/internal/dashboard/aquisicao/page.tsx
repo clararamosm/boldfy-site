@@ -8,6 +8,7 @@
  */
 
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { db, prArticles, people, companies, statuses } from '@/db';
 import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
@@ -152,7 +153,11 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           <h1 className="dash-title">Aquisição</h1>
           <p className="dash-subtitle">Tráfego · SEO · LinkedIn · Mídia & PR — cross-channel, com insights · {days}d</p>
         </div>
-        <PeriodFilter />
+        {/* Suspense é OBRIGATÓRIO em Next 16 pra client components com useSearchParams.
+           Sem isso o Server Component render quebra com erro genérico 500. */}
+        <Suspense fallback={<div style={{ width: 220, height: 32 }} />}>
+          <PeriodFilter />
+        </Suspense>
       </div>
 
       {/* ========================================================== */}

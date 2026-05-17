@@ -9,6 +9,7 @@
  */
 
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { db, people, companies, statuses } from '@/db';
 import { eq, and, isNull, count, desc, sql, gte } from 'drizzle-orm';
@@ -141,7 +142,9 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
           <h1 className="dash-title">Conversão & Funil</h1>
           <p className="dash-subtitle">Forms · Funil B2B · velocidade · cohort · {days}d</p>
         </div>
-        <PeriodFilter />
+        <Suspense fallback={<div style={{ width: 220, height: 32 }} />}>
+          <PeriodFilter />
+        </Suspense>
       </div>
 
       {/* ========================================================== */}
