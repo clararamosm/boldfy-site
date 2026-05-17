@@ -28,12 +28,13 @@ export function SankeyFlow({ edges, sourceLabels, targetLabels }: {
   }
   const totalW = Object.values(srcTotal).reduce((a, b) => a + b, 0) || 1;
 
-  const W = 800;
-  const H = 360;
-  const nodeW = 14;
-  const padL = 110;
-  const padR = 140;
-  const padTB = 16;
+  // Compacto: H=260 (era 360, ficou monstrão). Mantém legibilidade pq pads diminuíram tbm.
+  const W = 720;
+  const H = 260;
+  const nodeW = 12;
+  const padL = 100;
+  const padR = 120;
+  const padTB = 12;
   const innerH = H - padTB * 2;
 
   // Position sources on left
@@ -42,7 +43,7 @@ export function SankeyFlow({ edges, sourceLabels, targetLabels }: {
   for (const s of sources) {
     const h = (srcTotal[s] / totalW) * innerH;
     srcPos[s] = { y: yCursor, h };
-    yCursor += h + 4;
+    yCursor += h + 3;
   }
 
   // Position targets on right
@@ -51,7 +52,7 @@ export function SankeyFlow({ edges, sourceLabels, targetLabels }: {
   for (const t of targets) {
     const h = (tgtTotal[t] / totalW) * innerH;
     tgtPos[t] = { y: yCursor, h };
-    yCursor += h + 4;
+    yCursor += h + 3;
   }
 
   // Build flows

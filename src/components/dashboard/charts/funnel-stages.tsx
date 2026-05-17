@@ -29,7 +29,8 @@ export function FunnelStages({ stages }: {
               ) : null}
             </div>
             <div style={{ height: 28, background: '#FFFFFF', borderRadius: 8, overflow: 'hidden', border: '1px solid #E4D8ED', position: 'relative' }}>
-              <div style={{ height: '100%', width: `${Math.max(widthPct, s.count > 0 ? 2 : 0)}%`, background: `linear-gradient(90deg, ${color} 0%, ${color}CC 100%)`, borderRadius: 8 }} />
+              {/* Min width 5% pra count > 0 aparecer visualmente mesmo quando max é muito maior */}
+              <div style={{ height: '100%', width: `${Math.max(widthPct, s.count > 0 ? 5 : 0)}%`, background: `linear-gradient(90deg, ${color} 0%, ${color}CC 100%)` }} />
             </div>
             <div style={{ textAlign: 'right', fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67' }}>{formatBR(s.count)}</div>
           </div>
