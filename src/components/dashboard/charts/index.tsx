@@ -670,32 +670,39 @@ export function SourcedFunnel({
   const sourcesTotalH = firstStage.h;
   const sourcesStartY = firstStage.y;
 
-  let sCursor = sourcesStartY;
-  const sourceNodes = sources.map((s, i) => {
-    const h = Math.max((s.clicks / totalClicks) * sourcesTotalH, minH);
-    const node = {
-      ...s,
-      x: padL,
-      y: sCursor,
-      h,
-      color: palette[i % palette.length],
-      pct: (s.clicks / totalClicks) * 100,
-    };
-    sCursor += h;
-    return node;
-  });
+  // Pré-calcula cumulative heights (sem let mutado — React Compiler proíbe
+  // reassign de variáveis após render em React 19).
+  const sourceHeights = sources.map((s) => Math.max((s.clicks / totalClicks) * sourcesTotalH, minH));
+  const sourceCumY = sourceHeights.reduce<number[]>((acc, h, i) => {
+    const prev = i === 0 ? sourcesStartY : acc[i - 1] + sourceHeights[i - 1];
+    acc.push(prev);
+    return acc;
+  }, []);
+
+  const sourceNodes = sources.map((s, i) => ({
+    ...s,
+    x: padL,
+    y: sourceCumY[i],
+    h: sourceHeights[i],
+    color: palette[i % palette.length],
+    pct: (s.clicks / totalClicks) * 100,
+  }));
 
   // Connectors origem → primeira stage (cor da origem) — converge 100% sem perda
-  let firstStageCursor = firstStage.y;
-  const sourceToFunnel = sourceNodes.map((src) => {
+  const firstStageCursors = sourceNodes.reduce<number[]>((acc, src, i) => {
+    const prev = i === 0 ? firstStage.y : acc[i - 1] + sourceNodes[i - 1].h;
+    acc.push(prev);
+    return acc;
+  }, []);
+
+  const sourceToFunnel = sourceNodes.map((src, i) => {
     const x1 = src.x + sourceBlockW;
     const y1Top = src.y;
     const y1Bot = src.y + src.h;
     const x2 = firstStage.x;
-    const segH = src.h; // mesma altura que a origem (sem distorção)
-    const y2Top = firstStageCursor;
+    const segH = src.h;
+    const y2Top = firstStageCursors[i];
     const y2Bot = y2Top + segH;
-    firstStageCursor += segH;
     const mx = (x1 + x2) / 2;
     const path = `
       M${x1},${y1Top}

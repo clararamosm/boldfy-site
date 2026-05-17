@@ -1,17 +1,14 @@
 /**
  * Wrapper client que dá filtro de período próprio pra um gráfico.
  *
- * Server passa os dados de 180 dias (max). Wrapper filtra client-side
- * conforme o usuário escolhe 7/30/90/180. Zero round-trip ao servidor.
- *
- * Funciona com qualquer gráfico que receba `data: { date: string, ... }[]`.
- * Se um dia não tem dado, é preenchido com 0 — linha reta no range pra dar
- * noção de tempo (pedido da Clara).
+ * SSR-safe: render inicial usa defaultDays + Date deterministic (último item do array
+ * como "hoje"). localStorage e filter time-based só executam após mount, evitando
+ * hydration mismatch / Server Component crash.
  */
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const PERIOD_OPTIONS: { value: number; label: string }[] = [
   { value: 7, label: '7d' },
@@ -37,37 +34,47 @@ export function ChartWithPeriod<T extends WithDate>({
   /** Se passado, salva escolha do filtro em localStorage por chave */
   storageKey?: string;
 }) {
-  const [days, setDays] = useState<number>(() => {
-    if (typeof window !== 'undefined' && storageKey) {
+  // Initial state SEM ler localStorage (SSR-safe). Hidrata da preferência só
+  // depois que mount roda no client (useEffect).
+  const [days, setDays] = useState<number>(defaultDays);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (storageKey) {
       const saved = localStorage.getItem(`chart-period:${storageKey}`);
-      if (saved && PERIOD_OPTIONS.some((p) => String(p.value) === saved)) {
-        return parseInt(saved, 10);
+      if (saved) {
+        const n = parseInt(saved, 10);
+        if (PERIOD_OPTIONS.some((p) => p.value === n)) setDays(n);
       }
     }
-    return defaultDays;
-  });
+  }, [storageKey]);
 
   function selectDays(value: number) {
     setDays(value);
-    if (typeof window !== 'undefined' && storageKey) {
-      localStorage.setItem(`chart-period:${storageKey}`, String(value));
+    if (storageKey) {
+      try { localStorage.setItem(`chart-period:${storageKey}`, String(value)); } catch { /* ignore quota errors */ }
     }
   }
 
   const filtered = useMemo(() => {
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    const sinceIso = since.toISOString().split('T')[0];
+    if (fullData.length === 0) return [];
 
-    // Indexa dados por data pra preencher dias faltantes
-    const byDate = new Map(fullData.map((d) => [d.date, d]));
+    // SSR-safe: usa a ÚLTIMA data do array como "hoje" (não Date.now()).
+    // Após mount, useMemo re-roda com `mounted` dep e pode usar Date real.
+    const todayIso = mounted
+      ? new Date().toISOString().split('T')[0]
+      : fullData[fullData.length - 1].date;
+    const today = new Date(`${todayIso}T00:00:00`);
 
     if (!fillMissing) {
+      const since = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+      const sinceIso = since.toISOString().split('T')[0];
       return fullData.filter((d) => d.date >= sinceIso);
     }
 
-    // Constrói range completo, fill missing com cópia do primeiro point zerada
+    const byDate = new Map(fullData.map((d) => [d.date, d]));
     const sample = fullData[0];
-    if (!sample) return [];
     const zeroPoint: Record<string, unknown> = {};
     for (const k of Object.keys(sample)) {
       zeroPoint[k] = typeof (sample as Record<string, unknown>)[k] === 'number' ? 0 : '';
@@ -75,17 +82,14 @@ export function ChartWithPeriod<T extends WithDate>({
 
     const out: T[] = [];
     for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
       const iso = d.toISOString().split('T')[0];
       const found = byDate.get(iso);
-      if (found) {
-        out.push(found);
-      } else {
-        out.push({ ...zeroPoint, date: iso } as T);
-      }
+      if (found) out.push(found);
+      else out.push({ ...zeroPoint, date: iso } as T);
     }
     return out;
-  }, [fullData, days, fillMissing]);
+  }, [fullData, days, fillMissing, mounted]);
 
   return (
     <div>
