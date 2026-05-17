@@ -14,6 +14,7 @@ import { db, people, companies, statuses, prArticles } from '@/db';
 import { eq, and, isNull, count, sql, desc } from 'drizzle-orm';
 import { listCampaigns, getCampaignStatus, type Campaign } from '@/lib/campaigns';
 import { NewCampaignButton } from './new-campaign-button';
+import { EditCampaignButton } from './edit-campaign-button';
 import { timeAgo } from '@/lib/crm-format';
 import { isGa4Configured, getTopUtms, getTrafficByDay } from '@/lib/ga4';
 import { TimelineMarkers } from '@/components/dashboard/charts';
@@ -143,43 +144,49 @@ export default async function CampanhasPage() {
               const status = getCampaignStatus(c, now);
               const s = stats[i];
               const start = new Date(`${c.startDate}T00:00:00`);
-              const end = new Date(`${c.endDate}T23:59:59`);
+              const end = c.endDate ? new Date(`${c.endDate}T23:59:59`) : null;
               const cvr = s.leads > 0 ? ((s.fechados / s.leads) * 100).toFixed(1) : '—';
+              const totalTouchpoints = c.channels.reduce((a, ch) => a + ch.touchpoints.length, 0);
 
               return (
-                <Link
-                  key={c.slug}
-                  href={`/internal/dashboard/campanhas/${c.slug}`}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto auto auto auto auto',
-                    gap: 16,
-                    alignItems: 'center',
-                    padding: '16px 18px',
-                    background: '#FAF7FF',
-                    borderRadius: 12,
-                    textDecoration: 'none',
-                    transition: 'all 0.15s ease',
-                  }}
-                  className="campanha-row"
-                >
+                <div key={c.slug} style={{ position: 'relative' }}>
+                  <Link
+                    href={`/internal/dashboard/campanhas/${c.slug}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto auto auto auto auto auto',
+                      gap: 16,
+                      alignItems: 'center',
+                      padding: '16px 18px',
+                      background: '#FAF7FF',
+                      borderRadius: 12,
+                      textDecoration: 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                    className="campanha-row"
+                  >
                   <div>
                     <div style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 16, color: '#5E2A67' }}>{c.name}</div>
                     <div style={{ fontSize: 12, color: '#9D85B3', marginTop: 2 }}>{c.objective}</div>
-                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                       {c.channels.map((ch) => (
-                        <span key={ch} className="dash-pill">{ch}</span>
+                        <span key={ch.name} className="dash-pill">
+                          {ch.name}{ch.touchpoints.length > 0 ? ` · ${ch.touchpoints.length}` : ''}
+                        </span>
                       ))}
+                      {totalTouchpoints > 0 ? (
+                        <span style={{ fontSize: 10, color: '#9D85B3' }}>· {totalTouchpoints} link{totalTouchpoints > 1 ? 's' : ''}</span>
+                      ) : null}
                     </div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06 }}>Status</div>
-                    <span className={`dash-pill ${status === 'ativa' ? 'green' : status === 'planejada' ? 'blue' : 'gray'}`} style={{ marginTop: 4 }}>{status}</span>
+                    <span className={`dash-pill ${status === 'ativa' ? 'green' : status === 'planejada' ? 'blue' : status === 'always-on' ? 'amber' : 'gray'}`} style={{ marginTop: 4 }}>{status}</span>
                   </div>
                   <div style={{ textAlign: 'center', minWidth: 110 }}>
                     <div style={{ fontSize: 10, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06 }}>Janela</div>
                     <div style={{ fontSize: 12, color: '#45336B', fontWeight: 600, marginTop: 4 }}>
-                      {start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                      {start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {end ? end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '∞'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'center', minWidth: 70 }}>
@@ -194,7 +201,11 @@ export default async function CampanhasPage() {
                     <div style={{ fontSize: 10, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06 }}>CVR final</div>
                     <div style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 22, color: '#10B981', marginTop: 2 }}>{cvr}%</div>
                   </div>
+                  <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
+                    <EditCampaignButton campaign={c} />
+                  </div>
                 </Link>
+                </div>
               );
             })}
           </div>

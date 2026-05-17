@@ -1,12 +1,21 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createCampaign, deleteCampaign, type CreateCampaignInput } from '@/lib/campaigns';
+import { createCampaign, updateCampaign, deleteCampaign, type CampaignInput } from '@/lib/campaigns';
 
-export async function createCampaignAction(input: CreateCampaignInput) {
+export async function createCampaignAction(input: CampaignInput) {
   const result = await createCampaign(input);
   if (result.ok) {
     revalidatePath('/internal/dashboard/campanhas');
+  }
+  return result;
+}
+
+export async function updateCampaignAction(id: string, input: CampaignInput) {
+  const result = await updateCampaign(id, input);
+  if (result.ok) {
+    revalidatePath('/internal/dashboard/campanhas');
+    revalidatePath(`/internal/dashboard/campanhas/[slug]`, 'page');
   }
   return result;
 }

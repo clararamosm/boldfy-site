@@ -251,7 +251,12 @@ export const prArticles = pgTable('pr_articles', {
  * O drill-down [slug] cruza com people.firstTouchCampaign pra puxar leads.
  *
  * `slug` é a chave humana usada na URL — e também o valor exato em utm_campaign.
- * (Se quiser separar slug da URL do utm, futuro: adicionar coluna `utm_campaign` separada.)
+ *
+ * `channels` é jsonb estruturado: cada canal tem N touchpoints (URLs/shortlinks).
+ * Schema:
+ *   [{ name: 'LinkedIn', touchpoints: [{ url: '...', label: '...' }, ...] }, ...]
+ *
+ * `endDate` é nullable — `alwaysOn=true` deixa a campanha sem fim definido.
  */
 export const campaigns = pgTable('campaigns', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -259,9 +264,12 @@ export const campaigns = pgTable('campaigns', {
   name: text('name').notNull(),           // ex: 'Web Summit Rio 2026'
   objective: text('objective').notNull(),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
-  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
-  channels: text('channels').array().notNull(), // ['Eventos', 'LinkedIn', 'PR']
-  shortlinks: text('shortlinks').array(),       // ['ws-card', 'ws-keynote', ...]
+  endDate: timestamp('end_date', { withTimezone: true }),
+  alwaysOn: boolean('always_on').notNull().default(false),
+  channels: jsonb('channels').$type<Array<{
+    name: string;
+    touchpoints: Array<{ url: string; label?: string }>;
+  }>>().notNull().default([]),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

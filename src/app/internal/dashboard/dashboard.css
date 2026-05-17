@@ -542,6 +542,38 @@
   color: #CD50F1;
   border-color: #CD50F1;
 }
+.channel-chip:disabled { cursor: default; }
+
+.touchpoint-remove {
+  background: transparent;
+  border: none;
+  color: #9D85B3;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+.touchpoint-remove:hover { background: rgba(238, 90, 82, 0.1); color: #EE5A52; }
+
+.campaign-edit-btn {
+  background: #FFFFFF;
+  border: 1px solid #E4D8ED;
+  color: #9D85B3;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.campaign-edit-btn:hover {
+  border-color: #CD50F1;
+  color: #CD50F1;
+  background: #FAF5FE;
+}
 
 /* Header com título + filtro lado-a-lado nos cards de gráfico */
 .dash-card-header {

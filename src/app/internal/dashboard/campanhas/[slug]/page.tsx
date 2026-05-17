@@ -16,6 +16,7 @@ import { eq, and, isNull, desc, count, sql } from 'drizzle-orm';
 import { getCampaignBySlug, getCampaignStatus, listCampaigns } from '@/lib/campaigns';
 import { FunnelStages, BOLDFY_PALETTE } from '@/components/dashboard/charts';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
+import { EditCampaignButton } from '../edit-campaign-button';
 import { Settings2, FileText, Calendar, Trophy, BarChart3, Users, StickyNote } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -63,7 +64,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
   const cvr = totalLeads > 0 ? ((fechados / totalLeads) * 100).toFixed(1) : '—';
 
   const start = new Date(`${campaign.startDate}T00:00:00`);
-  const end = new Date(`${campaign.endDate}T23:59:59`);
+  const end = campaign.endDate ? new Date(`${campaign.endDate}T23:59:59`) : null;
 
   return (
     <div>
@@ -71,16 +72,20 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         <Link href="/internal/dashboard/campanhas" style={{ fontSize: 12, color: '#9D85B3', textDecoration: 'none' }}>← Voltar pra Campanhas</Link>
       </div>
 
-      <div className="dash-header">
-        <div>
+      <div className="dash-header" style={{ alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
           <h1 className="dash-title">{campaign.name}</h1>
           <p className="dash-subtitle">{campaign.objective}</p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <span className={`dash-pill ${status === 'ativa' ? 'green' : status === 'planejada' ? 'blue' : 'gray'}`}>{status}</span>
-            <span className="dash-pill">{start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <span className={`dash-pill ${status === 'ativa' ? 'green' : status === 'planejada' ? 'blue' : status === 'always-on' ? 'amber' : 'gray'}`}>{status}</span>
+            <span className="dash-pill">
+              {start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} →{' '}
+              {end ? end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '∞ always-on'}
+            </span>
             <span className="dash-pill amber">UTM: {campaign.utmCampaign}</span>
           </div>
         </div>
+        <EditCampaignButton campaign={campaign} />
       </div>
 
       {campaign.notes ? (
@@ -92,22 +97,51 @@ export default async function CampaignDetailPage({ params }: { params: Params })
       {/* Setup */}
       <div className="dash-card">
         <div className="dash-card-title"><Settings2 /> Setup</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 16 }}>
           <SetupItem label="Objetivo" value={campaign.objective} />
           <SetupItem label="UTM campaign" value={<code style={{ background: '#F7EEFC', padding: '2px 8px', borderRadius: 4 }}>{campaign.utmCampaign}</code>} />
-          <SetupItem label="Janela" value={`${start.toLocaleDateString('pt-BR')} → ${end.toLocaleDateString('pt-BR')}`} />
-          <SetupItem label="Canais" value={
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {campaign.channels.map((c) => <span key={c} className="dash-pill">{c}</span>)}
-            </div>
+          <SetupItem label="Janela" value={
+            <>
+              {start.toLocaleDateString('pt-BR')}
+              {' → '}
+              {end ? end.toLocaleDateString('pt-BR') : <span style={{ color: '#CD50F1', fontWeight: 700 }}>always-on</span>}
+            </>
           } />
-          {campaign.shortlinks ? (
-            <SetupItem label="Shortlinks" value={
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                {campaign.shortlinks.map((s) => <span key={s} className="dash-pill blue">/l/{s}</span>)}
-              </div>
-            } />
-          ) : null}
+        </div>
+
+        {/* Canais + touchpoints */}
+        <div>
+          <div style={{ fontSize: 11, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06, marginBottom: 10 }}>
+            Canais & touchpoints
+          </div>
+          {campaign.channels.length === 0 ? (
+            <div style={{ padding: 12, background: '#FAF7FF', borderRadius: 8, fontSize: 12, color: '#9D85B3' }}>
+              Nenhum canal configurado. Use o botão Editar pra adicionar.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {campaign.channels.map((c) => (
+                <div key={c.name} style={{ padding: 12, background: '#FAF7FF', borderRadius: 10, border: '1px solid #E4D8ED' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: c.touchpoints.length ? 8 : 0 }}>
+                    <strong style={{ fontSize: 13, color: '#5E2A67' }}>{c.name}</strong>
+                    <span style={{ fontSize: 10, color: '#9D85B3' }}>· {c.touchpoints.length} touchpoint{c.touchpoints.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  {c.touchpoints.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {c.touchpoints.map((tp, ti) => (
+                        <div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#FFFFFF', borderRadius: 6, fontSize: 12 }}>
+                          <a href={tp.url} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1', textDecoration: 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {tp.url}
+                          </a>
+                          {tp.label ? <span className="dash-pill">{tp.label}</span> : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
