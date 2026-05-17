@@ -700,17 +700,17 @@ export function SourcedFunnel({
   });
 
   return (
-    <div className="dash-chart">
-      <div className="dash-chart-svg-wrap">
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', display: 'block' }}>
+    <div className="dash-chart" style={{ width: '100%', height: '100%' }}>
+      <div className="dash-chart-svg-wrap" style={{ width: '100%', height: '100%' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', display: 'block', minHeight: 340 }}>
           {/* Header origens */}
           {sources.length > 0 ? (
             <text x={padL} y={padT - 14} fontSize={11} fontWeight={700} fill="#9D85B3" fontFamily="system-ui" style={{ textTransform: 'uppercase' }}>
-              Origens (cliques)
+              ORIGENS (CLIQUES)
             </text>
           ) : null}
-          <text x={funnelStartX} y={padT - 14} fontSize={11} fontWeight={700} fill="#9D85B3" fontFamily="system-ui">
-            Funil de conversão
+          <text x={funnelStartX} y={padT - 14} fontSize={11} fontWeight={700} fill="#9D85B3" fontFamily="system-ui" style={{ textTransform: 'uppercase' }}>
+            FUNIL DE CONVERSÃO
           </text>
 
           {/* Connectors source → stage 1 */}

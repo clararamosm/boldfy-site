@@ -119,14 +119,14 @@ export default async function DashboardOverviewPage() {
           </>
         ) : null}
 
-        {/* Funil unificado (sankey) — 6 colunas × 3 linhas */}
-        <div className="bento bento-span-6 bento-row-3">
+        {/* Funil unificado (sankey) — 6 colunas × 4 linhas */}
+        <div className="bento bento-span-6 bento-row-4">
           <div className="bento-title">
             <GitMerge /> Funil unificado cross-channel
             <span style={{ fontSize: 11, color: '#9D85B3', fontWeight: 600, marginLeft: 'auto' }}>últimos 30 dias</span>
           </div>
           <div className="bento-subtitle">Origens (cliques) → Visitas → Forms totais → Líderes B2B → MQL → Reuniões → Fechados</div>
-          <div className="bento-content" style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="bento-content" style={{ display: 'flex', alignItems: 'stretch', minHeight: 360 }}>
             <SourcedFunnel sources={funnel.sources} stages={funnel.stages} />
           </div>
         </div>
