@@ -18,7 +18,13 @@ export function FunnelStages({ stages }: {
         const widthPct = (s.count / max) * 100;
         const prev = i > 0 ? stages[i - 1].count : null;
         const dropPct = prev && prev > 0 ? ((prev - s.count) / prev) * 100 : null;
-        const color = s.color ?? BOLDFY_PALETTE[i % BOLDFY_PALETTE.length];
+        // Fallback robusto: só aceita cor que começa com # (hex). Se vier null,
+        // undefined, string vazia ou formato inesperado (rgb, rgba, named) →
+        // cai na palette. React 19 dropa style.background inteiro se o template
+        // literal contiver um valor inválido (causa de bug onde barras
+        // apareciam totalmente brancas no Pipeline).
+        const rawColor = s.color;
+        const safeColor = (typeof rawColor === 'string' && rawColor.startsWith('#')) ? rawColor : BOLDFY_PALETTE[i % BOLDFY_PALETTE.length];
 
         return (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '210px 1fr 100px', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#FAF7FF', borderRadius: 10 }}>
@@ -29,8 +35,10 @@ export function FunnelStages({ stages }: {
               ) : null}
             </div>
             <div style={{ height: 28, background: '#FFFFFF', borderRadius: 8, overflow: 'hidden', border: '1px solid #E4D8ED', position: 'relative' }}>
-              {/* Min width 5% pra count > 0 aparecer visualmente mesmo quando max é muito maior */}
-              <div style={{ height: '100%', width: `${Math.max(widthPct, s.count > 0 ? 5 : 0)}%`, background: `linear-gradient(90deg, ${color} 0%, ${color}CC 100%)` }} />
+              {/* Min width 5% pra count > 0 aparecer mesmo quando max é muito maior.
+                  Background sólido (sem alpha gradient) — concatenar 'CC' depois
+                  da cor quebrava quando vinha em formato não-hex. */}
+              <div style={{ height: '100%', width: `${Math.max(widthPct, s.count > 0 ? 5 : 0)}%`, backgroundColor: safeColor }} />
             </div>
             <div style={{ textAlign: 'right', fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 20, color: '#5E2A67' }}>{formatBR(s.count)}</div>
           </div>
