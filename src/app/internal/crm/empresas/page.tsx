@@ -1,15 +1,21 @@
 /**
  * CRM · Empresas — kanban de N colunas OU tabela com busca/filtro/sort.
  * Toggle via ?view=table.
+ *
+ * Mai/2026 ciclo 3: filtros server-side via searchParams (period, statusId).
+ * Empresas não tem canal/página de origem (esses são de pessoa).
  */
 
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { getCompaniesByStatus, type CompaniesByStatus } from '@/lib/crm-queries';
+import { getCompaniesByStatus, type CompaniesByStatus, type CrmFilters } from '@/lib/crm-queries';
+import { getStatuses } from '@/lib/statuses';
 import { CompanyKanban } from '@/components/crm/company-kanban';
 import { CompanyTable } from '@/components/crm/company-table';
 import { ViewToggle } from '@/components/crm/view-toggle';
 import { AddCompanyButton } from '@/components/crm/add-company-button';
+import { CrmFilters as CrmFiltersBar } from '@/components/crm/crm-filters';
 
 export const metadata: Metadata = {
   title: 'CRM · Empresas',
@@ -18,16 +24,35 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-type SearchParams = Promise<{ view?: string }>;
+type SearchParams = Promise<{
+  view?: string;
+  period?: string;
+  statusId?: string;
+}>;
+
+function parseFilters(sp: { period?: string; statusId?: string }): CrmFilters {
+  const period = ['7d', '30d', '90d'].includes(sp.period ?? '') ? (sp.period as CrmFilters['period']) : 'all';
+  return {
+    period,
+    statusId: sp.statusId || null,
+  };
+}
 
 export default async function CrmCompaniesPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const view = params.view === 'table' ? 'table' : 'kanban';
+  const filters = parseFilters(params);
 
   let data: CompaniesByStatus = [];
   let dbError: string | null = null;
+  let companyStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   try {
-    data = await getCompaniesByStatus(view === 'table' ? 1000 : 100);
+    const [d, statusesData] = await Promise.all([
+      getCompaniesByStatus(view === 'table' ? 1000 : 100, filters),
+      getStatuses('company'),
+    ]);
+    data = d;
+    companyStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }
@@ -51,6 +76,10 @@ export default async function CrmCompaniesPage({ searchParams }: { searchParams:
           <AddCompanyButton />
         </div>
       </div>
+
+      <Suspense fallback={<div style={{ height: 50, marginBottom: 14, background: '#FAF7FF', borderRadius: 10 }} />}>
+        <CrmFiltersBar kind="company" statuses={companyStatuses} />
+      </Suspense>
 
       {dbError ? (
         <div className="crm-empty-db">

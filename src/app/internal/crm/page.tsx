@@ -3,15 +3,23 @@
  *
  * Kanban de N colunas dinâmicas (configuráveis em Settings → Statuses) OU
  * tabela com search/filter/sort (toggle via ?view=table).
+ *
+ * Mai/2026 ciclo 3: filtros server-side via searchParams (period, statusId,
+ * canal, pagina) compartilhados entre kanban e table. Suspense wrap pros
+ * componentes client que usam useSearchParams (regra RSC #3).
  */
 
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { getPeopleByStatus, type PeopleByStatus } from '@/lib/crm-queries';
+import { getPeopleByStatus, type PeopleByStatus, type CrmFilters } from '@/lib/crm-queries';
+import { getStatuses } from '@/lib/statuses';
+import { db, people } from '@/db';
 import { PersonKanban } from '@/components/crm/person-kanban';
 import { PersonTable } from '@/components/crm/person-table';
 import { ViewToggle } from '@/components/crm/view-toggle';
 import { AddPersonButton } from '@/components/crm/add-person-button';
+import { CrmFilters as CrmFiltersBar } from '@/components/crm/crm-filters';
 
 export const metadata: Metadata = {
   title: 'CRM · Pessoas',
@@ -20,16 +28,53 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-type SearchParams = Promise<{ view?: string }>;
+type SearchParams = Promise<{
+  view?: string;
+  period?: string;
+  statusId?: string;
+  canal?: string;
+  pagina?: string;
+}>;
+
+function parseFilters(sp: { period?: string; statusId?: string; canal?: string; pagina?: string }): CrmFilters {
+  const period = ['7d', '30d', '90d'].includes(sp.period ?? '') ? (sp.period as CrmFilters['period']) : 'all';
+  return {
+    period,
+    statusId: sp.statusId || null,
+    canal: sp.canal || null,
+    pagina: sp.pagina || null,
+  };
+}
+
+async function getFilterOptions(): Promise<{ channels: string[]; pages: string[] }> {
+  const [chanRows, pageRows] = await Promise.all([
+    db.selectDistinct({ v: people.sourceChannel }).from(people),
+    db.selectDistinct({ v: people.sourcePage }).from(people),
+  ]);
+  return {
+    channels: chanRows.map((r) => r.v).filter((v): v is string => !!v && v !== 'unknown').sort(),
+    pages: pageRows.map((r) => r.v).filter((v): v is string => !!v).sort(),
+  };
+}
 
 export default async function CrmPeoplePage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const view = params.view === 'table' ? 'table' : 'kanban';
+  const filters = parseFilters(params);
 
   let data: PeopleByStatus = [];
   let dbError: string | null = null;
+  let personStatuses: Array<{ id: string; label: string; color: string | null }> = [];
+  let filterOptions: { channels: string[]; pages: string[] } = { channels: [], pages: [] };
   try {
-    data = await getPeopleByStatus(view === 'table' ? 1000 : 100);
+    const [d, statusesData, opts] = await Promise.all([
+      getPeopleByStatus(view === 'table' ? 1000 : 100, filters),
+      getStatuses('person'),
+      getFilterOptions(),
+    ]);
+    data = d;
+    personStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
+    filterOptions = opts;
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }
@@ -53,6 +98,10 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
           <AddPersonButton />
         </div>
       </div>
+
+      <Suspense fallback={<div style={{ height: 50, marginBottom: 14, background: '#FAF7FF', borderRadius: 10 }} />}>
+        <CrmFiltersBar kind="person" statuses={personStatuses} channels={filterOptions.channels} pages={filterOptions.pages} />
+      </Suspense>
 
       {dbError ? (
         <div className="crm-empty-db">
