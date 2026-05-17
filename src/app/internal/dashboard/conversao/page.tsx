@@ -29,6 +29,7 @@ import {
 } from '@/lib/dashboard-queries';
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
+import { SectionNav } from '@/components/dashboard/section-nav';
 import {
   FunnelStages,
   HeatmapChart,
@@ -120,6 +121,12 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
   const totalReunioes = (funnel.stages.find((f) => f.key === 'reunioes')?.count) ?? 0;
   const totalFechados = (funnel.stages.find((f) => f.key === 'fechados')?.count) ?? 0;
 
+  const navSections = [
+    { id: 'visao', label: 'Visão geral', icon: BarChart3 },
+    { id: 'funil', label: 'Funil B2B', icon: BarChart3 },
+    { id: 'forms', label: 'Forms', icon: ClipboardList },
+  ];
+
   return (
     <div>
       <div className="dash-header">
@@ -131,6 +138,10 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
           <PeriodFilter />
         </Suspense>
       </div>
+
+      <div className="dash-page-with-nav">
+        <SectionNav sections={navSections} />
+        <div className="dash-page-main" id="visao">
 
       {/* KPIs */}
       <div className="dash-kpi-grid">
@@ -159,6 +170,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
         </div>
       </div>
 
+      <div id="funil" />
       <SectionHeader icon={BarChart3} title="Funil B2B" subtitle="Drop-off por estágio · pipeline de empresas · leads parados" />
 
       {/* Funil clássico — TESTADO */}
@@ -280,6 +292,7 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
         </div>
       ) : null}
 
+      <div id="forms" />
       <SectionHeader icon={ClipboardList} title="Forms" subtitle="Taxa de conversão por form + padrão de quando convertem" />
 
       {/* Form CVR — só table */}
@@ -352,6 +365,8 @@ export default async function ConversaoPage({ searchParams }: { searchParams: Se
         )}
       </div>
 
+        </div>
+      </div>
     </div>
   );
 }

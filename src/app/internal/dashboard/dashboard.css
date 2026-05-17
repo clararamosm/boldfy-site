@@ -352,6 +352,67 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------------------------------------------------------------- */
+/*  Section nav lateral (pages longas: Aquisição, Conversão)        */
+/* ---------------------------------------------------------------- */
+.dash-page-with-nav {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+.dash-page-main { min-width: 0; }
+.dash-section-nav {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 6px;
+  background: #FFFFFF;
+  border: 1px solid #E4D8ED;
+  border-radius: 12px;
+  align-self: flex-start;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.dash-section-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9D85B3;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dash-section-nav-link:hover { color: #5E2A67; background: #FAF5FE; }
+.dash-section-nav-link.active {
+  background: #F7EEFC;
+  color: #CD50F1;
+}
+.dash-section-nav-link svg {
+  flex-shrink: 0;
+  color: inherit;
+}
+@media (max-width: 900px) {
+  .dash-page-with-nav { grid-template-columns: 1fr; }
+  .dash-section-nav {
+    position: relative;
+    top: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+    flex-wrap: nowrap;
+  }
+  .dash-section-nav-link { flex-shrink: 0; }
+}
+
 /* Header com título + filtro lado-a-lado nos cards de gráfico */
 .dash-card-header {
   display: flex;

@@ -28,6 +28,7 @@ import {
   DonutChart,
   HeatmapChart,
   BOLDFY_PALETTE,
+  BOLDFY_PURPLES,
 } from '@/components/dashboard/charts';
 import {
   GitMerge,
@@ -172,7 +173,7 @@ export default async function DashboardOverviewPage() {
               series={stacked.channels.map((c, i) => ({
                 key: c,
                 label: c,
-                color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],
+                color: BOLDFY_PURPLES[i % BOLDFY_PURPLES.length],
                 data: stacked.data.map((d) => Number(d[c] ?? 0)),
               }))}
               height={260}

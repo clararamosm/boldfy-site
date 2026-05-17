@@ -32,6 +32,21 @@ export const BOLDFY_PALETTE = [
   '#06B6D4', // cyan
 ];
 
+/**
+ * Variações tonais de roxo — pra stacked area e demais charts que ficam mais
+ * coesos quando todas séries são da mesma família de cor.
+ */
+export const BOLDFY_PURPLES = [
+  '#5E2A67', // roxo escuro Boldfy
+  '#7E3FA6',
+  '#9D5FCC',
+  '#B57AE0',
+  '#CD50F1', // roxo principal
+  '#E875FF',
+  '#F0A8FF',
+  '#F7D0FF',
+];
+
 function formatBR(n: number): string {
   return n.toLocaleString('pt-BR');
 }

@@ -10,8 +10,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { db, prArticles, people, companies, statuses } from '@/db';
-import { eq, and, isNull, count, desc, sql } from 'drizzle-orm';
+import { db, people, companies, statuses } from '@/db';
+import { eq, and, isNull, count, desc } from 'drizzle-orm';
 import {
   isGa4Configured,
   getTrafficSummary,
@@ -37,12 +37,14 @@ import {
 import { PeriodFilter } from '@/components/dashboard/period-filter';
 import { parsePeriod } from '@/components/dashboard/period-utils';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
+import { SectionNav } from '@/components/dashboard/section-nav';
 import {
   MultiLineChart,
   StackedAreaChart,
   ScatterChart,
   TimelineMarkers,
   BOLDFY_PALETTE,
+  BOLDFY_PURPLES,
 } from '@/components/dashboard/charts';
 import {
   Globe2,
@@ -147,42 +149,33 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
 
   const liCvr = liVisits > 0 ? (liLeads.length / liVisits) * 100 : 0;
 
-  // Mídia & PR
-  const articles = await safeBlock('articles', async () => {
-    return db.select().from(prArticles).orderBy(desc(prArticles.publishedAt)).limit(20);
-  }, [] as Array<typeof prArticles.$inferSelect>);
-
-  const prLeadsCount = await safeBlock('pr_leads', async () => {
-    const row = await db.select({ n: count() }).from(people)
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.sourceChannel, 'pr')));
-    return row[0]?.n ?? 0;
-  }, 0);
-
-  const prSessions = topUtms.filter((u) => u.source.toLowerCase() === 'pr').reduce((a, u) => a + u.sessions, 0);
-
-  // Timeline mídia: GA4 organic + markers de publicações
-  const organicSeries = dailyTraffic.map((d) => d.sessions);
-  // Defensive: filter inválidos antes de Date()
-  const articleMarkers = articles
-    .filter((a) => a.publishedAt && !isNaN(new Date(a.publishedAt).getTime()))
-    .map((a) => ({ date: new Date(a.publishedAt).toISOString().split('T')[0], label: a.title }))
-    .filter((m) => dailyTraffic.some((d) => d.date === m.date));
+  // Mídia & PR migrou pra /campanhas. As queries de pr_articles e prLeadsCount
+  // foram removidas daqui — vivem agora em src/app/internal/dashboard/campanhas/page.tsx.
 
   const totalChannels = channels.reduce((a, c) => a + c.sessions, 0);
+
+  const navSections = [
+    { id: 'visao', label: 'Visão geral', icon: BarChart3 },
+    { id: 'trafego', label: 'Tráfego', icon: Globe2 },
+    { id: 'seo', label: 'SEO', icon: Search },
+    { id: 'linkedin', label: 'LinkedIn', icon: Briefcase },
+  ];
 
   return (
     <div>
       <div className="dash-header">
         <div>
           <h1 className="dash-title">Aquisição</h1>
-          <p className="dash-subtitle">Tráfego · SEO · LinkedIn · Mídia & PR — cross-channel, com insights · {days}d</p>
+          <p className="dash-subtitle">Tráfego · SEO · LinkedIn — cross-channel, com insights · {days}d</p>
         </div>
-        {/* Suspense é OBRIGATÓRIO em Next 16 pra client components com useSearchParams.
-           Sem isso o Server Component render quebra com erro genérico 500. */}
         <Suspense fallback={<div style={{ width: 220, height: 32 }} />}>
           <PeriodFilter />
         </Suspense>
       </div>
+
+      <div className="dash-page-with-nav">
+        <SectionNav sections={navSections} />
+        <div className="dash-page-main" id="visao">
 
       {/* ========================================================== */}
       {/*  Header KPIs cross-channel                                 */}
@@ -206,12 +199,6 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
           <div className="dash-kpi-value">{liVisits.toLocaleString('pt-BR')}</div>
           <div className="dash-kpi-meta">{liLeads.length} leads · CVR {liCvr.toFixed(1)}%</div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon orange"><Newspaper /></div>
-          <div className="dash-kpi-label">Visitas PR</div>
-          <div className="dash-kpi-value">{prSessions.toLocaleString('pt-BR')}</div>
-          <div className="dash-kpi-meta">{prLeadsCount} leads · {articles.length} artigos</div>
-        </div>
       </div>
 
       {/* ========================================================== */}
@@ -226,7 +213,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
             series={channels.slice(0, 5).map((c, i) => ({
               key: c.channel,
               label: c.channel,
-              color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],
+              color: BOLDFY_PURPLES[i % BOLDFY_PURPLES.length],
               data: dailyTraffic.map((d) => Math.round((d.sessions * c.sessions) / (totalChannels || 1))),
             }))}
             height={260}
@@ -237,6 +224,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: TRÁFEGO (GA4)                                        */}
       {/* ============================================================== */}
+      <div id="trafego" />
       <SectionHeader icon={Globe2} title="Tráfego (GA4)" />
 
       {ga4Configured ? (
@@ -309,6 +297,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: SEO (Search Console) — clássico + INSIGHTS           */}
       {/* ============================================================== */}
+      <div id="seo" />
       <SectionHeader icon={Search} title="SEO (Search Console)" subtitle="Dados clássicos + insights além das plataformas" />
 
       {scConfigured ? (
@@ -500,6 +489,7 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
       {/* ============================================================== */}
       {/*  SECTION: LinkedIn (UTM)                                       */}
       {/* ============================================================== */}
+      <div id="linkedin" />
       <SectionHeader icon={Briefcase} title="LinkedIn (via UTM)" subtitle="Website Demographics ainda bloqueado (~300 únicos/90d pra desbloquear)" />
 
       <div className="dash-kpi-grid">
@@ -564,64 +554,12 @@ export default async function AquisicaoPage({ searchParams }: { searchParams: Se
         )}
       </div>
 
-      {/* ============================================================== */}
-      {/*  SECTION: Mídia & PR                                           */}
-      {/* ============================================================== */}
-      <SectionHeader icon={Newspaper} title="Mídia & PR" subtitle="Artigos publicados + correlação com spike orgânico" />
-
-      <div className="dash-kpi-grid">
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon"><Newspaper /></div>
-          <div className="dash-kpi-label">Artigos publicados</div>
-          <div className="dash-kpi-value">{articles.length}</div>
+          {/* Mídia & PR foi movido pra /dashboard/campanhas (faz mais sentido conceitual:
+              PR é campanha). Quem buscar aqui acha o link. */}
+          <div style={{ marginTop: 36, padding: 14, background: 'rgba(157, 133, 179, 0.06)', borderRadius: 10, fontSize: 12, color: '#5E2A67' }}>
+            📰 Mídia & PR agora vive em <Link href="/internal/dashboard/campanhas" style={{ color: '#CD50F1', fontWeight: 700 }}>Campanhas</Link> — faz mais sentido conceitual (PR é uma campanha).
+          </div>
         </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon blue"><Users /></div>
-          <div className="dash-kpi-label">Visitas PR (utm_source=pr)</div>
-          <div className="dash-kpi-value">{prSessions.toLocaleString('pt-BR')}</div>
-        </div>
-        <div className="dash-kpi">
-          <div className="dash-kpi-icon green"><FileText /></div>
-          <div className="dash-kpi-label">Leads via PR</div>
-          <div className="dash-kpi-value">{prLeadsCount}</div>
-        </div>
-      </div>
-
-      {/* 💡 INSIGHT: Timeline com markers de publicações */}
-      {dailyTraffic.length > 0 && articles.length > 0 ? (
-        <div className="dash-card">
-          <div className="dash-card-title"><Lightbulb /> Correlação publicações × spike orgânico</div>
-          <div className="dash-card-subtitle">Linha = sessões totais · marcadores vermelhos = publicações de PR</div>
-          <TimelineMarkers
-            dates={dailyTraffic.map((d) => d.date)}
-            values={organicSeries}
-            markers={articleMarkers}
-            label="Sessões"
-            color="#CD50F1"
-            height={220}
-          />
-        </div>
-      ) : null}
-
-      <div className="dash-card">
-        <div className="dash-card-title"><FileText /> Artigos cadastrados</div>
-        <div className="dash-card-subtitle">CRUD inline temporariamente removido — adicione novos artigos via SQL direto no Neon ou aguarde migração pra <Link href="/internal/dashboard/campanhas" style={{ color: '#CD50F1' }}>Campanhas</Link></div>
-        {articles.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem artigos cadastrados ainda.</div>
-        ) : (
-          <table className="dash-table">
-            <thead><tr><th>Título</th><th>Publicado</th><th>UTM campaign</th></tr></thead>
-            <tbody>
-              {articles.map((a) => (
-                <tr key={a.id}>
-                  <td className="strong" style={{ maxWidth: 480 }}>{a.title}</td>
-                  <td className="muted">{new Date(a.publishedAt).toLocaleDateString('pt-BR')}</td>
-                  <td className="muted">{a.utmCampaign ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </div>
     </div>
   );

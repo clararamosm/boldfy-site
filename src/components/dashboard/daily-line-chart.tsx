@@ -50,7 +50,8 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
   // Viewbox fixo + escala SVG faz o gráfico ser responsivo sem JS de resize
   const W = 800;
   const H = height;
-  const PAD = { top: 18, right: 12, bottom: 28, left: 44 };
+  // Mais padding nos lados pra acomodar labels coloridas dos 2 eixos Y
+  const PAD = { top: 22, right: 52, bottom: 28, left: 52 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
@@ -128,24 +129,33 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
 
       <div className="dash-chart-svg-wrap">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: H, display: 'block' }}>
-          {/* Y-grid (linhas horizontais com base no max do A) */}
+          {/* Label do eixo Y esquerdo (cor A) */}
+          <text x={PAD.left - 6} y={PAD.top - 10} fontSize={10} fontWeight={700} fill={colors.a} textAnchor="end" fontFamily="system-ui, sans-serif" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            {labels.a}
+          </text>
+          {/* Label do eixo Y direito (cor B) */}
+          <text x={PAD.left + innerW + 4} y={PAD.top - 10} fontSize={10} fontWeight={700} fill={colors.b} textAnchor="start" fontFamily="system-ui, sans-serif" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            {labels.b}
+          </text>
+
+          {/* Y-grid (linhas horizontais com base no max do A) + labels A coloridas */}
           {ticksA.map((t, i) => {
             const y = PAD.top + innerH - (t / maxA) * innerH;
             return (
               <g key={`gy-${i}`}>
                 <line x1={PAD.left} y1={y} x2={PAD.left + innerW} y2={y} stroke="#F0E6F7" strokeWidth={1} />
-                <text x={PAD.left - 6} y={y + 3} fontSize={10} fill="#9D85B3" textAnchor="end" fontFamily="system-ui, sans-serif">
+                <text x={PAD.left - 6} y={y + 3} fontSize={10} fill={colors.a} textAnchor="end" fontFamily="system-ui, sans-serif" fontWeight={600}>
                   {t.toLocaleString('pt-BR')}
                 </text>
               </g>
             );
           })}
 
-          {/* Eixo Y direito (escala do B) */}
+          {/* Eixo Y direito (escala do B) — labels B coloridas */}
           {ticksB.map((t, i) => {
             const y = PAD.top + innerH - (t / maxB) * innerH;
             return (
-              <text key={`yb-${i}`} x={PAD.left + innerW + 4} y={y + 3} fontSize={10} fill="#9D85B3" textAnchor="start" fontFamily="system-ui, sans-serif">
+              <text key={`yb-${i}`} x={PAD.left + innerW + 4} y={y + 3} fontSize={10} fill={colors.b} textAnchor="start" fontFamily="system-ui, sans-serif" fontWeight={600}>
                 {t.toLocaleString('pt-BR')}
               </text>
             );
