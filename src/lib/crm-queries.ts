@@ -167,6 +167,84 @@ export async function getActivitiesForPerson(
     .limit(limit);
 }
 
+/**
+ * Activities ligadas a uma empresa — inclui activities company-level (sem
+ * personId) e activities das pessoas linkadas (via people.companyId).
+ *
+ * Por que via people.companyId em vez de só activities.companyId?
+ * Muitas activities históricas (form_submit, page_view, email_open) foram
+ * gravadas com personId mas sem companyId. Pra empresa enxergar tudo que
+ * aconteceu, fazemos OR via subquery.
+ */
+export async function getActivitiesForCompany(
+  companyId: string,
+  limit = 200,
+): Promise<(Activity & { personName: string | null; personId: string | null })[]> {
+  const rows = await db
+    .select({
+      activity: activities,
+      personName: people.name,
+    })
+    .from(activities)
+    .leftJoin(people, eq(activities.personId, people.id))
+    .where(
+      sql`${activities.companyId} = ${companyId} OR ${activities.personId} IN (
+            SELECT id FROM people WHERE company_id = ${companyId} AND archived = FALSE AND merged_into_id IS NULL
+          )`,
+    )
+    .orderBy(desc(activities.createdAt))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    ...r.activity,
+    personName: r.personName ?? null,
+    personId: r.activity.personId ?? null,
+  }));
+}
+
+/**
+ * Pessoas linkadas a uma empresa, com status, ordenadas por lead score desc.
+ * Já inclui filtro archived/merged.
+ */
+export type CompanyPersonRow = {
+  person: Person;
+  status: Status | null;
+};
+
+export async function getPeopleForCompany(companyId: string): Promise<CompanyPersonRow[]> {
+  const rows = await db
+    .select({
+      person: people,
+      status: statuses,
+    })
+    .from(people)
+    .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .where(and(eq(people.companyId, companyId), eq(people.archived, false), isNull(people.mergedIntoId)))
+    .orderBy(desc(people.leadScore), desc(people.lastTouchAt));
+
+  return rows.map((r) => ({ person: r.person, status: r.status }));
+}
+
+/**
+ * União das AC tags de todas as pessoas linkadas. Útil pra ver o "footprint"
+ * de uma empresa no AC (formulários que entraram, segmentos, etc).
+ *
+ * Tags retornadas em ordem alfabética, sem duplicatas.
+ */
+export async function getAggregatedAcTagsForCompany(companyId: string): Promise<string[]> {
+  const rows = await db
+    .select({ tags: people.acTags })
+    .from(people)
+    .where(and(eq(people.companyId, companyId), eq(people.archived, false), isNull(people.mergedIntoId)));
+
+  const set = new Set<string>();
+  for (const row of rows) {
+    if (!row.tags) continue;
+    for (const tag of row.tags) if (tag) set.add(tag);
+  }
+  return Array.from(set).sort();
+}
+
 export type FeedActivity = Activity & {
   person: { id: string; name: string; email: string } | null;
   company: { id: string; name: string } | null;
@@ -208,6 +286,40 @@ export async function getUpcomingMeetingsForPerson(personId: string): Promise<Me
       ),
     )
     .orderBy(meetings.scheduledAt);
+}
+
+/**
+ * Reuniões futuras agregadas de TODAS as pessoas linkadas à empresa.
+ * Inclui nome da pessoa pra mostrar "Reunião com X em Y".
+ */
+export type CompanyUpcomingMeeting = Meeting & {
+  personName: string | null;
+  personIdRef: string | null;
+};
+
+export async function getUpcomingMeetingsForCompany(companyId: string): Promise<CompanyUpcomingMeeting[]> {
+  const rows = await db
+    .select({
+      meeting: meetings,
+      personName: people.name,
+      personId: people.id,
+    })
+    .from(meetings)
+    .innerJoin(people, eq(meetings.personId, people.id))
+    .where(
+      and(
+        eq(people.companyId, companyId),
+        eq(meetings.status, 'scheduled'),
+        gte(meetings.scheduledAt, new Date()),
+      ),
+    )
+    .orderBy(meetings.scheduledAt);
+
+  return rows.map((r) => ({
+    ...r.meeting,
+    personName: r.personName ?? null,
+    personIdRef: r.personId ?? null,
+  }));
 }
 
 /* -------------------------------------------------------------------------- */

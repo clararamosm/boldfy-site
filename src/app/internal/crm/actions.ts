@@ -131,11 +131,29 @@ export async function moveCompany(companyId: string, newStatusId: string): Promi
   }
 }
 
-const LogInteractionSchema = z.object({
-  personId: z.string().uuid(),
-  subtype: ManualSubtypeSchema,
-  observation: z.string().trim().min(1, 'Observação obrigatória').max(2000),
-});
+/**
+ * Schema do log manual.
+ *
+ * Suporta 3 escopos:
+ * 1. Pessoa específica (personId só) — uso original, no detalhe da pessoa
+ * 2. Empresa toda (companyId só) — interação company-level sem vincular pessoa
+ *    (ex: "enviei proposta", "reunião com comitê", "research de mercado")
+ * 3. Pessoa numa empresa (personId + companyId) — usado na page da empresa
+ *    quando a estrategista escolhe qual pessoa do comitê
+ *
+ * Validação: pelo menos um dos dois IDs deve estar presente.
+ */
+const LogInteractionSchema = z
+  .object({
+    personId: z.string().uuid().optional(),
+    companyId: z.string().uuid().optional(),
+    subtype: ManualSubtypeSchema,
+    observation: z.string().trim().min(1, 'Observação obrigatória').max(2000),
+  })
+  .refine((d) => !!d.personId || !!d.companyId, {
+    message: 'Informe pessoa ou empresa.',
+    path: ['personId'],
+  });
 
 const SUBTYPE_WEIGHTS: Record<z.infer<typeof ManualSubtypeSchema>, number> = {
   linkedin_message: 10,
@@ -153,8 +171,12 @@ export async function logManualInteraction(
   _prev: LogInteractionState,
   formData: FormData,
 ): Promise<LogInteractionState> {
+  // Treat empty strings as undefined pra zod entender o opcional
+  const rawPersonId = formData.get('personId');
+  const rawCompanyId = formData.get('companyId');
   const input = {
-    personId: formData.get('personId'),
+    personId: typeof rawPersonId === 'string' && rawPersonId.length > 0 ? rawPersonId : undefined,
+    companyId: typeof rawCompanyId === 'string' && rawCompanyId.length > 0 ? rawCompanyId : undefined,
     subtype: formData.get('subtype'),
     observation: formData.get('observation'),
   };
@@ -166,17 +188,26 @@ export async function logManualInteraction(
   try {
     await logActivity({
       personId: parsed.data.personId,
+      companyId: parsed.data.companyId,
       type: 'manual_interaction',
       subtype: parsed.data.subtype,
-      weight: SUBTYPE_WEIGHTS[parsed.data.subtype],
+      // Quando é company-level (sem person), score não aplica — peso 0 evita
+      // distorcer o lead score de nenhuma pessoa específica
+      weight: parsed.data.personId ? SUBTYPE_WEIGHTS[parsed.data.subtype] : 0,
       source: 'manual',
       data: {
         subtype: parsed.data.subtype,
         observation: parsed.data.observation,
+        scope: parsed.data.personId ? 'person' : 'company',
       },
     });
 
-    revalidatePath(`/internal/crm/people/${parsed.data.personId}`);
+    if (parsed.data.personId) {
+      revalidatePath(`/internal/crm/people/${parsed.data.personId}`);
+    }
+    if (parsed.data.companyId) {
+      revalidatePath(`/internal/crm/companies/${parsed.data.companyId}`);
+    }
     revalidatePath('/internal/crm/feed');
     return { ok: true };
   } catch (err) {
