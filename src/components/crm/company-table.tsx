@@ -10,6 +10,18 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { CompaniesByStatus, CompanyWithDetails } from '@/lib/crm-queries';
 import { timeAgo } from '@/lib/crm-format';
+import { useColumnPicker, type ColumnDef } from './column-picker';
+
+const COMPANY_COLUMNS: readonly ColumnDef[] = [
+  { key: 'name', label: 'Nome' },
+  { key: 'industry', label: 'Setor' },
+  { key: 'size', label: 'Porte' },
+  { key: 'status', label: 'Status' },
+  { key: 'peopleCount', label: 'Leads' },
+  { key: 'peopleNames', label: 'Pessoas vinculadas' },
+  { key: 'topScore', label: 'Top score' },
+  { key: 'updatedAt', label: 'Atualizada' },
+];
 
 type SortKey = 'name' | 'industry' | 'size' | 'status' | 'peopleCount' | 'topScore' | 'updatedAt' | 'createdAt';
 type SortDir = 'asc' | 'desc';
@@ -27,6 +39,7 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [visibleCols, ColumnPickerUI] = useColumnPicker('crm-table-cols-companies', COMPANY_COLUMNS);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -111,6 +124,9 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
         <div style={{ fontSize: 12, color: '#9D85B3' }}>
           {sorted.length} {sorted.length === 1 ? 'resultado' : 'resultados'}
         </div>
+        <div style={{ marginLeft: 'auto' }}>
+          {ColumnPickerUI}
+        </div>
       </div>
 
       <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, overflow: 'hidden' }}>
@@ -118,53 +134,63 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 900 }}>
             <thead>
               <tr style={{ background: '#FAF7FF' }}>
-                <Th label="Nome" col="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Setor" col="industry" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Porte" col="size" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Leads" col="peopleCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
-                <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3' }}>
-                  Pessoas vinculadas
-                </th>
-                <Th label="Top score" col="topScore" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
-                <Th label="Atualizada" col="updatedAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
+                {visibleCols.has('name') ? <Th label="Nome" col="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('industry') ? <Th label="Setor" col="industry" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('size') ? <Th label="Porte" col="size" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('status') ? <Th label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('peopleCount') ? <Th label="Leads" col="peopleCount" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" /> : null}
+                {visibleCols.has('peopleNames') ? (
+                  <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3' }}>
+                    Pessoas vinculadas
+                  </th>
+                ) : null}
+                {visibleCols.has('topScore') ? <Th label="Top score" col="topScore" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" /> : null}
+                {visibleCols.has('updatedAt') ? <Th label="Atualizada" col="updatedAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" /> : null}
               </tr>
             </thead>
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
+                  <td colSpan={visibleCols.size || 1} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
                     Nenhuma empresa bate com os filtros.
                   </td>
                 </tr>
               ) : (
                 sorted.map((c) => (
                   <tr key={c.id} style={{ borderTop: '1px solid #F7EEFC' }}>
-                    <td style={{ padding: '10px 14px' }}>
-                      <Link href={`/internal/crm/companies/${c.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#45336B' }}>{c.industry ?? '—'}</td>
-                    <td style={{ padding: '10px 14px', color: '#45336B' }}>{c.size ?? '—'}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      {c.status ? <StatusPill label={c.status.label} color={c.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.peopleCount}</td>
-                    <td style={{ padding: '10px 14px', color: '#45336B', fontSize: 12, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.peopleNames ?? 'Nenhuma pessoa vinculada'}>
-                      {c.peopleNames ? (
-                        <>
-                          {c.peopleNames}
-                          {c.peopleCount > 5 ? <span style={{ color: '#9D85B3' }}> +{c.peopleCount - 5}</span> : null}
-                        </>
-                      ) : (
-                        <span style={{ color: '#C0392B', fontSize: 11, fontStyle: 'italic' }}>⚠ órfã</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.topScore}</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
-                      {c.updatedAt ? timeAgo(c.updatedAt) : '—'}
-                    </td>
+                    {visibleCols.has('name') ? (
+                      <td style={{ padding: '10px 14px' }}>
+                        <Link href={`/internal/crm/companies/${c.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
+                          {c.name}
+                        </Link>
+                      </td>
+                    ) : null}
+                    {visibleCols.has('industry') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{c.industry ?? '—'}</td> : null}
+                    {visibleCols.has('size') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{c.size ?? '—'}</td> : null}
+                    {visibleCols.has('status') ? (
+                      <td style={{ padding: '10px 14px' }}>
+                        {c.status ? <StatusPill label={c.status.label} color={c.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}
+                      </td>
+                    ) : null}
+                    {visibleCols.has('peopleCount') ? <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.peopleCount}</td> : null}
+                    {visibleCols.has('peopleNames') ? (
+                      <td style={{ padding: '10px 14px', color: '#45336B', fontSize: 12, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.peopleNames ?? 'Nenhuma pessoa vinculada'}>
+                        {c.peopleNames ? (
+                          <>
+                            {c.peopleNames}
+                            {c.peopleCount > 5 ? <span style={{ color: '#9D85B3' }}> +{c.peopleCount - 5}</span> : null}
+                          </>
+                        ) : (
+                          <span style={{ color: '#C0392B', fontSize: 11, fontStyle: 'italic' }}>⚠ órfã</span>
+                        )}
+                      </td>
+                    ) : null}
+                    {visibleCols.has('topScore') ? <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.topScore}</td> : null}
+                    {visibleCols.has('updatedAt') ? (
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
+                        {c.updatedAt ? timeAgo(c.updatedAt) : '—'}
+                      </td>
+                    ) : null}
                   </tr>
                 ))
               )}

@@ -232,7 +232,14 @@ export async function upsertPerson(
       .limit(1);
 
     if (existing[0]) {
-      const updates: Partial<Person> = { lastTouchAt: new Date() };
+      // lastTouchAt: pra captura LIVE (sem firstTouchAt = sem indicação de
+      // import histórico), atualiza pra agora. Pra IMPORT (firstTouchAt
+      // passado), NÃO sobrescreve — preserva o último contato real que já
+      // foi computado via activities. Re-import não deve resetar lastTouch.
+      const updates: Partial<Person> = {};
+      if (!input.firstTouchAt) {
+        updates.lastTouchAt = new Date();
+      }
       if (input.phone && !existing[0].phone) updates.phone = input.phone;
       if (input.jobTitle && !existing[0].jobTitle) updates.jobTitle = input.jobTitle;
       if (input.linkedinUrl && !existing[0].linkedinUrl) updates.linkedinUrl = input.linkedinUrl;
@@ -320,13 +327,24 @@ export async function logActivity(
     let newStatusId: string | undefined;
 
     if (weight !== 0 && input.personId) {
+      // lastTouchAt: pra activity nova (em tempo real), usa now().
+      // Pra activity HISTÓRICA (import com createdAt passado), preserva o
+      // que já está no banco — evita que um re-import jogue lastTouchAt pra
+      // "agora" e crie a falsa sensação de que o lead interagiu hoje.
+      const setClause: Record<string, unknown> = {
+        leadScore: sql`GREATEST(0, ${people.leadScore} + ${weight})`,
+        updatedAt: new Date(),
+      };
+      if (!input.createdAt) {
+        setClause.lastTouchAt = new Date();
+      } else {
+        // Activity histórica: atualiza lastTouchAt SÓ se o novo timestamp é
+        // mais recente que o atual (preserva o último contato real).
+        setClause.lastTouchAt = sql`GREATEST(COALESCE(${people.lastTouchAt}, ${input.createdAt.toISOString()}::timestamptz), ${input.createdAt.toISOString()}::timestamptz)`;
+      }
       const [updated] = await db
         .update(people)
-        .set({
-          leadScore: sql`GREATEST(0, ${people.leadScore} + ${weight})`,
-          lastTouchAt: new Date(),
-          updatedAt: new Date(),
-        })
+        .set(setClause)
         .where(eq(people.id, input.personId))
         .returning({ leadScore: people.leadScore, statusId: people.statusId });
 

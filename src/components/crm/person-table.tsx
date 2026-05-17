@@ -18,6 +18,18 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { PeopleByStatus, PersonWithDetails } from '@/lib/crm-queries';
 import { timeAgo, methodVia, channelLabel } from '@/lib/crm-format';
+import { useColumnPicker, type ColumnDef } from './column-picker';
+
+const PERSON_COLUMNS: readonly ColumnDef[] = [
+  { key: 'name', label: 'Nome' },
+  { key: 'company', label: 'Empresa' },
+  { key: 'jobTitle', label: 'Cargo' },
+  { key: 'email', label: 'Email' },
+  { key: 'status', label: 'Status' },
+  { key: 'leadScore', label: 'Score' },
+  { key: 'via', label: 'Via' },
+  { key: 'lastTouchAt', label: 'Última atividade' },
+];
 
 type SortKey = 'name' | 'email' | 'company' | 'jobTitle' | 'status' | 'leadScore' | 'lastTouchAt' | 'createdAt';
 type SortDir = 'asc' | 'desc';
@@ -36,6 +48,7 @@ export function PersonTable({ data }: { data: PeopleByStatus }) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('lastTouchAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [visibleCols, ColumnPickerUI] = useColumnPicker('crm-table-cols-people', PERSON_COLUMNS);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -123,6 +136,9 @@ export function PersonTable({ data }: { data: PeopleByStatus }) {
         <div style={{ fontSize: 12, color: '#9D85B3' }}>
           {sorted.length} {sorted.length === 1 ? 'resultado' : 'resultados'}
         </div>
+        <div style={{ marginLeft: 'auto' }}>
+          {ColumnPickerUI}
+        </div>
       </div>
 
       <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, overflow: 'hidden' }}>
@@ -130,48 +146,56 @@ export function PersonTable({ data }: { data: PeopleByStatus }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 920 }}>
             <thead>
               <tr style={{ background: '#FAF7FF' }}>
-                <Th label="Nome" col="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Empresa" col="company" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Cargo" col="jobTitle" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Email" col="email" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Score" col="leadScore" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
-                <Th label="Via" col="createdAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <Th label="Última atividade" col="lastTouchAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" />
+                {visibleCols.has('name') ? <Th label="Nome" col="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('company') ? <Th label="Empresa" col="company" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('jobTitle') ? <Th label="Cargo" col="jobTitle" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('email') ? <Th label="Email" col="email" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('status') ? <Th label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('leadScore') ? <Th label="Score" col="leadScore" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" /> : null}
+                {visibleCols.has('via') ? <Th label="Via" col="createdAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} /> : null}
+                {visibleCols.has('lastTouchAt') ? <Th label="Última atividade" col="lastTouchAt" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} align="right" /> : null}
               </tr>
             </thead>
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
+                  <td colSpan={visibleCols.size || 1} style={{ padding: 40, textAlign: 'center', color: '#9D85B3' }}>
                     Nenhum lead bate com os filtros.
                   </td>
                 </tr>
               ) : (
                 sorted.map((p) => (
                   <tr key={p.id} style={{ borderTop: '1px solid #F7EEFC' }}>
-                    <td style={{ padding: '10px 14px' }}>
-                      <Link
-                        href={`/internal/crm/people/${p.id}`}
-                        style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}
-                      >
-                        {p.name}
-                      </Link>
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.company?.name ?? '—'}</td>
-                    <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.jobTitle ?? '—'}</td>
-                    <td style={{ padding: '10px 14px', color: '#9D85B3', fontSize: 12 }}>{p.email}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      {p.status ? <StatusPill label={p.status.label} color={p.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{p.leadScore}</td>
-                    <td style={{ padding: '10px 14px', fontSize: 11, color: '#9D85B3' }}>
-                      {methodVia(p.sourceMethod ?? 'manual')?.label ?? '—'}
-                      {p.sourceChannel && p.sourceChannel !== 'unknown' ? ` · ${channelLabel(p.sourceChannel)}` : ''}
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
-                      {p.lastTouchAt ? timeAgo(p.lastTouchAt) : '—'}
-                    </td>
+                    {visibleCols.has('name') ? (
+                      <td style={{ padding: '10px 14px' }}>
+                        <Link
+                          href={`/internal/crm/people/${p.id}`}
+                          style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}
+                        >
+                          {p.name}
+                        </Link>
+                      </td>
+                    ) : null}
+                    {visibleCols.has('company') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.company?.name ?? '—'}</td> : null}
+                    {visibleCols.has('jobTitle') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.jobTitle ?? '—'}</td> : null}
+                    {visibleCols.has('email') ? <td style={{ padding: '10px 14px', color: '#9D85B3', fontSize: 12 }}>{p.email}</td> : null}
+                    {visibleCols.has('status') ? (
+                      <td style={{ padding: '10px 14px' }}>
+                        {p.status ? <StatusPill label={p.status.label} color={p.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}
+                      </td>
+                    ) : null}
+                    {visibleCols.has('leadScore') ? <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{p.leadScore}</td> : null}
+                    {visibleCols.has('via') ? (
+                      <td style={{ padding: '10px 14px', fontSize: 11, color: '#9D85B3' }}>
+                        {methodVia(p.sourceMethod ?? 'manual')?.label ?? '—'}
+                        {p.sourceChannel && p.sourceChannel !== 'unknown' ? ` · ${channelLabel(p.sourceChannel)}` : ''}
+                      </td>
+                    ) : null}
+                    {visibleCols.has('lastTouchAt') ? (
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
+                        {p.lastTouchAt ? timeAgo(p.lastTouchAt) : '—'}
+                      </td>
+                    ) : null}
                   </tr>
                 ))
               )}

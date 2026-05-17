@@ -368,22 +368,13 @@ export async function importFromAC(): Promise<Result> {
             activitiesCreated++;
           }
 
-          // 4) Activity de marcação do import (peso 0)
-          await logActivity({
-            personId: p.data.id,
-            type: 'imported_from_ac',
-            weight: 0,
-            source: 'system',
-            data: {
-              ac_contact_id: c.id,
-              tags_count: tags.length,
-              email_events_count: emailEvents.length,
-              page_views_count: pageViews.length,
-              page_views_imported: recentPageViews.length,
-            },
-          });
+          // Activity 'imported_from_ac' removida em mai/2026 ciclo 3.x — virou
+          // ruído na timeline (Clara não quer ver "📦 Importado do AC" como
+          // ponto de contato — distorce a percepção de última interação).
+          // A info de import segue em metadata.imported_from { ac_contact_id,
+          // ac_imported_at, notes_count } pra debug.
 
-          // 5) Classifica por sourceMethod (regra mai/2026):
+          // Classifica por sourceMethod (regra mai/2026):
           // forms beta/demo/proposta vão direto pra Quente mesmo sem o score
           // ter atingido o threshold; report fica em Ativo (acumula score).
           // Não-regressão respeitada — não baixa se já está em status mais avançado.
