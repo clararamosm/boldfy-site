@@ -1,7 +1,9 @@
 /**
- * Dashboard · Funil B2B — silo simples.
- * Funil cross-channel + sankey origem→status + pipeline empresas +
- * leads parados + cohort + score por canal.
+ * Dashboard · Funil B2B — BISECT MODE.
+ *
+ * Versão mínima ATIVA: Funil drop-off + Pipeline empresas + Leads parados.
+ * Os 4 widgets únicos (Sankey, Velocity, BoxPlot, Cohort) estão comentados.
+ * Vamos descomentar UM por commit até reproduzir o erro digest 768129656.
  */
 
 import type { Metadata } from 'next';
@@ -11,32 +13,25 @@ import { count } from 'drizzle-orm';
 import { getStatuses } from '@/lib/statuses';
 import {
   getUnifiedFunnel,
-  getSourceToStatusSankey,
   getStuckLeads,
-  getVelocityByChannel,
-  getScoreDistributionByChannel,
-  getCohortMatrix,
+  // BISECT: importa mas não usa ainda
+  // getSourceToStatusSankey,
+  // getVelocityByChannel,
+  // getScoreDistributionByChannel,
+  // getCohortMatrix,
 } from '@/lib/dashboard-queries';
 import {
   FunnelStages,
-  SankeyFlow,
-  BoxPlotByChannel,
-  CohortMatrix,
-  BarCompareChart,
   BOLDFY_PALETTE,
+  // BISECT: importa mas não usa ainda
+  // SankeyFlow,
+  // BoxPlotByChannel,
+  // CohortMatrix,
+  // BarCompareChart,
 } from '@/components/dashboard/charts';
 import {
-  FileText,
-  Flame,
-  Calendar,
-  Trophy,
-  Target,
-  BarChart3,
-  GitMerge,
-  Snail,
-  Zap,
-  CalendarRange,
-  Workflow,
+  FileText, Flame, Calendar, Trophy, Target, GitMerge, Snail,
+  // Workflow, Zap, BarChart3, CalendarRange,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -48,20 +43,16 @@ export const dynamic = 'force-dynamic';
 
 const DAYS = 30;
 
-const SOURCE_LABELS: Record<string, string> = {
-  linkedin: 'LinkedIn', organic: 'Orgânico', direct: 'Direto',
-  email: 'Email', indicacao: 'Indicação', pr: 'PR',
-  manual: 'Manual', unknown: 'Não atribuído',
-};
+// const SOURCE_LABELS: Record<string, string> = {
+//   linkedin: 'LinkedIn', organic: 'Orgânico', direct: 'Direto',
+//   email: 'Email', indicacao: 'Indicação', pr: 'PR',
+//   manual: 'Manual', unknown: 'Não atribuído',
+// };
 
 export default async function FunilPage() {
-  const [funnel, sankey, stuck, velocity, scoreDist, cohort, allStatuses, pipelineCounts] = await Promise.all([
+  const [funnel, stuck, allStatuses, pipelineCounts] = await Promise.all([
     getUnifiedFunnel(DAYS).catch(() => ({ sources: [], stages: [] })),
-    getSourceToStatusSankey().catch(() => []),
     getStuckLeads(7).catch(() => []),
-    getVelocityByChannel().catch(() => []),
-    getScoreDistributionByChannel().catch(() => []),
-    getCohortMatrix(6).catch(() => []),
     getStatuses('company').catch(() => []),
     db.select({ statusId: companies.statusId, n: count() }).from(companies).groupBy(companies.statusId).catch(() => []),
   ]);
@@ -83,7 +74,9 @@ export default async function FunilPage() {
       <div className="dash-header">
         <div>
           <h1 className="dash-title">Funil B2B</h1>
-          <p className="dash-subtitle">Drop-off · velocidade · cohort · {DAYS} dias</p>
+          <p className="dash-subtitle">
+            Bisect mode · widgets básicos ativos · sankey/velocity/box/cohort comentados (próximos commits)
+          </p>
         </div>
       </div>
 
@@ -117,13 +110,6 @@ export default async function FunilPage() {
         }))} />
       </div>
 
-      {sankey.length > 0 ? (
-        <div className="dash-card">
-          <div className="dash-card-title"><Workflow /> Sankey: Origem → Status atual</div>
-          <SankeyFlow edges={sankey} sourceLabels={SOURCE_LABELS} />
-        </div>
-      ) : null}
-
       <div className="dash-card">
         <div className="dash-card-title"><GitMerge /> Pipeline de Empresas</div>
         <div className="dash-card-subtitle">Arrasta em <Link href="/internal/crm/empresas" style={{ color: '#CD50F1' }}>/crm/empresas</Link></div>
@@ -151,37 +137,17 @@ export default async function FunilPage() {
         )}
       </div>
 
-      {velocity.length > 0 ? (
-        <div className="dash-card">
-          <div className="dash-card-title"><Zap /> Velocidade por canal — lead → reunião</div>
-          <BarCompareChart
-            data={velocity.map((v) => ({ label: `${SOURCE_LABELS[v.channel] ?? v.channel} (${v.n})` }))}
-            series={[{ key: 'avg', label: 'Média dias', color: '#CD50F1', values: velocity.map((v) => Math.round(v.avgDays * 10) / 10) }]}
-          />
-        </div>
-      ) : null}
-
-      {scoreDist.length > 0 ? (
-        <div className="dash-card">
-          <div className="dash-card-title"><BarChart3 /> Score distribution por canal</div>
-          <BoxPlotByChannel rows={scoreDist} channelLabel={(c) => SOURCE_LABELS[c] ?? c} />
-        </div>
-      ) : null}
-
-      {cohort.length > 0 ? (
-        <div className="dash-card">
-          <div className="dash-card-title"><CalendarRange /> Cohort retention — leads → reunião</div>
-          <CohortMatrix rows={cohort.map((c) => ({
-            month: c.month,
-            total: c.total,
-            values: [
-              { label: '7d', value: c.reu7d },
-              { label: '14d', value: c.reu14d },
-              { label: '30d', value: c.reu30d },
-            ],
-          }))} />
-        </div>
-      ) : null}
+      <div style={{ marginTop: 18, padding: 14, background: 'rgba(245, 158, 11, 0.06)', borderRadius: 10, fontSize: 12, color: '#92580E' }}>
+        ⚠️ BISECT: Sankey, Velocidade, Score box plot e Cohort estão comentados. Vou descomentar 1 por commit pra achar qual quebra.
+      </div>
     </div>
   );
 }
+
+/* TODO BISECT — descomentar 1 por commit:
+ *
+ * 1. SankeyFlow (importar getSourceToStatusSankey + SankeyFlow + Workflow icon)
+ * 2. BarCompareChart velocidade (importar getVelocityByChannel + BarCompareChart + Zap icon)
+ * 3. BoxPlotByChannel score (importar getScoreDistributionByChannel + BoxPlotByChannel + BarChart3 icon)
+ * 4. CohortMatrix retention (importar getCohortMatrix + CohortMatrix + CalendarRange icon)
+ */
