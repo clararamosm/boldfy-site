@@ -1,0 +1,265 @@
+/**
+ * Webhook receiver pro ActiveCampaign.
+ *
+ * Recebe eventos de email/contato em tempo real e cria activities
+ * correspondentes na timeline do CRM.
+ *
+ * Eventos suportados (mai/2026):
+ *   - sent                  → activity 'email_sent' (peso 0)
+ *   - open                  → activity 'email_open' (peso +1)
+ *   - click                 → activity 'email_click' (peso +3)
+ *   - bounce                → activity 'email_bounce' (peso 0) + flag em metadata
+ *   - unsubscribe           → activity 'email_unsubscribed' (peso 0)
+ *   - update (contato)      → ignorado (vem rico demais e não acrescenta sinal)
+ *   - tag_add/tag_remove    → ignorado (já espelhamos via ac-sync ao mover status)
+ *
+ * Configuração no painel AC: Settings → Developer → Manage Webhooks →
+ *   - URL: https://www.boldfy.com.br/api/webhooks/ac
+ *   - Sources: Public + Admin + Automations
+ *   - Events: Sends, Opens, Clicks, Bounces, Unsubscribes
+ *   - (HMAC signature: AC NÃO assina webhooks por padrão — validação via
+ *      secret query param ?key=AC_WEBHOOK_SECRET é o que funciona na maioria
+ *      das contas)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { db, people, activities } from '@/db';
+import { eq, sql } from 'drizzle-orm';
+
+const AC_WEBHOOK_SECRET = process.env.AC_WEBHOOK_SECRET;
+
+type ACWebhookPayload = {
+  type: string;
+  date_time?: string;
+  initiated_from?: string;
+  initiated_by?: string;
+  list?: string;
+  contact?: {
+    id?: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+  };
+  campaign?: {
+    campaignid?: string;
+    messageid?: string;
+    name?: string;
+    subject?: string;
+    sdate?: string;
+  };
+  // Pra eventos de open/click vêm em estruturas próprias
+  link?: {
+    url?: string;
+  };
+  // Bounce
+  bounce_type?: string;
+  // Genérico — AC tem vários formatos
+  [k: string]: unknown;
+};
+
+/**
+ * Lookup person por acContactId (rápido, indexado) ou email (fallback).
+ * Retorna null se não acha — webhook acaba virando no-op (ignorado).
+ */
+async function findPersonByContact(contactId?: string, email?: string): Promise<{ id: string } | null> {
+  if (contactId) {
+    const [byId] = await db
+      .select({ id: people.id })
+      .from(people)
+      .where(eq(people.acContactId, contactId))
+      .limit(1);
+    if (byId) return byId;
+  }
+  if (email) {
+    const [byEmail] = await db
+      .select({ id: people.id })
+      .from(people)
+      .where(eq(people.email, email.toLowerCase()))
+      .limit(1);
+    if (byEmail) {
+      // Cache contactId pra próxima vez ser direto
+      if (contactId) {
+        await db.update(people)
+          .set({ acContactId: contactId, updatedAt: new Date() })
+          .where(sql`${people.id} = ${byEmail.id} AND ${people.acContactId} IS NULL`);
+      }
+      return byEmail;
+    }
+  }
+  return null;
+}
+
+/**
+ * Mapeia tipo do webhook AC → tipo de activity no CRM + peso + data.
+ * Retorna null se evento não deve gerar activity (ignorado).
+ */
+function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; data: Record<string, unknown> } | null {
+  const t = payload.type?.toLowerCase();
+  const baseData = {
+    campaign_id: payload.campaign?.campaignid,
+    campaign_name: payload.campaign?.name,
+    message_id: payload.campaign?.messageid,
+    message_subject: payload.campaign?.subject,
+    initiated_from: payload.initiated_from,
+    initiated_by: payload.initiated_by,
+    ac_event_date: payload.date_time,
+    via: 'ac_webhook',
+  };
+
+  switch (t) {
+    // Sent — pode vir como 'sent', 'send', ou 'campaign_starts_sending' dependendo
+    // do tipo (broadcast vs automation step). Se broadcast, payload não tem
+    // contact e findPersonByContact retorna null → endpoint ignora gracefully.
+    case 'sent':
+    case 'send':
+    case 'campaign_starts_sending':
+      return { type: 'email_sent', weight: 0, data: baseData };
+    case 'open':
+    case 'campaign_opened':
+      return { type: 'email_open', weight: 1, data: baseData };
+    case 'click':
+    case 'link_clicked':
+      return {
+        type: 'email_click',
+        weight: 3,
+        data: { ...baseData, url: payload.link?.url },
+      };
+    case 'forward':
+    case 'campaign_forwarded':
+      return { type: 'email_forwarded', weight: 8, data: baseData };
+    case 'reply':
+    case 'email_replies':
+    case 'email_reply':
+      return { type: 'email_reply', weight: 15, data: baseData };
+    case 'bounce':
+    case 'email_bounces':
+      return {
+        type: 'email_bounce',
+        weight: 0,
+        data: { ...baseData, bounce_type: payload.bounce_type ?? 'soft' },
+      };
+    case 'unsubscribe':
+    case 'contact_unsubscription':
+      return { type: 'email_unsubscribed', weight: 0, data: baseData };
+    default:
+      return null; // ignored event
+  }
+}
+
+/**
+ * Idempotência básica: AC pode reenviar o mesmo webhook. Se já existe
+ * activity com mesma assinatura no último 1min, skip.
+ */
+async function alreadyLogged(personId: string, type: string, campaignId?: string, eventDate?: string): Promise<boolean> {
+  if (!eventDate) return false;
+  try {
+    const cutoff = new Date(Date.now() - 60_000);
+    const rows = await db
+      .select({ id: activities.id })
+      .from(activities)
+      .where(sql`
+        ${activities.personId} = ${personId}
+        AND ${activities.type} = ${type}
+        AND ${activities.createdAt} > ${cutoff}
+        AND ${activities.data}->>'ac_event_date' = ${eventDate}
+        AND ${activities.data}->>'campaign_id' = ${campaignId ?? null}
+      `)
+      .limit(1);
+    return rows.length > 0;
+  } catch {
+    return false; // se a query quebra, deixa loggar (preferível duplicar do que perder)
+  }
+}
+
+export async function POST(req: NextRequest) {
+  // Validação por secret query param (?key=AC_WEBHOOK_SECRET).
+  // AC não tem HMAC nativo — esse é o padrão suportado pela maioria das contas.
+  if (AC_WEBHOOK_SECRET) {
+    const key = req.nextUrl.searchParams.get('key');
+    if (key !== AC_WEBHOOK_SECRET) {
+      return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+    }
+  }
+
+  let payload: ACWebhookPayload;
+  try {
+    // AC manda webhook como application/x-www-form-urlencoded por padrão,
+    // mas algumas contas têm JSON. Tenta os 2.
+    const contentType = req.headers.get('content-type') ?? '';
+    if (contentType.includes('application/json')) {
+      payload = await req.json();
+    } else {
+      const formData = await req.formData();
+      payload = Object.fromEntries(formData.entries()) as unknown as ACWebhookPayload;
+      // Reconstrói nested objects que vêm como "contact[email]" no form
+      const contact: Record<string, string> = {};
+      const campaign: Record<string, string> = {};
+      const link: Record<string, string> = {};
+      for (const [k, v] of Array.from(formData.entries())) {
+        if (typeof v !== 'string') continue;
+        const m = k.match(/^(contact|campaign|link)\[(\w+)\]$/);
+        if (m) {
+          if (m[1] === 'contact') contact[m[2]] = v;
+          else if (m[1] === 'campaign') campaign[m[2]] = v;
+          else if (m[1] === 'link') link[m[2]] = v;
+        }
+      }
+      if (Object.keys(contact).length > 0) payload.contact = contact;
+      if (Object.keys(campaign).length > 0) payload.campaign = campaign;
+      if (Object.keys(link).length > 0) payload.link = link;
+    }
+  } catch (err) {
+    console.error('[ac-webhook] failed to parse payload:', err);
+    return NextResponse.json({ ok: false, error: 'invalid payload' }, { status: 400 });
+  }
+
+  const event = mapEvent(payload);
+  if (!event) {
+    // Ignored event type — retorna 200 pra AC não retry
+    return NextResponse.json({ ok: true, ignored: payload.type });
+  }
+
+  const person = await findPersonByContact(payload.contact?.id, payload.contact?.email);
+  if (!person) {
+    // Pessoa não está no nosso CRM — comum (Profissional Individual etc).
+    // Retorna 200 pra AC não retry.
+    return NextResponse.json({ ok: true, ignored: 'person_not_in_crm', email: payload.contact?.email });
+  }
+
+  // Dedup por (personId + type + campaign_id + ac_event_date)
+  const dup = await alreadyLogged(person.id, event.type, payload.campaign?.campaignid, payload.date_time);
+  if (dup) {
+    return NextResponse.json({ ok: true, ignored: 'duplicate' });
+  }
+
+  try {
+    await db.insert(activities).values({
+      personId: person.id,
+      type: event.type,
+      weight: event.weight,
+      source: 'email',
+      data: event.data,
+    });
+
+    // Pra bounce/unsubscribe, também atualiza flag em metadata.ac_extra
+    // pro display (pill vermelho no header).
+    if (event.type === 'email_bounce') {
+      await db.update(people).set({
+        metadata: sql`
+          jsonb_set(
+            COALESCE(${people.metadata}, '{}'::jsonb),
+            '{ac_extra,bounced_${sql.raw(payload.bounce_type === 'hard' ? 'hard' : 'soft')}}',
+            'true'::jsonb
+          )
+        `,
+        updatedAt: new Date(),
+      }).where(eq(people.id, person.id));
+    }
+  } catch (err) {
+    console.error('[ac-webhook] failed to insert activity:', err);
+    // Retorna 500 pra AC retry
+    return NextResponse.json({ ok: false, error: 'db_error' }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, type: event.type, personId: person.id });
+}

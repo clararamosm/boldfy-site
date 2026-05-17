@@ -97,10 +97,38 @@ export function describeActivity(
     case 'material_download':
       return { icon: '📦', text: `Baixou material ${(data?.material as string) ?? ''}`.trim(), category: 'form' };
 
-    case 'email_open':
-      return { icon: '✉', text: `Abriu email${data?.subject ? ': ' + (data.subject as string) : ''}`, category: 'email' };
-    case 'email_click':
-      return { icon: '🔗', text: `Clicou link em email${data?.url ? ': ' + (data.url as string) : ''}`, category: 'email' };
+    case 'email_sent': {
+      const campaign = data?.campaign_name as string | undefined;
+      const subject = data?.message_subject as string | undefined;
+      const labelParts = [campaign, subject].filter(Boolean).join(' · ');
+      return { icon: '📤', text: `Email enviado${labelParts ? ': ' + labelParts : ''}`, category: 'email' };
+    }
+    case 'email_open': {
+      const campaign = data?.campaign_name as string | undefined;
+      const subject = (data?.message_subject as string | undefined) ?? (data?.subject as string | undefined);
+      const labelParts = [campaign, subject].filter(Boolean).join(' · ');
+      return { icon: '👀', text: `Abriu email${labelParts ? ': ' + labelParts : ''}`, category: 'email' };
+    }
+    case 'email_click': {
+      const url = data?.url as string | undefined;
+      const campaign = data?.campaign_name as string | undefined;
+      const label = url ?? campaign ?? '';
+      return { icon: '🔗', text: `Clicou link${label ? ': ' + label : ''}`, category: 'email' };
+    }
+    case 'email_forwarded': {
+      const campaign = data?.campaign_name as string | undefined;
+      return { icon: '📨', text: `Encaminhou email${campaign ? ': ' + campaign : ''}`, category: 'email' };
+    }
+    case 'email_reply': {
+      const campaign = data?.campaign_name as string | undefined;
+      const subject = data?.message_subject as string | undefined;
+      const labelParts = [campaign, subject].filter(Boolean).join(' · ');
+      return { icon: '💬', text: `Respondeu email${labelParts ? ': ' + labelParts : ''}`, category: 'email' };
+    }
+    case 'email_bounce':
+      return { icon: '⚠', text: `Email bounce (${(data?.bounce_type as string) ?? 'soft'})`, category: 'email' };
+    case 'email_unsubscribed':
+      return { icon: '🚫', text: `Descadastrou da cadência${data?.campaign_name ? ': ' + (data.campaign_name as string) : ''}`, category: 'email' };
 
     case 'cal_scheduled':
       return { icon: '📅', text: 'Agendou no Cal.com', category: 'cal' };

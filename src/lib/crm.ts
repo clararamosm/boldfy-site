@@ -28,8 +28,13 @@ const ACTIVITY_WEIGHTS: Record<string, number> = {
   form_submit_demo: 50,
   form_submit_proposta: 50,
   material_download: 5,
+  email_sent: 0,           // Email disparado pela cadência — só tracking (AC não dispara webhook individual por contato)
   email_open: 1,
   email_click: 3,
+  email_forwarded: 8,      // Forward = advocacy, alguém compartilhou com terceiros
+  email_reply: 15,         // Resposta direta = engajamento máximo, prioridade pra follow-up
+  email_bounce: 0,         // Pessoa pode ter bounce sem culpa — não desconta
+  email_unsubscribed: 0,   // Descadastrou — só flagra na timeline
   cal_scheduled: 30,
   cal_attended: 30,
   cal_noshow: -10,
