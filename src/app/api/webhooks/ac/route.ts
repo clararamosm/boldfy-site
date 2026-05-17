@@ -172,26 +172,29 @@ async function alreadyLogged(personId: string, type: string, campaignId?: string
 }
 
 export async function POST(req: NextRequest) {
+  console.log('[ac-webhook] POST received', { url: req.url, contentType: req.headers.get('content-type') });
+
   // Validação por secret query param (?key=AC_WEBHOOK_SECRET).
-  // AC não tem HMAC nativo — esse é o padrão suportado pela maioria das contas.
   if (AC_WEBHOOK_SECRET) {
     const key = req.nextUrl.searchParams.get('key');
     if (key !== AC_WEBHOOK_SECRET) {
+      console.warn('[ac-webhook] UNAUTHORIZED — key mismatch', { gotKey: key?.slice(0, 8) + '...', expectedPrefix: AC_WEBHOOK_SECRET.slice(0, 8) + '...' });
       return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
     }
   }
 
   let payload: ACWebhookPayload;
+  let rawDump: Record<string, unknown> | null = null;
   try {
-    // AC manda webhook como application/x-www-form-urlencoded por padrão,
-    // mas algumas contas têm JSON. Tenta os 2.
     const contentType = req.headers.get('content-type') ?? '';
     if (contentType.includes('application/json')) {
       payload = await req.json();
+      rawDump = { format: 'json', body: payload };
     } else {
       const formData = await req.formData();
-      payload = Object.fromEntries(formData.entries()) as unknown as ACWebhookPayload;
-      // Reconstrói nested objects que vêm como "contact[email]" no form
+      const flatEntries = Object.fromEntries(formData.entries());
+      payload = flatEntries as unknown as ACWebhookPayload;
+      // Reconstrói nested objects (contact[email] → contact.email)
       const contact: Record<string, string> = {};
       const campaign: Record<string, string> = {};
       const link: Record<string, string> = {};
@@ -207,28 +210,42 @@ export async function POST(req: NextRequest) {
       if (Object.keys(contact).length > 0) payload.contact = contact;
       if (Object.keys(campaign).length > 0) payload.campaign = campaign;
       if (Object.keys(link).length > 0) payload.link = link;
+      rawDump = { format: 'form', flatKeys: Object.keys(flatEntries), reconstructed: { contact, campaign, link } };
     }
   } catch (err) {
-    console.error('[ac-webhook] failed to parse payload:', err);
+    console.error('[ac-webhook] PARSE FAILED:', err);
     return NextResponse.json({ ok: false, error: 'invalid payload' }, { status: 400 });
   }
 
+  console.log('[ac-webhook] PAYLOAD parsed', {
+    type: payload.type,
+    contactId: payload.contact?.id,
+    contactEmail: payload.contact?.email,
+    campaignName: payload.campaign?.name,
+    campaignId: payload.campaign?.campaignid,
+    rawDump,
+  });
+
   const event = mapEvent(payload);
   if (!event) {
-    // Ignored event type — retorna 200 pra AC não retry
+    console.log('[ac-webhook] IGNORED — event type not mapped', { type: payload.type });
     return NextResponse.json({ ok: true, ignored: payload.type });
   }
 
   const person = await findPersonByContact(payload.contact?.id, payload.contact?.email);
   if (!person) {
-    // Pessoa não está no nosso CRM — comum (Profissional Individual etc).
-    // Retorna 200 pra AC não retry.
+    console.log('[ac-webhook] IGNORED — person not in CRM', {
+      contactId: payload.contact?.id,
+      email: payload.contact?.email,
+      mappedType: event.type,
+    });
     return NextResponse.json({ ok: true, ignored: 'person_not_in_crm', email: payload.contact?.email });
   }
 
   // Dedup por (personId + type + campaign_id + ac_event_date)
   const dup = await alreadyLogged(person.id, event.type, payload.campaign?.campaignid, payload.date_time);
   if (dup) {
+    console.log('[ac-webhook] IGNORED — duplicate', { personId: person.id, type: event.type });
     return NextResponse.json({ ok: true, ignored: 'duplicate' });
   }
 
@@ -240,6 +257,7 @@ export async function POST(req: NextRequest) {
       source: 'email',
       data: event.data,
     });
+    console.log('[ac-webhook] OK — activity created', { personId: person.id, type: event.type, weight: event.weight });
 
     // Pra bounce/unsubscribe, também atualiza flag em metadata.ac_extra
     // pro display (pill vermelho no header).
@@ -256,10 +274,21 @@ export async function POST(req: NextRequest) {
       }).where(eq(people.id, person.id));
     }
   } catch (err) {
-    console.error('[ac-webhook] failed to insert activity:', err);
-    // Retorna 500 pra AC retry
+    console.error('[ac-webhook] DB INSERT FAILED:', err);
     return NextResponse.json({ ok: false, error: 'db_error' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, type: event.type, personId: person.id });
+}
+
+// GET handler pra teste de saúde do endpoint. Manda 200 se está vivo.
+// Útil pra confirmar que a URL responde antes de configurar webhook no AC.
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    endpoint: 'ac-webhook',
+    method_expected: 'POST',
+    requires_secret: !!AC_WEBHOOK_SECRET,
+    timestamp: new Date().toISOString(),
+  });
 }
