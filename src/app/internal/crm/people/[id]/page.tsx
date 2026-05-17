@@ -109,12 +109,8 @@ export default async function LeadDetailPage({ params }: Props) {
                       🏢 {person.company.name}
                     </Link>
                   ) : null}
-                  {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
-                    <span className="crm-detail-link">
-                      📍 {channelLabel(person.sourceChannel)}
-                      {person.sourcePage ? ` · ${person.sourcePage}` : ''}
-                    </span>
-                  ) : null}
+                  {/* Canal/página removidos daqui em mai/2026 ciclo 3 — agora
+                      vivem no card Jornada abaixo. */}
                 </div>
 
                 <div className="crm-detail-actions">
@@ -123,7 +119,63 @@ export default async function LeadDetailPage({ params }: Props) {
               </div>
             </div>
 
-            <h3 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 15, color: '#5E2A67', marginTop: 14, marginBottom: 10 }}>
+            {/* Jornada — canal → página → forms preenchidos (compacta a info que
+                antes ficava espalhada entre sidebar "Origem" e badges no header) */}
+            {(() => {
+              const formsPreenchidos = activitiesList.filter((a) => a.type.startsWith('form_submit_'));
+              const hasJornada = (person.sourceChannel && person.sourceChannel !== 'unknown')
+                || person.sourcePage
+                || formsPreenchidos.length > 0
+                || person.firstTouchCampaign;
+              if (!hasJornada) return null;
+
+              const formLabels: Record<string, string> = {
+                form_submit_demo: '🎯 Demo',
+                form_submit_beta: '🧪 Beta',
+                form_submit_report: '📥 Report',
+                form_submit_proposta: '💼 Proposta',
+              };
+              // De-dup: lead pode ter preenchido o mesmo form múltiplas vezes
+              const uniqueForms = Array.from(new Set(formsPreenchidos.map((f) => f.type)));
+
+              return (
+                <div style={{ marginTop: 16, padding: '14px 16px', background: 'linear-gradient(135deg, rgba(205, 80, 241, 0.04), rgba(94, 42, 103, 0.02))', border: '1px solid rgba(205, 80, 241, 0.12)', borderRadius: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9D85B3', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                    🛤 Jornada do lead
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', fontSize: 12, color: '#45336B' }}>
+                    {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
+                      <span style={{ padding: '4px 10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', borderRadius: 999, fontWeight: 600 }}>
+                        📍 {channelLabel(person.sourceChannel)}
+                      </span>
+                    ) : null}
+                    {person.sourceChannel && person.sourcePage ? (
+                      <span style={{ color: '#9D85B3' }}>→</span>
+                    ) : null}
+                    {person.sourcePage ? (
+                      <span style={{ padding: '4px 10px', background: '#FAF7FF', color: '#5E2A67', borderRadius: 999, fontFamily: 'monospace', fontSize: 11 }}>
+                        {person.sourcePage}
+                      </span>
+                    ) : null}
+                    {(person.sourceChannel || person.sourcePage) && uniqueForms.length > 0 ? (
+                      <span style={{ color: '#9D85B3' }}>→</span>
+                    ) : null}
+                    {uniqueForms.map((formType) => (
+                      <span key={formType} style={{ padding: '4px 10px', background: 'rgba(205, 80, 241, 0.12)', color: '#CD50F1', borderRadius: 999, fontWeight: 700 }}>
+                        {formLabels[formType] ?? formType}
+                      </span>
+                    ))}
+                    {person.firstTouchCampaign ? (
+                      <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9D85B3' }}>
+                        Campanha: <strong style={{ color: '#5E2A67' }}>{person.firstTouchCampaign}</strong>
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <h3 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 15, color: '#5E2A67', marginTop: 18, marginBottom: 10 }}>
               Timeline {activitiesList.length > 0 ? `(${activitiesList.length})` : ''}
             </h3>
 
@@ -189,15 +241,17 @@ export default async function LeadDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Origem */}
-          {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
+          {/* Card "Origem" da sidebar removido — info agora vive no card
+              Jornada (esquerda) pra evitar duplicação. Apenas o "Primeiro
+              toque" continua aqui pra timestamp explícito quando existir. */}
+          {person.firstTouchAt ? (
             <div className="crm-side-card">
-              <div className="crm-side-title">📍 Origem</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
-                <div><span style={{ color: '#9D85B3' }}>Canal:</span> {channelLabel(person.sourceChannel)}</div>
-                {person.sourcePage ? <div><span style={{ color: '#9D85B3' }}>Página:</span> <code style={{ fontSize: 11 }}>{person.sourcePage}</code></div> : null}
-                {person.firstTouchCampaign ? <div><span style={{ color: '#9D85B3' }}>Campanha:</span> {person.firstTouchCampaign}</div> : null}
-                {person.firstTouchAt ? <div><span style={{ color: '#9D85B3' }}>Primeiro toque:</span> {new Date(person.firstTouchAt).toLocaleDateString('pt-BR')}</div> : null}
+              <div className="crm-side-title">⏱ Primeiro toque</div>
+              <div style={{ fontSize: 13, color: '#45336B' }}>
+                {new Date(person.firstTouchAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              </div>
+              <div style={{ fontSize: 11, color: '#9D85B3', marginTop: 4 }}>
+                {timeAgo(person.firstTouchAt)}
               </div>
             </div>
           ) : null}
