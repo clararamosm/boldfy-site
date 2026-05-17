@@ -304,6 +304,36 @@ export default async function CampanhasPage() {
           </table>
         )}
       </div>
+
+      {/* ====== Top UTMs (movido de Tráfego em mai/2026) ====== */}
+      <div className="dash-card">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+          <div className="dash-card-title"><Link2 /> Top UTMs (30d)</div>
+          <Link href="/internal/utm" style={{ fontSize: 12, color: '#CD50F1', fontWeight: 700, textDecoration: 'none' }}>
+            🔗 Gerar novo link →
+          </Link>
+        </div>
+        <div className="dash-card-subtitle">
+          Sessões GA4 por (source · medium · campaign) nos últimos 30 dias. Lista de links gerados completa em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>UTM</Link>.
+        </div>
+        {prUtms.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem dados de UTM no GA4 nos últimos 30 dias.</div>
+        ) : (
+          <table className="dash-table">
+            <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th className="right">Sessões</th></tr></thead>
+            <tbody>
+              {prUtms.slice(0, 20).map((u, i) => (
+                <tr key={i}>
+                  <td className="strong">{u.source}</td>
+                  <td>{u.medium}</td>
+                  <td className="muted">{u.campaign}</td>
+                  <td className="right">{u.sessions.toLocaleString('pt-BR')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

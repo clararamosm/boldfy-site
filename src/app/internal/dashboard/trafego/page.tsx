@@ -15,13 +15,12 @@ import {
   getTrafficSummary,
   getTrafficByChannel,
   getTopPages,
-  getTopUtms,
   getTrafficByDay,
 } from '@/lib/ga4';
 import { getStackedTrafficByChannel } from '@/lib/dashboard-queries';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 import { StackedAreaChart, BOLDFY_PURPLES } from '@/components/dashboard/charts';
-import { Globe2, Radio, TrendingUp, FileText, Tag } from 'lucide-react';
+import { Globe2, Radio, TrendingUp, FileText } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Tráfego',
@@ -50,11 +49,10 @@ export default async function TrafegoPage() {
     );
   }
 
-  const [summary, channels, pages, utms, daily, stacked] = await Promise.all([
+  const [summary, channels, pages, daily, stacked] = await Promise.all([
     getTrafficSummary(DAYS).catch(() => null),
     getTrafficByChannel(DAYS).catch(() => []),
     getTopPages(DAYS, 12).catch(() => []),
-    getTopUtms(DAYS, 15).catch(() => []),
     getTrafficByDay(DAYS).catch(() => []),
     getStackedTrafficByChannel(DAYS).catch(() => ({ data: [], channels: [] })),
   ]);
@@ -144,22 +142,8 @@ export default async function TrafegoPage() {
         </table>
       </div>
 
-      <div className="dash-card">
-        <div className="dash-card-title"><Tag /> Top UTMs</div>
-        <table className="dash-table">
-          <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th className="right">Sessões</th></tr></thead>
-          <tbody>
-            {utms.map((u, i) => (
-              <tr key={i}>
-                <td className="strong">{u.source}</td>
-                <td>{u.medium}</td>
-                <td className="muted">{u.campaign}</td>
-                <td className="right">{u.sessions.toLocaleString('pt-BR')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Bloco "Top UTMs" foi movido pra /dashboard/campanhas em mai/2026
+          (junto de Shortlinks, são dados complementares) */}
     </div>
   );
 }

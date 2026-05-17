@@ -17,7 +17,6 @@ const TABS = [
   { href: '/internal/dashboard/linkedin', label: 'LinkedIn', match: 'prefix' },
   { href: '/internal/dashboard/forms', label: 'Forms', match: 'prefix' },
   { href: '/internal/dashboard/campanhas', label: 'Campanhas', match: 'prefix' },
-  { href: '/internal/dashboard/utm', label: 'UTM', match: 'prefix' },
 ] as const;
 
 export function DashboardSubNav() {

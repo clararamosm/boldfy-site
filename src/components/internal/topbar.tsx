@@ -17,6 +17,7 @@ const MENU = [
   { href: '/internal/crm', label: 'CRM', match: '/internal/crm' },
   { href: '/internal/dashboard', label: 'Dashboard', match: '/internal/dashboard' },
   { href: '/internal/catalogo', label: 'Catálogo', match: '/internal/catalogo' },
+  { href: '/internal/utm', label: 'UTM', match: '/internal/utm' },
 ] as const;
 
 export function InternalTopbar() {
