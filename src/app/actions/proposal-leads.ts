@@ -399,8 +399,8 @@ export async function sendProposalLeadToNotion(
           cargo: input.cargo,
           total_mensal_proposta: input.totalCurrent,
           url_proposta: proposalUrl,
-          // Proposta é form 100% B2B (deep intent — só faz sentido pra ICP B2B)
-          tipo_de_lead: 'ICP B2B',
+          // Proposta é form 100% B2B (deep intent) — label novo (mai/2026)
+          tipo_de_lead: 'Líder B2B',
           intencao_uso: 'marca-empresa',
           // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
           ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),

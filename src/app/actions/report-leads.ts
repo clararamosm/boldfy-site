@@ -127,11 +127,14 @@ export async function sendReportLead(
     });
 
     /* ---------------------------------------------------------------- */
-    /*  2. CRM Boldfy — SÓ líderes B2B (intencaoUso=marca-empresa).     */
-    /*     Agências e criadores individuais ficam só no AC pra cadência */
-    /*     editorial. Folk legacy removido em mai/2026.                 */
+    /*  2. CRM Boldfy — TODOS os leads entram (Líder B2B, Parceiro,     */
+    /*     Profissional Individual). Gate B2B local removido em mai/2026 */
+    /*     ciclo 3.2 pra alinhar com import do AC (que também não filtra */
+    /*     por segmento). Kanban filtra visualmente só Líderes B2B; aba  */
+    /*     Forms mostra todos. Cadências do AC continuam segmentadas    */
+    /*     pelo gate If/Else em `tipo_de_lead = "Líder B2B"`.            */
     /* ---------------------------------------------------------------- */
-    if (acContactId && input.intencaoUso === 'marca-empresa') {
+    if (acContactId) {
       try {
         await recordLeadFromForm({
           name: input.nome,
