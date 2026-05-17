@@ -97,6 +97,14 @@ export type LogActivityInput = {
   companyId?: string;
   type: string;
   subtype?: string;
+  /**
+   * Override do timestamp da activity. Default = now() (default do Drizzle).
+   * Pra IMPORT: passar o timestamp original do evento no AC (ev.tstamp pra
+   * email events, pv.tstamp pra page views, cdate da nota pra form submits).
+   * Sem isso, todas as activities importadas ficam com createdAt=horário
+   * do import e a timeline mostra tudo como "X min atrás" (irreal).
+   */
+  createdAt?: Date;
   weight?: number;
   source?: 'web' | 'email' | 'cal' | 'linkedin' | 'manual' | 'system';
   data?: Record<string, unknown>;
@@ -249,6 +257,10 @@ export async function logActivity(
       data: input.subtype
         ? { subtype: input.subtype, ...input.data }
         : input.data,
+      // Override createdAt quando passado (ex: import histórico). Sem isso,
+      // todas as activities importadas ficam com createdAt=now e a timeline
+      // mostra tudo como "X min atrás" mesmo pra eventos de meses atrás.
+      ...(input.createdAt ? { createdAt: input.createdAt } : {}),
     };
 
     const [activity] = await db
@@ -276,6 +288,10 @@ export async function logActivity(
         if (desiredStatus) {
           const shouldPromote = await shouldAutoPromote(updated.statusId, desiredStatus.id);
           if (shouldPromote) {
+            // Resolve fromLabel antes de mudar (pra activity ter labels reais)
+            const all = await getStatuses('person');
+            const fromStatus = updated.statusId ? all.find((s) => s.id === updated.statusId) : null;
+
             await db
               .update(people)
               .set({ statusId: desiredStatus.id, updatedAt: new Date() })
@@ -287,7 +303,13 @@ export async function logActivity(
               type: 'status_change',
               weight: 0,
               source: 'system',
-              data: { fromId: updated.statusId, toId: desiredStatus.id, reason: 'auto_score_threshold' },
+              data: {
+                fromId: updated.statusId,
+                toId: desiredStatus.id,
+                fromLabel: fromStatus?.label ?? null,
+                toLabel: desiredStatus.label,
+                reason: 'auto_score_threshold',
+              },
             });
 
             // Auto-promote da pessoa → tenta promover empresa também (monotônico)
@@ -477,6 +499,7 @@ export async function classifyPersonBySourceMethod(
       data: {
         fromId: currentStatus?.id ?? null,
         toId: target.id,
+        fromLabel: currentStatus?.label ?? null,
         toLabel: target.label,
         reason: 'classify_by_method',
         sourceMethod,

@@ -144,6 +144,7 @@ export async function syncCompanyFromPeople(companyId: string): Promise<void> {
       data: {
         fromId: currentCompanyStatus?.id ?? null,
         toId: desired.id,
+        fromLabel: currentCompanyStatus?.label ?? null,
         toLabel: desired.label,
         reason: 'sync_from_people',
         entity: 'company',
@@ -201,6 +202,9 @@ export async function propagateTerminalToCompanyPeople(
       .set({ statusId: personEquivalent.id, updatedAt: new Date() })
       .where(inArray(people.id, ids));
 
+    // Resolve labels antigos pra ter histórico legível na activity
+    const personStatusMap = new Map(allPersonStatuses.map((s) => [s.id, s.label]));
+
     // Activity em cada pessoa pra auditoria
     await db.insert(activities).values(
       toUpdate.map((p) => ({
@@ -212,6 +216,7 @@ export async function propagateTerminalToCompanyPeople(
         data: {
           fromId: p.statusId,
           toId: personEquivalent.id,
+          fromLabel: p.statusId ? personStatusMap.get(p.statusId) ?? null : null,
           toLabel: personEquivalent.label,
           reason: 'propagated_from_company_terminal',
         },

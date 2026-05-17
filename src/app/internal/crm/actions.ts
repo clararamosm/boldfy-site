@@ -53,6 +53,13 @@ export async function movePerson(personId: string, newStatusId: string): Promise
     if (!prev) return { ok: false, error: 'Pessoa não encontrada.' };
     if (prev.statusId === newStatusId) return { ok: true }; // no-op
 
+    // Resolve fromLabel pra activity ter ambos os labels
+    let fromLabel: string | null = null;
+    if (prev.statusId) {
+      const [fromRow] = await db.select({ label: statuses.label }).from(statuses).where(eq(statuses.id, prev.statusId)).limit(1);
+      fromLabel = fromRow?.label ?? null;
+    }
+
     await db
       .update(people)
       .set({ statusId: newStatusId, updatedAt: new Date() })
@@ -63,7 +70,7 @@ export async function movePerson(personId: string, newStatusId: string): Promise
       type: 'status_change',
       weight: 0,
       source: 'manual',
-      data: { fromId: prev.statusId, toId: newStatusId, toLabel: statusRow.label, reason: 'manual' },
+      data: { fromId: prev.statusId, toId: newStatusId, fromLabel, toLabel: statusRow.label, reason: 'manual' },
     });
 
     // Sync AC (non-blocking — falha não bloqueia o user)
@@ -117,12 +124,19 @@ export async function moveCompany(companyId: string, newStatusId: string): Promi
       .set({ statusId: newStatusId, updatedAt: new Date() })
       .where(eq(companies.id, companyId));
 
+    // Resolve fromLabel pra activity ter ambos os labels
+    let fromCompanyLabel: string | null = null;
+    if (prev.statusId) {
+      const [fromRow] = await db.select({ label: statuses.label }).from(statuses).where(eq(statuses.id, prev.statusId)).limit(1);
+      fromCompanyLabel = fromRow?.label ?? null;
+    }
+
     await logActivity({
       companyId,
       type: 'status_change',
       weight: 0,
       source: 'manual',
-      data: { fromId: prev.statusId, toId: newStatusId, toLabel: statusRow.label, entity: 'company', reason: 'manual' },
+      data: { fromId: prev.statusId, toId: newStatusId, fromLabel: fromCompanyLabel, toLabel: statusRow.label, entity: 'company', reason: 'manual' },
     });
 
     // Sync AC (non-blocking)

@@ -290,9 +290,26 @@ export async function importFromAC(): Promise<Result> {
 
           // 1) Activities sintéticas — UMA por form preenchido (lead pode ter
           // preenchido Report + Beta + Demo, todos vão pra timeline).
-          // Antes de mai/2026 ciclo 3 criava só 1 — bug que escondia múltiplas
-          // submissões do mesmo lead na aba Formulários.
+          // Cada form usa createdAt = cdate do contact AC (data real da
+          // primeira submissão). Sem isso, todos os form_submit_* ficavam
+          // com hora do import e timeline mostrava "X min atrás" pra forms
+          // antigos.
           const formActivities = activityTypesForFormTags(tags);
+          // Enriquecer com canal/página inferidos pra timeline ter contexto
+          // (mesmo nas activities importadas onde não temos detalhe por
+          // submissão).
+          const formContextData = {
+            reconstructed: true,
+            from: 'ac_import_inferred_from_tag',
+            utm_source_first: fields['utm_source_first'] ?? null,
+            utm_campaign_first: fields['utm_campaign_first'] ?? null,
+            utm_medium_first: fields['utm_medium_first'] ?? null,
+            sourceChannel: sourceChannel,
+            campaign_name: fields['utm_campaign_first'] ?? null,
+          };
+          const formCreatedAt = cdateParsed && !Number.isNaN(cdateParsed.getTime())
+            ? cdateParsed
+            : undefined;
           for (const formActivity of formActivities) {
             await logActivity({
               personId: p.data.id,
@@ -300,34 +317,42 @@ export async function importFromAC(): Promise<Result> {
               type: formActivity.type,
               weight: formActivity.weight,
               source: 'system',
-              data: { reconstructed: true, from: 'ac_import_inferred_from_tag' },
+              data: formContextData,
+              createdAt: formCreatedAt,
             });
             activitiesCreated++;
           }
 
-          // 2) Email events (opens/clicks)
+          // 2) Email events (opens/clicks) — createdAt = timestamp original
+          // do AC (ev.tstamp). Sem isso, timeline mostrava todos os emails
+          // como "X min atrás" mesmo pra opens de meses atrás.
           for (const ev of emailEvents) {
             const type = ev.type === 'open' ? 'email_open' : 'email_click';
             const weight = weightForActivity(type);
+            const evDate = ev.tstamp ? new Date(ev.tstamp) : undefined;
             await logActivity({
               personId: p.data.id,
               type,
               weight,
               source: 'email',
               data: {
-                subject: ev.campaignName ?? undefined,
+                campaign_name: ev.campaignName ?? undefined,
+                message_subject: ev.campaignName ?? undefined,
                 url: ev.url,
                 imported: true,
                 original_tstamp: ev.tstamp,
               },
+              createdAt: evDate && !Number.isNaN(evDate.getTime()) ? evDate : undefined,
             });
             activitiesCreated++;
           }
 
           // 3) Page views (limitado a 50 mais recentes pra não estourar)
+          // Mesma lógica: createdAt = pv.tstamp pra timeline ter datas reais.
           const recentPageViews = pageViews.slice(0, 50);
           for (const pv of recentPageViews) {
             const { type, weight } = pageViewActivityType(pv.url);
+            const pvDate = pv.tstamp ? new Date(pv.tstamp) : undefined;
             await logActivity({
               personId: p.data.id,
               type,
@@ -338,6 +363,7 @@ export async function importFromAC(): Promise<Result> {
                 imported: true,
                 original_tstamp: pv.tstamp,
               },
+              createdAt: pvDate && !Number.isNaN(pvDate.getTime()) ? pvDate : undefined,
             });
             activitiesCreated++;
           }

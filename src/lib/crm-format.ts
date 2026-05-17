@@ -87,13 +87,29 @@ export function describeActivity(
       return { icon: '📖', text: `Leu ${(data?.page as string) ?? 'blog post'}`, category: 'web' };
 
     case 'form_submit_demo':
-      return { icon: '🎯', text: 'Submeteu Form Demo', category: 'form' };
     case 'form_submit_beta':
-      return { icon: '🧪', text: 'Submeteu Form Beta', category: 'form' };
     case 'form_submit_report':
-      return { icon: '📥', text: 'Baixou Report B2B', category: 'form' };
-    case 'form_submit_proposta':
-      return { icon: '💼', text: 'Submeteu Simulador de Proposta', category: 'form' };
+    case 'form_submit_proposta': {
+      const labelMap: Record<string, { icon: string; label: string }> = {
+        form_submit_demo: { icon: '🎯', label: 'Demo' },
+        form_submit_beta: { icon: '🧪', label: 'Beta' },
+        form_submit_report: { icon: '📥', label: 'Report B2B' },
+        form_submit_proposta: { icon: '💼', label: 'Simulador de Proposta' },
+      };
+      const m = labelMap[type];
+      // Contexto opcional vindo do data: utm_source, sourceChannel, campaign
+      const channel = (data?.sourceChannel as string | undefined)
+        ?? (data?.utm_source as string | undefined)
+        ?? (data?.utm_source_first as string | undefined);
+      const page = (data?.origem as string | undefined) ?? (data?.sourcePage as string | undefined);
+      const campaign = (data?.utm_campaign as string | undefined) ?? (data?.utm_campaign_first as string | undefined);
+      const contextParts: string[] = [];
+      if (channel && channel !== 'unknown') contextParts.push(`via ${channel}`);
+      if (page) contextParts.push(`em ${page}`);
+      if (campaign) contextParts.push(`campanha: ${campaign}`);
+      const context = contextParts.length > 0 ? ` · ${contextParts.join(' · ')}` : '';
+      return { icon: m.icon, text: `Submeteu ${m.label}${context}`, category: 'form' };
+    }
     case 'material_download':
       return { icon: '📦', text: `Baixou material ${(data?.material as string) ?? ''}`.trim(), category: 'form' };
 
@@ -143,11 +159,51 @@ export function describeActivity(
       return { icon: '➕', text: 'Adicionada via extensão Chrome', category: 'system' };
 
     case 'status_change': {
-      const from = (data?.from as string) ?? '?';
-      const to = (data?.to as string) ?? '?';
-      const reason = data?.reason === 'auto_score_threshold' ? ' (auto)' : '';
-      return { icon: '→', text: `Status: ${from} → ${to}${reason}`, category: 'system' };
+      // Tentar várias chaves pra resolver labels — o schema do data evoluiu:
+      //   Antigo: { from, to }
+      //   Novo:   { fromId, toId, fromLabel, toLabel, reason, sourceMethod }
+      // Cai pra "?" só se nenhuma forma tiver label resolvível.
+      const fromLabel = (data?.fromLabel as string) ?? (data?.from as string) ?? null;
+      const toLabel = (data?.toLabel as string) ?? (data?.to as string) ?? null;
+      const reasonRaw = data?.reason as string | undefined;
+      const reasonText = reasonRaw === 'auto_score_threshold' ? ' (auto)'
+        : reasonRaw === 'classify_by_method' ? ' (por form)'
+        : reasonRaw === 'sync_from_people' ? ' (sync pessoa)'
+        : reasonRaw === 'propagated_from_company_terminal' ? ' (sync empresa)'
+        : '';
+      if (toLabel && fromLabel) {
+        return { icon: '→', text: `Status: ${fromLabel} → ${toLabel}${reasonText}`, category: 'system' };
+      }
+      if (toLabel) {
+        return { icon: '→', text: `Status alterado pra: ${toLabel}${reasonText}`, category: 'system' };
+      }
+      return { icon: '→', text: `Status alterado${reasonText}`, category: 'system' };
     }
+    case 'classification_skipped': {
+      const reason = data?.reason as string | undefined;
+      const sourceMethod = data?.sourceMethod as string | undefined;
+      if (reason === 'no_classification_by_design') {
+        return { icon: '·', text: `Form ${sourceMethod ?? ''} — sem mudança de status (cadência cuida)`.trim(), category: 'system' };
+      }
+      if (reason === 'no_regression') {
+        const cur = data?.currentStatus as string | undefined;
+        return { icon: '·', text: `Form ${sourceMethod ?? ''} — mantido em ${cur ?? 'status atual'}`.trim(), category: 'system' };
+      }
+      if (reason === 'is_terminal') {
+        return { icon: '·', text: `Form ${sourceMethod ?? ''} — pessoa em status terminal, ignorado`.trim(), category: 'system' };
+      }
+      return { icon: '·', text: `Classificação ignorada`, category: 'system' };
+    }
+    case 'ac_sync_ok': {
+      const newTag = data?.newTag as string | undefined;
+      return { icon: '🔄', text: `Tag AC sincronizada: ${newTag ?? '(sem tag)'}`, category: 'system' };
+    }
+    case 'ac_sync_failed': {
+      const reason = data?.reason as string | undefined;
+      return { icon: '⚠', text: `Sync AC falhou: ${reason ?? 'erro'}`, category: 'system' };
+    }
+    case 'imported_from_ac':
+      return { icon: '📦', text: 'Importado do ActiveCampaign', category: 'system' };
 
     case 'tag_added':
       return { icon: '🏷', text: `Tag adicionada: ${(data?.tag as string) ?? ''}`, category: 'system' };

@@ -276,20 +276,66 @@ export default async function LeadDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Card "Origem" da sidebar removido — info agora vive no card
-              Jornada (esquerda) pra evitar duplicação. Apenas o "Primeiro
-              toque" continua aqui pra timestamp explícito quando existir. */}
-          {person.firstTouchAt ? (
-            <div className="crm-side-card">
-              <div className="crm-side-title">⏱ Primeiro toque</div>
-              <div style={{ fontSize: 13, color: '#45336B' }}>
-                {new Date(person.firstTouchAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+          {/* Origem do lead — card consolidado na sidebar com todos os campos
+              de "primeiro toque": canal, página, campanha, data, e o(s)
+              formulário(s) preenchido(s). Complementa o card Jornada (à
+              esquerda) que mostra a sequência visual. */}
+          {(() => {
+            const formsPreenchidos = activitiesList
+              .filter((a) => a.type.startsWith('form_submit_'))
+              .map((a) => a.type);
+            const uniqueForms = Array.from(new Set(formsPreenchidos));
+            const formLabelMap: Record<string, string> = {
+              form_submit_demo: 'Demo',
+              form_submit_beta: 'Beta',
+              form_submit_report: 'Report',
+              form_submit_proposta: 'Proposta',
+            };
+            const hasOrigin = person.firstTouchAt
+              || (person.sourceChannel && person.sourceChannel !== 'unknown')
+              || person.sourcePage
+              || person.firstTouchCampaign
+              || uniqueForms.length > 0;
+            if (!hasOrigin) return null;
+            return (
+              <div className="crm-side-card">
+                <div className="crm-side-title">📍 Origem do lead</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
+                  {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
+                    <div>
+                      <span style={{ color: '#9D85B3' }}>Canal:</span>{' '}
+                      <strong style={{ color: '#45336B' }}>{channelLabel(person.sourceChannel)}</strong>
+                    </div>
+                  ) : null}
+                  {person.sourcePage ? (
+                    <div>
+                      <span style={{ color: '#9D85B3' }}>Página:</span>{' '}
+                      <code style={{ fontSize: 11, color: '#5E2A67', background: '#FAF7FF', padding: '1px 6px', borderRadius: 4 }}>{person.sourcePage}</code>
+                    </div>
+                  ) : null}
+                  {uniqueForms.length > 0 ? (
+                    <div>
+                      <span style={{ color: '#9D85B3' }}>Formulário{uniqueForms.length > 1 ? 's' : ''}:</span>{' '}
+                      <strong style={{ color: '#45336B' }}>{uniqueForms.map((f) => formLabelMap[f] ?? f).join(' · ')}</strong>
+                    </div>
+                  ) : null}
+                  {person.firstTouchCampaign ? (
+                    <div>
+                      <span style={{ color: '#9D85B3' }}>Campanha:</span>{' '}
+                      <strong style={{ color: '#45336B' }}>{person.firstTouchCampaign}</strong>
+                    </div>
+                  ) : null}
+                  {person.firstTouchAt ? (
+                    <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px solid #F0E5F8' }}>
+                      <span style={{ color: '#9D85B3' }}>Primeiro toque:</span>{' '}
+                      <strong style={{ color: '#45336B' }}>{new Date(person.firstTouchAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
+                      <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 2 }}>{timeAgo(person.firstTouchAt)}</div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: '#9D85B3', marginTop: 4 }}>
-                {timeAgo(person.firstTouchAt)}
-              </div>
-            </div>
-          ) : null}
+            );
+          })()}
 
           {/* Card Proposta destacado — quando lead preencheu form Proposta, a
               URL do HTML da proposta + valor mensal ficam no header da sidebar
