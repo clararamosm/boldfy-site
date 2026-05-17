@@ -51,10 +51,18 @@ async function getFilterOptions(): Promise<{ channels: string[]; pages: string[]
     db.selectDistinct({ v: people.sourceChannel }).from(people),
     db.selectDistinct({ v: people.sourcePage }).from(people),
   ]);
-  return {
-    channels: chanRows.map((r) => r.v).filter((v): v is string => !!v && v !== 'unknown').sort(),
-    pages: pageRows.map((r) => r.v).filter((v): v is string => !!v).sort(),
-  };
+  // sourceChannel é enum tipado — cast explícito pra string[] (type guard
+  // `v is string` falha quando o domínio é union de literals).
+  const channels = chanRows
+    .map((r) => r.v)
+    .filter((v): v is NonNullable<typeof v> => v !== null && v !== 'unknown')
+    .map((v) => v as string)
+    .sort();
+  const pages = pageRows
+    .map((r) => r.v)
+    .filter((v): v is string => typeof v === 'string' && v.length > 0)
+    .sort();
+  return { channels, pages };
 }
 
 export default async function CrmPeoplePage({ searchParams }: { searchParams: SearchParams }) {
