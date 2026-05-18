@@ -11,7 +11,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { kv } from '@vercel/kv';
 import { db, people, companies, statuses, prArticles, utmLinks } from '@/db';
-import { eq, and, isNull, count, desc, inArray } from 'drizzle-orm';
+import { eq, and, isNull, count, desc, inArray, sql } from 'drizzle-orm';
 import { listCampaigns, getCampaignStatus, type Campaign } from '@/lib/campaigns';
 import { NewCampaignButton } from './new-campaign-button';
 import { EditCampaignButton } from './edit-campaign-button';
