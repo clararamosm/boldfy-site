@@ -33,6 +33,7 @@ import {
   initials,
   timeAgo,
   formatScheduledAt,
+  formatDateTime,
   describeActivity,
   timelineDotClass,
   methodVia,
@@ -267,7 +268,10 @@ export default async function CompanyDetailPage({ params }: Props) {
                               <span className="crm-score-delta negative">{act.weight}</span>
                             ) : null}
                           </div>
-                          <div className="crm-timeline-time">{timeAgo(act.createdAt)}</div>
+                          <div className="crm-timeline-time" title={timeAgo(act.createdAt)}>
+                            <div>{formatDateTime(act.createdAt)}</div>
+                            <div style={{ fontSize: 9, color: '#9D85B3', marginTop: 1 }}>{timeAgo(act.createdAt)}</div>
+                          </div>
                         </div>
                         {/* Vincular à pessoa quando a activity pertence a uma */}
                         {act.personName && act.personId ? (

@@ -19,6 +19,7 @@ import {
   initials,
   timeAgo,
   formatScheduledAt,
+  formatDateTime,
   describeActivity,
   timelineDotClass,
   channelLabel,
@@ -336,6 +337,10 @@ export default async function LeadDetailPage({ params }: Props) {
                     const SKIP_KEYS = new Set([
                       'form_type', 'form_slug', 'utms', 'observacoes',
                       'observation', 'reconstructed', 'from',
+                      // UTMs planos (legado pre-Task 1) — renderizados como
+                      // chips azuis dedicados abaixo. Sem isso, apareceriam 2x.
+                      'utm_source', 'utm_medium', 'utm_campaign',
+                      'utm_content', 'utm_term',
                       // Chaves legadas do import AC — info já redundante na sidebar
                       'utm_source_first', 'utm_medium_first', 'utm_campaign_first',
                       'sourceChannel', 'campaign_name',
@@ -410,7 +415,10 @@ export default async function LeadDetailPage({ params }: Props) {
                               <span className="crm-score-delta negative">{act.weight}</span>
                             ) : null}
                           </div>
-                          <div className="crm-timeline-time">{timeAgo(act.createdAt)}</div>
+                          <div className="crm-timeline-time" title={timeAgo(act.createdAt)}>
+                            <div>{formatDateTime(act.createdAt)}</div>
+                            <div style={{ fontSize: 9, color: '#9D85B3', marginTop: 1 }}>{timeAgo(act.createdAt)}</div>
+                          </div>
                         </div>
 
                         {/* Render rico de form_submit (Task 1 da spec): campos como tags visuais */}

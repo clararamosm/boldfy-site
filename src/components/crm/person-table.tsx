@@ -17,7 +17,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { PeopleByStatus, PersonWithDetails } from '@/lib/crm-queries';
-import { timeAgo, methodVia, channelLabel } from '@/lib/crm-format';
+import { timeAgo, formatDateTime, methodVia, channelLabel } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from './column-picker';
 
 const PERSON_COLUMNS: readonly ColumnDef[] = [
@@ -232,8 +232,8 @@ export function PersonTable({
                       </td>
                     ) : null}
                     {visibleCols.has('lastTouchAt') ? (
-                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
-                        {p.lastTouchAt ? timeAgo(p.lastTouchAt) : '—'}
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }} title={p.lastTouchAt ? timeAgo(p.lastTouchAt) : ''}>
+                        {p.lastTouchAt ? formatDateTime(p.lastTouchAt) : '—'}
                       </td>
                     ) : null}
                   </tr>

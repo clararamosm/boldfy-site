@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import type { PersonRow, FormType } from './shared';
 import { FORM_LABELS } from './shared';
-import { timeAgo, channelLabel } from '@/lib/crm-format';
+import { timeAgo, formatDateTime, channelLabel } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from '@/components/crm/column-picker';
 
 // Spec §2: "default fields visíveis: name, email, phone, jobTitle. Campos
@@ -264,8 +264,8 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                     </td>
                   ) : null}
                   {visibleCols.has('lastFormAt') ? (
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
-                      {timeAgo(row.lastFormAt)}
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap', verticalAlign: 'middle' }} title={timeAgo(row.lastFormAt)}>
+                      {formatDateTime(row.lastFormAt)}
                     </td>
                   ) : null}
                 </tr>

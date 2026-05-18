@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { CompaniesByStatus, CompanyWithDetails } from '@/lib/crm-queries';
-import { timeAgo } from '@/lib/crm-format';
+import { timeAgo, formatDateTime } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from './column-picker';
 
 const COMPANY_COLUMNS: readonly ColumnDef[] = [
@@ -227,8 +227,8 @@ export function CompanyTable({
                     ) : null}
                     {visibleCols.has('topScore') ? <td style={{ padding: '10px 14px', textAlign: 'right', color: '#45336B', fontWeight: 600 }}>{c.topScore}</td> : null}
                     {visibleCols.has('updatedAt') ? (
-                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }}>
-                        {c.updatedAt ? timeAgo(c.updatedAt) : '—'}
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap' }} title={c.updatedAt ? timeAgo(c.updatedAt) : ''}>
+                        {c.updatedAt ? formatDateTime(c.updatedAt) : '—'}
                       </td>
                     ) : null}
                   </tr>

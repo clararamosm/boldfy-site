@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import type { CompanyWithDetails } from '@/lib/crm-queries';
-import { timeAgo } from '@/lib/crm-format';
+import { timeAgo, formatDateTime } from '@/lib/crm-format';
 
 type Props = { company: CompanyWithDetails };
 
@@ -47,7 +47,7 @@ export function CompanyCard({ company }: Props) {
             </div>
             <div style={{ color: '#5E2A67', fontWeight: 600, marginTop: 2 }}>
               {company.nextAction}
-              {company.nextActionAt ? ` · ${timeAgo(company.nextActionAt)}` : ''}
+              {company.nextActionAt ? ` · ${formatDateTime(company.nextActionAt)}` : ''}
             </div>
           </div>
         ) : null}

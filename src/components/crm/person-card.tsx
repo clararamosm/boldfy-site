@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import type { PersonWithDetails } from '@/lib/crm-queries';
-import { avatarHue, initials, timeAgo, methodVia, channelLabel } from '@/lib/crm-format';
+import { avatarHue, initials, timeAgo, formatDateTime, methodVia, channelLabel } from '@/lib/crm-format';
 
 type Props = {
   person: PersonWithDetails;
@@ -97,7 +97,9 @@ export function PersonCard({ person, lastActionText, selected, anySelected, onTo
 
         <div className="crm-last-action">
           <span>{lastActionText ?? 'Última atividade'}</span>
-          <span className="time">{timeAgo(person.lastTouchAt)}</span>
+          <span className="time" title={timeAgo(person.lastTouchAt)}>
+            {person.lastTouchAt ? formatDateTime(person.lastTouchAt) : '—'}
+          </span>
         </div>
 
         <div className="crm-origins">

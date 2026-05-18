@@ -38,6 +38,24 @@ export function formatScheduledAt(date: Date | string): string {
   });
 }
 
+/**
+ * Data + hora absoluto pt-BR (DD/MM/YYYY HH:MM). Pedido Clara 2026-05-18:
+ * preferir timestamp explícito ao relativo ("há 28 min") em timeline, cards
+ * de pessoas/empresas, e tabelas. timeAgo() segue disponível pra contextos
+ * onde "agora" / "ontem" são mais legíveis (notificações, etc).
+ */
+export function formatDateTime(date: Date | string | null | undefined): string {
+  if (!date) return '—';
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Avatar — hue determinístico por string (mesma pessoa = mesma cor)         */
 /* -------------------------------------------------------------------------- */
