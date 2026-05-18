@@ -11,7 +11,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Trash2, Link as LinkIcon } from 'lucide-react';
 import type { Campaign, CampaignInput, ChannelEntry } from '@/lib/campaigns';
-import { createCampaignAction, updateCampaignAction } from './actions';
+import { createCampaignAction, updateCampaignAction, deleteCampaignAction } from './actions';
 
 const CHANNEL_OPTIONS = ['SEO', 'LinkedIn', 'Eventos', 'PR', 'Email', 'Ads', 'Indicação', 'Outros'];
 
@@ -37,7 +37,12 @@ export function CampaignFormModal({
   const [startDate, setStartDate] = useState(initial?.startDate ?? '');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
   const [alwaysOn, setAlwaysOn] = useState(initial?.alwaysOn ?? false);
-  const [channels, setChannels] = useState<ChannelEntry[]>(initial?.channels ?? []);
+  // Normaliza channels: campanhas legadas (Web Summit Rio etc) podem ter
+  // touchpoints undefined no jsonb. Garante array vazio aqui pra evitar
+  // crash nos map/filter/spread abaixo.
+  const [channels, setChannels] = useState<ChannelEntry[]>(
+    (initial?.channels ?? []).map((c) => ({ name: c.name, touchpoints: c.touchpoints ?? [] })),
+  );
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   function autoSlug(value: string) {
@@ -105,6 +110,28 @@ export function CampaignFormModal({
         return;
       }
       onClose();
+      router.refresh();
+    });
+  }
+
+  function handleDelete() {
+    if (mode.kind !== 'edit') return;
+    const confirmed = window.confirm(
+      `Apagar campanha "${mode.campaign.name}"?\n\n` +
+      `Os leads e UTMs que apontam pra ela NÃO são apagados — só o registro da campanha.\n\n` +
+      `Essa ação não pode ser desfeita.`,
+    );
+    if (!confirmed) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteCampaignAction(mode.campaign.id);
+      if (!result.ok) {
+        setError(result.error ?? 'Falha ao apagar');
+        return;
+      }
+      onClose();
+      // Volta pra lista (sai do drill-down se estiver nele)
+      router.push('/internal/dashboard/campanhas');
       router.refresh();
     });
   }
@@ -241,11 +268,28 @@ export function CampaignFormModal({
             </div>
           ) : null}
 
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
-            <button type="button" onClick={() => !isPending && onClose()} className="crm-btn" disabled={isPending}>Cancelar</button>
-            <button type="submit" className="crm-btn crm-btn-primary" disabled={isPending}>
-              {isPending ? 'Salvando...' : (mode.kind === 'create' ? 'Criar campanha' : 'Salvar mudanças')}
-            </button>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+            {mode.kind === 'edit' ? (
+              <button
+                type="button" onClick={handleDelete} disabled={isPending}
+                style={{
+                  padding: '8px 14px', fontSize: 13, fontWeight: 600,
+                  color: '#C0392B', background: 'transparent',
+                  border: '1px solid rgba(192, 57, 43, 0.25)', borderRadius: 8,
+                  cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.5 : 1,
+                  fontFamily: 'inherit',
+                }}
+                title="Apagar campanha"
+              >
+                <Trash2 size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Apagar campanha
+              </button>
+            ) : <span />}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={() => !isPending && onClose()} className="crm-btn" disabled={isPending}>Cancelar</button>
+              <button type="submit" className="crm-btn crm-btn-primary" disabled={isPending}>
+                {isPending ? 'Salvando...' : (mode.kind === 'create' ? 'Criar campanha' : 'Salvar mudanças')}
+              </button>
+            </div>
           </div>
         </form>
       </div>
