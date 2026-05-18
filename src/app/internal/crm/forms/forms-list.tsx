@@ -16,9 +16,9 @@ import { FORM_LABELS } from './shared';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from '@/components/crm/column-picker';
 
-// Spec §8: "Coluna picker permite ativar campos opcionais (cargo, telefone, etc)".
-// Telefone e Cargo são opcionais (default visíveis); demais sempre visíveis no
-// default — user esconde via picker se quiser.
+// Spec §2: "default fields visíveis: name, email, phone, jobTitle. Campos
+// opcionais ativáveis na visualização (column picker)". Defaults abaixo
+// alinhados — resto começa OCULTO e user habilita via picker.
 const FORMS_COLUMNS: readonly ColumnDef[] = [
   { key: 'name', label: 'Nome' },
   { key: 'email', label: 'Email' },
@@ -32,6 +32,11 @@ const FORMS_COLUMNS: readonly ColumnDef[] = [
   { key: 'empresa', label: 'Empresa' },
   { key: 'lastFormAt', label: 'Último form' },
 ];
+
+// Spec §2 explícita: defaults = name, email, phone, jobTitle (cargo). Esses
+// 4 são as colunas canônicas do CRM. Demais são opt-in via picker — útil pra
+// não inundar a tabela com info que nem todo lead tem populada.
+const FORMS_COLUMNS_DEFAULT: readonly string[] = ['name', 'email', 'phone', 'cargo'];
 
 type Props = {
   rows: PersonRow[];
@@ -64,7 +69,11 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [visibleCols, ColumnPickerUI] = useColumnPicker('crm-table-cols-forms', FORMS_COLUMNS);
+  const [visibleCols, ColumnPickerUI] = useColumnPicker(
+    'crm-table-cols-forms',
+    FORMS_COLUMNS,
+    FORMS_COLUMNS_DEFAULT,
+  );
 
   const currentSortBy = searchParams.get('sortBy') ?? 'lastFormAt';
   const currentSortDir = searchParams.get('sortDir') ?? 'desc';

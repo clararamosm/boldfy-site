@@ -24,10 +24,16 @@ export type ColumnDef = { key: string; label: string };
 export function useColumnPicker(
   storageKey: string,
   allColumns: readonly ColumnDef[],
+  defaultVisibleKeys?: readonly string[],
 ): [Set<string>, ReactNode] {
-  // Default: todas visíveis (SSR + primeira render no client)
+  // Default: subset informado por defaultVisibleKeys OU todas visíveis (fallback).
+  // SSR + primeira render no client usa esse default; useEffect abaixo carrega
+  // preferência salva em localStorage (se existir) e re-renderiza.
   const allKeys = new Set(allColumns.map((c) => c.key));
-  const [visible, setVisible] = useState<Set<string>>(allKeys);
+  const initialVisible = defaultVisibleKeys
+    ? new Set(defaultVisibleKeys.filter((k) => allKeys.has(k)))
+    : allKeys;
+  const [visible, setVisible] = useState<Set<string>>(initialVisible);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +80,9 @@ export function useColumnPicker(
   }
 
   function resetAll() {
-    setVisible(allKeys);
+    // "Reset" volta pro DEFAULT (subset configurado), não pra todas visíveis.
+    // Pra mostrar todas, user clica em cada checkbox manualmente.
+    setVisible(initialVisible);
     try {
       window.localStorage.removeItem(storageKey);
     } catch {
@@ -166,7 +174,7 @@ export function useColumnPicker(
               onMouseEnter={(e) => { e.currentTarget.style.background = '#FAF7FF'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              ↺ Resetar (mostrar todas)
+              ↺ Resetar (voltar ao padrão)
             </button>
           </div>
         </div>

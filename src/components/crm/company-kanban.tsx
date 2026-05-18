@@ -7,17 +7,21 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { CompaniesByStatus } from '@/lib/crm-queries';
+import type { CompaniesByStatus, CompanyWithDetails } from '@/lib/crm-queries';
 import { CompanyCard } from './company-card';
 import { moveCompany } from '@/app/internal/crm/actions';
 
-type Props = { data: CompaniesByStatus };
+type Props = {
+  data: CompaniesByStatus;
+  inactiveCompanies?: CompanyWithDetails[];
+};
 
-export function CompanyKanban({ data }: Props) {
+export function CompanyKanban({ data, inactiveCompanies = [] }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
+  const [inactiveExpanded, setInactiveExpanded] = useState(false);
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>, colId: string) {
     e.preventDefault();
@@ -66,7 +70,20 @@ export function CompanyKanban({ data }: Props) {
 
   return (
     <div className="crm-kanban-wrap">
-      <div className="crm-kanban" style={{ gridTemplateColumns: `repeat(${data.length}, 240px)` }}>
+      <div
+        className="crm-kanban"
+        style={{
+          // Coluna extra "Inativos" — fina (44px) quando colapsada, 240px expandida.
+          // Spec §8: empresa inativa = peopleCount > 0 AND todas linkadas unsub.
+          gridTemplateColumns: `repeat(${data.length}, 240px)${
+            inactiveCompanies.length > 0
+              ? inactiveExpanded
+                ? ' 240px'
+                : ' 44px'
+              : ''
+          }`,
+        }}
+      >
         {data.map(({ status, companies }) => {
           const isDragOver = dragOverColId === status.id;
           return (
@@ -101,6 +118,65 @@ export function CompanyKanban({ data }: Props) {
             </div>
           );
         })}
+
+        {/* COLUNA INATIVAS — empresa cujos linkados estão TODOS unsub.
+            Colapsada por default; click pra expandir/colapsar. */}
+        {inactiveCompanies.length > 0 ? (
+          inactiveExpanded ? (
+            <div className="crm-col" style={{ background: 'rgba(157, 133, 179, 0.04)', borderColor: 'rgba(157, 133, 179, 0.2)' }}>
+              <div className="crm-col-header" style={{ cursor: 'pointer' }} onClick={() => setInactiveExpanded(false)} title="Colapsar">
+                <div className="crm-col-title">
+                  <span className="crm-col-dot" style={{ background: '#9D85B3' }} />
+                  Inativas
+                  <span style={{ fontSize: 9, color: '#9D85B3', fontWeight: 600 }}>(todos linkados unsub)</span>
+                </div>
+                <span className="crm-col-count" style={{ background: 'rgba(157, 133, 179, 0.18)', color: '#6B5B8A' }}>
+                  {inactiveCompanies.length} ›
+                </span>
+              </div>
+              <div className="crm-col-cards">
+                {inactiveCompanies.map((company) => (
+                  <div key={company.id} style={{ opacity: 0.6 }}>
+                    <CompanyCard company={company} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setInactiveExpanded(true)}
+              title={`Mostrar ${inactiveCompanies.length} empresa${inactiveCompanies.length === 1 ? '' : 's'} inativa${inactiveCompanies.length === 1 ? '' : 's'} (todos linkados unsubscribed)`}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                gap: 8,
+                padding: '14px 0',
+                background: 'rgba(157, 133, 179, 0.06)',
+                border: '1px dashed rgba(157, 133, 179, 0.25)',
+                borderRadius: 10,
+                cursor: 'pointer',
+                color: '#6B5B8A',
+                fontFamily: 'inherit',
+                fontSize: 11,
+                fontWeight: 700,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span style={{ fontSize: 16 }}>‹</span>
+              <span style={{
+                writingMode: 'vertical-rl',
+                transform: 'rotate(180deg)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}>
+                Inativas · {inactiveCompanies.length}
+              </span>
+            </button>
+          )
+        ) : null}
       </div>
     </div>
   );

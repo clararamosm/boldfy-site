@@ -26,6 +26,7 @@ import {
 import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
+import { FormsSubmittedChipList } from '@/components/crm/forms-submitted-chip-list';
 
 export const metadata: Metadata = {
   title: 'Lead',
@@ -194,6 +195,22 @@ export default async function LeadDetailPage({ params }: Props) {
                   {person.jobTitle ?? <em style={{ color: '#9D85B3' }}>cargo não informado</em>}
                   {person.company ? ` · ${person.company.name}` : ''}
                 </p>
+
+                {/* Headline (4º campo default do header — spec §8: Foto, nome,
+                    jobTitle, headline). Headline costuma ser do LinkedIn ou AC
+                    e dá contexto além do cargo formal (ex: "Founder & CEO @ X
+                    · Helping founders ship faster"). */}
+                {person.headline ? (
+                  <p style={{
+                    margin: '4px 0 0',
+                    fontSize: 13,
+                    color: '#6B5B8A',
+                    fontStyle: 'italic',
+                    lineHeight: 1.4,
+                  }}>
+                    {person.headline}
+                  </p>
+                ) : null}
 
                 <div className="crm-detail-links">
                   {person.linkedinUrl ? (
@@ -507,46 +524,9 @@ export default async function LeadDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Formulários preenchidos — Task 1: chips de people.forms_submitted */}
-          {person.formsSubmitted && person.formsSubmitted.length > 0 ? (
-            <div className="crm-side-card">
-              <div className="crm-side-title">📋 Formulários preenchidos</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {person.formsSubmitted.map((slug) => {
-                  const LABELS: Record<string, { emoji: string; label: string }> = {
-                    report: { emoji: '📥', label: 'Report' },
-                    beta: { emoji: '🧪', label: 'Beta' },
-                    demo: { emoji: '🎯', label: 'Demo' },
-                    proposta: { emoji: '💼', label: 'Proposta' },
-                    linkedin_extension: { emoji: '🔗', label: 'LinkedIn' },
-                  };
-                  const m = LABELS[slug] ?? { emoji: '📄', label: slug };
-                  // Anchor pra activity correspondente na timeline (id setado abaixo)
-                  return (
-                    <a
-                      key={slug}
-                      href={`#form-${slug}`}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '4px 10px',
-                        background: 'rgba(205, 80, 241, 0.1)',
-                        color: '#CD50F1',
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <span>{m.emoji}</span>
-                      <span>{m.label}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
+          {/* Formulários preenchidos — componente reusável (spec §13).
+              Render null se array vazio (não polui sidebar). */}
+          <FormsSubmittedChipList formsSubmitted={person.formsSubmitted ?? []} />
 
           {/* Origem do lead — card consolidado na sidebar com todos os campos
               de "primeiro toque": canal, página, campanha, data, e o(s)

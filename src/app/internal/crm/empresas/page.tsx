@@ -9,7 +9,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { getCompaniesByStatus, type CompaniesByStatus, type CrmFilters } from '@/lib/crm-queries';
+import { getCompaniesByStatus, getInactiveCompanies, type CompaniesByStatus, type CompanyWithDetails, type CrmFilters } from '@/lib/crm-queries';
 import { getStatuses } from '@/lib/statuses';
 import { CompanyKanban } from '@/components/crm/company-kanban';
 import { CompanyTable } from '@/components/crm/company-table';
@@ -44,14 +44,17 @@ export default async function CrmCompaniesPage({ searchParams }: { searchParams:
   const filters = parseFilters(params);
 
   let data: CompaniesByStatus = [];
+  let inactiveCompanies: CompanyWithDetails[] = [];
   let dbError: string | null = null;
   let companyStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   try {
-    const [d, statusesData] = await Promise.all([
+    const [d, inactive, statusesData] = await Promise.all([
       getCompaniesByStatus(view === 'table' ? 1000 : 100, filters),
+      getInactiveCompanies(view === 'table' ? 1000 : 100),
       getStatuses('company'),
     ]);
     data = d;
+    inactiveCompanies = inactive;
     companyStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
@@ -92,9 +95,9 @@ export default async function CrmCompaniesPage({ searchParams }: { searchParams:
           <p>Recarrega a página pra criar os statuses padrão automaticamente.</p>
         </div>
       ) : view === 'table' ? (
-        <CompanyTable data={data} />
+        <CompanyTable data={data} inactiveCompanies={inactiveCompanies} />
       ) : (
-        <CompanyKanban data={data} />
+        <CompanyKanban data={data} inactiveCompanies={inactiveCompanies} />
       )}
     </div>
   );

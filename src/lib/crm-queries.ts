@@ -155,8 +155,42 @@ export type CompaniesByStatus = {
   companies: CompanyWithDetails[];
 }[];
 
+/**
+ * Empresa "inativa" = tem pessoas linkadas E TODAS estão unsubscribed.
+ * Empresa sem pessoas, ou com pelo menos 1 pessoa ativa, NÃO é inativa.
+ *
+ * Lógica: NOT EXISTS (pessoa ativa não-unsub) AND EXISTS (pessoa unsub).
+ * Subquery via SQL bruto pra evitar correlacionar 2x.
+ */
+const COMPANY_INACTIVE_CLAUSE = sql`(
+  EXISTS (
+    SELECT 1 FROM people p
+    WHERE p.company_id = ${companies.id}
+      AND p.archived = FALSE
+      AND p.merged_into_id IS NULL
+      AND p.unsubscribed = TRUE
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM people p
+    WHERE p.company_id = ${companies.id}
+      AND p.archived = FALSE
+      AND p.merged_into_id IS NULL
+      AND p.unsubscribed = FALSE
+  )
+)`;
+
 export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters = {}): Promise<CompaniesByStatus> {
   const filterClauses: SQL[] = [];
+
+  // Task 2 (spec §8): filtro implícito de inativos na empresa. Default
+  // exclui empresas inativas (todos linkados unsubscribed). onlyUnsubscribed
+  // inverte; includeUnsubscribed traz todas.
+  if (filters.onlyUnsubscribed) {
+    filterClauses.push(COMPANY_INACTIVE_CLAUSE);
+  } else if (!filters.includeUnsubscribed) {
+    filterClauses.push(sql`NOT ${COMPANY_INACTIVE_CLAUSE}`);
+  }
+
   const cutoff = periodCutoff(filters.period);
   if (cutoff) filterClauses.push(gte(companies.createdAt, cutoff));
   if (filters.statusId) filterClauses.push(eq(companies.statusId, filters.statusId));
@@ -213,6 +247,47 @@ export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters 
   }
 
   return grouped;
+}
+
+/**
+ * Empresas "inativas" — todas pessoas linkadas estão unsubscribed.
+ * Usada pela coluna colapsada do CompanyKanban + toggle do CompanyTable.
+ *
+ * Mesmo shape de CompanyWithDetails (peopleCount, topScore, peopleNames)
+ * pra dropar direto na UI existente.
+ */
+export async function getInactiveCompanies(perColumn = 100): Promise<CompanyWithDetails[]> {
+  const rows = await db
+    .select({
+      company: companies,
+      status: statuses,
+      peopleCount: sql<number>`(SELECT COUNT(*)::int FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL)`,
+      topScore: sql<number>`COALESCE((SELECT MAX(lead_score) FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL), 0)`,
+      peopleNames: sql<string | null>`(
+        SELECT string_agg(name, ', ' ORDER BY name)
+        FROM (
+          SELECT name FROM people
+          WHERE company_id = ${companies.id}
+            AND archived = FALSE
+            AND merged_into_id IS NULL
+          ORDER BY lead_score DESC
+          LIMIT 5
+        ) AS top5
+      )`,
+    })
+    .from(companies)
+    .leftJoin(statuses, eq(companies.statusId, statuses.id))
+    .where(COMPANY_INACTIVE_CLAUSE)
+    .orderBy(desc(companies.updatedAt))
+    .limit(perColumn);
+
+  return rows.map((r) => ({
+    ...r.company,
+    status: r.status,
+    peopleCount: r.peopleCount,
+    topScore: r.topScore,
+    peopleNames: r.peopleNames,
+  }));
 }
 
 export async function getCompanyById(id: string): Promise<CompanyWithDetails | null> {
@@ -445,6 +520,9 @@ export async function getCrmCounts(): Promise<{
   // totalPeople = só ATIVOS (filtro implícito unsubscribed=false) — bate com
   // o que aparece no kanban default. Inativos viram coluna escondida do
   // kanban (não contam no badge da sub-nav).
+  //
+  // totalCompanies = exclui empresas inativas (todos linkados unsubscribed),
+  // mesma semântica do filtro implícito no kanban de empresas.
   const [p, c, a] = await Promise.all([
     db.select({ n: count() }).from(people).where(and(
       eq(people.archived, false),
@@ -452,7 +530,7 @@ export async function getCrmCounts(): Promise<{
       eq(people.unsubscribed, false),
       sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
     )),
-    db.select({ n: count() }).from(companies),
+    db.select({ n: count() }).from(companies).where(sql`NOT ${COMPANY_INACTIVE_CLAUSE}`),
     db.select({ n: count() }).from(activities),
   ]);
   return {

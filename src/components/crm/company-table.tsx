@@ -26,12 +26,24 @@ const COMPANY_COLUMNS: readonly ColumnDef[] = [
 type SortKey = 'name' | 'industry' | 'size' | 'status' | 'peopleCount' | 'topScore' | 'updatedAt' | 'createdAt';
 type SortDir = 'asc' | 'desc';
 
-export function CompanyTable({ data }: { data: CompaniesByStatus }) {
+export function CompanyTable({
+  data,
+  inactiveCompanies = [],
+}: {
+  data: CompaniesByStatus;
+  inactiveCompanies?: CompanyWithDetails[];
+}) {
+  // Task 2 (spec §8): toggle "Mostrar inativas" — mesmo padrão do PersonTable.
+  // Default false (filtro implícito exclui empresas cujos todos linkados estão
+  // unsubscribed). Toggle inclui essas no dataset.
+  const [showInactive, setShowInactive] = useState(false);
+
   const allCompanies = useMemo(() => {
     const flat: CompanyWithDetails[] = [];
     for (const group of data) flat.push(...group.companies);
+    if (showInactive) flat.push(...inactiveCompanies);
     return flat;
-  }, [data]);
+  }, [data, showInactive, inactiveCompanies]);
 
   const statuses = useMemo(() => data.map((g) => g.status), [data]);
 
@@ -124,7 +136,35 @@ export function CompanyTable({ data }: { data: CompaniesByStatus }) {
         <div style={{ fontSize: 12, color: '#9D85B3' }}>
           {sorted.length} {sorted.length === 1 ? 'resultado' : 'resultados'}
         </div>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Toggle "Mostrar inativas" (spec §8) — só aparece se houver inativas */}
+          {inactiveCompanies.length > 0 ? (
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 10px',
+                background: showInactive ? 'rgba(157, 133, 179, 0.14)' : '#FFFFFF',
+                border: '1px solid #E4D8ED',
+                borderRadius: 8,
+                fontSize: 11,
+                color: '#6B5B8A',
+                fontWeight: 600,
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              title="Empresas cujas pessoas linkadas estão todas unsubscribed no AC"
+            >
+              <input
+                type="checkbox"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                style={{ margin: 0 }}
+              />
+              Mostrar inativas ({inactiveCompanies.length})
+            </label>
+          ) : null}
           {ColumnPickerUI}
         </div>
       </div>
