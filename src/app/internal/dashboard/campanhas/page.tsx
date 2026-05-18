@@ -146,13 +146,13 @@ export default async function CampanhasPage() {
           </div>
           <NewCampaignButton />
         </div>
-        {campaignsList.length === 0 ? (
+        {(campaignsList ?? []).length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhuma campanha cadastrada.</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {campaignsList.map((c, i) => {
+            {(campaignsList ?? []).map((c, i) => {
               const status = getCampaignStatus(c, now);
-              const s = stats[i];
+              const s = stats?.[i] ?? { leads: 0, reunioes: 0, fechados: 0 };
               const start = new Date(`${c.startDate}T00:00:00`);
               const end = c.endDate ? new Date(`${c.endDate}T23:59:59`) : null;
               const cvr = s.leads > 0 ? ((s.fechados / s.leads) * 100).toFixed(1) : '—';
@@ -249,12 +249,12 @@ export default async function CampanhasPage() {
         </div>
       </div>
 
-      {dailyTraffic.length > 0 && articles.length > 0 ? (
+      {(dailyTraffic ?? []).length > 0 && (articles ?? []).length > 0 ? (
         <div className="dash-card">
           <div className="dash-card-title"><Lightbulb /> Correlação publicações × spike orgânico</div>
           <div className="dash-card-subtitle">Linha = sessões totais · marcadores = publicações</div>
           <TimelineMarkers
-            dates={dailyTraffic.map((d) => d.date)}
+            dates={(dailyTraffic ?? []).map((d) => d.date)}
             values={organicSeries}
             markers={articleMarkers}
             label="Sessões"
@@ -266,16 +266,16 @@ export default async function CampanhasPage() {
 
       <div className="dash-card">
         <div className="dash-card-title"><FileText /> Artigos cadastrados</div>
-        {articles.length === 0 ? (
+        {(articles ?? []).length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem artigos cadastrados ainda.</div>
         ) : (
           <table className="dash-table">
             <thead><tr><th>Título</th><th>Publicado</th><th>UTM campaign</th></tr></thead>
             <tbody>
-              {articles.map((a) => (
+              {(articles ?? []).map((a) => (
                 <tr key={a.id}>
                   <td className="strong" style={{ maxWidth: 480 }}>{a.title}</td>
-                  <td className="muted">{new Date(a.publishedAt).toLocaleDateString('pt-BR')}</td>
+                  <td className="muted">{a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('pt-BR') : '—'}</td>
                   <td className="muted">{a.utmCampaign ?? '—'}</td>
                 </tr>
               ))}
@@ -297,17 +297,17 @@ export default async function CampanhasPage() {
           Shortlinks (KV) servem como alias curto pros UTMs em mídias com limite de caracteres ·
           <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code>
         </div>
-        {shortlinks.length === 0 ? (
+        {(shortlinks ?? []).length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem shortlinks no KV.</div>
         ) : (
           <table className="dash-table">
             <thead><tr><th>Code</th><th>Destino</th><th className="right">Cliques</th><th className="right">Último click</th></tr></thead>
             <tbody>
-              {shortlinks.map((s) => (
+              {(shortlinks ?? []).map((s) => (
                 <tr key={s.code}>
                   <td className="strong"><span className="dash-pill blue">/l/{s.code}</span></td>
                   <td className="muted" style={{ maxWidth: 460, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
-                  <td className="right strong">{s.clicks.toLocaleString('pt-BR')}</td>
+                  <td className="right strong">{(s.clicks ?? 0).toLocaleString('pt-BR')}</td>
                   <td className="right muted">{s.lastClickAt ? timeAgo(new Date(s.lastClickAt)) : '—'}</td>
                 </tr>
               ))}
@@ -327,18 +327,18 @@ export default async function CampanhasPage() {
         <div className="dash-card-subtitle">
           Sessões GA4 por (source · medium · campaign) nos últimos 30 dias. Lista de links gerados completa em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>UTM</Link>.
         </div>
-        {prUtms.length === 0 ? (
+        {(prUtms ?? []).length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem dados de UTM no GA4 nos últimos 30 dias.</div>
         ) : (
           <table className="dash-table">
             <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th className="right">Sessões</th></tr></thead>
             <tbody>
-              {prUtms.slice(0, 20).map((u, i) => (
+              {(prUtms ?? []).slice(0, 20).map((u, i) => (
                 <tr key={i}>
                   <td className="strong">{u.source}</td>
                   <td>{u.medium}</td>
                   <td className="muted">{u.campaign}</td>
-                  <td className="right">{u.sessions.toLocaleString('pt-BR')}</td>
+                  <td className="right">{(u.sessions ?? 0).toLocaleString('pt-BR')}</td>
                 </tr>
               ))}
             </tbody>
