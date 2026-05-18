@@ -53,13 +53,20 @@ export function adaptBeta(input: BetaInput): ClassifiedLead {
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
   };
 
+  // Activity data — TODOS os campos do form Beta na timeline (spec §8)
   const activityData: Record<string, unknown> = {
     form_type: 'beta',
+    nome: input.nome,
+    email: input.email,
+    telefone: input.telefone,
+    cargo: input.cargo,
+    empresa: input.empresa,
+    setor: input.setor,
+    colaboradores_para_beta: input.colaboradores,
     objetivo_principal: input.objetivoPrincipal,
     como_conheceu: input.comoConheceu,
     observacoes: input.observacoes,
-    setor: input.setor,
-    colaboradores_para_beta: input.colaboradores,
+    ...(input.origem ? { origem: input.origem } : {}),
     utms: {
       source: input.utm_source,
       medium: input.utm_medium,

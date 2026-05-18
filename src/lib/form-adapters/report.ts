@@ -69,12 +69,18 @@ export function adaptReport(input: ReportInput): ClassifiedLead {
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
   };
 
-  // Activity data — vai pra timeline (Task 2 renderiza rica).
+  // Activity data — vai pra timeline (Task 2 §8: "mostra TODOS os campos
+  // preenchidos"). Incluir AQUI tudo que o form captura, mesmo redundante
+  // com header — o lead detail mostra como chips visuais.
   const activityData: Record<string, unknown> = {
     form_type: 'report',
+    nome: input.nome,
+    email: input.email,
+    ...(empresaInformada ? { empresa: empresaInformada } : {}),
     intencao_uso: input.intencaoUso,
     tipo_lead: tipoLead,
     newsletter_opt_in: newsletterOptIn,
+    ...(input.origem ? { origem: input.origem } : {}),
     utms: {
       source: input.utm_source,
       medium: input.utm_medium,

@@ -64,13 +64,19 @@ export function adaptProposal(
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
   };
 
+  // Activity data — TODOS os campos do form Proposta na timeline (spec §8)
   const activityData: Record<string, unknown> = {
     form_type: 'proposta',
+    nome: input.nome,
+    email: input.email,
+    cargo: input.cargo,
+    empresa: input.empresa,
     total_mensal: input.totalCurrent,
     total_full: input.totalFull,
     savings: input.savings,
     beta_active: input.betaActive,
-    proposal_url: ctx.proposalUrl,
+    ...(ctx.proposalUrl ? { proposal_url: ctx.proposalUrl } : {}),
+    ...(input.origem ? { origem: input.origem } : {}),
     utms: {
       source: input.utm_source,
       medium: input.utm_medium,

@@ -278,72 +278,8 @@ export default async function LeadDetailPage({ params }: Props) {
               </div>
             </div>
 
-            {/* Jornada — canal → página → forms preenchidos (compacta a info que
-                antes ficava espalhada entre sidebar "Origem" e badges no header) */}
-            {(() => {
-              const formsPreenchidos = activitiesList.filter((a) => a.type.startsWith('form_submit_'));
-              const hasJornada = (person.sourceChannel && person.sourceChannel !== 'unknown')
-                || person.sourcePage
-                || formsPreenchidos.length > 0
-                || person.firstTouchCampaign;
-              if (!hasJornada) return null;
-
-              const formLabels: Record<string, string> = {
-                form_submit_demo: '🎯 Demo',
-                form_submit_beta: '🧪 Beta',
-                form_submit_report: '📥 Report',
-                form_submit_proposta: '💼 Proposta',
-              };
-              // De-dup: lead pode ter preenchido o mesmo form múltiplas vezes
-              const uniqueForms = Array.from(new Set(formsPreenchidos.map((f) => f.type)));
-
-              return (
-                <div style={{ marginTop: 16, padding: '14px 16px', background: 'linear-gradient(135deg, rgba(205, 80, 241, 0.04), rgba(94, 42, 103, 0.02))', border: '1px solid rgba(205, 80, 241, 0.12)', borderRadius: 10 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#9D85B3', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                    🛤 Jornada do lead
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', fontSize: 12, color: '#45336B' }}>
-                    {person.sourceChannel && person.sourceChannel !== 'unknown' ? (
-                      <span style={{ padding: '4px 10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', borderRadius: 999, fontWeight: 600 }}>
-                        📍 {channelLabel(person.sourceChannel)}
-                      </span>
-                    ) : null}
-                    {person.sourceChannel && person.sourcePage ? (
-                      <span style={{ color: '#9D85B3' }}>→</span>
-                    ) : null}
-                    {person.sourcePage ? (
-                      <span style={{ padding: '4px 10px', background: '#FAF7FF', color: '#5E2A67', borderRadius: 999, fontFamily: 'monospace', fontSize: 11 }}>
-                        {person.sourcePage}
-                      </span>
-                    ) : null}
-                    {(person.sourceChannel || person.sourcePage) && uniqueForms.length > 0 ? (
-                      <span style={{ color: '#9D85B3' }}>→</span>
-                    ) : null}
-                    {uniqueForms.map((formType) => (
-                      <span key={formType} style={{ padding: '4px 10px', background: 'rgba(205, 80, 241, 0.12)', color: '#CD50F1', borderRadius: 999, fontWeight: 700 }}>
-                        {formLabels[formType] ?? formType}
-                      </span>
-                    ))}
-                    {person.firstTouchCampaign ? (
-                      <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9D85B3' }}>
-                        Campanha: <strong style={{ color: '#5E2A67' }}>{person.firstTouchCampaign}</strong>
-                      </span>
-                    ) : null}
-                  </div>
-                  {/* Last engagement (deriva de email opens/clicks no AC) */}
-                  {(() => {
-                    const m = person.metadata as Record<string, unknown> | null;
-                    const ext = m?.ac_extra as { last_engagement_at?: string | null } | undefined;
-                    if (!ext?.last_engagement_at) return null;
-                    return (
-                      <div style={{ marginTop: 8, fontSize: 11, color: '#9D85B3' }}>
-                        Última interação email: <strong style={{ color: '#5E2A67' }}>{timeAgo(new Date(ext.last_engagement_at))}</strong>
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })()}
+            {/* Bloco "Jornada do lead" removido (decisão Clara 2026-05-18 — info
+                redundante com chips do header + sidebar "Origem do lead"). */}
 
             <h3 style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 15, color: '#5E2A67', marginTop: 18, marginBottom: 10 }}>
               Timeline {activitiesList.length > 0 ? `(${activitiesList.length})` : ''}
@@ -364,15 +300,20 @@ export default async function LeadDetailPage({ params }: Props) {
                   const formSlug = (data.form_slug as string | undefined)
                     ?? act.type.replace('form_submit_', '');
 
-                  /* ---- Task 1: render rico de form_submit ---- */
-                  // Campos canônicos que viraram tag visual (cargo, empresa, intenção, etc).
-                  // Observações ficam num bloco separado destacado.
-                  // UTMs viram texto inline.
+                  /* ---- Task 2: render rico de form_submit (spec §8: "mostra TODOS
+                       os campos preenchidos") ----
+                     Estratégia: itera por TUDO de activityData, exceto chaves com
+                     tratamento próprio (form_type, form_slug, utms, observacoes).
+                     Labels conhecidos viram label legível; desconhecidos viram
+                     humanize(key). Forms futuros (sem código novo) já aparecem
+                     completos. */
                   let canonicalChips: Array<{ k: string; v: string }> = [];
-                  let utmInline = '';
+                  let utmChips: Array<{ k: string; v: string }> = [];
                   let obsBlock: string | undefined;
 
                   if (isFormSubmit) {
+                    // Labels prettify pra chaves conhecidas. Desconhecidas caem
+                    // em humanize() (snake_case → Title Case).
                     const FIELD_LABELS: Record<string, string> = {
                       cargo: 'Cargo',
                       empresa: 'Empresa',
@@ -385,35 +326,68 @@ export default async function LeadDetailPage({ params }: Props) {
                       como_conheceu: 'Como conheceu',
                       newsletter_opt_in: 'Newsletter',
                       total_mensal: 'Total mensal',
+                      total_full: 'Total cheio',
                       savings: 'Economia',
                       beta_active: 'Beta ativo',
+                      origem: 'Origem',
+                      proposal_url: 'URL proposta',
                     };
-                    for (const [key, label] of Object.entries(FIELD_LABELS)) {
-                      const v = data[key];
-                      if (v === undefined || v === null || v === '' || v === false) {
-                        if (key === 'newsletter_opt_in' && v === false) {
-                          canonicalChips.push({ k: label, v: 'NÃO' });
-                        }
-                        continue;
-                      }
-                      let strVal = '';
-                      if (typeof v === 'boolean') strVal = v ? 'SIM' : 'NÃO';
-                      else if (typeof v === 'number') {
-                        strVal = key === 'total_mensal' || key === 'savings'
+                    // Chaves com tratamento separado (não vão pra chips genéricos)
+                    const SKIP_KEYS = new Set([
+                      'form_type', 'form_slug', 'utms', 'observacoes',
+                      'observation', 'reconstructed', 'from',
+                      // Chaves legadas do import AC — info já redundante na sidebar
+                      'utm_source_first', 'utm_medium_first', 'utm_campaign_first',
+                      'sourceChannel', 'campaign_name',
+                    ]);
+                    function humanize(k: string): string {
+                      return FIELD_LABELS[k]
+                        ?? k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                    }
+                    function formatValue(key: string, v: unknown): string {
+                      if (typeof v === 'boolean') return v ? 'SIM' : 'NÃO';
+                      if (typeof v === 'number') {
+                        return key === 'total_mensal' || key === 'savings' || key === 'total_full'
                           ? `R$ ${v.toLocaleString('pt-BR')}`
                           : String(v);
-                      } else strVal = String(v);
-                      canonicalChips.push({ k: label, v: strVal });
+                      }
+                      if (typeof v === 'object' && v !== null) return JSON.stringify(v);
+                      return String(v);
                     }
+
+                    for (const [key, raw] of Object.entries(data)) {
+                      if (SKIP_KEYS.has(key)) continue;
+                      // Skip undefined/null/'' — boolean false segue (Newsletter: NÃO é info)
+                      if (raw === undefined || raw === null || raw === '') continue;
+                      canonicalChips.push({ k: humanize(key), v: formatValue(key, raw) });
+                    }
+
                     obsBlock = (data.observacoes as string | undefined) || observation;
 
-                    // UTMs inline
-                    const utms = data.utms as Record<string, string | undefined> | undefined;
-                    if (utms) {
-                      const parts: string[] = [];
-                      if (utms.source) parts.push(`via ${utms.source}`);
-                      if (utms.campaign) parts.push(`campanha: ${utms.campaign}`);
-                      utmInline = parts.join(' · ');
+                    // UTMs como chips dedicados (mais visíveis que texto inline).
+                    // Suporta DOIS formatos: aninhado {utms: {source, ...}} (novo,
+                    // pós-Task 1) E plano {utm_source, utm_medium, ...} (legado,
+                    // pré-Task 1 — activities históricas têm assim).
+                    const UTM_LABEL: Record<string, string> = {
+                      source: 'UTM source',
+                      medium: 'UTM medium',
+                      campaign: 'UTM campaign',
+                      content: 'UTM content',
+                      term: 'UTM term',
+                    };
+                    const utmsNested = data.utms as Record<string, string | undefined> | undefined;
+                    if (utmsNested) {
+                      for (const [k, v] of Object.entries(utmsNested)) {
+                        if (!v) continue;
+                        utmChips.push({ k: UTM_LABEL[k] ?? `UTM ${k}`, v: String(v) });
+                      }
+                    } else {
+                      // Fallback: campos planos utm_source/utm_medium/etc
+                      for (const k of ['source', 'medium', 'campaign', 'content', 'term']) {
+                        const v = data[`utm_${k}`];
+                        if (!v) continue;
+                        utmChips.push({ k: UTM_LABEL[k], v: String(v) });
+                      }
                     }
                   }
 
@@ -472,10 +446,26 @@ export default async function LeadDetailPage({ params }: Props) {
                           </div>
                         ) : null}
 
-                        {/* UTMs inline (form_submit) */}
-                        {isFormSubmit && utmInline ? (
-                          <div style={{ marginTop: 6, fontSize: 10, color: '#9D85B3' }}>
-                            {utmInline}
+                        {/* UTMs como chips dedicados (mais visíveis que texto inline) */}
+                        {isFormSubmit && utmChips.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                            {utmChips.map((c) => (
+                              <span
+                                key={c.k}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'baseline',
+                                  gap: 4,
+                                  padding: '2px 7px',
+                                  background: 'rgba(59, 130, 246, 0.08)',
+                                  borderRadius: 6,
+                                  fontSize: 10,
+                                }}
+                              >
+                                <span style={{ color: '#3B82F6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.k}:</span>
+                                <span style={{ color: '#45336B' }}>{c.v}</span>
+                              </span>
+                            ))}
                           </div>
                         ) : null}
                       </div>

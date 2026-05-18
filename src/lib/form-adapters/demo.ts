@@ -48,10 +48,16 @@ export function adaptDemo(input: DemoInput): ClassifiedLead {
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
   };
 
+  // Activity data — TODOS os campos do form Demo na timeline (spec §8)
   const activityData: Record<string, unknown> = {
     form_type: 'demo',
-    origem: input.origem,
+    nome: input.nome,
+    email: input.email,
+    telefone: input.telefone,
+    cargo: input.cargo,
+    empresa: input.empresa,
     funcionarios: input.funcionarios,
+    ...(input.origem ? { origem: input.origem } : {}),
     utms: {
       source: input.utm_source,
       medium: input.utm_medium,

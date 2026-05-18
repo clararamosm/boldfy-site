@@ -51,11 +51,36 @@ type Counters = {
 /*  Tag mapping — alinhado com routeSegments() antigo em ac-tags.ts          */
 /* -------------------------------------------------------------------------- */
 
-function deriveSegmentFromTags(tags: string[] | null): 'lider_b2b' | 'parceiro' | 'profissional_individual' | null {
+type Segment = 'lider_b2b' | 'parceiro' | 'profissional_individual';
+
+function deriveSegmentFromTags(tags: string[] | null): Segment | null {
   if (!tags || tags.length === 0) return null;
   if (tags.includes('Segmento: Líderes B2B')) return 'lider_b2b';
   if (tags.includes('Segmento: Parceiros estratégicos')) return 'parceiro';
   if (tags.includes('Segmento: Profissionais Individuais')) return 'profissional_individual';
+  return null;
+}
+
+/**
+ * Fallback 1: deriva segment de intencao_uso em activity form_submit_report.data.
+ * Importante porque o fluxo ANTIGO não populava people.ac_tags, mas guardava
+ * intencao_uso na activity (Patricia/Heloisa/etc).
+ */
+function segmentFromIntencao(intencao: string | undefined | null): Segment | null {
+  if (intencao === 'marca-empresa') return 'lider_b2b';
+  if (intencao === 'marca-clientes') return 'parceiro';
+  if (intencao === 'marca-pessoal') return 'profissional_individual';
+  return null;
+}
+
+/**
+ * Fallback 2: forms B2B-only (Beta/Demo/Proposta/extensão) sempre = Líder B2B
+ * por design — não precisa de tag nem de intencao_uso.
+ */
+function segmentFromSourceMethod(method: string | null): Segment | null {
+  if (method === 'form_beta' || method === 'form_demo' || method === 'form_proposta' || method === 'extension_linkedin') {
+    return 'lider_b2b';
+  }
   return null;
 }
 
@@ -97,6 +122,7 @@ async function main() {
       email: people.email,
       acTags: people.acTags,
       segment: people.segment,
+      sourceMethod: people.sourceMethod,
       newsletterOptIn: people.newsletterOptIn,
       formsSubmitted: people.formsSubmitted,
       proposalUrl: people.proposalUrl,
@@ -112,24 +138,8 @@ async function main() {
     const updates: Record<string, unknown> = {};
 
     try {
-      /* ---- 1. segment ---- */
-      if (!person.segment) {
-        const derived = deriveSegmentFromTags(person.acTags);
-        if (derived) {
-          updates.segment = derived;
-          counters.segment_set++;
-        }
-      }
-
-      /* ---- 2. newsletter_opt_in ---- */
-      // Idempotente: só seta se hoje está false e tag indica true.
-      const tagSaysOptIn = deriveOptInFromTags(person.acTags);
-      if (tagSaysOptIn && !person.newsletterOptIn) {
-        updates.newsletterOptIn = true;
-        counters.opt_in_set++;
-      }
-
-      /* ---- 3. forms_submitted (append de slugs únicos) ---- */
+      /* ---- 3. forms_submitted + busca activities (precisa ANTES do segment
+                 porque fallback de segment usa intencao_uso da activity) ---- */
       const formActs = await db
         .select({ type: activities.type, data: activities.data })
         .from(activities)
@@ -138,14 +148,29 @@ async function main() {
       const existingFormsSet = new Set(person.formsSubmitted ?? []);
       const newFormsSet = new Set<string>(existingFormsSet);
       let proposalUrlCandidate: string | undefined;
+      let intencaoFromActivity: string | undefined;
+      let optInFromActivity: boolean | undefined;
 
       for (const act of formActs) {
         const slug = activityTypeToSlug(act.type);
         if (slug) newFormsSet.add(slug);
 
+        // Extrai sinais úteis da activity (formato antigo armazenava plano)
+        const d = (act.data as Record<string, unknown> | null) ?? {};
+
+        // intencao_uso pode estar plano ou aninhado; pega o último que vir
+        const intencao = d.intencao_uso as string | undefined;
+        if (intencao) intencaoFromActivity = intencao;
+
+        // newsletter_opt_in pode ser booleano ou string "SIM"/"NAO"
+        const optIn = d.newsletter_opt_in;
+        if (optIn === true || optIn === 'SIM' || optIn === 'sim') optInFromActivity = true;
+        else if (optIn === false || optIn === 'NAO' || optIn === 'NÃO' || optIn === 'nao') {
+          if (optInFromActivity === undefined) optInFromActivity = false;
+        }
+
         // Captura proposal_url da activity de proposta (se existir no payload)
-        if (act.type === 'form_submit_proposta' && act.data) {
-          const d = act.data as Record<string, unknown>;
+        if (act.type === 'form_submit_proposta') {
           const url = (d.proposal_url as string | undefined)
             ?? (d.url_proposta as string | undefined)
             ?? ((d.utms as Record<string, unknown> | undefined)?.proposal_url as string | undefined);
@@ -158,6 +183,32 @@ async function main() {
       if (newFormsSet.size > existingFormsSet.size) {
         updates.formsSubmitted = Array.from(newFormsSet);
         counters.forms_appended += newFormsSet.size - existingFormsSet.size;
+      }
+
+      /* ---- 1. segment (cascade de fallbacks) ---- */
+      // Backfill v2: tenta 3 fontes em ordem de confiança:
+      //   1) ac_tags do CRM (preenchido pelo fluxo novo ou import AC)
+      //   2) intencao_uso em activities form_submit_report.data (fluxo antigo
+      //      do Report guardava aqui mesmo sem popular ac_tags)
+      //   3) sourceMethod hardcoded (forms B2B-only sempre = Líder B2B)
+      if (!person.segment) {
+        const derived =
+          deriveSegmentFromTags(person.acTags)
+          ?? segmentFromIntencao(intencaoFromActivity)
+          ?? segmentFromSourceMethod(person.sourceMethod);
+        if (derived) {
+          updates.segment = derived;
+          counters.segment_set++;
+        }
+      }
+
+      /* ---- 2. newsletter_opt_in (cascade) ---- */
+      // Prioridade: tag AC → activity data. Idempotente: só seta se ainda false.
+      const tagSaysOptIn = deriveOptInFromTags(person.acTags);
+      const finalOptIn = tagSaysOptIn || (optInFromActivity === true);
+      if (finalOptIn && !person.newsletterOptIn) {
+        updates.newsletterOptIn = true;
+        counters.opt_in_set++;
       }
 
       /* ---- 4. proposal_url ---- */
