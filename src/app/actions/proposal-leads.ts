@@ -10,9 +10,9 @@
  */
 
 import type { ProposalData } from '@/lib/notion-crm';
-import { syncContact, addNoteToContact } from '@/lib/activecampaign';
-import { buildACTags } from '@/lib/ac-tags';
+import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
+import { adaptProposal } from '@/lib/form-adapters/proposal';
 import { ProposalLeadSchema, parseInput } from './_schemas';
 import { buildProposalUrl } from '@/lib/proposal-token';
 import type { z } from 'zod';
@@ -365,50 +365,23 @@ export async function sendProposalLeadToNotion(
       ]);
     }
 
-    // 3. Sync to ActiveCampaign (universo geral)
-    // Simulador é form 100% B2B — adiciona segmento automático (dispara
-    // a automação Tag→Lista no AC que inscreve em Líderes B2B).
-    // Beta tester saiu daqui — a info do beta vai via campo
-    // `total_mensal_proposta` (que já reflete o desconto) + a note com
-    // o resumo da proposta.
-    const acTags = buildACTags({
-      formType: 'Simulador de Proposta',
-      extraTags: [
-        'Segmento: Líderes B2B',
-        input.plataformaEnabled ? 'Módulo: SaaS' : null,
-        input.designPlan ? 'Módulo: Design on Demand' : null,
-        input.fsTls > 0 ? 'Módulo: Content Full-Service' : null,
-      ].filter((t): t is string => !!t),
+    // 3. Adapter + recordLeadFromForm (CRM-first; AC sync rola dentro).
+    //    proposalUrl precisa estar populado ANTES (passo 1-2 acima).
+    const lead = adaptProposal(input, {
+      proposalUrl,
+      propostaNotionId: propostaId ?? undefined,
     });
 
-    const nameParts = input.nome.trim().split(/\s+/);
-    const firstName = nameParts[0] ?? input.nome;
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const crmResult = await recordLeadFromForm(lead);
+    if (!crmResult.ok) {
+      console.error('[proposal-leads] recordLeadFromForm failed:', crmResult.error);
+      // Não bloqueia retorno — proposta no Notion já foi criada,
+      // user merece ver o link da proposta mesmo se CRM falhar.
+    }
 
-    // AWAIT aqui é essencial — em serverless (Vercel), fire-and-forget é
-    // descartado quando a função retorna. Foi por isso que leads apareciam
-    // no Notion mas não chegavam no ActiveCampaign antes desse fix.
+    // 4. Nota descritiva no AC com link da proposta + resumo (best-effort).
     try {
-      const acContactId = await syncContact({
-        email: input.email,
-        firstName,
-        lastName,
-        tags: acTags,
-        fields: {
-          empresa: input.empresa,
-          cargo: input.cargo,
-          total_mensal_proposta: input.totalCurrent,
-          url_proposta: proposalUrl,
-          // Proposta é form 100% B2B (deep intent) — label novo (mai/2026)
-          tipo_de_lead: 'Líder B2B',
-          intencao_uso: 'marca-empresa',
-          // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
-          ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-          ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-          ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-        },
-      });
-
+      const acContactId = await findContactByEmail(input.email);
       if (acContactId) {
         const summary = buildProposalSummary(input);
         const note = [
@@ -427,42 +400,9 @@ export async function sendProposalLeadToNotion(
           .filter(Boolean)
           .join('\n');
         await addNoteToContact(acContactId, note);
-
-        // Folk legacy removido em mai/2026 — CRM Boldfy é a fonte única daqui.
-
-        // CRM Boldfy — Simulador é lead super qualificado.
-        try {
-          await recordLeadFromForm({
-            name: input.nome,
-            email: input.email,
-            jobTitle: input.cargo,
-            companyName: input.empresa,
-            acContactId,
-            sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
-            sourcePage: input.origem,
-            sourceMethod: 'form_proposta',
-            utmCampaign: input.utm_campaign,
-            activityType: 'form_submit_proposta',
-            activityData: {
-              form_type: 'proposta',
-              total_mensal: input.totalCurrent,
-              total_full: input.totalFull,
-              savings: input.savings,
-              utm_source: input.utm_source,
-              utm_medium: input.utm_medium,
-              utm_campaign: input.utm_campaign,
-            },
-          });
-        } catch (crmErr) {
-          console.error('[proposal-leads] CRM dual-write error (non-blocking):', crmErr);
-        }
-      } else {
-        console.warn(
-          '[proposal-leads] AC syncContact returned null — contato nao foi criado/atualizado. Verificar ACTIVECAMPAIGN_API_URL e ACTIVECAMPAIGN_API_KEY no Vercel.',
-        );
       }
     } catch (acErr) {
-      console.error('[proposal-leads] ActiveCampaign sync error (non-blocking):', acErr);
+      console.error('[proposal-leads] AC note error (non-blocking):', acErr);
     }
 
     return {

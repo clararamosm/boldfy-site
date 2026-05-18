@@ -14,9 +14,10 @@ import { usePathname } from 'next/navigation';
 type Props = {
   totalPeople: number | null;
   totalCompanies: number | null;
+  totalInactive?: number | null;
 };
 
-export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
+export function CrmSubNav({ totalPeople, totalCompanies, totalInactive }: Props) {
   const pathname = usePathname() ?? '';
 
   // Match logic: exato pra Pessoas (root), prefix pros outros
@@ -24,6 +25,7 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
   const isEmpresas = pathname.startsWith('/internal/crm/empresas');
   const isFeed = pathname.startsWith('/internal/crm/feed');
   const isForms = pathname.startsWith('/internal/crm/forms');
+  const isInativos = pathname.startsWith('/internal/crm/inativos');
   const isSettings = pathname.startsWith('/internal/crm/settings');
 
   return (
@@ -58,6 +60,24 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
       >
         Formulários
       </Link>
+      {/* Task 1: aba Leads Inativos. Aparece sempre se totalInactive!=null;
+          contador some quando zerado pra não poluir. */}
+      {totalInactive !== undefined && totalInactive !== null ? (
+        <Link
+          href="/internal/crm/inativos"
+          className={`crm-subnav-link ${isInativos ? 'active' : ''}`}
+          aria-current={isInativos ? 'page' : undefined}
+          style={{ opacity: totalInactive > 0 ? 1 : 0.55 }}
+          title="Leads que deram unsubscribe no AC"
+        >
+          Inativos
+          {totalInactive > 0 ? (
+            <span className="count" style={{ background: 'rgba(157, 133, 179, 0.18)', color: '#6B5B8A' }}>
+              {totalInactive}
+            </span>
+          ) : null}
+        </Link>
+      ) : null}
       <Link
         href="/internal/crm/settings/statuses"
         className={`crm-subnav-link ${isSettings ? 'active' : ''}`}

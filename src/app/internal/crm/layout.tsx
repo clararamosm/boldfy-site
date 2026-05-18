@@ -13,17 +13,19 @@ import './crm.css';
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
   let totalPeople: number | null = null;
   let totalCompanies: number | null = null;
+  let totalInactive: number | null = null;
   try {
     const counts = await getCrmCounts();
     totalPeople = counts.totalPeople;
     totalCompanies = counts.totalCompanies;
+    totalInactive = counts.totalInactive;
   } catch {
     // DB não conectado — passa null e o sub-nav esconde os counts
   }
 
   return (
     <div>
-      <CrmSubNav totalPeople={totalPeople} totalCompanies={totalCompanies} />
+      <CrmSubNav totalPeople={totalPeople} totalCompanies={totalCompanies} totalInactive={totalInactive} />
       {children}
     </div>
   );

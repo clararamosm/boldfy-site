@@ -146,6 +146,46 @@ export function describeActivity(
     case 'email_unsubscribed':
       return { icon: '🚫', text: `Descadastrou da cadência${data?.campaign_name ? ': ' + (data.campaign_name as string) : ''}`, category: 'email' };
 
+    /* ---------------- Task 1: lifecycle events ---------------- */
+    case 'lead_unsubscribed':
+      return { icon: '❌', text: 'Saiu da lista (unsubscribed)', category: 'email' };
+    case 'lead_resubscribed': {
+      const formSlug = data?.form_slug as string | undefined;
+      return { icon: '✓', text: `Voltou pra base${formSlug ? ` (preencheu form ${formSlug})` : ''}`, category: 'email' };
+    }
+    case 'field_changed': {
+      const field = (data?.field as string) ?? 'campo';
+      const oldV = (data?.old_value as string | null) ?? null;
+      const newV = (data?.new_value as string | null) ?? null;
+      const src = data?.source_form as string | undefined;
+      const FIELD_LABELS: Record<string, string> = {
+        jobTitle: 'Cargo',
+        segment: 'Segmento',
+        phone: 'Telefone',
+        linkedinUrl: 'LinkedIn',
+        location: 'Localização',
+      };
+      const fieldLabel = FIELD_LABELS[field] ?? field;
+      // Renderiza segmento internal slug pra label legível
+      const SEGMENT_LABELS: Record<string, string> = {
+        lider_b2b: 'Líder B2B',
+        parceiro: 'Parceiro estratégico',
+        profissional_individual: 'Profissional individual',
+      };
+      const fmtVal = (v: string | null): string => {
+        if (v === null || v === undefined) return 'vazio';
+        if (field === 'segment') return SEGMENT_LABELS[v] ?? v;
+        return v;
+      };
+      const direction = `${fmtVal(oldV)} → ${fmtVal(newV)}`;
+      const suffix = src ? ` (via form ${src})` : '';
+      return { icon: '✏', text: `${fieldLabel}: ${direction}${suffix}`, category: 'system' };
+    }
+    case 'automation_started': {
+      const name = (data?.automation_name as string) ?? (data?.tag_that_triggered as string) ?? 'cadência';
+      return { icon: '🔄', text: `Entrou na cadência: ${name}`, category: 'email' };
+    }
+
     case 'cal_scheduled':
       return { icon: '📅', text: 'Agendou no Cal.com', category: 'cal' };
     case 'cal_attended':

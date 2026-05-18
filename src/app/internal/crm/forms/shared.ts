@@ -23,6 +23,9 @@ export const FORM_LABELS: Record<FormType, string> = {
 /**
  * 1 row por pessoa. forms = lista de-dup dos forms preenchidos.
  * lastFormAt/firstFormAt usados pra sort.
+ *
+ * Task 1 (mai/2026): segment, newsletterOptIn, unsubscribed lidos direto
+ * das colunas dedicadas em people (não mais derivados de acTags).
  */
 export type PersonRow = {
   person: {
@@ -36,6 +39,11 @@ export type PersonRow = {
     statusColor: string | null;
     jobTitle: string | null;
     metadata: Record<string, unknown> | null;
+    segment: string | null;
+    newsletterOptIn: boolean;
+    unsubscribed: boolean;
+    unsubscribedAt: Date | null;
+    formsSubmitted: string[];
   };
   company: { id: string; name: string } | null;
   forms: FormType[];

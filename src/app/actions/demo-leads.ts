@@ -1,16 +1,19 @@
 'use server';
 
 /**
- * Server action to capture Demo leads.
+ * Server action para capturar leads de Demo.
  *
- * Arquitetura simplificada (a partir de Abr/2026):
- * - Sem database de Pessoas/Empresas no Notion — CRM é 100% ActiveCampaign
- * - Todo lead vai pro AC com tags completas (form + origem + UTMs + porte)
+ * Task 1 (mai/2026 — spec crm-source-of-truth):
+ *  - Fluxo CRM-first via adapter + recordLeadFromForm.
+ *  - Demo é 100% B2B (lider_b2b_only).
+ *  - Tag operacional 'Demo: Aguardando agendamento' é injetada AQUI (não no
+ *    adapter) porque é flag de fluxo Cal — webhook /api/webhooks/cal remove
+ *    quando lead agenda. Cadência de recuperação fica em quem não agendou.
  */
 
-import { syncContact, addNoteToContact } from '@/lib/activecampaign';
-import { buildACTags } from '@/lib/ac-tags';
+import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
+import { adaptDemo } from '@/lib/form-adapters/demo';
 import { DemoLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
@@ -19,116 +22,51 @@ export type DemoLeadInput = z.input<typeof DemoLeadSchema>;
 export async function sendDemoLeadToNotion(
   rawInput: DemoLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
-  // Validação zod — bloqueia inputs malformados antes de chamar AC
+  // Nome do export mantido pra não quebrar imports.
   const parsed = parseInput(DemoLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
   }
   const input = parsed.data;
 
-  // Mantido nome do export pra não quebrar as imports existentes —
-  // na prática agora só dispara pro ActiveCampaign
   try {
-    const nameParts = input.nome.trim().split(/\s+/);
-    const firstName = nameParts[0] ?? input.nome;
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const lead = adaptDemo(input);
+    // Tag operacional do fluxo Cal — webhook remove quando agendamento ocorre.
+    lead.acTags = [...lead.acTags, 'Demo: Aguardando agendamento'];
 
-    const acTags = buildACTags({
-      formType: 'Demo',
-      extraTags: [
-        // Demo é form 100% B2B — adiciona segmento automático (dispara a
-        // automação Tag→Lista no AC que inscreve em Líderes B2B).
-        'Segmento: Líderes B2B',
-        // Tag de rastreamento: lead pediu demo mas ainda nao agendou
-        // horario no Cal.com. O webhook /api/webhooks/cal remove essa
-        // tag quando a pessoa agenda — permite rodar cadencia de
-        // recuperacao pra quem submeteu o form mas nao chegou a escolher.
-        'Demo: Aguardando agendamento',
-      ],
-    });
-
-    const contactId = await syncContact({
-      email: input.email,
-      firstName,
-      lastName,
-      phone: input.telefone,
-      tags: acTags,
-      fields: {
-        empresa: input.empresa,
-        cargo: input.cargo,
-        porte: input.funcionarios,
-        // Demo é form 100% B2B por gate de UI — label novo (mai/2026)
-        tipo_de_lead: 'Líder B2B',
-        intencao_uso: 'marca-empresa',
-        // UTMs de primeiro toque (substituem tags utm_* — ver ac-tags.ts)
-        ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
-        ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
-        ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
-      },
-    });
-
-    if (!contactId) {
+    const result = await recordLeadFromForm(lead);
+    if (!result.ok) {
+      console.error('[demo-leads] recordLeadFromForm failed:', result.error);
       return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
     }
 
-    // Anexa uma note com os dados completos ao contato
-    const note = [
-      `📅 Demo agendada via ${input.origem || 'Popup Demo'}`,
-      ``,
-      `Nome: ${input.nome}`,
-      `Email: ${input.email}`,
-      `WhatsApp: ${input.telefone}`,
-      `Cargo: ${input.cargo}`,
-      `Empresa: ${input.empresa}`,
-      `Porte: ${input.funcionarios}`,
-      ``,
-      `— Tracking —`,
-      `Origem no site: ${input.origem || 'Popup Demo'}`,
-      input.utm_source ? `utm_source: ${input.utm_source}` : '',
-      input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
-      input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    // AWAIT essencial em serverless — fire-and-forget e descartado quando
-    // a funcao retorna
+    // Nota descritiva no AC (best-effort)
     try {
-      await addNoteToContact(contactId, note);
+      const acContactId = await findContactByEmail(input.email);
+      if (acContactId) {
+        const note = [
+          `📅 Demo agendada via ${input.origem || 'Popup Demo'}`,
+          ``,
+          `Nome: ${input.nome}`,
+          `Email: ${input.email}`,
+          `WhatsApp: ${input.telefone}`,
+          `Cargo: ${input.cargo}`,
+          `Empresa: ${input.empresa}`,
+          `Porte: ${input.funcionarios}`,
+          ``,
+          `— Tracking —`,
+          `Origem no site: ${input.origem || 'Popup Demo'}`,
+          input.utm_source ? `utm_source: ${input.utm_source}` : '',
+          input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
+          input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n');
+        await addNoteToContact(acContactId, note);
+      }
     } catch (err) {
       console.error('[demo-leads] Error adding note (non-blocking):', err);
     }
-
-    // CRM Boldfy (dual-write) — nosso DB próprio, vai substituir Folk em breve.
-    // Sprint 1 do CRM: começamos escrevendo em paralelo. Sprint 4: removemos Folk.
-    // Falha aqui não bloqueia (graceful degradation).
-    try {
-      await recordLeadFromForm({
-        name: input.nome,
-        email: input.email,
-        phone: input.telefone,
-        jobTitle: input.cargo,
-        companyName: input.empresa,
-        companySize: input.funcionarios,
-        acContactId: contactId,
-        sourceChannel: (input.utm_source as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | undefined) ?? 'unknown',
-        sourcePage: input.origem,
-        sourceMethod: 'form_demo',
-        utmCampaign: input.utm_campaign,
-        activityType: 'form_submit_demo',
-        activityData: {
-          form_type: 'demo',
-          origem: input.origem,
-          utm_source: input.utm_source,
-          utm_medium: input.utm_medium,
-          utm_campaign: input.utm_campaign,
-        },
-      });
-    } catch (err) {
-      console.error('[demo-leads] CRM dual-write error (non-blocking):', err);
-    }
-
-    // Folk legacy removido em mai/2026 — CRM Boldfy é fonte única daqui.
 
     return { success: true };
   } catch (error) {

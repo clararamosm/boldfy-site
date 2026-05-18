@@ -4,6 +4,14 @@
  * Sprint 3a: Status virou tabela editável (`statuses`). Promoção automática
  * lê thresholds dinamicamente via lib/statuses.ts.
  *
+ * Task 1 (mai/2026, spec crm-source-of-truth): CRM é source-of-truth.
+ *  - upsertPerson aceita segment, newsletterOptIn, unsubscribed*, formsSubmitted,
+ *    acTagsSet, metadataPatch — retorna {person, isNew, fieldChanges}.
+ *  - recordLeadFromForm aceita ClassifiedLead direto (vem de form-adapters).
+ *  - Ordem invertida: CRM grava SEMPRE; AC sync tenta depois e nunca bloqueia.
+ *  - classifyPersonBySourceMethod skipa activity 'no_regression' pra pessoa
+ *    recém-criada (suprime ruído na timeline).
+ *
  * Falhas: NUNCA throw — sempre retorna { ok, ... } pra caller decidir.
  */
 
@@ -12,6 +20,9 @@ import type { Person, Company, NewActivity } from '@/db';
 import { eq, sql } from 'drizzle-orm';
 import { getDefaultStatus, statusForScore, shouldAutoPromote, classifyByMethod, getStatuses, hasClassificationLadder } from './statuses';
 import { syncCompanyFromPeople } from './crm-sync';
+import { syncContact } from './activecampaign';
+import type { ClassifiedLead } from './form-adapters/types';
+import { formSlugToActivityType } from './form-definitions';
 
 /* -------------------------------------------------------------------------- */
 /*  Pesos pré-definidos por tipo de activity                                  */
@@ -80,6 +91,45 @@ export type UpsertPersonInput = {
    * Só aplica em INSERT — pessoa existente não tem firstTouchAt sobrescrito.
    */
   firstTouchAt?: Date;
+  /* ----------------- Task 1 — CRM source of truth ----------------- */
+  /** Tipo de lead derivado do form. Override em cada submit (última-resposta). */
+  segment?: 'lider_b2b' | 'parceiro' | 'profissional_individual' | null;
+  /** Opt-in de newsletter (checkbox em forms topo de funil). */
+  newsletterOptIn?: boolean;
+  /** URL da proposta HTML (form Proposta). */
+  proposalUrl?: string;
+  /** UTM source do último toque (atualiza a cada submit). */
+  lastTouchSource?: string;
+  /** UTM campaign do último toque. */
+  lastTouchCampaign?: string;
+  /**
+   * Slug do form acabado de preencher — vai ser appended em
+   * people.forms_submitted (dedup atômico via SQL).
+   */
+  formsSubmittedAppend?: string;
+  /**
+   * Set EXPLÍCITO de acTags (rebuild — não merge). Quando passado,
+   * substitui completamente o array. Quando undefined, mantém atual.
+   */
+  acTagsSet?: string[];
+  /**
+   * Patch de metadata (merge jsonb via `metadata || patch`). Substitui
+   * chaves top-level coincidentes, preserva outras. Quando undefined,
+   * mantém metadata atual.
+   */
+  metadataPatch?: Record<string, unknown>;
+};
+
+/**
+ * Resultado de upsertPerson — sinaliza criação vs atualização e lista
+ * mudanças em campos canônicos pra que o caller (recordLeadFromForm)
+ * possa emitir activities 'field_changed' correspondentes.
+ */
+export type UpsertPersonResult = {
+  person: Person;
+  isNew: boolean;
+  fieldChanges: Array<{ field: string; oldValue: string | null; newValue: string | null }>;
+  resubscribed: boolean;
 };
 
 export type UpsertCompanyInput = {
@@ -90,6 +140,11 @@ export type UpsertCompanyInput = {
   linkedinUrl?: string;
   /** Default = new Date(). Mesma semântica do upsertPerson — só aplica em INSERT. */
   firstTouchAt?: Date;
+  /**
+   * Patch de metadata (merge jsonb). Usado pra empacotar Beta `colaboradores`
+   * em `metadata.beta_data.seats_requested` (≠ company.size).
+   */
+  metadataPatch?: Record<string, unknown>;
 };
 
 export type LogActivityInput = {
@@ -181,10 +236,23 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
       if (input.size && !existing[0].size) updates.size = input.size;
       if (input.website && !existing[0].website) updates.website = input.website;
       if (input.linkedinUrl && !existing[0].linkedinUrl) updates.linkedinUrl = input.linkedinUrl;
-      if (Object.keys(updates).length > 0) {
+
+      const hasFieldUpdates = Object.keys(updates).length > 0;
+      const hasMetaPatch = input.metadataPatch && Object.keys(input.metadataPatch).length > 0;
+
+      if (hasFieldUpdates || hasMetaPatch) {
+        // metadata patch via jsonb || — preserva chaves não-coincidentes.
+        // Drizzle não tem operador nativo, então uso sql template.
+        const patchSql = hasMetaPatch
+          ? sql`COALESCE(${companies.metadata}, '{}'::jsonb) || ${JSON.stringify(input.metadataPatch)}::jsonb`
+          : undefined;
+
+        const setObj: Record<string, unknown> = { ...updates, updatedAt: new Date() };
+        if (patchSql) setObj.metadata = patchSql;
+
         const [updated] = await db
           .update(companies)
-          .set({ ...updates, updatedAt: new Date() })
+          .set(setObj)
           .where(eq(companies.id, existing[0].id))
           .returning();
         return { ok: true, data: updated };
@@ -203,6 +271,7 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
         linkedinUrl: input.linkedinUrl,
         statusId: defaultStatus?.id ?? null,
         firstTouchAt: input.firstTouchAt ?? new Date(),
+        metadata: input.metadataPatch ?? null,
       })
       .returning();
     return { ok: true, data: created };
@@ -220,7 +289,7 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
 export async function upsertPerson(
   input: UpsertPersonInput,
   companyId?: string,
-): Promise<CrmResult<Person>> {
+): Promise<CrmResult<UpsertPersonResult>> {
   try {
     const email = input.email.trim().toLowerCase();
     if (email.length === 0) return { ok: false, error: 'Email vazio' };
@@ -232,6 +301,9 @@ export async function upsertPerson(
       .limit(1);
 
     if (existing[0]) {
+      const prev = existing[0];
+      const fieldChanges: UpsertPersonResult['fieldChanges'] = [];
+
       // lastTouchAt: pra captura LIVE (sem firstTouchAt = sem indicação de
       // import histórico), atualiza pra agora. Pra IMPORT (firstTouchAt
       // passado), NÃO sobrescreve — preserva o último contato real que já
@@ -240,23 +312,91 @@ export async function upsertPerson(
       if (!input.firstTouchAt) {
         updates.lastTouchAt = new Date();
       }
-      if (input.phone && !existing[0].phone) updates.phone = input.phone;
-      if (input.jobTitle && !existing[0].jobTitle) updates.jobTitle = input.jobTitle;
-      if (input.linkedinUrl && !existing[0].linkedinUrl) updates.linkedinUrl = input.linkedinUrl;
-      if (input.photoUrl && !existing[0].photoUrl) updates.photoUrl = input.photoUrl;
-      if (input.headline && !existing[0].headline) updates.headline = input.headline;
-      if (input.location && !existing[0].location) updates.location = input.location;
-      if (input.acContactId && !existing[0].acContactId) updates.acContactId = input.acContactId;
-      if (companyId && !existing[0].companyId) updates.companyId = companyId;
+      // Campos canônicos: preenche se vazio + emite field_changed quando
+      // troca valor (jobTitle especificamente — outros campos seguem regra
+      // "preenche se vazio" hoje pra evitar regressão por dado pior).
+      if (input.phone && !prev.phone) updates.phone = input.phone;
+      if (input.linkedinUrl && !prev.linkedinUrl) updates.linkedinUrl = input.linkedinUrl;
+      if (input.photoUrl && !prev.photoUrl) updates.photoUrl = input.photoUrl;
+      if (input.headline && !prev.headline) updates.headline = input.headline;
+      if (input.location && !prev.location) updates.location = input.location;
+      if (input.acContactId && !prev.acContactId) updates.acContactId = input.acContactId;
+      if (companyId && !prev.companyId) updates.companyId = companyId;
+
+      // jobTitle especial — sobrescreve E emite field_changed quando muda
+      if (input.jobTitle && input.jobTitle !== prev.jobTitle) {
+        updates.jobTitle = input.jobTitle;
+        fieldChanges.push({
+          field: 'jobTitle',
+          oldValue: prev.jobTitle,
+          newValue: input.jobTitle,
+        });
+      }
+
+      // Task 1: segment é última-resposta (sobrescreve sempre que informado).
+      // Emite field_changed quando muda pra ter trilha de mudança de intenção.
+      if (input.segment !== undefined && input.segment !== prev.segment) {
+        updates.segment = input.segment;
+        fieldChanges.push({
+          field: 'segment',
+          oldValue: prev.segment,
+          newValue: input.segment,
+        });
+      }
+
+      // newsletter_opt_in: também sobrescreve. Sem field_changed pra evitar
+      // ruído (true→false é mudança normal entre forms diferentes).
+      if (input.newsletterOptIn !== undefined && input.newsletterOptIn !== prev.newsletterOptIn) {
+        updates.newsletterOptIn = input.newsletterOptIn;
+      }
+
+      // proposal_url: sobrescreve quando vier (forma mais recente prevalece).
+      if (input.proposalUrl !== undefined) {
+        updates.proposalUrl = input.proposalUrl;
+      }
+
+      // last_touch_* sempre atualiza quando vier (first_touch_* nunca toca).
+      if (input.lastTouchSource !== undefined) updates.lastTouchSource = input.lastTouchSource;
+      if (input.lastTouchCampaign !== undefined) updates.lastTouchCampaign = input.lastTouchCampaign;
+
+      // Resubscribe: form novo numa pessoa unsubscribed = volta pra ativo.
+      let resubscribed = false;
+      if (prev.unsubscribed && input.formsSubmittedAppend) {
+        updates.unsubscribed = false;
+        updates.resubscribedAt = new Date();
+        resubscribed = true;
+      }
+
+      // acTagsSet: rebuild explícito do array (não merge).
+      if (input.acTagsSet !== undefined) {
+        updates.acTags = input.acTagsSet;
+      }
+
+      /* ----- SQL-level updates pra forms_submitted (atômico, dedup) ----- */
+      // formsSubmittedAppend: ARRAY(SELECT DISTINCT unnest(coalesce(...) || ARRAY[slug]))
+      // — atômico no UPDATE, sobrevive a submits simultâneos.
+      const setObj: Record<string, unknown> = { ...updates, updatedAt: new Date() };
+      if (input.formsSubmittedAppend) {
+        const slug = input.formsSubmittedAppend;
+        setObj.formsSubmitted = sql`ARRAY(SELECT DISTINCT unnest(COALESCE(${people.formsSubmitted}, '{}'::text[]) || ARRAY[${slug}]::text[]))`;
+      }
+
+      // metadata patch via jsonb || — preserva chaves não-coincidentes.
+      if (input.metadataPatch && Object.keys(input.metadataPatch).length > 0) {
+        setObj.metadata = sql`COALESCE(${people.metadata}, '{}'::jsonb) || ${JSON.stringify(input.metadataPatch)}::jsonb`;
+      }
 
       const [updated] = await db
         .update(people)
-        .set({ ...updates, updatedAt: new Date() })
-        .where(eq(people.id, existing[0].id))
+        .set(setObj)
+        .where(eq(people.id, prev.id))
         .returning();
-      return { ok: true, data: updated };
+      return { ok: true, data: { person: updated, isNew: false, fieldChanges, resubscribed } };
     }
 
+    /* ------------------------------------------------------------------ */
+    /*  INSERT — pessoa nova                                              */
+    /* ------------------------------------------------------------------ */
     const defaultStatus = await getDefaultStatus('person');
     const firstTouch = input.firstTouchAt ?? new Date();
     const [created] = await db
@@ -282,10 +422,22 @@ export async function upsertPerson(
         // lastTouchAt = firstTouch quando importando histórico, pra timeline
         // não desalinhar (lastTouch nunca anterior a firstTouch).
         lastTouchAt: firstTouch,
+        lastTouchSource: input.lastTouchSource ?? input.firstTouchSource ?? input.sourceChannel,
+        lastTouchCampaign: input.lastTouchCampaign ?? input.firstTouchCampaign,
         acContactId: input.acContactId,
+        // Task 1 — campos novos
+        segment: input.segment ?? null,
+        newsletterOptIn: input.newsletterOptIn ?? false,
+        formsSubmitted: input.formsSubmittedAppend ? [input.formsSubmittedAppend] : [],
+        proposalUrl: input.proposalUrl,
+        acTags: input.acTagsSet ?? null,
+        metadata: input.metadataPatch ?? null,
       })
       .returning();
-    return { ok: true, data: created };
+    return {
+      ok: true,
+      data: { person: created, isNew: true, fieldChanges: [], resubscribed: false },
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[crm.upsertPerson] failed:', msg);
@@ -402,75 +554,157 @@ export async function logActivity(
 
 /* -------------------------------------------------------------------------- */
 /*  recordLeadFromForm — wrapper alto-nível pros server actions de form        */
+/*                                                                             */
+/*  Task 1 (mai/2026): aceita ClassifiedLead direto (vem de form-adapters).    */
+/*  Fluxo:                                                                     */
+/*    1. upsertCompany (se aplicável)                                          */
+/*    2. upsertPerson com tudo (segment, opt-in, acTags, metadata, etc)        */
+/*    3. logActivity 'form_submit_<slug>' com payload completo                 */
+/*    4. logActivity 'field_changed' por mudança detectada                     */
+/*    5. logActivity 'lead_resubscribed' se voltou pra ativo                   */
+/*    6. classifyPersonBySourceMethod (com isNew pra suprimir no_regression    */
+/*       em pessoa recém-criada)                                               */
+/*    7. AC syncContact (try/catch — emit 'ac_sync_failed' se falhar; nunca    */
+/*       propaga erro pro caller)                                              */
 /* -------------------------------------------------------------------------- */
 
-export type RecordLeadInput = {
-  name: string;
-  email: string;
-  phone?: string;
-  jobTitle?: string;
-  companyName?: string;
-  companyIndustry?: string;
-  companySize?: string;
-  acContactId?: string;
-  sourceChannel?: SourceChannel;
-  sourcePage?: string;
-  sourceMethod: SourceMethod;
-  utmCampaign?: string;
-  activityType: string;
-  activityData?: Record<string, unknown>;
-};
-
 export async function recordLeadFromForm(
-  input: RecordLeadInput,
+  lead: ClassifiedLead,
 ): Promise<CrmResult<{ personId: string; companyId?: string }>> {
+  /* ---------- 1. Empresa ---------- */
   let companyId: string | undefined;
-
-  if (input.companyName) {
+  if (lead.companyName) {
     const c = await upsertCompany({
-      name: input.companyName,
-      industry: input.companyIndustry,
-      size: input.companySize,
+      name: lead.companyName,
+      industry: lead.companyIndustry,
+      size: lead.companySize,
+      metadataPatch: lead.companyMetadataPatch,
     });
     if (c.ok) companyId = c.data.id;
   }
 
+  /* ---------- 2. Pessoa ---------- */
   const p = await upsertPerson(
     {
-      name: input.name,
-      email: input.email,
-      phone: input.phone,
-      jobTitle: input.jobTitle,
-      acContactId: input.acContactId,
-      sourceChannel: input.sourceChannel,
-      sourcePage: input.sourcePage,
-      sourceMethod: input.sourceMethod,
-      firstTouchSource: input.sourceChannel,
-      firstTouchCampaign: input.utmCampaign,
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      jobTitle: lead.jobTitle,
+      linkedinUrl: lead.linkedinUrl,
+      photoUrl: lead.photoUrl,
+      headline: lead.headline,
+      location: lead.location,
+      acContactId: lead.acContactId,
+      sourceChannel: lead.sourceChannel,
+      sourcePage: lead.sourcePage,
+      sourceMethod: lead.sourceMethod,
+      firstTouchSource: lead.firstTouchSource ?? lead.sourceChannel,
+      firstTouchCampaign: lead.firstTouchCampaign,
+      lastTouchSource: lead.lastTouchSource ?? lead.sourceChannel,
+      lastTouchCampaign: lead.lastTouchCampaign ?? lead.firstTouchCampaign,
+      segment: lead.segment,
+      newsletterOptIn: lead.newsletterOptIn,
+      proposalUrl: lead.proposalUrl,
+      formsSubmittedAppend: lead.formSlug,
+      acTagsSet: lead.acTags,
+      metadataPatch: lead.personMetadataPatch,
     },
     companyId,
   );
-
   if (!p.ok) return { ok: false, error: p.error };
+  const { person, isNew, fieldChanges, resubscribed } = p.data;
 
-  // Activity da submissão ANTES de classificar — pra timeline ficar coerente
-  // (form submit primeiro, depois eventual status_change auto).
+  /* ---------- 3. Activity de form_submit (timeline) ---------- */
+  // Activity type preserva format atual `form_submit_<slug>` pra manter
+  // compat com ACTIVITY_WEIGHTS e filtros do kanban. Payload tem form_slug
+  // explícito + todos os campos do form pra render da timeline rica (Task 2).
   await logActivity({
-    personId: p.data.id,
+    personId: person.id,
     companyId,
-    type: input.activityType,
-    source: 'web',
-    data: input.activityData,
+    type: formSlugToActivityType(lead.formSlug),
+    source: lead.source ?? 'web',
+    data: {
+      form_slug: lead.formSlug,
+      ...lead.activityData,
+    },
   });
 
-  // CLASSIFICAÇÃO POR sourceMethod (mai/2026 — substitui regra antiga por score):
-  // forms report → Ativo, beta/demo/proposta → Quente, extension_linkedin → LinkedIn Lead.
-  // NÃO-REGRESSÃO: se a pessoa já está em status MAIS avançado (sortOrder maior)
-  // que o target, NÃO regride — só registra que o form foi preenchido (via activity
-  // logada acima) e mantém o status atual. Vale pra TODOS os forms.
-  await classifyPersonBySourceMethod(p.data.id, input.sourceMethod);
+  /* ---------- 4. field_changed activities ---------- */
+  for (const change of fieldChanges) {
+    await db.insert(activities).values({
+      personId: person.id,
+      type: 'field_changed',
+      weight: 0,
+      source: 'system',
+      data: {
+        field: change.field,
+        old_value: change.oldValue,
+        new_value: change.newValue,
+        source_form: lead.formSlug,
+      },
+    });
+  }
 
-  return { ok: true, data: { personId: p.data.id, companyId } };
+  /* ---------- 5. lead_resubscribed (se aplicável) ---------- */
+  if (resubscribed) {
+    await db.insert(activities).values({
+      personId: person.id,
+      type: 'lead_resubscribed',
+      weight: 0,
+      source: 'system',
+      data: { form_slug: lead.formSlug },
+    });
+  }
+
+  /* ---------- 6. Classificação por sourceMethod ---------- */
+  // isNew=true suprime activity 'classification_skipped reason=no_regression'
+  // (era ruído pra pessoa recém-criada, sem promoção real).
+  await classifyPersonBySourceMethod(person.id, lead.sourceMethod, isNew);
+
+  /* ---------- 7. AC sync (try/catch — nunca bloqueia) ---------- */
+  // Ordem invertida: CRM gravou primeiro (princípio 1 da spec — source of
+  // truth). AC vem depois. Se falhar, emite activity ac_sync_failed e segue.
+  if (lead.syncToAC !== false) {
+    try {
+      const acContactId = await syncContact({
+        email: person.email,
+        firstName: lead.acFirstName ?? lead.name.split(/\s+/)[0],
+        lastName: lead.acLastName ?? lead.name.split(/\s+/).slice(1).join(' '),
+        phone: lead.phone,
+        tags: lead.acTags,
+        fields: lead.acFields,
+      });
+      if (acContactId && !person.acContactId) {
+        // Cacheia contactId no people pra futuros syncs serem diretos
+        await db
+          .update(people)
+          .set({ acContactId, updatedAt: new Date() })
+          .where(eq(people.id, person.id));
+      }
+      if (!acContactId) {
+        // syncContact retornou null (AC down ou config faltando)
+        await db.insert(activities).values({
+          personId: person.id,
+          type: 'ac_sync_failed',
+          weight: 0,
+          source: 'system',
+          data: { reason: 'sync_returned_null', form_slug: lead.formSlug },
+        });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[recordLeadFromForm] AC sync error (non-blocking):', msg);
+      await db.insert(activities).values({
+        personId: person.id,
+        type: 'ac_sync_failed',
+        weight: 0,
+        source: 'system',
+        data: { reason: 'sync_threw', error: msg, form_slug: lead.formSlug },
+      });
+    }
+  }
+
+  return { ok: true, data: { personId: person.id, companyId } };
 }
 
 /**
@@ -488,10 +722,16 @@ export async function recordLeadFromForm(
  *
  * Status atual é considerado "mais avançado" se: tem sortOrder maior, OU é
  * terminal (terminal sempre vence — não regride mesmo se sortOrder menor).
+ *
+ * Task 1 (mai/2026): novo param `isNewlyCreated` suprime a activity
+ * `classification_skipped reason='no_regression'` pra pessoa recém-criada.
+ * Sem isso, todo lead novo do Report ganha logo de cara um item ruidoso
+ * "Form X — mantido em Ativo" na timeline (não há "anterior" pra manter).
  */
 export async function classifyPersonBySourceMethod(
   personId: string,
   sourceMethod: SourceMethod,
+  isNewlyCreated = false,
 ): Promise<void> {
   try {
     const [current] = await db
@@ -536,18 +776,24 @@ export async function classifyPersonBySourceMethod(
 
     if (!target) {
       // Cadeia toda menor que current — não promove (não regride).
-      // Activity de auditoria pra timeline mostrar que o form foi processado.
-      await db.insert(activities).values({
-        personId,
-        type: 'classification_skipped',
-        weight: 0,
-        source: 'system',
-        data: {
-          reason: 'no_regression',
-          sourceMethod,
-          currentStatus: currentStatus?.label ?? null,
-        },
-      });
+      // Task 1: pra pessoa recém-criada, esse skip é ruído (não há "anterior"
+      // pra manter — promoção foi feita no INSERT via defaultStatus). Skipa
+      // a activity. Pra pessoa já avançada que preenche form de baixo nível
+      // (ex: lead em Reunião marcada preenche Report), continua logando pra
+      // auditoria — aí tem valor real entender que o lead voltou a engajar.
+      if (!isNewlyCreated) {
+        await db.insert(activities).values({
+          personId,
+          type: 'classification_skipped',
+          weight: 0,
+          source: 'system',
+          data: {
+            reason: 'no_regression',
+            sourceMethod,
+            currentStatus: currentStatus?.label ?? null,
+          },
+        });
+      }
       return;
     }
 

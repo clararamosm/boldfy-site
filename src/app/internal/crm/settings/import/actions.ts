@@ -286,7 +286,7 @@ export async function importFromAC(): Promise<Result> {
               leadScore: 0, // reset pra recalcular via activities
               updatedAt: new Date(),
             })
-            .where(eq(people.id, p.data.id));
+            .where(eq(people.id, p.data.person.id));
 
           // 1) Activities sintéticas — UMA por form preenchido (lead pode ter
           // preenchido Report + Beta + Demo, todos vão pra timeline).
@@ -312,7 +312,7 @@ export async function importFromAC(): Promise<Result> {
             : undefined;
           for (const formActivity of formActivities) {
             await logActivity({
-              personId: p.data.id,
+              personId: p.data.person.id,
               companyId,
               type: formActivity.type,
               weight: formActivity.weight,
@@ -331,7 +331,7 @@ export async function importFromAC(): Promise<Result> {
             const weight = weightForActivity(type);
             const evDate = ev.tstamp ? new Date(ev.tstamp) : undefined;
             await logActivity({
-              personId: p.data.id,
+              personId: p.data.person.id,
               type,
               weight,
               source: 'email',
@@ -354,7 +354,7 @@ export async function importFromAC(): Promise<Result> {
             const { type, weight } = pageViewActivityType(pv.url);
             const pvDate = pv.tstamp ? new Date(pv.tstamp) : undefined;
             await logActivity({
-              personId: p.data.id,
+              personId: p.data.person.id,
               type,
               weight,
               source: 'web',
@@ -378,7 +378,7 @@ export async function importFromAC(): Promise<Result> {
           // forms beta/demo/proposta vão direto pra Quente mesmo sem o score
           // ter atingido o threshold; report fica em Ativo (acumula score).
           // Não-regressão respeitada — não baixa se já está em status mais avançado.
-          await classifyPersonBySourceMethod(p.data.id, sourceMethod);
+          await classifyPersonBySourceMethod(p.data.person.id, sourceMethod);
           activitiesCreated++;
 
           if (wasExisting) updated++;

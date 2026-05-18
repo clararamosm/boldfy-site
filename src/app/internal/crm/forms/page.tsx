@@ -40,6 +40,8 @@ type Params = {
   statusId: string | null;
   canal: string | null;
   pagina: string | null;
+  /** 'hide' (default): só ativos. 'show': inclui unsubscribed também. 'only': só unsubscribed. */
+  unsubscribed: 'hide' | 'show' | 'only';
   sortBy: 'lastFormAt' | 'name' | 'email';
   sortDir: 'asc' | 'desc';
   page: number;
@@ -53,6 +55,9 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
   const statusId = typeof sp.statusId === 'string' && sp.statusId.length > 0 ? sp.statusId : null;
   const canal = typeof sp.canal === 'string' && sp.canal.length > 0 ? sp.canal : null;
   const pagina = typeof sp.pagina === 'string' && sp.pagina.length > 0 ? sp.pagina : null;
+  const unsubscribedRaw = sp.unsubscribed as string | undefined;
+  const unsubscribed: Params['unsubscribed'] =
+    unsubscribedRaw === 'show' || unsubscribedRaw === 'only' ? unsubscribedRaw : 'hide';
   const sortBy = (sp.sortBy as Params['sortBy']) ?? 'lastFormAt';
   const sortDir = (sp.sortDir as Params['sortDir']) ?? 'desc';
   const page = Math.max(1, parseInt(typeof sp.page === 'string' ? sp.page : '1', 10) || 1);
@@ -63,16 +68,9 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
     segmento: ['all', 'lider_b2b', 'parceiro', 'profissional_individual', 'newsletter'].includes(segmento as string)
       ? (segmento as Params['segmento']) : 'all',
     formType: validFormTypes.includes(formType as Params['formType']) ? (formType as Params['formType']) : 'all',
-    statusId, canal, pagina, sortBy, sortDir, page, pageSize,
+    statusId, canal, pagina, unsubscribed, sortBy, sortDir, page, pageSize,
   };
 }
-
-const SEGMENT_TO_TAG: Record<Exclude<Params['segmento'], 'all'>, string> = {
-  lider_b2b: 'Segmento: Líderes B2B',
-  parceiro: 'Segmento: Parceiros estratégicos',
-  profissional_individual: 'Segmento: Profissionais Individuais',
-  newsletter: 'Segmento: Newsletter Boldfy',
-};
 
 function dateFilter(period: Params['period']): SQL | undefined {
   if (period === 'all') return undefined;
@@ -100,10 +98,16 @@ async function getPeopleWithForms(params: Params): Promise<{
   const dateF = dateFilter(params.period);
   if (dateF) filters.push(dateF);
 
-  if (params.segmento !== 'all') {
-    const tag = SEGMENT_TO_TAG[params.segmento];
-    filters.push(sql`${tag} = ANY(${people.acTags})`);
+  // Task 1: filtros lêem colunas dedicadas em vez de derivar de acTags.
+  if (params.segmento === 'newsletter') {
+    filters.push(eq(people.newsletterOptIn, true));
+  } else if (params.segmento !== 'all') {
+    filters.push(eq(people.segment, params.segmento));
   }
+
+  // Default 'hide' filtra unsubscribed=false. 'only' inverte. 'show' não filtra.
+  if (params.unsubscribed === 'hide') filters.push(eq(people.unsubscribed, false));
+  if (params.unsubscribed === 'only') filters.push(eq(people.unsubscribed, true));
 
   if (params.statusId) filters.push(eq(people.statusId, params.statusId));
   if (params.canal) filters.push(eq(people.sourceChannel, params.canal as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown'));
@@ -122,6 +126,11 @@ async function getPeopleWithForms(params: Params): Promise<{
       personSourceChannel: people.sourceChannel,
       personSourcePage: people.sourcePage,
       personAcTags: people.acTags,
+      personSegment: people.segment,
+      personOptIn: people.newsletterOptIn,
+      personUnsubscribed: people.unsubscribed,
+      personUnsubscribedAt: people.unsubscribedAt,
+      personFormsSubmitted: people.formsSubmitted,
       personStatusLabel: statuses.label,
       personStatusColor: statuses.color,
       companyId: companies.id,
@@ -159,6 +168,11 @@ async function getPeopleWithForms(params: Params): Promise<{
           statusLabel: row.personStatusLabel ?? null,
           statusColor: row.personStatusColor ?? null,
           metadata: row.personMetadata as Record<string, unknown> | null,
+          segment: row.personSegment ?? null,
+          newsletterOptIn: row.personOptIn ?? false,
+          unsubscribed: row.personUnsubscribed ?? false,
+          unsubscribedAt: row.personUnsubscribedAt ?? null,
+          formsSubmitted: (row.personFormsSubmitted as string[] | null) ?? [],
         },
         company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
         forms: [ft],

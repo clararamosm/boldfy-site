@@ -30,16 +30,14 @@ const FORM_EMOJI: Record<FormType, string> = {
 };
 
 /**
- * Detecta segmento principal pelas tags AC. Hierarquia:
- * Líder B2B > Parceiro > Profissional Individual > Beta tester > Newsletter.
+ * Mapping segment slug → label + cor. Task 1 (mai/2026): lê direto de
+ * people.segment (não mais derivado de acTags — bug fix da Patricia/Heloisa).
  */
-function detectSegment(tags: string[] | null): { label: string; color: string } | null {
-  if (!tags || tags.length === 0) return null;
-  if (tags.includes('Segmento: Líderes B2B')) return { label: 'Líder B2B', color: '#CD50F1' };
-  if (tags.includes('Segmento: Parceiros estratégicos')) return { label: 'Parceiro', color: '#3B82F6' };
-  if (tags.includes('Segmento: Profissionais Individuais')) return { label: 'Prof. Individual', color: '#F59E0B' };
-  if (tags.includes('Segmento: Beta tester')) return { label: 'Beta tester', color: '#10B981' };
-  if (tags.includes('Segmento: Newsletter Boldfy')) return { label: 'Newsletter', color: '#6B5B8A' };
+function segmentDisplay(segment: string | null): { label: string; color: string } | null {
+  if (!segment) return null;
+  if (segment === 'lider_b2b') return { label: 'Líder B2B', color: '#CD50F1' };
+  if (segment === 'parceiro') return { label: 'Parceiro', color: '#3B82F6' };
+  if (segment === 'profissional_individual') return { label: 'Prof. Individual', color: '#F59E0B' };
   return null;
 }
 
@@ -136,16 +134,25 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
           </thead>
           <tbody>
             {rows.map((row) => {
-              const segment = detectSegment(row.person.acTags);
-              const optIn = (row.person.acTags ?? []).includes('Segmento: Newsletter Boldfy');
+              const segment = segmentDisplay(row.person.segment);
+              const optIn = row.person.newsletterOptIn;
+              const isUnsub = row.person.unsubscribed;
               const canalLabel = row.person.sourceChannel && row.person.sourceChannel !== 'unknown'
                 ? channelLabel(row.person.sourceChannel) : '—';
               return (
-                <tr key={row.person.id} style={{ borderBottom: '1px solid #F7EEFC' }}>
+                <tr key={row.person.id} style={{ borderBottom: '1px solid #F7EEFC', opacity: isUnsub ? 0.55 : 1 }}>
                   <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
                     <Link href={`/internal/crm/people/${row.person.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
                       {row.person.name || '—'}
                     </Link>
+                    {isUnsub ? (
+                      <span
+                        title={row.person.unsubscribedAt ? `Saiu em ${new Date(row.person.unsubscribedAt).toLocaleDateString('pt-BR')}` : 'Unsubscribed'}
+                        style={{ display: 'inline-block', marginLeft: 6, padding: '1px 6px', background: '#E5E5E5', color: '#6B5B8A', borderRadius: 4, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', verticalAlign: 'middle' }}
+                      >
+                        Unsub
+                      </span>
+                    ) : null}
                     {row.person.jobTitle ? (
                       <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 2 }}>{row.person.jobTitle}</div>
                     ) : null}

@@ -21,9 +21,9 @@ import {
   formatScheduledAt,
   describeActivity,
   timelineDotClass,
-  methodVia,
   channelLabel,
 } from '@/lib/crm-format';
+import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
 
@@ -47,7 +47,67 @@ export default async function LeadDetailPage({ params }: Props) {
     getUpcomingMeetingsForPerson(id),
   ]);
 
-  const via = methodVia(person.sourceMethod);
+  /**
+   * Task 1 — 3 chips compostos no header:
+   *  - Via: deriva de sourceMethod (Via Form / Via Extension / Via Manual)
+   *  - Canal: deriva de sourceChannel quando disponível
+   *  - Form: deriva do último slug em forms_submitted ou do sourceMethod
+   * Substitui o chip único "Via Form Report" do legado.
+   */
+  function buildOriginChips(p: NonNullable<typeof person>): Array<{ label: string; bg: string; color: string; key: string }> {
+    const chips: Array<{ label: string; bg: string; color: string; key: string }> = [];
+    const method = p.sourceMethod ?? 'manual';
+    // Via
+    if (method.startsWith('form_')) {
+      chips.push({ key: 'via', label: 'Via Form', bg: '#F0E5F8', color: '#5E2A67' });
+    } else if (method === 'extension_linkedin') {
+      chips.push({ key: 'via', label: 'Via Extension', bg: '#F0E5F8', color: '#5E2A67' });
+    } else if (method === 'imported_folk') {
+      chips.push({ key: 'via', label: 'Via LinkedIn (legado)', bg: '#F0E5F8', color: '#5E2A67' });
+    } else if (method === 'manual') {
+      chips.push({ key: 'via', label: 'Via Manual', bg: '#F0E5F8', color: '#5E2A67' });
+    }
+    // Canal
+    if (p.sourceChannel && p.sourceChannel !== 'unknown') {
+      chips.push({
+        key: 'canal',
+        label: channelLabel(p.sourceChannel),
+        bg: 'rgba(59, 130, 246, 0.12)',
+        color: '#3B82F6',
+      });
+    } else if (method === 'extension_linkedin') {
+      chips.push({ key: 'canal', label: 'LinkedIn', bg: 'rgba(59, 130, 246, 0.12)', color: '#3B82F6' });
+    }
+    // Form (último do array; vazio se extensão/manual)
+    const FORM_LABELS: Record<string, string> = {
+      report: 'Report',
+      beta: 'Beta',
+      demo: 'Demo',
+      proposta: 'Proposta',
+      linkedin_extension: 'LinkedIn',
+    };
+    const forms = p.formsSubmitted ?? [];
+    const lastForm = forms.length > 0 ? forms[forms.length - 1] : null;
+    if (lastForm && lastForm !== 'linkedin_extension') {
+      chips.push({
+        key: 'form',
+        label: FORM_LABELS[lastForm] ?? lastForm,
+        bg: 'rgba(205, 80, 241, 0.12)',
+        color: '#CD50F1',
+      });
+    } else if (method.startsWith('form_')) {
+      // Fallback derivado de sourceMethod quando forms_submitted ainda vazio
+      const slug = method.replace('form_', '');
+      chips.push({
+        key: 'form',
+        label: FORM_LABELS[slug] ?? slug,
+        bg: 'rgba(205, 80, 241, 0.12)',
+        color: '#CD50F1',
+      });
+    }
+    return chips;
+  }
+  const originChips = buildOriginChips(person);
   const statusColor = person.status?.color ?? 'neutral';
   const scoreClass = statusColor === 'amber' || statusColor === 'orange'
     ? 'quente'
@@ -79,12 +139,70 @@ export default async function LeadDetailPage({ params }: Props) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
                   <h1 className="crm-detail-name">{person.name}</h1>
+                  {/* Badge UNSUBSCRIBED — Task 1: lead saiu da lista via webhook AC */}
+                  {person.unsubscribed ? (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '3px 10px',
+                        background: '#E5E5E5',
+                        color: '#6B5B8A',
+                        borderRadius: 999,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                      title={[
+                        person.firstTouchAt ? `Inscrito desde ${new Date(person.firstTouchAt).toLocaleDateString('pt-BR')}` : null,
+                        person.unsubscribedAt ? `Saiu em ${new Date(person.unsubscribedAt).toLocaleDateString('pt-BR')}` : null,
+                      ].filter(Boolean).join(' · ')}
+                    >
+                      ❌ Unsubscribed
+                    </span>
+                  ) : null}
                   <span className={`crm-score-pill ${scoreClass}`}>
                     ⚡ {person.status?.label ?? 'sem status'} · {person.leadScore} pts
                   </span>
-                  {via ? (
-                    <span className={`crm-via-badge ${via.classKey}`} style={{ margin: 0 }}>
-                      {via.label}
+                  {/* 3 chips compostos de origem — substitui chip único "Via Form Report" */}
+                  {originChips.map((chip) => (
+                    <span
+                      key={chip.key}
+                      style={{
+                        display: 'inline-block',
+                        padding: '3px 10px',
+                        background: chip.bg,
+                        color: chip.color,
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {chip.label}
+                    </span>
+                  ))}
+                  {/* Badge segment colorido */}
+                  {person.segment ? (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '3px 10px',
+                        background:
+                          person.segment === 'lider_b2b' ? 'rgba(205, 80, 241, 0.14)'
+                          : person.segment === 'parceiro' ? 'rgba(59, 130, 246, 0.14)'
+                          : 'rgba(245, 158, 11, 0.14)',
+                        color:
+                          person.segment === 'lider_b2b' ? '#CD50F1'
+                          : person.segment === 'parceiro' ? '#3B82F6'
+                          : '#F59E0B',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {segmentLabel(person.segment)}
                     </span>
                   ) : null}
                 </div>
@@ -139,6 +257,23 @@ export default async function LeadDetailPage({ params }: Props) {
 
                 <div className="crm-detail-actions">
                   <a href="#log-form" className="crm-btn crm-btn-primary">+ Log interação</a>
+                  {/* Botão Proposta — Task 1: aparece quando lead preencheu Simulador */}
+                  {person.proposalUrl ? (
+                    <a
+                      href={person.proposalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="crm-btn"
+                      style={{
+                        background: '#10B981',
+                        color: '#FFFFFF',
+                        borderColor: '#10B981',
+                        fontWeight: 700,
+                      }}
+                    >
+                      📄 Ver proposta
+                    </a>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -223,9 +358,71 @@ export default async function LeadDetailPage({ params }: Props) {
                 {activitiesList.map((act) => {
                   const display = describeActivity(act.type, act.data as Record<string, unknown> | null);
                   const dotClass = timelineDotClass(display.category);
-                  const observation = (act.data as Record<string, unknown> | null)?.observation as string | undefined;
+                  const data = (act.data as Record<string, unknown> | null) ?? {};
+                  const observation = data.observation as string | undefined;
+                  const isFormSubmit = act.type.startsWith('form_submit_');
+                  const formSlug = (data.form_slug as string | undefined)
+                    ?? act.type.replace('form_submit_', '');
+
+                  /* ---- Task 1: render rico de form_submit ---- */
+                  // Campos canônicos que viraram tag visual (cargo, empresa, intenção, etc).
+                  // Observações ficam num bloco separado destacado.
+                  // UTMs viram texto inline.
+                  let canonicalChips: Array<{ k: string; v: string }> = [];
+                  let utmInline = '';
+                  let obsBlock: string | undefined;
+
+                  if (isFormSubmit) {
+                    const FIELD_LABELS: Record<string, string> = {
+                      cargo: 'Cargo',
+                      empresa: 'Empresa',
+                      setor: 'Setor',
+                      funcionarios: 'Funcionários',
+                      colaboradores_para_beta: 'Colaboradores no beta',
+                      intencao_uso: 'Intenção',
+                      tipo_lead: 'Tipo de lead',
+                      objetivo_principal: 'Objetivo',
+                      como_conheceu: 'Como conheceu',
+                      newsletter_opt_in: 'Newsletter',
+                      total_mensal: 'Total mensal',
+                      savings: 'Economia',
+                      beta_active: 'Beta ativo',
+                    };
+                    for (const [key, label] of Object.entries(FIELD_LABELS)) {
+                      const v = data[key];
+                      if (v === undefined || v === null || v === '' || v === false) {
+                        if (key === 'newsletter_opt_in' && v === false) {
+                          canonicalChips.push({ k: label, v: 'NÃO' });
+                        }
+                        continue;
+                      }
+                      let strVal = '';
+                      if (typeof v === 'boolean') strVal = v ? 'SIM' : 'NÃO';
+                      else if (typeof v === 'number') {
+                        strVal = key === 'total_mensal' || key === 'savings'
+                          ? `R$ ${v.toLocaleString('pt-BR')}`
+                          : String(v);
+                      } else strVal = String(v);
+                      canonicalChips.push({ k: label, v: strVal });
+                    }
+                    obsBlock = (data.observacoes as string | undefined) || observation;
+
+                    // UTMs inline
+                    const utms = data.utms as Record<string, string | undefined> | undefined;
+                    if (utms) {
+                      const parts: string[] = [];
+                      if (utms.source) parts.push(`via ${utms.source}`);
+                      if (utms.campaign) parts.push(`campanha: ${utms.campaign}`);
+                      utmInline = parts.join(' · ');
+                    }
+                  }
+
                   return (
-                    <div key={act.id} className="crm-timeline-item">
+                    <div
+                      key={act.id}
+                      className="crm-timeline-item"
+                      id={isFormSubmit ? `form-${formSlug}` : undefined}
+                    >
                       <div className={`crm-timeline-dot ${dotClass}`}>
                         <span>{display.icon}</span>
                       </div>
@@ -241,8 +438,45 @@ export default async function LeadDetailPage({ params }: Props) {
                           </div>
                           <div className="crm-timeline-time">{timeAgo(act.createdAt)}</div>
                         </div>
-                        {observation ? (
-                          <div className="crm-timeline-observation">{observation}</div>
+
+                        {/* Render rico de form_submit (Task 1 da spec): campos como tags visuais */}
+                        {isFormSubmit && canonicalChips.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                            {canonicalChips.map((c) => (
+                              <span
+                                key={c.k}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'baseline',
+                                  gap: 4,
+                                  padding: '3px 8px',
+                                  background: '#FAF7FF',
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                }}
+                              >
+                                <span style={{ color: '#9D85B3', fontWeight: 600 }}>{c.k}:</span>
+                                <span style={{ color: '#45336B', fontWeight: 500 }}>{c.v}</span>
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        {/* Observação do lead (Beta) — bloco destacado */}
+                        {obsBlock ? (
+                          <div className="crm-timeline-observation" style={{ marginTop: 8 }}>
+                            <strong style={{ color: '#9D85B3', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                              📝 Observação do lead
+                            </strong>
+                            {obsBlock}
+                          </div>
+                        ) : null}
+
+                        {/* UTMs inline (form_submit) */}
+                        {isFormSubmit && utmInline ? (
+                          <div style={{ marginTop: 6, fontSize: 10, color: '#9D85B3' }}>
+                            {utmInline}
+                          </div>
                         ) : null}
                       </div>
                     </div>
@@ -273,8 +507,63 @@ export default async function LeadDetailPage({ params }: Props) {
                 </div>
               ) : null}
               {person.location ? <div><span style={{ color: '#9D85B3' }}>Localização:</span> {person.location}</div> : null}
+              {/* Newsletter — coluna dedicada em people (Task 1) */}
+              <div style={{ marginTop: 4, paddingTop: 6, borderTop: '1px solid #F0E5F8' }}>
+                <span style={{ color: '#9D85B3' }}>Newsletter:</span>{' '}
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  background: person.newsletterOptIn ? 'rgba(16, 185, 129, 0.12)' : 'rgba(157, 133, 179, 0.12)',
+                  color: person.newsletterOptIn ? '#10B981' : '#6B5B8A',
+                }}>
+                  {person.newsletterOptIn ? 'SIM' : 'NÃO'}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Formulários preenchidos — Task 1: chips de people.forms_submitted */}
+          {person.formsSubmitted && person.formsSubmitted.length > 0 ? (
+            <div className="crm-side-card">
+              <div className="crm-side-title">📋 Formulários preenchidos</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {person.formsSubmitted.map((slug) => {
+                  const LABELS: Record<string, { emoji: string; label: string }> = {
+                    report: { emoji: '📥', label: 'Report' },
+                    beta: { emoji: '🧪', label: 'Beta' },
+                    demo: { emoji: '🎯', label: 'Demo' },
+                    proposta: { emoji: '💼', label: 'Proposta' },
+                    linkedin_extension: { emoji: '🔗', label: 'LinkedIn' },
+                  };
+                  const m = LABELS[slug] ?? { emoji: '📄', label: slug };
+                  // Anchor pra activity correspondente na timeline (id setado abaixo)
+                  return (
+                    <a
+                      key={slug}
+                      href={`#form-${slug}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '4px 10px',
+                        background: 'rgba(205, 80, 241, 0.1)',
+                        color: '#CD50F1',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <span>{m.emoji}</span>
+                      <span>{m.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           {/* Origem do lead — card consolidado na sidebar com todos os campos
               de "primeiro toque": canal, página, campanha, data, e o(s)
@@ -471,12 +760,9 @@ export default async function LeadDetailPage({ params }: Props) {
             </div>
           ) : null}
 
-          {person.internalNotes ? (
-            <div className="crm-side-card">
-              <div className="crm-side-title">📝 Notas internas</div>
-              <div style={{ fontSize: 13, color: '#45336B', whiteSpace: 'pre-wrap' }}>{person.internalNotes}</div>
-            </div>
-          ) : null}
+          {/* people.internal_notes removida na Task 1 do CRM source-of-truth.
+              Notas livres viram activity 'interaction_manual' (botão "+ Nota"
+              vai pro header do perfil — Task 2 da spec). */}
         </aside>
 
       </div>

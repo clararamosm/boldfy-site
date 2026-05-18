@@ -140,7 +140,17 @@ function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; da
       };
     case 'unsubscribe':
     case 'contact_unsubscription':
-      return { type: 'email_unsubscribed', weight: 0, data: baseData };
+      // Task 1 (mai/2026): unsubscribe agora vira 'lead_unsubscribed' (semântica
+      // de pessoa, não de email) — pois também flipa people.unsubscribed=true.
+      // O type antigo 'email_unsubscribed' continua existindo pra activities
+      // históricas. Render bonito vem na Task 2.
+      return { type: 'lead_unsubscribed', weight: 0, data: baseData };
+    case 'subscribe':
+    case 'contact_subscribed':
+      // Resubscribe via UI do AC (raro — usuário normalmente volta via form
+      // novo no site, que cai em recordLeadFromForm). Flipa flag se a pessoa
+      // estava unsubscribed.
+      return { type: 'lead_resubscribed', weight: 0, data: baseData };
     default:
       return null; // ignored event
   }
@@ -270,6 +280,22 @@ export async function POST(req: NextRequest) {
             'true'::jsonb
           )
         `,
+        updatedAt: new Date(),
+      }).where(eq(people.id, person.id));
+    }
+
+    // Task 1: unsubscribe/resubscribe flipam flag dedicada em people.
+    if (event.type === 'lead_unsubscribed') {
+      await db.update(people).set({
+        unsubscribed: true,
+        unsubscribedAt: new Date(),
+        updatedAt: new Date(),
+      }).where(eq(people.id, person.id));
+    }
+    if (event.type === 'lead_resubscribed') {
+      await db.update(people).set({
+        unsubscribed: false,
+        resubscribedAt: new Date(),
         updatedAt: new Date(),
       }).where(eq(people.id, person.id));
     }

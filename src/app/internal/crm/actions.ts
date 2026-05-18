@@ -296,7 +296,7 @@ export async function createPersonManual(_prev: unknown, formData: FormData): Pr
     if (!p.ok) return { ok: false, error: p.error };
 
     await logActivity({
-      personId: p.data.id,
+      personId: p.data.person.id,
       companyId,
       type: 'manual_note',
       source: 'manual',
@@ -304,7 +304,7 @@ export async function createPersonManual(_prev: unknown, formData: FormData): Pr
     });
 
     revalidatePath('/internal/crm');
-    return { ok: true, personId: p.data.id };
+    return { ok: true, personId: p.data.person.id };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -503,12 +503,10 @@ export async function mergePeople(keepId: string, mergeIds: string[]): Promise<A
     const totalScore = all.reduce((sum, p) => sum + p.leadScore, 0);
     enrich.leadScore = totalScore;
 
-    // Concatena notes
-    const notes = all
-      .map((p) => p.internalNotes)
-      .filter((n): n is string => !!n && n.length > 0)
-      .join('\n---\n');
-    if (notes) enrich.internalNotes = notes;
+    // people.internal_notes removida na Task 1 do CRM source-of-truth.
+    // Notas livres viram activity 'interaction_manual' (timeline). Merge não
+    // precisa concatenar nada — as activities das outras pessoas já são
+    // movidas pra keep via UPDATE em activities/meetings abaixo.
 
     // Status final: mantém o do principal (Clara ajusta depois se quiser)
 

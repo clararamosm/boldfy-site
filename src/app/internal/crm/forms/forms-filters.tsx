@@ -71,8 +71,10 @@ export function FormsFilters({ statuses, channels, pages, countsByForm }: Props)
   const currentCanal = searchParams.get('canal') ?? '';
   const currentPagina = searchParams.get('pagina') ?? '';
   const currentPageSize = searchParams.get('pageSize') ?? '20';
+  // Task 1: 'hide' (default) | 'show' | 'only'
+  const currentUnsub = searchParams.get('unsubscribed') ?? 'hide';
 
-  const hasFilters = currentPeriod !== 'all' || currentSegmento !== 'all' || currentFormType !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '';
+  const hasFilters = currentPeriod !== 'all' || currentSegmento !== 'all' || currentFormType !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentUnsub !== 'hide';
 
   const selectStyle: React.CSSProperties = {
     padding: '8px 10px',
@@ -175,6 +177,21 @@ export function FormsFilters({ statuses, channels, pages, countsByForm }: Props)
           <select value={currentPagina} onChange={(e) => updateParam('pagina', e.target.value)} disabled={pending} style={{ ...selectStyle, maxWidth: 200 }}>
             <option value="">Todas</option>
             {pages.map((p) => <option key={p} value={p}>{p.length > 30 ? `…${p.slice(-30)}` : p}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Inativos</label>
+          <select
+            value={currentUnsub}
+            onChange={(e) => updateParam('unsubscribed', e.target.value === 'hide' ? null : e.target.value)}
+            disabled={pending}
+            style={selectStyle}
+            title="Default: oculta unsubscribed. Show inclui. Only mostra só inativos."
+          >
+            <option value="hide">Ocultar inativos</option>
+            <option value="show">Mostrar inativos</option>
+            <option value="only">Só inativos</option>
           </select>
         </div>
 

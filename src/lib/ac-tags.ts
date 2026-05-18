@@ -141,3 +141,73 @@ export function buildACTags(params: {
 
   return tags;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  buildLegibleACTags — naming legível (Task 1 — CRM source of truth)         */
+/* -------------------------------------------------------------------------- */
+/**
+ * Constrói o set MÍNIMO de tags AC pro novo fluxo CRM-first. 4 famílias só:
+ *
+ *  1. Tipo de lead (1):  'Líder B2B' | 'Parceiro estratégico' | 'Profissional individual'
+ *  2. Form de origem (1): 'Form: Algoritmo LinkedIn 2026' | 'Form: Beta Test' |
+ *                          'Form: Demo' | 'Form: Proposta' | 'Form: LinkedIn'
+ *                          (vem do form_definitions.ac_tag — NÃO renomeado)
+ *  3. Newsletter (opcional): 'Newsletter' se opt-in true
+ *  4. Unsubscribed (opcional): 'Unsubscribed' se webhook AC indicou unsub
+ *
+ * Substitui `routeSegments` + `buildACTags` no fluxo novo dos adapters.
+ * Aliases antigos (Segmento: X, ICP: X, Persona: X) saem na Task 3 (cleanup).
+ *
+ * IMPORTANTE: a tag-mãe (Form: ...) é a que dispara a cadência atual do AC.
+ * Naming foi MANTIDO específico por slug pra não quebrar automation existente.
+ */
+export function buildLegibleACTags(params: {
+  segment: 'lider_b2b' | 'parceiro' | 'profissional_individual' | null;
+  formAcTag: string; // vem de form_definitions.acTag (ex: 'Form: Beta Test')
+  newsletterOptIn?: boolean;
+  unsubscribed?: boolean;
+}): string[] {
+  const tags: string[] = [];
+
+  // Tipo de lead (1 das 3 ou nenhuma se segment=null)
+  if (params.segment === 'lider_b2b') tags.push('Líder B2B');
+  else if (params.segment === 'parceiro') tags.push('Parceiro estratégico');
+  else if (params.segment === 'profissional_individual') tags.push('Profissional individual');
+
+  // Form de origem (sempre presente — vem da form_definition correspondente)
+  tags.push(params.formAcTag);
+
+  if (params.newsletterOptIn) tags.push('Newsletter');
+  if (params.unsubscribed) tags.push('Unsubscribed');
+
+  return tags;
+}
+
+/**
+ * Helper inverso pra retro-compat — converte LeadSegment do CRM em label
+ * legível pra exibir em UI (badge no header do perfil, etc).
+ */
+export function segmentLabel(segment: string | null | undefined): string | null {
+  switch (segment) {
+    case 'lider_b2b': return 'Líder B2B';
+    case 'parceiro': return 'Parceiro estratégico';
+    case 'profissional_individual': return 'Profissional individual';
+    default: return null;
+  }
+}
+
+/**
+ * Deriva LeadSegment a partir da intencao_uso do form Report. Centralizado
+ * aqui pra adapter de report.ts e backfill da Task 3 usarem a mesma regra.
+ *
+ * Forms B2B-only (Beta/Demo/Proposta/extensão) NÃO usam essa função —
+ * sempre derivam segment='lider_b2b' direto.
+ */
+export function segmentFromIntencao(
+  intencaoUso: IntencaoUso | undefined,
+): 'lider_b2b' | 'parceiro' | 'profissional_individual' | null {
+  if (intencaoUso === 'marca-empresa') return 'lider_b2b';
+  if (intencaoUso === 'marca-clientes') return 'parceiro';
+  if (intencaoUso === 'marca-pessoal') return 'profissional_individual';
+  return null;
+}

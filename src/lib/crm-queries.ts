@@ -13,12 +13,19 @@ import { getStatuses } from './statuses';
 /**
  * Filtros opcionais aplicáveis tanto em getPeopleByStatus quanto em
  * getCompaniesByStatus. URL searchParams → server → query.
+ *
+ * Task 1 (mai/2026): includeUnsubscribed=false (default) filtra leads que
+ * saíram da lista. Aba "Leads inativos" passa true pra ver só esses.
  */
 export type CrmFilters = {
   period?: 'all' | '7d' | '30d' | '90d';
   statusId?: string | null;
   canal?: string | null;
   pagina?: string | null;
+  /** Default false. Quando true, traz unsubscribed também. */
+  includeUnsubscribed?: boolean;
+  /** Quando true, traz APENAS unsubscribed (aba "Leads inativos"). */
+  onlyUnsubscribed?: boolean;
 };
 
 function periodCutoff(period?: CrmFilters['period']): Date | null {
@@ -58,6 +65,14 @@ export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {
     // Gate B2B no kanban — only Líderes B2B (mai/2026 ciclo 3)
     sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
   ];
+
+  // Task 1: filtro implícito unsubscribed=false. Aba "Inativos" passa
+  // onlyUnsubscribed=true; "Mostrar inativos" passa includeUnsubscribed=true.
+  if (filters.onlyUnsubscribed) {
+    filterClauses.push(eq(people.unsubscribed, true));
+  } else if (!filters.includeUnsubscribed) {
+    filterClauses.push(eq(people.unsubscribed, false));
+  }
 
   const cutoff = periodCutoff(filters.period);
   if (cutoff) filterClauses.push(gte(people.createdAt, cutoff));
@@ -426,20 +441,30 @@ export async function getCrmCounts(): Promise<{
   totalPeople: number;
   totalCompanies: number;
   totalActivities: number;
+  totalInactive: number;
 }> {
-  const [p, c, a] = await Promise.all([
+  // totalPeople = só ativos (filtro implícito unsubscribed=false).
+  // totalInactive = unsubscribed=true, mesmo gate B2B (pra aba "Leads inativos").
+  const [p, c, a, inactive] = await Promise.all([
     db.select({ n: count() }).from(people).where(and(
       eq(people.archived, false),
       isNull(people.mergedIntoId),
-      // Gate B2B — mesmo de getPeopleByStatus
+      eq(people.unsubscribed, false),
       sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
     )),
     db.select({ n: count() }).from(companies),
     db.select({ n: count() }).from(activities),
+    db.select({ n: count() }).from(people).where(and(
+      eq(people.archived, false),
+      isNull(people.mergedIntoId),
+      eq(people.unsubscribed, true),
+      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+    )),
   ]);
   return {
     totalPeople: p[0]?.n ?? 0,
     totalCompanies: c[0]?.n ?? 0,
     totalActivities: a[0]?.n ?? 0,
+    totalInactive: inactive[0]?.n ?? 0,
   };
 }

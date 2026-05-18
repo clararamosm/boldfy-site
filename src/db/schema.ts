@@ -163,7 +163,43 @@ export const people = pgTable(
      */
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
     description: text('description'),
-    internalNotes: text('internal_notes'),
+    /* ------------------------------------------------------------------ */
+    /*  CRM Source of Truth (mai/2026 — Task 1 da spec crm-source-of-truth) */
+    /* ------------------------------------------------------------------ */
+    /**
+     * Tipo de lead derivado da intenção declarada no último form topo de funil:
+     *  - 'lider_b2b'              → preencheu form B2B (Beta/Demo/Proposta) ou
+     *                                 declarou intencao_uso='marca-empresa' no Report
+     *  - 'parceiro'               → intencao_uso='marca-clientes' (agência/consultor)
+     *  - 'profissional_individual'→ intencao_uso='marca-pessoal' (criador/autônomo)
+     *
+     * Ortogonal a status (que é estágio do funil). Pessoa pode ser
+     * Profissional Individual em status Ativo, ou Líder B2B em Quente.
+     * Última-resposta vence — mudança vira activity 'field_changed'.
+     */
+    segment: text('segment'),
+    /** Opt-in explícito de newsletter — checkbox em forms topo de funil. */
+    newsletterOptIn: boolean('newsletter_opt_in').notNull().default(false),
+    /**
+     * Lead deu unsubscribe no AC (espelhado via webhook /api/webhooks/ac).
+     * Kanban e Forms tab filtram unsubscribed=false por default. Quando true,
+     * lead vai pra aba "Leads inativos". Form novo zera essa flag (resubscribe).
+     */
+    unsubscribed: boolean('unsubscribed').notNull().default(false),
+    unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+    resubscribedAt: timestamp('resubscribed_at', { withTimezone: true }),
+    /**
+     * Slugs dos forms que essa pessoa já preencheu (dedup acumulativo).
+     * Ex: ['report', 'beta']. Append via SQL atômico em upsertPerson.
+     * Substitui derivação por activities form_submit_* na UI da aba Forms.
+     */
+    formsSubmitted: text('forms_submitted').array().notNull().default(sql`'{}'::text[]`),
+    /** URL da proposta HTML gerada (form Proposta). Botão destacado no perfil. */
+    proposalUrl: text('proposal_url'),
+    /** UTM source do ÚLTIMO toque — atualiza a cada form/captura nova. */
+    lastTouchSource: text('last_touch_source'),
+    /** UTM campaign do último toque. firstTouch* permanecem imutáveis. */
+    lastTouchCampaign: text('last_touch_campaign'),
     archived: boolean('archived').notNull().default(false),
     mergedIntoId: uuid('merged_into_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -176,6 +212,10 @@ export const people = pgTable(
     index('idx_people_company').on(t.companyId),
     index('idx_people_score').on(t.leadScore),
     index('idx_people_source').on(t.sourceChannel, t.sourcePage),
+    // Índices da Task 1 — criados via Neon SQL editor; declarados aqui
+    // pra drizzle-kit não tentar dropar caso a Clara rode push no futuro.
+    index('idx_people_segment').on(t.segment),
+    index('idx_people_forms_gin').using('gin', t.formsSubmitted),
   ],
 );
 
@@ -323,6 +363,37 @@ export const extensionTokens = pgTable('extension_tokens', {
 });
 
 /* -------------------------------------------------------------------------- */
+/*  form_definitions — catálogo dos forms do site + extensão (Task 1 CRM)     */
+/* -------------------------------------------------------------------------- */
+/**
+ * Cada linha = 1 form que captura leads pro CRM.
+ *
+ * - `slug` é a chave humana usada em código (FormSlug em lib/form-definitions).
+ * - `kind` decide se o form gera segmentação dinâmica (topo_funil — Report
+ *   pergunta intencao_uso) ou se é 100% Líder B2B por design (lider_b2b_only).
+ * - `ac_tag` é o nome da tag aplicada no AC pra disparar cadências —
+ *   ATENÇÃO: naming é específico por slug pra suportar múltiplos materiais
+ *   futuros (Form: Algoritmo TikTok 2027 etc). A tag atual `Form: Algoritmo
+ *   LinkedIn 2026` é MANTIDA (não renomeada pra Form: Report).
+ * - `fields_schema` é DESCRITIVO (catálogo) — validação real continua via
+ *   Zod hardcoded em app/actions/_schemas.ts. Pra UI/admin futura listar
+ *   campos esperados de cada form.
+ *
+ * Seed inicial via Chrome MCP no Neon (Task 1 — May 2026). Adicionar form
+ * novo: INSERT aqui + criar adapter em lib/form-adapters/ + server action.
+ */
+export const formDefinitions = pgTable('form_definitions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  kind: text('kind').notNull(), // 'topo_funil' | 'lider_b2b_only' (CHECK no DB)
+  acTag: text('ac_tag').notNull(),
+  fieldsSchema: jsonb('fields_schema').$type<Record<string, unknown>>().notNull().default({}),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/* -------------------------------------------------------------------------- */
 /*  google_oauth_tokens — auth de usuário pra GA4 + Search Console            */
 /* -------------------------------------------------------------------------- */
 /**
@@ -423,3 +494,5 @@ export type CampaignRow = typeof campaigns.$inferSelect;
 export type NewCampaignRow = typeof campaigns.$inferInsert;
 export type GoogleOauthToken = typeof googleOauthTokens.$inferSelect;
 export type NewGoogleOauthToken = typeof googleOauthTokens.$inferInsert;
+export type FormDefinition = typeof formDefinitions.$inferSelect;
+export type NewFormDefinition = typeof formDefinitions.$inferInsert;
