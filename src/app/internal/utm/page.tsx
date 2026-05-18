@@ -17,7 +17,6 @@ import { db, utmLinks } from '@/db';
 import { desc } from 'drizzle-orm';
 import { UtmForm } from './utm-form';
 import { UtmHistory } from './utm-history';
-import { UtmImporter } from './utm-importer';
 import { getTopUtms } from '@/lib/ga4';
 import { safeBlock } from '@/lib/safe-block';
 
@@ -78,8 +77,6 @@ export default async function UtmGeneratorPage() {
           </p>
         </div>
       </div>
-
-      <UtmImporter />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'flex-start' }}>
         <UtmForm />

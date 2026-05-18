@@ -1,5 +1,5 @@
 /**
- * DEPRECATED — componente moveu pra /internal/utm/utm-importer.tsx.
+ * @deprecated DELETAR este arquivo no próximo commit.
+ * O importer foi removido após migração concluída em mai/2026.
  */
-
-export { UtmImporter } from '../../utm/utm-importer';
+export {};
