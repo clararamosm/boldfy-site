@@ -11,14 +11,21 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { db, people, companies, statuses } from '@/db';
-import { eq, and, isNull, desc, count, sql } from 'drizzle-orm';
+import { db, people, companies, statuses, utmLinks } from '@/db';
+import { eq, and, isNull, desc, count } from 'drizzle-orm';
 import { getCampaignBySlug, getCampaignStatus, listCampaigns } from '@/lib/campaigns';
-import { FunnelStages, BOLDFY_PALETTE } from '@/components/dashboard/charts';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
 import { EditCampaignButton } from '../edit-campaign-button';
 import { safeBlock } from '@/lib/safe-block';
-import { Settings2, FileText, Calendar, Trophy, BarChart3, Users, StickyNote } from 'lucide-react';
+import { isGa4Configured } from '@/lib/ga4';
+import {
+  getUtmAnalyticsBatch,
+  analyticsForLink,
+  analyticsKey,
+  type UtmAnalytics,
+} from '@/lib/ga4-utm-analytics';
+import { CampaignUtmList } from './utm-list';
+import { Settings2, FileText, Calendar, Trophy, Link2, Users, StickyNote } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard · Campanha',
@@ -41,8 +48,8 @@ export default async function CampaignDetailPage({ params }: { params: Params })
 
   const status = getCampaignStatus(campaign);
 
-  // Leads dessa campanha — cada query em safeBlock (defesa em profundidade)
-  const [leads, statusBreakdown] = await Promise.all([
+  // Leads + UTMs dessa campanha — cada query em safeBlock (defesa em profundidade)
+  const [leads, statusBreakdown, campaignUtmLinks] = await Promise.all([
     safeBlock('campaign-detail', 'leads', () =>
       db.select({ person: people, company: companies, status: statuses })
         .from(people)
@@ -60,12 +67,45 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         .groupBy(statuses.label),
       [],
     ),
+    safeBlock('campaign-detail', 'utmLinks', () =>
+      db.select().from(utmLinks).where(eq(utmLinks.utmCampaign, campaign.utmCampaign)).orderBy(desc(utmLinks.createdAt)),
+      [],
+    ),
   ]);
 
-  const statusMap = new Map(statusBreakdown.map((s) => [s.statusLabel ?? 'Sem status', s.n]));
+  // Analytics batched pros UTMs dessa campanha (sessões/usuários/engaj + daily)
+  const oldestUtm = campaignUtmLinks.length > 0
+    ? new Date(Math.min(...campaignUtmLinks.map((l) => new Date(l.createdAt).getTime())))
+    : new Date();
+  const analyticsBatch = isGa4Configured()
+    ? await safeBlock('campaign-detail', 'utmAnalytics', () => getUtmAnalyticsBatch(oldestUtm), new Map<string, UtmAnalytics>())
+    : new Map<string, UtmAnalytics>();
+  const analyticsByKey: Record<string, UtmAnalytics> = {};
+  for (const link of campaignUtmLinks) {
+    const a = analyticsForLink(analyticsBatch, link);
+    if (a) {
+      const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+      analyticsByKey[key] = a;
+    }
+  }
+  const enrichedCampaignLinks = campaignUtmLinks.map((link) => ({
+    id: link.id,
+    label: link.label,
+    baseUrl: link.baseUrl,
+    utmSource: link.utmSource,
+    utmMedium: link.utmMedium,
+    utmCampaign: link.utmCampaign,
+    utmContent: link.utmContent,
+    utmTerm: link.utmTerm,
+    fullUrl: link.fullUrl,
+    shortCode: link.shortCode,
+    createdAt: link.createdAt,
+  }));
+
+  const statusMap = new Map((statusBreakdown ?? []).map((s) => [s.statusLabel ?? 'Sem status', s.n]));
   const fechados = statusMap.get('Fechado') ?? 0;
   const reunioes = (statusMap.get('Reunião marcada') ?? 0) + (statusMap.get('Em andamento') ?? 0);
-  const totalLeads = leads.length;
+  const totalLeads = (leads ?? []).length;
   const cvr = totalLeads > 0 ? ((fechados / totalLeads) * 100).toFixed(1) : '—';
 
   const start = new Date(`${campaign.startDate}T00:00:00`);
@@ -174,19 +214,14 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         </div>
       </div>
 
-      {/* Breakdown por status */}
+      {/* UTMs cadastrados nessa campanha */}
       <div className="dash-card">
-        <div className="dash-card-title"><BarChart3 /> Distribuição por status</div>
-        <div className="dash-card-subtitle">Onde os leads dessa campanha estão hoje</div>
-        {statusBreakdown.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhum lead atribuído a essa campanha ainda.</div>
-        ) : (
-          <FunnelStages stages={statusBreakdown.map((s, i) => ({
-            label: s.statusLabel ?? 'Sem status',
-            count: s.n,
-            color: BOLDFY_PALETTE[i % BOLDFY_PALETTE.length],
-          }))} />
-        )}
+        <div className="dash-card-title"><Link2 /> Links UTM dessa campanha</div>
+        <div className="dash-card-subtitle">
+          Todos os links rastreáveis criados pra <code>utm_campaign={campaign.utmCampaign}</code> · gere mais em{' '}
+          <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/internal/utm</Link>
+        </div>
+        <CampaignUtmList links={enrichedCampaignLinks} analyticsByKey={analyticsByKey} />
       </div>
 
       {/* Leads */}

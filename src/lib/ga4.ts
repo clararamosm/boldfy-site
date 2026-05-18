@@ -149,6 +149,11 @@ type Ga4Report = {
   totals?: Array<{ metricValues: Array<{ value: string }> }>;
 };
 
+/** Exposto pra módulos externos (ex: ga4-utm-analytics.ts). */
+export function runReportPublic(body: object) {
+  return runReport(body);
+}
+
 async function runReport(body: object): Promise<Ga4Report | null> {
   const token = await getAccessToken();
   const propertyId = getPropertyId();
