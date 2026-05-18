@@ -120,30 +120,41 @@ export function InternalTopbar() {
           cursor: help;
         }
 
-        /* Menu — lista limpa de links, sem segmented control */
+        /* Menu — lista limpa de links, separada visualmente do tag interno
+           por uma "spine" vertical sutil + gap mais respirável.
+           Active: pill roxo sólido com texto branco (alta contraste, sem
+           ambiguidade de qual aba você está). */
         .topbar-menu {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          margin-left: 6px;
+          gap: 6px;
+          margin-left: 14px;
+          padding-left: 16px;
+          border-left: 1px solid #E4D8ED;
         }
         .topbar-menu-link {
           padding: 7px 14px;
           font-size: 13px;
           font-weight: 600;
-          color: #9D85B3;
+          color: #6B5B8A;
           text-decoration: none;
           transition: all 0.15s ease;
           border-radius: 8px;
           white-space: nowrap;
+          letter-spacing: 0.01em;
         }
         .topbar-menu-link:hover {
           color: #5E2A67;
           background: #FAF5FE;
         }
         .topbar-menu-link.active {
-          color: #CD50F1;
-          background: #F7EEFC;
+          color: #FFFFFF;
+          background: #CD50F1;
+          box-shadow: 0 1px 3px rgba(205, 80, 241, 0.3);
+        }
+        .topbar-menu-link.active:hover {
+          color: #FFFFFF;
+          background: #B844D9;
         }
 
         /* === RIGHT side compacto === */
@@ -186,12 +197,21 @@ export function InternalTopbar() {
 
         @media (max-width: 900px) {
           .topbar-private-tag { display: none; }
+          .topbar-menu {
+            margin-left: 4px;
+            padding-left: 8px;
+          }
         }
         @media (max-width: 720px) {
           .internal-topbar { padding: 10px 14px; gap: 10px; }
           .topbar-left { gap: 8px; }
           .topbar-icon-btn span { display: none; }
           .topbar-icon-btn kbd { display: none; }
+          .topbar-menu {
+            margin-left: 0;
+            padding-left: 0;
+            border-left: none;
+          }
           .topbar-menu-link { padding: 6px 10px; font-size: 12px; }
         }
       `}</style>
