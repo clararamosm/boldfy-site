@@ -58,14 +58,17 @@ export default async function LeadDetailPage({ params }: Props) {
     const chips: Array<{ label: string; bg: string; color: string; key: string }> = [];
     const method = p.sourceMethod ?? 'manual';
     // Via
+    // Via = cinza neutro (spec §8 tabela: Via=cinza, Canal=azul, Form=roxo)
+    const VIA_BG = '#E5E5EA';
+    const VIA_FG = '#5E5E68';
     if (method.startsWith('form_')) {
-      chips.push({ key: 'via', label: 'Via Form', bg: '#F0E5F8', color: '#5E2A67' });
+      chips.push({ key: 'via', label: 'Via Form', bg: VIA_BG, color: VIA_FG });
     } else if (method === 'extension_linkedin') {
-      chips.push({ key: 'via', label: 'Via Extension', bg: '#F0E5F8', color: '#5E2A67' });
+      chips.push({ key: 'via', label: 'Via Extension', bg: VIA_BG, color: VIA_FG });
     } else if (method === 'imported_folk') {
-      chips.push({ key: 'via', label: 'Via LinkedIn (legado)', bg: '#F0E5F8', color: '#5E2A67' });
+      chips.push({ key: 'via', label: 'Via LinkedIn (legado)', bg: VIA_BG, color: VIA_FG });
     } else if (method === 'manual') {
-      chips.push({ key: 'via', label: 'Via Manual', bg: '#F0E5F8', color: '#5E2A67' });
+      chips.push({ key: 'via', label: 'Via Manual', bg: VIA_BG, color: VIA_FG });
     }
     // Canal
     if (p.sourceChannel && p.sourceChannel !== 'unknown') {
@@ -166,7 +169,9 @@ export default async function LeadDetailPage({ params }: Props) {
                   <span className={`crm-score-pill ${scoreClass}`}>
                     ⚡ {person.status?.label ?? 'sem status'} · {person.leadScore} pts
                   </span>
-                  {/* 3 chips compostos de origem — substitui chip único "Via Form Report" */}
+                  {/* 3 chips compostos de origem — substitui chip único "Via Form Report".
+                      Spec §8 tabela: Via | Canal | Form. Segment badge fica na
+                      sidebar "Contexto" (não no header). */}
                   {originChips.map((chip) => (
                     <span
                       key={chip.key}
@@ -183,28 +188,6 @@ export default async function LeadDetailPage({ params }: Props) {
                       {chip.label}
                     </span>
                   ))}
-                  {/* Badge segment colorido */}
-                  {person.segment ? (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '3px 10px',
-                        background:
-                          person.segment === 'lider_b2b' ? 'rgba(205, 80, 241, 0.14)'
-                          : person.segment === 'parceiro' ? 'rgba(59, 130, 246, 0.14)'
-                          : 'rgba(245, 158, 11, 0.14)',
-                        color:
-                          person.segment === 'lider_b2b' ? '#CD50F1'
-                          : person.segment === 'parceiro' ? '#3B82F6'
-                          : '#F59E0B',
-                        borderRadius: 999,
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {segmentLabel(person.segment)}
-                    </span>
-                  ) : null}
                 </div>
 
                 <p className="crm-detail-headline">
@@ -652,20 +635,115 @@ export default async function LeadDetailPage({ params }: Props) {
             );
           })()}
 
-          {/* Dados de form (vindos do AC custom fields ou direto) */}
+          {/* Sidebar "Contexto" — spec §8: segment badge + intencaoUso +
+              objetivoPrincipal + comoConheceu + outros campos de metadata.form_data.
+              Acumulável: novos campos de forms futuros aparecem aqui sem ALTER. */}
           {(() => {
             const m = person.metadata as Record<string, unknown> | null;
-            const formData = m?.form_data as Record<string, string | undefined> | undefined;
-            if (!formData || Object.values(formData).every((v) => !v)) return null;
+            const formData = (m?.form_data as Record<string, unknown> | undefined) ?? {};
+            const hasContent = person.segment
+              || Object.values(formData).some((v) => v !== null && v !== undefined && v !== '');
+            if (!hasContent) return null;
+
+            // Labels conhecidos pra render bonito; outros caem em fallback "humanize"
+            const FIELD_LABELS: Record<string, string> = {
+              intencao_uso: 'Intenção',
+              objetivo_principal: 'Objetivo',
+              como_conheceu: 'Como conheceu',
+              observacoes: 'Observações',
+              tipo_de_lead: 'Tipo de lead',
+              cargo: 'Cargo',
+              empresa: 'Empresa',
+              setor: 'Setor',
+            };
+            // Enum-like → render como tag clicável (spec §8: "tag clicável quando for enum")
+            const ENUM_FIELDS = new Set(['intencao_uso', 'tipo_de_lead', 'como_conheceu', 'setor']);
+            // Multi-line (textareas) → bloco destacado
+            const LONG_FIELDS = new Set(['objetivo_principal', 'observacoes']);
+
+            function humanize(key: string): string {
+              if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+              return key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            }
+
+            const segmentColors = {
+              lider_b2b: { bg: 'rgba(205, 80, 241, 0.14)', color: '#CD50F1' },
+              parceiro: { bg: 'rgba(59, 130, 246, 0.14)', color: '#3B82F6' },
+              profissional_individual: { bg: 'rgba(245, 158, 11, 0.14)', color: '#F59E0B' },
+            } as const;
+
+            // Campos opcionais ordenados (segment vem primeiro). Pula values vazios.
+            const orderedKeys = ['intencao_uso', 'tipo_de_lead', 'cargo', 'objetivo_principal', 'como_conheceu', 'observacoes', 'setor', 'empresa'];
+            const knownKeys = new Set([...orderedKeys, ...Object.keys(FIELD_LABELS)]);
+            const extraKeys = Object.keys(formData).filter((k) => !knownKeys.has(k));
+            const allKeys = [...orderedKeys, ...extraKeys];
+
             return (
               <div className="crm-side-card">
-                <div className="crm-side-title">📋 Dados do form</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
-                  {formData.tipo_de_lead ? <div><span style={{ color: '#9D85B3' }}>Tipo:</span> {formData.tipo_de_lead}</div> : null}
-                  {formData.intencao_uso ? <div><span style={{ color: '#9D85B3' }}>Intenção:</span> {formData.intencao_uso}</div> : null}
-                  {formData.objetivo_principal ? <div><span style={{ color: '#9D85B3' }}>Objetivo:</span><div style={{ marginTop: 2, padding: '6px 8px', background: '#FAF7FF', borderRadius: 6 }}>{formData.objetivo_principal}</div></div> : null}
-                  {formData.como_conheceu ? <div><span style={{ color: '#9D85B3' }}>Como conheceu:</span> {formData.como_conheceu}</div> : null}
-                  {formData.observacoes ? <div><span style={{ color: '#9D85B3' }}>Observações:</span><div style={{ marginTop: 2, padding: '6px 8px', background: '#FAF7FF', borderRadius: 6 }}>{formData.observacoes}</div></div> : null}
+                <div className="crm-side-title">🧩 Contexto</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12 }}>
+                  {/* Segment badge — sempre primeiro */}
+                  {person.segment ? (
+                    <div>
+                      <span style={{ color: '#9D85B3', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                        Segmento
+                      </span>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '4px 10px',
+                          background: segmentColors[person.segment as keyof typeof segmentColors]?.bg ?? '#FAF7FF',
+                          color: segmentColors[person.segment as keyof typeof segmentColors]?.color ?? '#45336B',
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {segmentLabel(person.segment) ?? person.segment}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {/* Demais campos do form */}
+                  {allKeys.map((key) => {
+                    const value = formData[key];
+                    if (value === null || value === undefined || value === '') return null;
+                    const strVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    const label = humanize(key);
+
+                    if (LONG_FIELDS.has(key)) {
+                      return (
+                        <div key={key}>
+                          <span style={{ color: '#9D85B3', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                            {label}
+                          </span>
+                          <div style={{ padding: '6px 10px', background: '#FAF7FF', borderRadius: 6, color: '#45336B', whiteSpace: 'pre-wrap' }}>
+                            {strVal}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    if (ENUM_FIELDS.has(key)) {
+                      return (
+                        <div key={key}>
+                          <span style={{ color: '#9D85B3', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 4 }}>
+                            {label}
+                          </span>
+                          <span style={{ display: 'inline-block', padding: '2px 8px', background: '#FAF7FF', color: '#45336B', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>
+                            {strVal}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={key}>
+                        <span style={{ color: '#9D85B3' }}>{label}:</span>{' '}
+                        <strong style={{ color: '#45336B', fontWeight: 600 }}>{strVal}</strong>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

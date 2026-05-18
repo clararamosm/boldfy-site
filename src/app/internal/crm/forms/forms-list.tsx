@@ -14,6 +14,24 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import type { PersonRow, FormType } from './shared';
 import { FORM_LABELS } from './shared';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
+import { useColumnPicker, type ColumnDef } from '@/components/crm/column-picker';
+
+// Spec §8: "Coluna picker permite ativar campos opcionais (cargo, telefone, etc)".
+// Telefone e Cargo são opcionais (default visíveis); demais sempre visíveis no
+// default — user esconde via picker se quiser.
+const FORMS_COLUMNS: readonly ColumnDef[] = [
+  { key: 'name', label: 'Nome' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Telefone' },
+  { key: 'cargo', label: 'Cargo' },
+  { key: 'formularios', label: 'Formulários' },
+  { key: 'segmento', label: 'Segmento' },
+  { key: 'optin', label: 'Opt-in' },
+  { key: 'status', label: 'Status' },
+  { key: 'canal', label: 'Canal' },
+  { key: 'empresa', label: 'Empresa' },
+  { key: 'lastFormAt', label: 'Último form' },
+];
 
 type Props = {
   rows: PersonRow[];
@@ -45,6 +63,8 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [visibleCols, ColumnPickerUI] = useColumnPicker('crm-table-cols-forms', FORMS_COLUMNS);
 
   const currentSortBy = searchParams.get('sortBy') ?? 'lastFormAt';
   const currentSortDir = searchParams.get('sortDir') ?? 'desc';
@@ -103,33 +123,42 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
     );
   };
 
+  // Estilo padrão de TH (não-sortable)
+  const thBase: React.CSSProperties = {
+    textAlign: 'left',
+    padding: '10px 12px',
+    fontSize: 10,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: '#9D85B3',
+    borderBottom: '1px solid #E4D8ED',
+    whiteSpace: 'nowrap',
+  };
+
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, overflow: 'hidden' }}>
+    <div>
+      {/* Toolbar com column picker (spec §8: ativar campos opcionais) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        {ColumnPickerUI}
+      </div>
+
+      <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 900 }}>
           <thead>
             <tr style={{ background: '#FAF7FF' }}>
-              <SortHeader colKey="name" label="Nome" />
-              <SortHeader colKey="email" label="Email" />
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Formulários
-              </th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Segmento
-              </th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Opt-in
-              </th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Status
-              </th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Canal
-              </th>
-              <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9D85B3', borderBottom: '1px solid #E4D8ED', whiteSpace: 'nowrap' }}>
-                Empresa
-              </th>
-              <SortHeader colKey="lastFormAt" label="Último form" align="right" />
+              {visibleCols.has('name') ? <SortHeader colKey="name" label="Nome" /> : null}
+              {visibleCols.has('email') ? <SortHeader colKey="email" label="Email" /> : null}
+              {visibleCols.has('phone') ? <th style={thBase}>Telefone</th> : null}
+              {visibleCols.has('cargo') ? <th style={thBase}>Cargo</th> : null}
+              {visibleCols.has('formularios') ? <th style={thBase}>Formulários</th> : null}
+              {visibleCols.has('segmento') ? <th style={thBase}>Segmento</th> : null}
+              {visibleCols.has('optin') ? <th style={thBase}>Opt-in</th> : null}
+              {visibleCols.has('status') ? <th style={thBase}>Status</th> : null}
+              {visibleCols.has('canal') ? <th style={thBase}>Canal</th> : null}
+              {visibleCols.has('empresa') ? <th style={thBase}>Empresa</th> : null}
+              {visibleCols.has('lastFormAt') ? <SortHeader colKey="lastFormAt" label="Último form" align="right" /> : null}
             </tr>
           </thead>
           <tbody>
@@ -141,65 +170,95 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                 ? channelLabel(row.person.sourceChannel) : '—';
               return (
                 <tr key={row.person.id} style={{ borderBottom: '1px solid #F7EEFC', opacity: isUnsub ? 0.55 : 1 }}>
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    <Link href={`/internal/crm/people/${row.person.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
-                      {row.person.name || '—'}
-                    </Link>
-                    {isUnsub ? (
-                      <span
-                        title={row.person.unsubscribedAt ? `Saiu em ${new Date(row.person.unsubscribedAt).toLocaleDateString('pt-BR')}` : 'Unsubscribed'}
-                        style={{ display: 'inline-block', marginLeft: 6, padding: '1px 6px', background: '#E5E5E5', color: '#6B5B8A', borderRadius: 4, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', verticalAlign: 'middle' }}
-                      >
-                        Unsub
-                      </span>
-                    ) : null}
-                    {row.person.jobTitle ? (
-                      <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 2 }}>{row.person.jobTitle}</div>
-                    ) : null}
-                  </td>
-                  <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
-                    <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email}>
-                      {row.person.email}
-                    </span>
-                  </td>
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {row.forms.map((f) => (
-                        <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(205, 80, 241, 0.1)', color: '#CD50F1', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                          <span>{FORM_EMOJI[f]}</span>
-                          {FORM_LABELS[f]}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    {segment ? (
-                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${segment.color}1A`, color: segment.color }}>
-                        {segment.label}
-                      </span>
-                    ) : <span style={{ color: '#9D85B3' }}>—</span>}
-                  </td>
-                  <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: optIn ? 'rgba(16, 185, 129, 0.1)' : 'rgba(157, 133, 179, 0.1)', color: optIn ? '#10B981' : '#6B5B8A' }}>
-                      {optIn ? 'Sim' : 'Não'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
-                    {row.person.statusLabel ?? <span style={{ color: '#9D85B3' }}>—</span>}
-                  </td>
-                  <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
-                    {canalLabel}
-                  </td>
-                  <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
-                    {row.company ? (
-                      <Link href={`/internal/crm/companies/${row.company.id}`} style={{ color: '#5E2A67', textDecoration: 'none' }}>
-                        {row.company.name}
+                  {visibleCols.has('name') ? (
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      <Link href={`/internal/crm/people/${row.person.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
+                        {row.person.name || '—'}
                       </Link>
-                    ) : <span style={{ color: '#9D85B3' }}>—</span>}
-                  </td>
-                  <td style={{ padding: '10px 12px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
-                    {timeAgo(row.lastFormAt)}
-                  </td>
+                      {isUnsub ? (
+                        <span
+                          title={row.person.unsubscribedAt ? `Saiu em ${new Date(row.person.unsubscribedAt).toLocaleDateString('pt-BR')}` : 'Unsubscribed'}
+                          style={{ display: 'inline-block', marginLeft: 6, padding: '1px 6px', background: '#E5E5E5', color: '#6B5B8A', borderRadius: 4, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', verticalAlign: 'middle' }}
+                        >
+                          Unsub
+                        </span>
+                      ) : null}
+                      {/* jobTitle como subtitle só se coluna Cargo NÃO está visível
+                          (evita duplicar) */}
+                      {row.person.jobTitle && !visibleCols.has('cargo') ? (
+                        <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 2 }}>{row.person.jobTitle}</div>
+                      ) : null}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('email') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
+                      <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email}>
+                        {row.person.email}
+                      </span>
+                    </td>
+                  ) : null}
+                  {visibleCols.has('phone') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
+                      {row.person.phone ?? <span style={{ color: '#9D85B3' }}>—</span>}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('cargo') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
+                      {row.person.jobTitle ?? <span style={{ color: '#9D85B3' }}>—</span>}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('formularios') ? (
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {row.forms.map((f) => (
+                          <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(205, 80, 241, 0.1)', color: '#CD50F1', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
+                            <span>{FORM_EMOJI[f]}</span>
+                            {FORM_LABELS[f]}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  ) : null}
+                  {visibleCols.has('segmento') ? (
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      {segment ? (
+                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: `${segment.color}1A`, color: segment.color }}>
+                          {segment.label}
+                        </span>
+                      ) : <span style={{ color: '#9D85B3' }}>—</span>}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('optin') ? (
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: optIn ? 'rgba(16, 185, 129, 0.1)' : 'rgba(157, 133, 179, 0.1)', color: optIn ? '#10B981' : '#6B5B8A' }}>
+                        {optIn ? 'Sim' : 'Não'}
+                      </span>
+                    </td>
+                  ) : null}
+                  {visibleCols.has('status') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
+                      {row.person.statusLabel ?? <span style={{ color: '#9D85B3' }}>—</span>}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('canal') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle', fontSize: 12 }}>
+                      {canalLabel}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('empresa') ? (
+                    <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
+                      {row.company ? (
+                        <Link href={`/internal/crm/companies/${row.company.id}`} style={{ color: '#5E2A67', textDecoration: 'none' }}>
+                          {row.company.name}
+                        </Link>
+                      ) : <span style={{ color: '#9D85B3' }}>—</span>}
+                    </td>
+                  ) : null}
+                  {visibleCols.has('lastFormAt') ? (
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#9D85B3', fontSize: 11, whiteSpace: 'nowrap', verticalAlign: 'middle' }}>
+                      {timeAgo(row.lastFormAt)}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}
@@ -222,6 +281,7 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

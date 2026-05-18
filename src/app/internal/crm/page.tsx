@@ -128,7 +128,7 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
           <p>Recarrega a página pra criar os statuses padrão automaticamente.</p>
         </div>
       ) : view === 'table' ? (
-        <PersonTable data={data} />
+        <PersonTable data={data} inactivePeople={inactivePeople} />
       ) : (
         <PersonKanban data={data} inactivePeople={inactivePeople} />
       )}

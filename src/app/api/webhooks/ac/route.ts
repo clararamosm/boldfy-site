@@ -25,6 +25,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, people, activities } from '@/db';
 import { eq, sql } from 'drizzle-orm';
+import { automationForTag } from '@/lib/ac-tag-mapping';
 
 const AC_WEBHOOK_SECRET = process.env.AC_WEBHOOK_SECRET;
 
@@ -53,6 +54,16 @@ type ACWebhookPayload = {
   };
   // Bounce
   bounce_type?: string;
+  // Tag add/remove — AC manda objeto contact_tag
+  contact_tag?: {
+    tag?: string;
+    id?: string;
+  };
+  tag?: {
+    tag?: string;
+    id?: string;
+    name?: string;
+  };
   // Genérico — AC tem vários formatos
   [k: string]: unknown;
 };
@@ -151,6 +162,29 @@ function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; da
       // novo no site, que cai em recordLeadFromForm). Flipa flag se a pessoa
       // estava unsubscribed.
       return { type: 'lead_resubscribed', weight: 0, data: baseData };
+    case 'contact_tag_added':
+    case 'contact_tag':
+    case 'tag': {
+      // Task 1 (spec §6): tag adicionada → consulta mapa ac-tag-mapping.
+      // Se a tag dispara automation conhecida, emit 'automation_started' com
+      // o nome legível pra timeline ("🔄 Entrou na cadência X"). Se não tem
+      // mapping, emit 'tag_added' genérico (legível mas sem nome de cadência).
+      const tagName = payload.contact_tag?.tag
+        ?? payload.tag?.tag
+        ?? payload.tag?.name
+        ?? '';
+      const automationName = tagName ? automationForTag(tagName) : null;
+      if (automationName) {
+        return {
+          type: 'automation_started',
+          weight: 0,
+          data: { ...baseData, automation_name: automationName, tag_that_triggered: tagName },
+        };
+      }
+      // Tag não mapeada — ignora (não polui timeline). Habilitar log de
+      // 'tag_added' aqui se virar útil pra debug futuro.
+      return null;
+    }
     default:
       return null; // ignored event
   }

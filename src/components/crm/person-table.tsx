@@ -34,13 +34,25 @@ const PERSON_COLUMNS: readonly ColumnDef[] = [
 type SortKey = 'name' | 'email' | 'company' | 'jobTitle' | 'status' | 'leadScore' | 'lastTouchAt' | 'createdAt';
 type SortDir = 'asc' | 'desc';
 
-export function PersonTable({ data }: { data: PeopleByStatus }) {
-  // Flatten
+export function PersonTable({
+  data,
+  inactivePeople = [],
+}: {
+  data: PeopleByStatus;
+  inactivePeople?: PersonWithDetails[];
+}) {
+  // Task 2 (spec §8): toggle "Mostrar inativos" — default false (filtro
+  // implícito unsubscribed=false). Quando true, concatena inactivePeople
+  // no dataset visível.
+  const [showInactive, setShowInactive] = useState(false);
+
+  // Flatten ativos + inativos (se toggle ligado)
   const allPeople = useMemo(() => {
     const flat: PersonWithDetails[] = [];
     for (const group of data) flat.push(...group.people);
+    if (showInactive) flat.push(...inactivePeople);
     return flat;
-  }, [data]);
+  }, [data, showInactive, inactivePeople]);
 
   const statuses = useMemo(() => data.map((g) => g.status), [data]);
 
@@ -136,7 +148,35 @@ export function PersonTable({ data }: { data: PeopleByStatus }) {
         <div style={{ fontSize: 12, color: '#9D85B3' }}>
           {sorted.length} {sorted.length === 1 ? 'resultado' : 'resultados'}
         </div>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Toggle "Mostrar inativos" (spec §8) — só aparece se houver inativos */}
+          {inactivePeople.length > 0 ? (
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 10px',
+                background: showInactive ? 'rgba(157, 133, 179, 0.14)' : '#FFFFFF',
+                border: '1px solid #E4D8ED',
+                borderRadius: 8,
+                fontSize: 11,
+                color: '#6B5B8A',
+                fontWeight: 600,
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              title="Inclui leads que deram unsubscribe no AC"
+            >
+              <input
+                type="checkbox"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                style={{ margin: 0 }}
+              />
+              Mostrar inativos ({inactivePeople.length})
+            </label>
+          ) : null}
           {ColumnPickerUI}
         </div>
       </div>

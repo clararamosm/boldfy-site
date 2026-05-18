@@ -32,6 +32,7 @@ export type PersonRow = {
     id: string;
     name: string;
     email: string;
+    phone: string | null;
     sourceChannel: string | null;
     sourcePage: string | null;
     acTags: string[] | null;
