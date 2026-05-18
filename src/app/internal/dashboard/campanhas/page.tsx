@@ -211,7 +211,8 @@ export default async function CampanhasPage() {
                     <div style={{ fontSize: 10, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06 }}>CVR final</div>
                     <div style={{ fontFamily: 'var(--font-headline)', fontWeight: 900, fontSize: 22, color: '#10B981', marginTop: 2 }}>{cvr}%</div>
                   </div>
-                  <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
+                  {/* EditCampaignButton já faz preventDefault+stopPropagation internamente — sem onClick aqui (Server Components não podem passar event handlers pra elementos HTML em Next 16+) */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
                     <EditCampaignButton campaign={c} />
                   </div>
                 </Link>
