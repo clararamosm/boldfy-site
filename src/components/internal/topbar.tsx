@@ -39,15 +39,22 @@ export function InternalTopbar() {
           interno · não indexado
         </span>
 
-        <nav className="topbar-menu" aria-label="Áreas internas">
+        <nav
+          aria-label="Áreas internas"
+          className="ml-3.5 flex items-center gap-1.5 border-l border-border pl-4 max-md:ml-2 max-md:border-l-0 max-md:pl-0"
+        >
           {MENU.map((item) => {
             const active = pathname === item.match || pathname.startsWith(`${item.match}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`topbar-menu-link ${active ? 'active' : ''}`}
                 aria-current={active ? 'page' : undefined}
+                className={
+                  active
+                    ? 'whitespace-nowrap rounded-lg bg-primary px-3.5 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary/90'
+                    : 'whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-accent-foreground'
+                }
               >
                 {item.label}
               </Link>
@@ -120,42 +127,9 @@ export function InternalTopbar() {
           cursor: help;
         }
 
-        /* Menu — lista limpa de links, separada visualmente do tag interno
-           por uma "spine" vertical sutil + gap mais respirável.
-           Active: pill roxo sólido com texto branco (alta contraste, sem
-           ambiguidade de qual aba você está). */
-        .topbar-menu {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          margin-left: 14px;
-          padding-left: 16px;
-          border-left: 1px solid #E4D8ED;
-        }
-        .topbar-menu-link {
-          padding: 7px 14px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #6B5B8A;
-          text-decoration: none;
-          transition: all 0.15s ease;
-          border-radius: 8px;
-          white-space: nowrap;
-          letter-spacing: 0.01em;
-        }
-        .topbar-menu-link:hover {
-          color: #5E2A67;
-          background: #FAF5FE;
-        }
-        .topbar-menu-link.active {
-          color: #FFFFFF;
-          background: #CD50F1;
-          box-shadow: 0 1px 3px rgba(205, 80, 241, 0.3);
-        }
-        .topbar-menu-link.active:hover {
-          color: #FFFFFF;
-          background: #B844D9;
-        }
+        /* Menu de áreas internas — Tailwind inline (vide JSX acima).
+           Migrado de styled-jsx porque o hash não estava sendo aplicado
+           nos children do nav, deixando os links sem padding/active style. */
 
         /* === RIGHT side compacto === */
         .topbar-right {
