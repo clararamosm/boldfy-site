@@ -17,6 +17,7 @@ import { getCampaignBySlug, getCampaignStatus, listCampaigns } from '@/lib/campa
 import { FunnelStages, BOLDFY_PALETTE } from '@/components/dashboard/charts';
 import { timeAgo, channelLabel } from '@/lib/crm-format';
 import { EditCampaignButton } from '../edit-campaign-button';
+import { safeBlock } from '@/lib/safe-block';
 import { Settings2, FileText, Calendar, Trophy, BarChart3, Users, StickyNote } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -40,21 +41,25 @@ export default async function CampaignDetailPage({ params }: { params: Params })
 
   const status = getCampaignStatus(campaign);
 
-  // Leads dessa campanha
+  // Leads dessa campanha — cada query em safeBlock (defesa em profundidade)
   const [leads, statusBreakdown] = await Promise.all([
-    db.select({ person: people, company: companies, status: statuses })
-      .from(people)
-      .leftJoin(companies, eq(people.companyId, companies.id))
-      .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.firstTouchCampaign, campaign.utmCampaign)))
-      .orderBy(desc(people.createdAt))
-      .catch(() => []),
-    db.select({ statusLabel: statuses.label, n: count() })
-      .from(people)
-      .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(eq(people.firstTouchCampaign, campaign.utmCampaign))
-      .groupBy(statuses.label)
-      .catch(() => []),
+    safeBlock('campaign-detail', 'leads', () =>
+      db.select({ person: people, company: companies, status: statuses })
+        .from(people)
+        .leftJoin(companies, eq(people.companyId, companies.id))
+        .leftJoin(statuses, eq(people.statusId, statuses.id))
+        .where(and(eq(people.archived, false), isNull(people.mergedIntoId), eq(people.firstTouchCampaign, campaign.utmCampaign)))
+        .orderBy(desc(people.createdAt)),
+      [],
+    ),
+    safeBlock('campaign-detail', 'statusBreakdown', () =>
+      db.select({ statusLabel: statuses.label, n: count() })
+        .from(people)
+        .leftJoin(statuses, eq(people.statusId, statuses.id))
+        .where(eq(people.firstTouchCampaign, campaign.utmCampaign))
+        .groupBy(statuses.label),
+      [],
+    ),
   ]);
 
   const statusMap = new Map(statusBreakdown.map((s) => [s.statusLabel ?? 'Sem status', s.n]));
@@ -114,21 +119,23 @@ export default async function CampaignDetailPage({ params }: { params: Params })
           <div style={{ fontSize: 11, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06, marginBottom: 10 }}>
             Canais & touchpoints
           </div>
-          {campaign.channels.length === 0 ? (
+          {(campaign.channels ?? []).length === 0 ? (
             <div style={{ padding: 12, background: '#FAF7FF', borderRadius: 8, fontSize: 12, color: '#9D85B3' }}>
               Nenhum canal configurado. Use o botão Editar pra adicionar.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {campaign.channels.map((c) => (
+              {(campaign.channels ?? []).map((c) => {
+                const tps = c.touchpoints ?? [];
+                return (
                 <div key={c.name} style={{ padding: 12, background: '#FAF7FF', borderRadius: 10, border: '1px solid #E4D8ED' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: c.touchpoints.length ? 8 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: tps.length ? 8 : 0 }}>
                     <strong style={{ fontSize: 13, color: '#5E2A67' }}>{c.name}</strong>
-                    <span style={{ fontSize: 10, color: '#9D85B3' }}>· {c.touchpoints.length} touchpoint{c.touchpoints.length !== 1 ? 's' : ''}</span>
+                    <span style={{ fontSize: 10, color: '#9D85B3' }}>· {tps.length} touchpoint{tps.length !== 1 ? 's' : ''}</span>
                   </div>
-                  {c.touchpoints.length > 0 ? (
+                  {tps.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {c.touchpoints.map((tp, ti) => (
+                      {tps.map((tp, ti) => (
                         <div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#FFFFFF', borderRadius: 6, fontSize: 12 }}>
                           <a href={tp.url} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1', textDecoration: 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {tp.url}
@@ -139,7 +146,8 @@ export default async function CampaignDetailPage({ params }: { params: Params })
                     </div>
                   ) : null}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
