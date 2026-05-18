@@ -7,7 +7,7 @@
 
 import { db, people, companies, activities, meetings, statuses } from '@/db';
 import type { Person, Company, Activity, Meeting, Status } from '@/db';
-import { and, eq, isNull, desc, sql, count, gte, type SQL } from 'drizzle-orm';
+import { and, eq, isNull, desc, asc, sql, count, gte, type SQL } from 'drizzle-orm';
 import { getStatuses } from './statuses';
 
 /**
@@ -26,12 +26,55 @@ export type CrmFilters = {
   includeUnsubscribed?: boolean;
   /** Quando true, traz APENAS unsubscribed (aba "Leads inativos"). */
   onlyUnsubscribed?: boolean;
+  /**
+   * Sort string formato "{key}-{dir}". Vem do searchParam ?sort= do CrmFilters
+   * UI. Tipos suportados por kind (parser lida com inválidos via default):
+   *  person:  lastTouchAt|createdAt|name|leadScore × asc|desc
+   *  company: updatedAt|createdAt|name|peopleCount|topScore × asc|desc
+   */
+  sort?: string | null;
 };
 
 function periodCutoff(period?: CrmFilters['period']): Date | null {
   if (!period || period === 'all') return null;
   const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Resolve sort string "{key}-{dir}" pra orderBy clauses do Drizzle.
+ * Fallback: pra person → lastTouchAt desc; pra company → updatedAt desc.
+ * Sort secundário sempre createdAt desc pra estabilidade quando o primário
+ * tiver empate.
+ */
+function resolvePersonSort(sort: string | null | undefined): SQL[] {
+  const [keyRaw, dirRaw] = (sort ?? '').split('-');
+  const dir = dirRaw === 'asc' ? asc : desc;
+  const secondary = desc(people.createdAt);
+  switch (keyRaw) {
+    case 'name':        return [dir(people.name), secondary];
+    case 'createdAt':   return [dir(people.createdAt)];
+    case 'leadScore':   return [dir(people.leadScore), secondary];
+    case 'lastTouchAt':
+    default:
+      return [desc(people.lastTouchAt), secondary];
+  }
+}
+function resolveCompanySort(sort: string | null | undefined): SQL[] {
+  const [keyRaw, dirRaw] = (sort ?? '').split('-');
+  const dir = dirRaw === 'asc' ? asc : desc;
+  const secondary = desc(companies.createdAt);
+  switch (keyRaw) {
+    case 'name':        return [dir(companies.name), secondary];
+    case 'createdAt':   return [dir(companies.createdAt)];
+    case 'peopleCount':
+      return [sql`(SELECT COUNT(*) FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL) DESC`, secondary];
+    case 'topScore':
+      return [sql`COALESCE((SELECT MAX(lead_score) FROM people WHERE company_id = ${companies.id} AND archived = FALSE AND merged_into_id IS NULL), 0) DESC`, secondary];
+    case 'updatedAt':
+    default:
+      return [desc(companies.updatedAt), secondary];
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -49,21 +92,27 @@ export type PeopleByStatus = {
 }[];
 
 /**
- * Tag AC que define o gate visual do kanban de pessoas. Só Líderes B2B
- * aparecem no kanban — outros segmentos (Profissional Individual, Parceiro,
- * Newsletter) ficam só na aba Formulários, evitando ruído no pipeline B2B.
+ * Gate B2B do kanban de pessoas: só Líderes B2B aparecem. Outros segmentos
+ * (Profissional Individual, Parceiro) ficam só na aba Formulários, evitando
+ * ruído no pipeline B2B.
  *
- * Implementado como filtro SQL pra performance: SELECT já vem reduzido,
- * sem precisar filtrar em memória.
+ * Task 1+ (mai/2026): gate agora usa people.segment direto (não acTags antigo
+ * `Segmento: Líderes B2B`). Razão: o fluxo novo grava segment como coluna
+ * dedicada; ac_tags do CRM serve só como espelho/auditoria das tags AC.
+ * O bug antigo (Patricia/Heloisa não aparecendo no kanban) vinha do gate
+ * olhar ac_tags que nem sempre estava sincronizado.
+ *
+ * Reaplica em todas as queries do kanban + counters da sub-nav pra
+ * consistência.
  */
-const KANBAN_B2B_TAG = 'Segmento: Líderes B2B';
+const KANBAN_B2B_CLAUSE = eq(people.segment, 'lider_b2b');
 
 export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {}): Promise<PeopleByStatus> {
   const filterClauses: SQL[] = [
     eq(people.archived, false),
     isNull(people.mergedIntoId),
-    // Gate B2B no kanban — only Líderes B2B (mai/2026 ciclo 3)
-    sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+    // Gate B2B no kanban (mai/2026 ciclo 3+) — usa coluna dedicada segment
+    KANBAN_B2B_CLAUSE,
   ];
 
   // Task 1: filtro implícito unsubscribed=false. Aba "Inativos" passa
@@ -90,7 +139,7 @@ export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {
       .leftJoin(companies, eq(people.companyId, companies.id))
       .leftJoin(statuses, eq(people.statusId, statuses.id))
       .where(and(...filterClauses))
-      .orderBy(desc(people.lastTouchAt), desc(people.createdAt)),
+      .orderBy(...resolvePersonSort(filters.sort)),
   ]);
 
   // Inicializa todas as colunas vazias na ordem correta
@@ -222,7 +271,7 @@ export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters 
       .from(companies)
       .leftJoin(statuses, eq(companies.statusId, statuses.id))
       .where(filterClauses.length > 0 ? and(...filterClauses) : undefined)
-      .orderBy(desc(companies.updatedAt)),
+      .orderBy(...resolveCompanySort(filters.sort)),
   ]);
 
   const grouped: CompaniesByStatus = allStatuses.map((s) => ({ status: s, companies: [] }));
@@ -528,7 +577,7 @@ export async function getCrmCounts(): Promise<{
       eq(people.archived, false),
       isNull(people.mergedIntoId),
       eq(people.unsubscribed, false),
-      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+      KANBAN_B2B_CLAUSE,
     )),
     db.select({ n: count() }).from(companies).where(sql`NOT ${COMPANY_INACTIVE_CLAUSE}`),
     db.select({ n: count() }).from(activities),
@@ -558,7 +607,7 @@ export async function getInactivePeople(perColumn = 100): Promise<PersonWithDeta
       eq(people.archived, false),
       isNull(people.mergedIntoId),
       eq(people.unsubscribed, true),
-      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+      KANBAN_B2B_CLAUSE,
     ))
     .orderBy(desc(people.unsubscribedAt), desc(people.lastTouchAt))
     .limit(perColumn);

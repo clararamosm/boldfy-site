@@ -33,6 +33,26 @@ const PERIODS = [
   { value: '7d', label: 'Últimos 7d' },
 ] as const;
 
+// Sort options compartilhados entre Pessoas e Empresas. Score/lastForm
+// só fazem sentido pra person; createdAt/updatedAt + name servem pra ambos.
+const PERSON_SORTS = [
+  { value: 'lastTouchAt-desc', label: 'Última atividade ↓' },
+  { value: 'createdAt-desc',  label: 'Mais recentes ↓' },
+  { value: 'createdAt-asc',   label: 'Mais antigos ↑' },
+  { value: 'name-asc',        label: 'Nome A→Z' },
+  { value: 'name-desc',       label: 'Nome Z→A' },
+  { value: 'leadScore-desc',  label: 'Pontuação ↓' },
+  { value: 'leadScore-asc',   label: 'Pontuação ↑' },
+] as const;
+const COMPANY_SORTS = [
+  { value: 'updatedAt-desc',   label: 'Mais recentes ↓' },
+  { value: 'updatedAt-asc',    label: 'Mais antigos ↑' },
+  { value: 'name-asc',         label: 'Nome A→Z' },
+  { value: 'name-desc',        label: 'Nome Z→A' },
+  { value: 'peopleCount-desc', label: 'Mais leads ↓' },
+  { value: 'topScore-desc',    label: 'Top score ↓' },
+] as const;
+
 export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -59,8 +79,12 @@ export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props)
   const currentStatusId = searchParams.get('statusId') ?? '';
   const currentCanal = searchParams.get('canal') ?? '';
   const currentPagina = searchParams.get('pagina') ?? '';
+  // Sort = "{key}-{dir}" no URL pra ser 1 select. Default por kind.
+  const sortDefault = kind === 'person' ? 'lastTouchAt-desc' : 'updatedAt-desc';
+  const currentSort = searchParams.get('sort') ?? sortDefault;
+  const sortOptions = kind === 'person' ? PERSON_SORTS : COMPANY_SORTS;
 
-  const hasFilters = currentPeriod !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '';
+  const hasFilters = currentPeriod !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentSort !== sortDefault;
 
   const selectStyle: React.CSSProperties = {
     padding: '8px 10px',
@@ -119,6 +143,18 @@ export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props)
           </select>
         </div>
       ) : null}
+
+      <div>
+        <label style={labelStyle}>Ordenar por</label>
+        <select
+          value={currentSort}
+          onChange={(e) => updateParam('sort', e.target.value === sortDefault ? null : e.target.value)}
+          disabled={pending}
+          style={selectStyle}
+        >
+          {sortOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+      </div>
 
       {hasFilters ? (
         <button type="button" onClick={clearAll} disabled={pending} className="crm-btn" style={{ alignSelf: 'flex-end', fontSize: 12 }}>

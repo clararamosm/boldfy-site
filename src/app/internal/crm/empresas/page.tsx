@@ -28,13 +28,15 @@ type SearchParams = Promise<{
   view?: string;
   period?: string;
   statusId?: string;
+  sort?: string;
 }>;
 
-function parseFilters(sp: { period?: string; statusId?: string }): CrmFilters {
+function parseFilters(sp: { period?: string; statusId?: string; sort?: string }): CrmFilters {
   const period = ['7d', '30d', '90d'].includes(sp.period ?? '') ? (sp.period as CrmFilters['period']) : 'all';
   return {
     period,
     statusId: sp.statusId || null,
+    sort: sp.sort || null,
   };
 }
 
