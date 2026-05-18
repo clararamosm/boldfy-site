@@ -1,19 +1,28 @@
 /**
  * Kanban de Pessoas — client component com drag-drop nativo + seleção
  * múltipla pra merge.
+ *
+ * Task 2 (mai/2026 — spec crm-source-of-truth §8): coluna "Inativos" como
+ * ÚLTIMA etapa, COLAPSADA por default. Click no header expande. Não ocupa
+ * espaço quando colapsada. Não conta no badge total da sub-nav (mantido
+ * fora de getCrmCounts.totalPeople).
  */
 
 'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { PeopleByStatus } from '@/lib/crm-queries';
+import type { PeopleByStatus, PersonWithDetails } from '@/lib/crm-queries';
 import { PersonCard } from './person-card';
 import { movePerson, mergePeople } from '@/app/internal/crm/actions';
 
-type Props = { data: PeopleByStatus };
+type Props = {
+  data: PeopleByStatus;
+  inactivePeople?: PersonWithDetails[];
+};
 
-export function PersonKanban({ data }: Props) {
+export function PersonKanban({ data, inactivePeople = [] }: Props) {
+  const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
@@ -98,7 +107,20 @@ export function PersonKanban({ data }: Props) {
   return (
     <>
       <div className="crm-kanban-wrap">
-        <div className="crm-kanban" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(280px, 1fr))` }}>
+        <div
+          className="crm-kanban"
+          style={{
+            // Coluna extra pros Inativos: largura fixa pequena quando colapsada,
+            // largura normal quando expandida. Só renderiza se houver inativos.
+            gridTemplateColumns: `repeat(${data.length}, minmax(280px, 1fr))${
+              inactivePeople.length > 0
+                ? inactiveExpanded
+                  ? ' minmax(280px, 1fr)'
+                  : ' 44px'
+                : ''
+            }`,
+          }}
+        >
           {data.map(({ status, people }) => {
             const isDragOver = dragOverColId === status.id;
             return (
@@ -136,6 +158,70 @@ export function PersonKanban({ data }: Props) {
               </div>
             );
           })}
+
+          {/* COLUNA INATIVOS — colapsada por default. Sempre depois de todos os
+              statuses (incluindo terminais como Perdido/Fechado). */}
+          {inactivePeople.length > 0 ? (
+            inactiveExpanded ? (
+              <div className="crm-col" style={{ background: 'rgba(157, 133, 179, 0.04)', borderColor: 'rgba(157, 133, 179, 0.2)' }}>
+                <div className="crm-col-header" style={{ cursor: 'pointer' }} onClick={() => setInactiveExpanded(false)} title="Colapsar">
+                  <div className="crm-col-title">
+                    <span className="crm-col-dot" style={{ background: '#9D85B3' }} />
+                    Inativos
+                    <span style={{ fontSize: 9, color: '#9D85B3', fontWeight: 600 }}>(unsubscribed)</span>
+                  </div>
+                  <span className="crm-col-count" style={{ background: 'rgba(157, 133, 179, 0.18)', color: '#6B5B8A' }}>
+                    {inactivePeople.length} ›
+                  </span>
+                </div>
+                <div className="crm-col-cards">
+                  {inactivePeople.map((person) => (
+                    <div key={person.id} style={{ opacity: 0.6 }}>
+                      <PersonCard
+                        person={person}
+                        selected={selected.has(person.id)}
+                        anySelected={anySelected}
+                        onToggleSelect={toggleSelect}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setInactiveExpanded(true)}
+                title={`Mostrar ${inactivePeople.length} lead${inactivePeople.length === 1 ? '' : 's'} inativo${inactivePeople.length === 1 ? '' : 's'} (unsubscribed)`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  gap: 8,
+                  padding: '14px 0',
+                  background: 'rgba(157, 133, 179, 0.06)',
+                  border: '1px dashed rgba(157, 133, 179, 0.25)',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  color: '#6B5B8A',
+                  fontFamily: 'inherit',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span style={{ fontSize: 16 }}>‹</span>
+                <span style={{
+                  writingMode: 'vertical-rl',
+                  transform: 'rotate(180deg)',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}>
+                  Inativos · {inactivePeople.length}
+                </span>
+              </button>
+            )
+          ) : null}
         </div>
       </div>
 

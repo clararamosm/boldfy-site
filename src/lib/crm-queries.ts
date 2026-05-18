@@ -441,11 +441,11 @@ export async function getCrmCounts(): Promise<{
   totalPeople: number;
   totalCompanies: number;
   totalActivities: number;
-  totalInactive: number;
 }> {
-  // totalPeople = só ativos (filtro implícito unsubscribed=false).
-  // totalInactive = unsubscribed=true, mesmo gate B2B (pra aba "Leads inativos").
-  const [p, c, a, inactive] = await Promise.all([
+  // totalPeople = só ATIVOS (filtro implícito unsubscribed=false) — bate com
+  // o que aparece no kanban default. Inativos viram coluna escondida do
+  // kanban (não contam no badge da sub-nav).
+  const [p, c, a] = await Promise.all([
     db.select({ n: count() }).from(people).where(and(
       eq(people.archived, false),
       isNull(people.mergedIntoId),
@@ -454,17 +454,40 @@ export async function getCrmCounts(): Promise<{
     )),
     db.select({ n: count() }).from(companies),
     db.select({ n: count() }).from(activities),
-    db.select({ n: count() }).from(people).where(and(
-      eq(people.archived, false),
-      isNull(people.mergedIntoId),
-      eq(people.unsubscribed, true),
-      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
-    )),
   ]);
   return {
     totalPeople: p[0]?.n ?? 0,
     totalCompanies: c[0]?.n ?? 0,
     totalActivities: a[0]?.n ?? 0,
-    totalInactive: inactive[0]?.n ?? 0,
   };
+}
+
+/**
+ * Busca pessoas unsubscribed (gate B2B). Usado pela coluna "Inativos"
+ * colapsada no final do kanban — fica oculta até user expandir.
+ *
+ * Spec §8: "Coluna 'Inativos' como ÚLTIMA etapa do kanban (depois de
+ * 'Perdido'), colapsada por default. Click pra expandir mostra leads
+ * unsubscribed dentro. Não ocupa espaço quando não usado."
+ */
+export async function getInactivePeople(perColumn = 100): Promise<PersonWithDetails[]> {
+  const rows = await db
+    .select()
+    .from(people)
+    .leftJoin(companies, eq(people.companyId, companies.id))
+    .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .where(and(
+      eq(people.archived, false),
+      isNull(people.mergedIntoId),
+      eq(people.unsubscribed, true),
+      sql`${KANBAN_B2B_TAG} = ANY(${people.acTags})`,
+    ))
+    .orderBy(desc(people.unsubscribedAt), desc(people.lastTouchAt))
+    .limit(perColumn);
+
+  return rows.map((r) => ({
+    ...r.people,
+    company: r.companies,
+    status: r.statuses,
+  }));
 }

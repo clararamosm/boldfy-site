@@ -13,7 +13,7 @@
     "db:migrate": "node --env-file=.env.local node_modules/.bin/drizzle-kit migrate",
     "db:push": "node --env-file=.env.local node_modules/.bin/drizzle-kit push",
     "db:studio": "node --env-file=.env.local node_modules/.bin/drizzle-kit studio",
-    "backfill:crm-source-of-truth": "node --env-file=.env.local --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"tsx/esm\", pathToFileURL(\"./\"));' scripts/backfill-crm-source-of-truth.ts"
+    "backfill:crm-source-of-truth": "node --env-file=.env.local --import tsx scripts/backfill-crm-source-of-truth.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

@@ -12,7 +12,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { getPeopleByStatus, type PeopleByStatus, type CrmFilters } from '@/lib/crm-queries';
+import { getPeopleByStatus, getInactivePeople, type PeopleByStatus, type PersonWithDetails, type CrmFilters } from '@/lib/crm-queries';
 import { getStatuses } from '@/lib/statuses';
 import { db, people } from '@/db';
 import { PersonKanban } from '@/components/crm/person-kanban';
@@ -71,16 +71,19 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
   const filters = parseFilters(params);
 
   let data: PeopleByStatus = [];
+  let inactivePeople: PersonWithDetails[] = [];
   let dbError: string | null = null;
   let personStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   let filterOptions: { channels: string[]; pages: string[] } = { channels: [], pages: [] };
   try {
-    const [d, statusesData, opts] = await Promise.all([
+    const [d, inactive, statusesData, opts] = await Promise.all([
       getPeopleByStatus(view === 'table' ? 1000 : 100, filters),
+      getInactivePeople(view === 'table' ? 1000 : 100),
       getStatuses('person'),
       getFilterOptions(),
     ]);
     data = d;
+    inactivePeople = inactive;
     personStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
     filterOptions = opts;
   } catch (err) {
@@ -127,7 +130,7 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
       ) : view === 'table' ? (
         <PersonTable data={data} />
       ) : (
-        <PersonKanban data={data} />
+        <PersonKanban data={data} inactivePeople={inactivePeople} />
       )}
     </div>
   );
