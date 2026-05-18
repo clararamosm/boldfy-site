@@ -236,6 +236,8 @@ export const prArticles = pgTable('pr_articles', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: text('title').notNull(),
   publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),
+  articleUrl: text('article_url'), // URL externo da notícia no veículo (https://infomoney.com.br/...)
+  outlet: text('outlet'), // veículo (InfoMoney, Exame, etc) — opcional
   shortlinkCode: text('shortlink_code'), // ex: pr-elg-mai26 (corresponde a /l/[code])
   utmCampaign: text('utm_campaign'), // ex: 'artigo-employee-led-growth-mai26'
   notes: text('notes'),

@@ -10,8 +10,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { kv } from '@vercel/kv';
-import { db, people, companies, statuses, prArticles } from '@/db';
-import { eq, and, isNull, count, sql, desc } from 'drizzle-orm';
+import { db, people, companies, statuses, prArticles, utmLinks } from '@/db';
+import { eq, and, isNull, count, desc, inArray } from 'drizzle-orm';
 import { listCampaigns, getCampaignStatus, type Campaign } from '@/lib/campaigns';
 import { NewCampaignButton } from './new-campaign-button';
 import { EditCampaignButton } from './edit-campaign-button';
@@ -19,6 +19,12 @@ import { timeAgo } from '@/lib/crm-format';
 import { isGa4Configured, getTopUtms, getTrafficByDay } from '@/lib/ga4';
 import { TimelineMarkers } from '@/components/dashboard/charts';
 import { safeBlock } from '@/lib/safe-block';
+import {
+  getUtmAnalyticsBatch,
+  analyticsKey,
+  type UtmAnalytics,
+} from '@/lib/ga4-utm-analytics';
+import { ArticlesList } from './articles-list';
 import { Megaphone, Link2, Newspaper, FileText, Users, Lightbulb } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -121,6 +127,43 @@ export default async function CampanhasPage() {
     isGa4Configured() ? safeBlock('campanhas', 'topUtms', () => getTopUtms(30, 50), []) : Promise.resolve([]),
     isGa4Configured() ? safeBlock('campanhas', 'trafficByDay', () => getTrafficByDay(30), []) : Promise.resolve([]),
   ]);
+  // Analytics dos artigos — busca utm_links pelos utm_campaign dos artigos
+  // pra montar o key (source|medium|campaign) usado no batch GA4
+  const articleCampaigns = (articles ?? []).map((a) => a.utmCampaign).filter((c): c is string => !!c);
+  const articleUtmLinks = articleCampaigns.length > 0
+    ? await safeBlock(
+        'campanhas', 'articleUtmLinks',
+        () => db.select().from(utmLinks).where(inArray(utmLinks.utmCampaign, articleCampaigns)),
+        [],
+      )
+    : [];
+  const oldestArticleLink = articleUtmLinks.length > 0
+    ? new Date(Math.min(...articleUtmLinks.map((l) => new Date(l.createdAt).getTime())))
+    : new Date();
+  const articleAnalyticsBatch = articleUtmLinks.length > 0 && isGa4Configured()
+    ? await safeBlock('campanhas', 'articleAnalytics', () => getUtmAnalyticsBatch(oldestArticleLink), new Map<string, UtmAnalytics>())
+    : new Map<string, UtmAnalytics>();
+  // Mapa por utm_campaign (não por key) — agrega todos os links que
+  // compartilham mesma campaign
+  const analyticsByUtmCampaign: Record<string, UtmAnalytics> = {};
+  for (const link of articleUtmLinks) {
+    const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+    const found = articleAnalyticsBatch.get(key);
+    if (found) {
+      const existing = analyticsByUtmCampaign[link.utmCampaign];
+      if (existing) {
+        // Agrega — pode haver múltiplos links com mesma utm_campaign (source/medium diferentes)
+        existing.totals.sessions += found.totals.sessions;
+        existing.totals.users += found.totals.users;
+      } else {
+        analyticsByUtmCampaign[link.utmCampaign] = {
+          totals: { ...found.totals },
+          daily: found.daily,
+        };
+      }
+    }
+  }
+
   const prLeadsCount = prLeadsRow[0]?.n ?? 0;
   const prSessions = (prUtms ?? []).filter((u) => (u.source ?? '').toLowerCase() === 'pr').reduce((a, u) => a + (u.sessions ?? 0), 0);
   const organicSeries = (dailyTraffic ?? []).map((d) => d.sessions ?? 0);
@@ -266,22 +309,12 @@ export default async function CampanhasPage() {
 
       <div className="dash-card">
         <div className="dash-card-title"><FileText /> Artigos cadastrados</div>
-        {(articles ?? []).length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem artigos cadastrados ainda.</div>
-        ) : (
-          <table className="dash-table">
-            <thead><tr><th>Título</th><th>Publicado</th><th>UTM campaign</th></tr></thead>
-            <tbody>
-              {(articles ?? []).map((a) => (
-                <tr key={a.id}>
-                  <td className="strong" style={{ maxWidth: 480 }}>{a.title}</td>
-                  <td className="muted">{a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('pt-BR') : '—'}</td>
-                  <td className="muted">{a.utmCampaign ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <div className="dash-card-subtitle">
+          Cada artigo é vinculado por <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>utm_campaign</code>{' '}
+          ao link UTM que você gerou em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
+          Métricas vêm do GA4 desde a criação do link.
+        </div>
+        <ArticlesList articles={articles ?? []} analyticsByUtmCampaign={analyticsByUtmCampaign} />
       </div>
 
       {/* ====== Links rastreáveis (UTM + Shortlinks) ====== */}
