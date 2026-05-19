@@ -76,5 +76,14 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ['/internal/:path*'],
+  // Matcher amplo: roda em TUDO menos assets estáticos e API.
+  // Por que: além do gate de auth em /internal (gated dentro da função
+  // por `if (pathname.startsWith('/internal'))`), o proxy também propaga
+  // x-pathname pro Server Component root layout poder pular scripts de
+  // analytics em /internal/* e /proposta/* — sem isso, rotas fora de
+  // /internal não teriam x-pathname e o layout carregaria analytics
+  // mesmo nas propostas privadas.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|images/|fonts/|api/).*)',
+  ],
 };
