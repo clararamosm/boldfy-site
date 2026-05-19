@@ -149,6 +149,42 @@ type Ga4Report = {
   totals?: Array<{ metricValues: Array<{ value: string }> }>;
 };
 
+/**
+ * Filtro GA4 que EXCLUI tráfego em páginas internas (CRM, Dashboard, Catálogo,
+ * UTM Generator — tudo sob /internal/*). Aplicado em todas as queries do
+ * dashboard pra que métricas reflitam só visitantes reais do site público.
+ *
+ * Decisão Clara 2026-05-18: páginas /internal só Clara + equipe acessam,
+ * inflar métricas com elas distorce análise.
+ *
+ * Merge com filtros adicionais via `andGroup` quando necessário.
+ */
+export const EXCLUDE_INTERNAL_DIMENSION_FILTER = {
+  notExpression: {
+    filter: {
+      fieldName: 'pagePath',
+      stringFilter: {
+        matchType: 'BEGINS_WITH',
+        value: '/internal',
+        caseSensitive: false,
+      },
+    },
+  },
+};
+
+/**
+ * Helper pra mesclar EXCLUDE_INTERNAL_DIMENSION_FILTER com filtros adicionais.
+ * Quando `extra` é undefined, retorna só o exclude. Caso contrário, agrupa via AND.
+ */
+export function withInternalExcluded(extra?: object): object {
+  if (!extra) return EXCLUDE_INTERNAL_DIMENSION_FILTER;
+  return {
+    andGroup: {
+      expressions: [EXCLUDE_INTERNAL_DIMENSION_FILTER, extra],
+    },
+  };
+}
+
 /** Exposto pra módulos externos (ex: ga4-utm-analytics.ts). */
 export function runReportPublic(body: object) {
   return runReport(body);
@@ -203,6 +239,7 @@ export async function getTrafficSummary(days = 30): Promise<TrafficSummary | nul
       { name: 'averageSessionDuration' },
       { name: 'bounceRate' },
     ],
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report) return null;
 
@@ -229,6 +266,7 @@ export async function getTrafficByChannel(days = 30): Promise<ChannelRow[]> {
     dimensions: [{ name: 'sessionDefaultChannelGroup' }],
     metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
     orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return [];
 
@@ -248,6 +286,7 @@ export async function getTopPages(days = 30, limit = 10): Promise<PageRow[]> {
     metrics: [{ name: 'screenPageViews' }, { name: 'sessions' }],
     orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
     limit: String(limit),
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return [];
 
@@ -270,6 +309,7 @@ export async function getTrafficByDay(days = 28): Promise<DailyPoint[]> {
     dimensions: [{ name: 'date' }],
     metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
     orderBys: [{ dimension: { dimensionName: 'date' } }],
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return [];
 
@@ -297,6 +337,7 @@ export async function getTrafficByDayAndChannel(days = 28): Promise<ChannelByDay
     metrics: [{ name: 'sessions' }],
     orderBys: [{ dimension: { dimensionName: 'date' } }],
     limit: '10000',
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return [];
 
@@ -324,6 +365,7 @@ export async function getTopUtms(days = 30, limit = 15): Promise<UtmRow[]> {
     metrics: [{ name: 'sessions' }],
     orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
     limit: String(limit),
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return [];
 

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Inter, Nunito_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -124,29 +125,51 @@ const websiteJsonLd = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /**
+   * Detecta páginas internas (CRM/Dashboard/Catálogo/UTM/Settings) pra
+   * NÃO carregar scripts de analytics — só Clara + equipe acessam, esses
+   * pageviews enviesam totais de sessions/users do GA4 e do dashboard.
+   *
+   * Pathname vem via header x-pathname setado pelo middleware. Fallback
+   * pra carregar tudo em caso de ausência (build-time/SSG cache).
+   *
+   * Cobre /internal/* (CRM, dashboards, etc) E /proposta/* (propostas
+   * privadas geradas pra clientes específicos — não fazem parte do
+   * tráfego público que faz sentido medir).
+   */
+  const h = await headers();
+  const pathname = h.get('x-pathname') ?? '';
+  const isInternalRoute = pathname.startsWith('/internal') || pathname.startsWith('/proposta');
+
   return (
     <html
       lang="pt-BR"
       className={`h-full antialiased ${inter.variable} ${nunitoSans.variable}`}
     >
       <head>
-        {/* Consent Mode v2 defaults — precisa rodar antes do GTM */}
-        <ConsentModeDefaults />
+        {/* Analytics scripts: SOMENTE em páginas públicas. /internal e /proposta
+            ficam fora pra não inflar métricas. */}
+        {!isInternalRoute ? (
+          <>
+            {/* Consent Mode v2 defaults — precisa rodar antes do GTM */}
+            <ConsentModeDefaults />
 
-        {/* Google Tag Manager — orquestra GA4 + LinkedIn Insight Tag */}
-        <GTMScript />
+            {/* Google Tag Manager — orquestra GA4 + LinkedIn Insight Tag */}
+            <GTMScript />
 
-        {/* Fallbacks pra quem não quiser usar GTM (ficam inativos enquanto GTM estiver ativo) */}
-        <GA4Script />
-        <LinkedInInsightScript />
+            {/* Fallbacks pra quem não quiser usar GTM (ficam inativos enquanto GTM estiver ativo) */}
+            <GA4Script />
+            <LinkedInInsightScript />
 
-        {/* ActiveCampaign Site Tracking (VGO) — pode coexistir com GTM */}
-        <ActiveCampaignTracking />
+            {/* ActiveCampaign Site Tracking (VGO) — pode coexistir com GTM */}
+            <ActiveCampaignTracking />
+          </>
+        ) : null}
 
         <script
           type="application/ld+json"
@@ -158,15 +181,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans overflow-x-hidden">
-        {/* GTM noscript fallback — obrigatório ficar logo após <body> */}
-        <GTMNoScript />
+        {/* GTM noscript fallback — só em páginas públicas (matchando o GTMScript acima) */}
+        {!isInternalRoute ? <GTMNoScript /> : null}
 
         <Providers>
-          <InternalTrafficMarker />
+          {!isInternalRoute ? <InternalTrafficMarker /> : null}
           <ConditionalHeader />
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
-          <ConsentBanner />
+          {!isInternalRoute ? <ConsentBanner /> : null}
         </Providers>
       </body>
     </html>

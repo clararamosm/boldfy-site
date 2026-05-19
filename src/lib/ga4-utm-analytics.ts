@@ -17,7 +17,7 @@
  * `analyticsKey()` exportado abaixo.
  */
 
-import { runReportPublic } from './ga4';
+import { runReportPublic, EXCLUDE_INTERNAL_DIMENSION_FILTER } from './ga4';
 import { slug } from './utm';
 
 export type UtmDailyPoint = { date: string; sessions: number; users: number };
@@ -89,6 +89,7 @@ export async function getUtmAnalyticsBatch(sinceDate: Date): Promise<Map<string,
       { name: 'engagedSessions' },
     ],
     limit: '100000',
+    dimensionFilter: EXCLUDE_INTERNAL_DIMENSION_FILTER,
   });
   if (!report?.rows) return new Map();
 
