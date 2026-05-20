@@ -52,6 +52,17 @@ export const MATERIAIS: Record<string, Material> = {
     ctaText: 'Baixar gratis',
     href: '/algoritmo-linkedin',
   },
+  'case-semrush': {
+    slug: 'case-semrush',
+    tag: 'Case gratuito',
+    title: 'O case ELG da Semrush',
+    description:
+      'Como uma gigante global ativou ~30 colaboradores no LinkedIn e gerou +500k de alcance em 2 meses — com R$ 360 mil em earned media.',
+    cover: '/images/case-semrush-cover.jpeg',
+    coverAspect: '695/974', // proporcao real da imagem
+    ctaText: 'Baixar gratis',
+    href: '/case-semrush',
+  },
 };
 
 /**

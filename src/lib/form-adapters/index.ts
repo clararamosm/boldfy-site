@@ -9,6 +9,7 @@
 
 export type { ClassifiedLead } from './types';
 export { adaptReport } from './report';
+export { adaptCase } from './case';
 export { adaptBeta } from './beta';
 export { adaptDemo } from './demo';
 export { adaptProposal, type ProposalAdapterContext } from './proposal';

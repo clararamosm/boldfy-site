@@ -107,11 +107,13 @@ export function describeActivity(
     case 'form_submit_demo':
     case 'form_submit_beta':
     case 'form_submit_report':
+    case 'form_submit_case':
     case 'form_submit_proposta': {
       const labelMap: Record<string, { icon: string; label: string }> = {
         form_submit_demo: { icon: '🎯', label: 'Demo' },
         form_submit_beta: { icon: '🧪', label: 'Beta' },
         form_submit_report: { icon: '📥', label: 'Report B2B' },
+        form_submit_case: { icon: '📑', label: 'Case Semrush ELG' },
         form_submit_proposta: { icon: '💼', label: 'Simulador de Proposta' },
       };
       const m = labelMap[type];
@@ -334,6 +336,7 @@ export function methodVia(method: string | null | undefined): { label: string; c
     case 'form_demo': return { label: 'via Form Demo', classKey: 'form' };
     case 'form_beta': return { label: 'via Form Beta', classKey: 'form' };
     case 'form_report': return { label: 'via Form Report', classKey: 'form' };
+    case 'form_case_semrush': return { label: 'via Form Case Semrush', classKey: 'form' };
     case 'form_proposta': return { label: 'via Form Proposta', classKey: 'form' };
     case 'manual': return { label: 'via Manual', classKey: 'manual' };
     // Equivalente histórico de extension_linkedin (Folk era usado pra capturar

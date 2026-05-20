@@ -75,6 +75,20 @@ const MATERIAIS: Material[] = [
     ],
   },
   {
+    slug: 'case-semrush',
+    status: 'live',
+    tag: 'Case',
+    title: 'O Case ELG da Semrush',
+    description:
+      'Como uma gigante global ativou ~30 colaboradores no LinkedIn e gerou +500k de alcance em 2 meses, R$ 360 mil em earned media e um método que virou produto. Leitura de bastidores de quem viveu por dentro.',
+    href: '/case-semrush',
+    cover: '/images/case-semrush-editorial.png',
+    meta: [
+      { icon: 'clock', label: '12 min' },
+      { icon: 'chart', label: '4 partes' },
+    ],
+  },
+  {
     slug: 'playbook-employee-advocacy',
     status: 'soon',
     tag: 'Em breve',

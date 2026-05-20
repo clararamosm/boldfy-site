@@ -98,6 +98,7 @@ function activityTypesForFormTags(tags: string[]): Array<{ type: string; weight:
   if (tags.some((t) => t.includes('Form: Demo'))) acts.push({ type: 'form_submit_demo', weight: 50 });
   if (tags.some((t) => t.includes('Form: Beta'))) acts.push({ type: 'form_submit_beta', weight: 25 });
   if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) acts.push({ type: 'form_submit_report', weight: 10 });
+  if (tags.some((t) => t.includes('Form: Case'))) acts.push({ type: 'form_submit_case', weight: 15 });
   if (tags.some((t) => t.includes('Simulador') || t.includes('Proposta'))) acts.push({ type: 'form_submit_proposta', weight: 50 });
   return acts;
 }

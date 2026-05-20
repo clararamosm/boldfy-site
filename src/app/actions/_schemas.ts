@@ -167,6 +167,66 @@ export const ReportLeadSchema = z
   })
   .extend(UtmFieldsSchema.shape);
 
+/**
+ * Schema do form do Case Semrush ELG (LP /case-semrush).
+ *
+ * Mesma base do Report (nome+email+intencao+newsletter) MAIS três campos
+ * extras de qualificação B2B (empresa, cargo, tamanho_empresa) que só são
+ * exigidos quando intencaoUso='marca-empresa'. Pros outros casos (agência,
+ * criador) o lead segue o fluxo enxuto do report.
+ *
+ * Validação cruzada via superRefine: se a pessoa marca 'marca-empresa',
+ * os 3 campos B2B passam a ser obrigatórios (mesma lógica do gate UI).
+ */
+const TamanhoEmpresaSchema = z.enum([
+  'ate-10',
+  '11-50',
+  '51-200',
+  '201-500',
+  '500+',
+]);
+
+export const CaseLeadSchema = z
+  .object({
+    nome: NameSchema,
+    email: EmailSchema,
+    intencaoUso: IntencaoUsoSchema,
+    // Campos B2B — opcionais no schema, validados em superRefine quando
+    // intencaoUso='marca-empresa'. Mantemos opcionais aqui pro adapter
+    // saber tratar null sem crash quando lead não é B2B.
+    empresa: optionalText(200),
+    cargo: optionalText(120),
+    tamanhoEmpresa: TamanhoEmpresaSchema.optional(),
+    origem: optionalText(200),
+    newsletterOptIn: z.boolean().optional(),
+  })
+  .extend(UtmFieldsSchema.shape)
+  .superRefine((data, ctx) => {
+    if (data.intencaoUso === 'marca-empresa') {
+      if (!data.empresa) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['empresa'],
+          message: 'Empresa obrigatória pra leads B2B',
+        });
+      }
+      if (!data.cargo) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['cargo'],
+          message: 'Cargo obrigatório pra leads B2B',
+        });
+      }
+      if (!data.tamanhoEmpresa) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['tamanhoEmpresa'],
+          message: 'Tamanho da empresa obrigatório pra leads B2B',
+        });
+      }
+    }
+  });
+
 /* -------------------------------------------------------------------------- */
 /*  Helper genérico                                                            */
 /* -------------------------------------------------------------------------- */

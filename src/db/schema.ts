@@ -50,6 +50,7 @@ export const sourceMethodEnum = pgEnum('source_method', [
   'form_demo',
   'form_beta',
   'form_report',
+  'form_case_semrush',
   'form_proposta',
   'extension_linkedin',
   'manual',

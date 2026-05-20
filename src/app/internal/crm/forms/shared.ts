@@ -11,12 +11,14 @@ export type FormType =
   | 'form_submit_demo'
   | 'form_submit_beta'
   | 'form_submit_report'
+  | 'form_submit_case'
   | 'form_submit_proposta';
 
 export const FORM_LABELS: Record<FormType, string> = {
   form_submit_demo: 'Demo',
   form_submit_beta: 'Beta',
   form_submit_report: 'Report',
+  form_submit_case: 'Case Semrush',
   form_submit_proposta: 'Proposta',
 };
 

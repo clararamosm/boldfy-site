@@ -33,7 +33,7 @@ import { eq } from 'drizzle-orm';
 /*  Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export type FormSlug = 'report' | 'beta' | 'demo' | 'proposta' | 'linkedin_extension';
+export type FormSlug = 'report' | 'beta' | 'demo' | 'proposta' | 'linkedin_extension' | 'case';
 export type FormKind = 'topo_funil' | 'lider_b2b_only';
 
 export type LeadSegment = 'lider_b2b' | 'parceiro' | 'profissional_individual';
@@ -84,6 +84,17 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     name: 'Extracao LinkedIn',
     kind: 'lider_b2b_only',
     acTag: 'Form: LinkedIn',
+  },
+  // Case de meio-funil (Semrush ELG). Mesma natureza topo_funil do report —
+  // pergunta intencao_uso, gera 3 segments (lider_b2b/parceiro/profissional).
+  // Pede mais campos que o report (cargo + tamanho da empresa) só pra quem
+  // marca 'marca-empresa', porque audiência de case é mais qualificada e
+  // aguenta atrito extra de fundo de funil.
+  case: {
+    slug: 'case',
+    name: 'Case Semrush ELG',
+    kind: 'topo_funil',
+    acTag: 'Form: Case Semrush ELG',
   },
 };
 
@@ -161,6 +172,10 @@ const SLUG_TO_SOURCE_METHOD: Record<FormSlug, SourceMethod> = {
   demo: 'form_demo',
   proposta: 'form_proposta',
   linkedin_extension: 'extension_linkedin',
+  // Case usa source_method dedicado pra diferenciar do report nos analytics
+  // do CRM. Migration 0002_form_case_semrush.sql adiciona 'form_case_semrush'
+  // ao enum sourceMethodEnum — precisa rodar no Neon antes do deploy.
+  case: 'form_case_semrush',
 };
 
 export function formSlugToSourceMethod(slug: FormSlug): SourceMethod {
@@ -182,5 +197,6 @@ export function formSlugToActivityType(slug: FormSlug): string {
     case 'demo': return 'form_submit_demo';
     case 'proposta': return 'form_submit_proposta';
     case 'linkedin_extension': return 'form_submit_extension_linkedin';
+    case 'case': return 'form_submit_case';
   }
 }

@@ -49,6 +49,7 @@ const FORM_EMOJI: Record<FormType, string> = {
   form_submit_demo: '🎯',
   form_submit_beta: '🧪',
   form_submit_report: '📥',
+  form_submit_case: '📑',
   form_submit_proposta: '💼',
 };
 

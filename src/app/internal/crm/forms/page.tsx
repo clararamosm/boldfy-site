@@ -62,7 +62,7 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
   const sortDir = (sp.sortDir as Params['sortDir']) ?? 'desc';
   const page = Math.max(1, parseInt(typeof sp.page === 'string' ? sp.page : '1', 10) || 1);
   const pageSize = ([20, 50, 100].includes(Number(sp.pageSize)) ? Number(sp.pageSize) : 20) as Params['pageSize'];
-  const validFormTypes: Array<Params['formType']> = ['all', 'form_submit_demo', 'form_submit_beta', 'form_submit_report', 'form_submit_proposta'];
+  const validFormTypes: Array<Params['formType']> = ['all', 'form_submit_demo', 'form_submit_beta', 'form_submit_report', 'form_submit_case', 'form_submit_proposta'];
   return {
     period: ['all', '7d', '30d', '90d'].includes(period as string) ? (period as Params['period']) : 'all',
     segmento: ['all', 'lider_b2b', 'parceiro', 'profissional_individual', 'newsletter'].includes(segmento as string)
@@ -186,7 +186,7 @@ async function getPeopleWithForms(params: Params): Promise<{
 
   // Counts por form (sobre TODAS as pessoas filtradas, antes do filtro de formType)
   const countsByForm: Record<FormType, number> = {
-    form_submit_demo: 0, form_submit_beta: 0, form_submit_report: 0, form_submit_proposta: 0,
+    form_submit_demo: 0, form_submit_beta: 0, form_submit_report: 0, form_submit_case: 0, form_submit_proposta: 0,
   };
   for (const r of byPersonId.values()) {
     for (const f of r.forms) if (countsByForm[f] !== undefined) countsByForm[f]++;
@@ -238,7 +238,7 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
 
   let rows: PersonRow[] = [];
   let countsByForm: Record<FormType, number> = {
-    form_submit_demo: 0, form_submit_beta: 0, form_submit_report: 0, form_submit_proposta: 0,
+    form_submit_demo: 0, form_submit_beta: 0, form_submit_report: 0, form_submit_case: 0, form_submit_proposta: 0,
   };
   let totalPeople = 0;
   let dbError: string | null = null;

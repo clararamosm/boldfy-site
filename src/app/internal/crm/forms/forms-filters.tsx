@@ -43,6 +43,7 @@ const FORM_CHIPS: Array<{ value: 'all' | FormType; emoji: string; label: string 
   { value: 'form_submit_demo', emoji: '🎯', label: 'Demo' },
   { value: 'form_submit_beta', emoji: '🧪', label: 'Beta' },
   { value: 'form_submit_report', emoji: '📥', label: 'Report' },
+  { value: 'form_submit_case', emoji: '📑', label: 'Case' },
   { value: 'form_submit_proposta', emoji: '💼', label: 'Proposta' },
 ];
 
