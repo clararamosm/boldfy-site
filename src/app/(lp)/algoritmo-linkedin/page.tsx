@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { sendReportLead } from '@/app/actions/report-leads';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
 import { useUtmParams } from '@/hooks/use-utm-params';
@@ -47,11 +48,10 @@ import { LpFooter } from '@/components/layout/lp-footer';
 
 const FORM_SECTION_ID = 'form-section';
 const PDF_URL = '/reports/algoritmo-linkedin-2026-boldfy.pdf';
-const CALENDAR_URL =
-  'https://cal.com/clara-boldfy/diagnostico?utm_source=lp&utm_medium=cta&utm_campaign=report-algoritmo-linkedin&utm_content=lp-cta-secundario';
 
 export default function AlgoritmoLinkedinPage() {
   const utms = useUtmParams();
+  const { openPopup } = useDemoPopup();
 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -644,26 +644,15 @@ export default function AlgoritmoLinkedinPage() {
             </div>
 
             <div className="shrink-0">
-              <a
-                href={CALENDAR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('cta_click', {
-                    cta_type: 'schedule_meeting',
-                    source: 'report:bottom-cta',
-                  })
-                }
+              <Button
+                onClick={() => openPopup('report:bottom-cta')}
+                size="lg"
+                variant="secondary"
+                className="text-sm font-bold gap-2 w-full md:w-auto"
               >
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="text-sm font-bold gap-2 w-full md:w-auto"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Agendar uma conversa
-                </Button>
-              </a>
+                <Calendar className="w-4 h-4" />
+                Agendar uma conversa
+              </Button>
               <p className="text-[10px] text-white/40 mt-2 text-center md:text-right">
                 15 min · sem compromisso
               </p>
