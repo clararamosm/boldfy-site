@@ -21,6 +21,7 @@ const LP_ROUTES = [
   '/beta-test',
   '/algoritmo-linkedin',
   '/agendar-demo',
+  '/case-semrush',
 ];
 
 /**

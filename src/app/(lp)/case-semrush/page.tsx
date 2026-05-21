@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { sendCaseLead } from '@/app/actions/case-leads';
+import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
 import { useUtmParams } from '@/hooks/use-utm-params';
@@ -50,13 +51,12 @@ import { LpFooter } from '@/components/layout/lp-footer';
 
 const FORM_SECTION_ID = 'form-section';
 const PDF_URL = '/reports/Case-Semrush-Employee-Led-Growth-Boldfy.pdf';
-const CALENDAR_URL =
-  'https://cal.com/clara-boldfy/diagnostico?utm_source=lp&utm_medium=cta&utm_campaign=case-semrush&utm_content=lp-cta-secundario';
 
 type TamanhoEmpresa = 'ate-10' | '11-50' | '51-200' | '201-500' | '500+';
 
 export default function CaseSemrushPage() {
   const utms = useUtmParams();
+  const { openPopup } = useDemoPopup();
 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -434,23 +434,6 @@ export default function CaseSemrushPage() {
           </div>
         </section>
 
-        {/* PROOF QUOTE — citação âncora do case */}
-        <section className="bg-gradient-to-br from-[#1A0E2E] to-[#0F0A18] rounded-xl p-6 md:p-8 mb-6 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/15 rounded-full blur-3xl" />
-          <div className="relative z-10 max-w-3xl">
-            <span className="inline-flex text-[10px] font-bold uppercase tracking-wide bg-primary/20 text-primary px-3 py-1 rounded-full mb-3">
-              Trecho do case
-            </span>
-            <p className="font-headline text-base md:text-lg text-white/90 leading-relaxed italic mb-3">
-              &ldquo;Ir construir a ferramenta da própria estratégia é o tipo de
-              aposta que ninguém faz por algo que não funciona.&rdquo;
-            </p>
-            <p className="text-xs text-white/40">
-              — Clara Ramos, leitura de bastidores
-            </p>
-          </div>
-        </section>
-
         {/* FORM — captura de lead */}
         <section
           id={FORM_SECTION_ID}
@@ -695,26 +678,15 @@ export default function CaseSemrushPage() {
             </div>
 
             <div className="shrink-0">
-              <a
-                href={CALENDAR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  trackEvent('cta_click', {
-                    cta_type: 'schedule_meeting',
-                    source: 'case:bottom-cta',
-                  })
-                }
+              <Button
+                onClick={() => openPopup('case:bottom-cta')}
+                size="lg"
+                variant="secondary"
+                className="text-sm font-bold gap-2 w-full md:w-auto"
               >
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="text-sm font-bold gap-2 w-full md:w-auto"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Agendar uma conversa
-                </Button>
-              </a>
+                <Calendar className="w-4 h-4" />
+                Agendar uma conversa
+              </Button>
               <p className="text-[10px] text-white/40 mt-2 text-center md:text-right">
                 15 min · sem compromisso
               </p>
