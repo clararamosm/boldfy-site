@@ -19,10 +19,9 @@ import type { z } from 'zod';
 
 export type DemoLeadInput = z.input<typeof DemoLeadSchema>;
 
-export async function sendDemoLeadToNotion(
+export async function submitDemoLead(
   rawInput: DemoLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
-  // Nome do export mantido pra não quebrar imports.
   const parsed = parseInput(DemoLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };

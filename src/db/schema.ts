@@ -49,7 +49,7 @@ export const sourceChannelEnum = pgEnum('source_channel', [
 export const sourceMethodEnum = pgEnum('source_method', [
   'form_demo',
   'form_beta',
-  'form_report',
+  'form_algoritmo_linkedin',
   'form_case_semrush',
   'form_proposta',
   'extension_linkedin',
@@ -191,7 +191,7 @@ export const people = pgTable(
     resubscribedAt: timestamp('resubscribed_at', { withTimezone: true }),
     /**
      * Slugs dos forms que essa pessoa já preencheu (dedup acumulativo).
-     * Ex: ['report', 'beta']. Append via SQL atômico em upsertPerson.
+     * Ex: ['algoritmo-linkedin', 'beta']. Append via SQL atômico em upsertPerson.
      * Substitui derivação por activities form_submit_* na UI da aba Forms.
      */
     formsSubmitted: text('forms_submitted').array().notNull().default(sql`'{}'::text[]`),

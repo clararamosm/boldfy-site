@@ -9,8 +9,10 @@
  *                       Parceiros estratégicos, Profissionais Individuais).
  *                       Pula se segment já está preenchido (idempotente).
  *  2. newsletter_opt_in — true se tem tag 'Segmento: Newsletter Boldfy'.
- *  3. forms_submitted — coleta slugs únicos de activities form_submit_*
- *                       da pessoa (form_submit_report → 'report', etc).
+ *  3. forms_submitted — coleta slugs únicos de activities form_submit_* da
+ *                       pessoa (form_submit_algoritmo_linkedin →
+ *                       'algoritmo-linkedin', form_submit_case_semrush →
+ *                       'case-semrush', etc).
  *  4. proposal_url   — se houver activity form_submit_proposta com
  *                       data.proposal_url ou data.url_proposta, grava aqui.
  *  5. metadata.backfill_at — timestamp pra auditoria do que foi backfillado.
@@ -62,9 +64,10 @@ function deriveSegmentFromTags(tags: string[] | null): Segment | null {
 }
 
 /**
- * Fallback 1: deriva segment de intencao_uso em activity form_submit_report.data.
- * Importante porque o fluxo ANTIGO não populava people.ac_tags, mas guardava
- * intencao_uso na activity (Patricia/Heloisa/etc).
+ * Fallback 1: deriva segment de intencao_uso em activity form_submit_*.data
+ * (algoritmo_linkedin ou case_semrush). Importante porque o fluxo ANTIGO não
+ * populava people.ac_tags, mas guardava intencao_uso na activity
+ * (Patricia/Heloisa/etc).
  */
 function segmentFromIntencao(intencao: string | undefined | null): Segment | null {
   if (intencao === 'marca-empresa') return 'lider_b2b';
@@ -90,11 +93,16 @@ function deriveOptInFromTags(tags: string[] | null): boolean {
 }
 
 function activityTypeToSlug(type: string): string | null {
-  if (type === 'form_submit_report') return 'report';
+  if (type === 'form_submit_algoritmo_linkedin') return 'algoritmo-linkedin';
+  if (type === 'form_submit_case_semrush') return 'case-semrush';
   if (type === 'form_submit_beta') return 'beta';
   if (type === 'form_submit_demo') return 'demo';
   if (type === 'form_submit_proposta') return 'proposta';
   if (type === 'form_submit_extension_linkedin') return 'linkedin_extension';
+  // Compat com migrations antigas (pré-0003a) que ainda podem aparecer
+  // se o backfill rodar antes da migration 0003a no Neon.
+  if (type === 'form_submit_report') return 'algoritmo-linkedin';
+  if (type === 'form_submit_case') return 'case-semrush';
   return null;
 }
 
@@ -188,8 +196,9 @@ async function main() {
       /* ---- 1. segment (cascade de fallbacks) ---- */
       // Backfill v2: tenta 3 fontes em ordem de confiança:
       //   1) ac_tags do CRM (preenchido pelo fluxo novo ou import AC)
-      //   2) intencao_uso em activities form_submit_report.data (fluxo antigo
-      //      do Report guardava aqui mesmo sem popular ac_tags)
+      //   2) intencao_uso em activities form_submit_algoritmo_linkedin.data
+      //      (e form_submit_case_semrush — fluxo antigo guardava aqui mesmo
+      //      sem popular ac_tags)
       //   3) sourceMethod hardcoded (forms B2B-only sempre = Líder B2B)
       if (!person.segment) {
         const derived =

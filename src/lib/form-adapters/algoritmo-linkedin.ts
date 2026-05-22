@@ -1,5 +1,9 @@
 /**
- * Adapter pro form Report ("Algoritmo LinkedIn 2026"). Topo de funil.
+ * Adapter pro form Algoritmo LinkedIn 2026 (report de topo de funil).
+ *
+ * Naming: slug interno SEMPRE espelha o slug da URL pública (/algoritmo-linkedin).
+ * Termos genéricos tipo 'report' são proibidos — quando o segundo material chegar,
+ * 'report' deixaria de identificar de qual estamos falando. Ver AGENTS.md.
  *
  * Particularidades:
  *  - Pergunta intencao_uso → deriva segment dinamicamente (3 possibilidades).
@@ -9,15 +13,15 @@
  */
 
 import type { z } from 'zod';
-import type { ReportLeadSchema } from '@/app/actions/_schemas';
+import type { AlgoritmoLinkedinLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags, segmentFromIntencao } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
 import type { ClassifiedLead } from './types';
 import type { SourceChannel } from '../crm';
 
-type ReportInput = z.infer<typeof ReportLeadSchema>;
+type AlgoritmoLinkedinInput = z.infer<typeof AlgoritmoLinkedinLeadSchema>;
 
-const FORM_SLUG = 'report' as const;
+const FORM_SLUG = 'algoritmo-linkedin' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
 /**
@@ -30,7 +34,7 @@ function utmSourceToChannel(src: string | undefined): SourceChannel {
   return 'unknown';
 }
 
-export function adaptReport(input: ReportInput): ClassifiedLead {
+export function adaptAlgoritmoLinkedin(input: AlgoritmoLinkedinInput): ClassifiedLead {
   const segment = segmentFromIntencao(input.intencaoUso);
   const newsletterOptIn = input.newsletterOptIn === true;
 
@@ -73,7 +77,7 @@ export function adaptReport(input: ReportInput): ClassifiedLead {
   // preenchidos"). Incluir AQUI tudo que o form captura, mesmo redundante
   // com header — o lead detail mostra como chips visuais.
   const activityData: Record<string, unknown> = {
-    form_type: 'report',
+    form_type: 'algoritmo-linkedin',
     nome: input.nome,
     email: input.email,
     ...(empresaInformada ? { empresa: empresaInformada } : {}),
@@ -111,7 +115,7 @@ export function adaptReport(input: ReportInput): ClassifiedLead {
     acFields,
     sourceChannel: channel,
     sourcePage: input.origem || 'LP Algoritmo LinkedIn',
-    sourceMethod: 'form_report',
+    sourceMethod: 'form_algoritmo_linkedin',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,
     lastTouchSource: input.utm_source ?? channel,

@@ -34,8 +34,8 @@ const ACTIVITY_WEIGHTS: Record<string, number> = {
   page_view_solucoes: 3,
   page_view_agendar_demo: 5,
   blog_read: 2,
-  form_submit_report: 10,
-  form_submit_case: 15,        // Case é meio-funil — mais qualificado que report, menos que beta
+  form_submit_algoritmo_linkedin: 10,
+  form_submit_case_semrush: 15,  // Case é meio-funil — mais qualificado que algoritmo-linkedin, menos que beta
   form_submit_beta: 25,
   form_submit_demo: 50,
   form_submit_proposta: 50,
@@ -68,7 +68,7 @@ export function weightForActivity(type: string, subtype?: string): number {
 /* -------------------------------------------------------------------------- */
 
 export type SourceChannel = 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown';
-export type SourceMethod = 'form_demo' | 'form_beta' | 'form_report' | 'form_case_semrush' | 'form_proposta' | 'extension_linkedin' | 'manual' | 'imported_folk';
+export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'extension_linkedin' | 'manual' | 'imported_folk';
 
 export type UpsertPersonInput = {
   name: string;

@@ -8,11 +8,11 @@
  * Decisões (espelha a /algoritmo-linkedin):
  *  - Mora dentro do route group `(lp)` pra ficar isolada do header/footer
  *    globais (escondidos pelo `ConditionalChrome` quando a rota é uma LP).
- *  - Form mais rico que o report: nome + email + intencao (sempre), e quando
- *    intencao='marca-empresa' aparece empresa + cargo + tamanho_empresa
- *    (qualificação meio-funil). Mesma lógica condicional do report, com
- *    campos extras pra audiência mais qualificada do case.
- *  - Server action sendCaseLead sincroniza CRM-first → AC, tag
+ *  - Form mais rico que o algoritmo-linkedin: nome + email + intencao (sempre),
+ *    e quando intencao='marca-empresa' aparece empresa + cargo + tamanho_empresa
+ *    (qualificação meio-funil). Mesma lógica condicional, com campos extras
+ *    pra audiência mais qualificada do case.
+ *  - Server action submitCaseSemrushLead sincroniza CRM-first → AC, tag
  *    'Form: Case Semrush ELG' aplicada (cadência será criada depois pela Clara).
  *  - Entrega na tela de sucesso: botão de download direto do PDF
  *    (/public/reports/Case-Semrush-Employee-Led-Growth-Boldfy.pdf).
@@ -24,7 +24,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { sendCaseLead } from '@/app/actions/case-leads';
+import { submitCaseSemrushLead } from '@/app/actions/case-semrush-leads';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
@@ -170,7 +170,7 @@ export default function CaseSemrushPage() {
   ];
 
   const scrollToForm = (source: string) => {
-    trackEvent('cta_click', { cta_type: 'case_download', source });
+    trackEvent('cta_click', { cta_type: 'case_semrush_download', source });
     document.getElementById(FORM_SECTION_ID)?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -186,11 +186,11 @@ export default function CaseSemrushPage() {
     setSending(true);
 
     trackEvent('form_submit_start', {
-      form_type: 'case',
+      form_type: 'case-semrush',
       source: 'case-semrush-page',
     });
 
-    const result = await sendCaseLead({
+    const result = await submitCaseSemrushLead({
       nome,
       email,
       intencaoUso,
@@ -208,7 +208,7 @@ export default function CaseSemrushPage() {
     if (result.success) {
       setSent(true);
       trackEvent('form_submit_success', {
-        form_type: 'case',
+        form_type: 'case-semrush',
         source: 'case-semrush-page',
       });
       // Dispara o download automaticamente. A cadência de email com PDF
@@ -221,7 +221,7 @@ export default function CaseSemrushPage() {
       const msg = result.error || 'Não foi possível enviar. Tente de novo em instantes.';
       setError(msg);
       trackEvent('form_submit_error', {
-        form_type: 'case',
+        form_type: 'case-semrush',
         error_message: msg,
       });
     }

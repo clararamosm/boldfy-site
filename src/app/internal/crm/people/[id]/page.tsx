@@ -538,8 +538,8 @@ export default async function LeadDetailPage({ params }: Props) {
             const formLabelMap: Record<string, string> = {
               form_submit_demo: 'Demo',
               form_submit_beta: 'Beta',
-              form_submit_report: 'Report',
-              form_submit_case: 'Case Semrush',
+              form_submit_algoritmo_linkedin: 'Algoritmo LinkedIn',
+              form_submit_case_semrush: 'Case Semrush',
               form_submit_proposta: 'Proposta',
             };
             const hasOrigin = person.firstTouchAt

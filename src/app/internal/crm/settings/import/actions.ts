@@ -74,14 +74,15 @@ function pageViewActivityType(url: string): { type: string; weight: number } {
 /**
  * Determina source method a partir das tags AC. Lead pode ter MÚLTIPLOS forms;
  * sourceMethod é único então pega o mais "avançado" no funil
- * (proposta > demo > beta > report). Activities individuais são criadas pra
- * cada form preenchido — ver activityTypesForFormTags.
+ * (proposta > demo > beta > case-semrush > algoritmo-linkedin). Activities
+ * individuais são criadas pra cada form preenchido — ver activityTypesForFormTags.
  */
-function inferSourceMethod(tags: string[]): 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta' | 'manual' {
+function inferSourceMethod(tags: string[]): 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'manual' {
   if (tags.some((t) => t.includes('Form: Simulador') || t.includes('Form: Proposta'))) return 'form_proposta';
   if (tags.some((t) => t.includes('Form: Demo'))) return 'form_demo';
   if (tags.some((t) => t.includes('Form: Beta'))) return 'form_beta';
-  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return 'form_report';
+  if (tags.some((t) => t.includes('Form: Case'))) return 'form_case_semrush';
+  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) return 'form_algoritmo_linkedin';
   return 'manual';
 }
 
@@ -97,8 +98,8 @@ function activityTypesForFormTags(tags: string[]): Array<{ type: string; weight:
   const acts: Array<{ type: string; weight: number }> = [];
   if (tags.some((t) => t.includes('Form: Demo'))) acts.push({ type: 'form_submit_demo', weight: 50 });
   if (tags.some((t) => t.includes('Form: Beta'))) acts.push({ type: 'form_submit_beta', weight: 25 });
-  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) acts.push({ type: 'form_submit_report', weight: 10 });
-  if (tags.some((t) => t.includes('Form: Case'))) acts.push({ type: 'form_submit_case', weight: 15 });
+  if (tags.some((t) => t.includes('Algoritmo') || t.includes('Form: Report'))) acts.push({ type: 'form_submit_algoritmo_linkedin', weight: 10 });
+  if (tags.some((t) => t.includes('Form: Case'))) acts.push({ type: 'form_submit_case_semrush', weight: 15 });
   if (tags.some((t) => t.includes('Simulador') || t.includes('Proposta'))) acts.push({ type: 'form_submit_proposta', weight: 50 });
   return acts;
 }

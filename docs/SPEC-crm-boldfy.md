@@ -116,7 +116,7 @@ CREATE TABLE people (
   -- Origem do lead (dois níveis)
   source_channel  TEXT,        -- canal: 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'manual'
   source_page     TEXT,        -- página específica: '/agendar-demo' | '/beta-test' | '/materiais' | etc
-  source_method   TEXT,        -- como entrou: 'form_demo' | 'form_beta' | 'form_report' | 'form_proposta' | 'extension_linkedin' | 'manual'
+  source_method   TEXT,        -- como entrou: 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'extension_linkedin' | 'manual'
 
   -- First touch attribution
   first_touch_at  TIMESTAMPTZ,
@@ -520,7 +520,7 @@ Display no CRM: cada lead detail mostra "Próximas reuniões" em card no topo. C
 
 ### 12.1 AC → Nosso CRM (input)
 
-Cada vez que form submit acontece (server actions atuais), além de escrever no AC, **também escreve no nosso DB**. É só extender as funções `sendBetaLeadToNotion`, `sendDemoLeadToNotion`, etc, pra fazer dupla escrita.
+Cada vez que form submit acontece (server actions atuais), o lead é gravado **CRM-first no nosso DB** via `recordLeadFromForm`, e em seguida sincronizado pro AC. Server actions ativas: `submitBetaLead`, `submitDemoLead`, `submitProposalLead`, `submitAlgoritmoLinkedinLead`, `submitCaseSemrushLead`.
 
 Webhooks de AC pra registrar email_open, email_click — adicionar handler em `/api/webhooks/ac/route.ts` (não existe ainda) que cria activities.
 

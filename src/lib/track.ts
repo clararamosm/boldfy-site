@@ -15,9 +15,9 @@
  *   trackEvent('cta_click', { cta_type: 'demo', source: 'header:desktop' });
  */
 
-type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'report' | 'case';
+type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush';
 
-type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'report_download' | 'case_download' | 'schedule_meeting';
+type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_download' | 'case_semrush_download' | 'schedule_meeting';
 
 /**
  * Uni\u00e3o discriminada dos eventos que tem nome + params bem definidos.

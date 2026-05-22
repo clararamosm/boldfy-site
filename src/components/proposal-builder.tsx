@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { sendProposalLeadToNotion, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
+import { submitProposalLead, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
 import { trackEvent } from '@/lib/track';
 
@@ -218,7 +218,7 @@ function ProposalBuilderModal({
       teamItems,
     };
 
-    const res: ProposalLeadResult = await sendProposalLeadToNotion(input);
+    const res: ProposalLeadResult = await submitProposalLead(input);
 
     if (res.success) {
       setStatus('success');

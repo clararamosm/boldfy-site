@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { sendBetaLeadToNotion } from '@/app/actions/beta-leads';
+import { submitBetaLead } from '@/app/actions/beta-leads';
 import { trackEvent } from '@/lib/track';
 import {
   Loader2,
@@ -192,7 +192,7 @@ export default function BetaTestPage() {
 
     trackEvent('form_submit_start', { form_type: 'beta', source: 'beta-test-page' });
 
-    const result = await sendBetaLeadToNotion({
+    const result = await submitBetaLead({
       nome, email, telefone, cargo, empresa, setor,
       colaboradores, objetivoPrincipal, comoConheceu, observacoes,
     });

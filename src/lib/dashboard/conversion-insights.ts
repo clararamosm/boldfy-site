@@ -34,7 +34,8 @@ export async function getFormConversionRate(days = 30): Promise<FormCvr[]> {
   const methodToPage: Record<string, string> = {
     form_demo: '/agendar-demo',
     form_beta: '/beta-test',
-    form_report: '/materiais/report-b2b',
+    form_algoritmo_linkedin: '/algoritmo-linkedin',
+    form_case_semrush: '/case-semrush',
     form_proposta: '/orcamento',
   };
 

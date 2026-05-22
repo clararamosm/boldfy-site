@@ -1,29 +1,34 @@
 /**
  * Adapter pro form Case Semrush ELG ("Bastidores de uma estratégia que virou
- * referência global"). Meio-funil — pede mais qualificação que o report.
+ * referência global"). Meio-funil — pede mais qualificação que o algoritmo-
+ * linkedin (report de topo).
+ *
+ * Naming: slug interno SEMPRE espelha o slug da URL pública (/case-semrush).
+ * Termos genéricos tipo 'case' são proibidos — quando o segundo case chegar,
+ * 'case' deixaria de identificar de qual estamos falando. Ver AGENTS.md.
  *
  * Particularidades:
- *  - Mesmo padrão topo_funil do report: pergunta intencao_uso, deriva segment
- *    dinamicamente (3 possibilidades).
+ *  - Mesmo padrão topo_funil do algoritmo-linkedin: pergunta intencao_uso,
+ *    deriva segment dinamicamente (3 possibilidades).
  *  - Quando intencao_uso='marca-empresa': captura cargo + porte (tamanho da
- *    empresa) também — campos que o report não pega. Pros outros casos (agência,
- *    criador), só nome+email+intenção+newsletter como o report.
+ *    empresa) também — campos que o algoritmo-linkedin não pega. Pros outros
+ *    casos (agência, criador), só nome+email+intenção+newsletter.
  *  - Tags AC: 'Form: Case Semrush ELG' (cadência criada depois) + segment +
- *    newsletter conforme opt-in. Mesmo helper buildLegibleACTags do report.
+ *    newsletter conforme opt-in. Mesmo helper buildLegibleACTags.
  *  - source_method dedicado 'form_case_semrush' (migration 0002) pra
- *    diferenciar do report nos analytics do CRM.
+ *    diferenciar do algoritmo-linkedin nos analytics do CRM.
  */
 
 import type { z } from 'zod';
-import type { CaseLeadSchema } from '@/app/actions/_schemas';
+import type { CaseSemrushLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags, segmentFromIntencao } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
 import type { ClassifiedLead } from './types';
 import type { SourceChannel } from '../crm';
 
-type CaseInput = z.infer<typeof CaseLeadSchema>;
+type CaseSemrushInput = z.infer<typeof CaseSemrushLeadSchema>;
 
-const FORM_SLUG = 'case' as const;
+const FORM_SLUG = 'case-semrush' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
 /**
@@ -31,7 +36,7 @@ const def = getFormDefinitionSync(FORM_SLUG);
  * field `porte` do AC. Labels legíveis (não os values do select) — o time
  * de SDR lê isso direto no contato sem precisar decodificar.
  */
-function tamanhoEmpresaLabel(v: CaseInput['tamanhoEmpresa']): string | undefined {
+function tamanhoEmpresaLabel(v: CaseSemrushInput['tamanhoEmpresa']): string | undefined {
   switch (v) {
     case 'ate-10': return 'Até 10 colaboradores';
     case '11-50': return '11-50 colaboradores';
@@ -44,7 +49,7 @@ function tamanhoEmpresaLabel(v: CaseInput['tamanhoEmpresa']): string | undefined
 
 /**
  * Mapeia utm_source pro enum SourceChannel. Fallback 'unknown' quando
- * UTM não bate com nenhum canal conhecido. Mesma lógica do report.
+ * UTM não bate com nenhum canal conhecido. Mesma lógica do algoritmo-linkedin.
  */
 function utmSourceToChannel(src: string | undefined): SourceChannel {
   const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
@@ -52,7 +57,7 @@ function utmSourceToChannel(src: string | undefined): SourceChannel {
   return 'unknown';
 }
 
-export function adaptCase(input: CaseInput): ClassifiedLead {
+export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
   const segment = segmentFromIntencao(input.intencaoUso);
   const newsletterOptIn = input.newsletterOptIn === true;
   const isB2B = input.intencaoUso === 'marca-empresa';
@@ -74,7 +79,8 @@ export function adaptCase(input: CaseInput): ClassifiedLead {
     newsletterOptIn,
   });
 
-  // Label legível pro custom field `tipo_de_lead`. Mesmo padrão do report.
+  // Label legível pro custom field `tipo_de_lead`. Mesmo padrão do
+  // algoritmo-linkedin.
   const tipoLead =
     segment === 'lider_b2b' ? 'Líder B2B'
     : segment === 'parceiro' ? 'Parceiro estratégico'
@@ -95,7 +101,7 @@ export function adaptCase(input: CaseInput): ClassifiedLead {
 
   // Activity data — tudo que o form captura, pra timeline mostrar como chips.
   const activityData: Record<string, unknown> = {
-    form_type: 'case',
+    form_type: 'case-semrush',
     nome: input.nome,
     email: input.email,
     ...(empresaInformada ? { empresa: empresaInformada } : {}),

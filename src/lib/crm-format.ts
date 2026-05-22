@@ -106,14 +106,14 @@ export function describeActivity(
 
     case 'form_submit_demo':
     case 'form_submit_beta':
-    case 'form_submit_report':
-    case 'form_submit_case':
+    case 'form_submit_algoritmo_linkedin':
+    case 'form_submit_case_semrush':
     case 'form_submit_proposta': {
       const labelMap: Record<string, { icon: string; label: string }> = {
         form_submit_demo: { icon: '🎯', label: 'Demo' },
         form_submit_beta: { icon: '🧪', label: 'Beta' },
-        form_submit_report: { icon: '📥', label: 'Report B2B' },
-        form_submit_case: { icon: '📑', label: 'Case Semrush ELG' },
+        form_submit_algoritmo_linkedin: { icon: '📥', label: 'Report Algoritmo LinkedIn 2026' },
+        form_submit_case_semrush: { icon: '📑', label: 'Case Semrush ELG' },
         form_submit_proposta: { icon: '💼', label: 'Simulador de Proposta' },
       };
       const m = labelMap[type];
@@ -335,7 +335,7 @@ export function methodVia(method: string | null | undefined): { label: string; c
     case 'extension_linkedin': return { label: 'via LinkedIn', classKey: 'linkedin' };
     case 'form_demo': return { label: 'via Form Demo', classKey: 'form' };
     case 'form_beta': return { label: 'via Form Beta', classKey: 'form' };
-    case 'form_report': return { label: 'via Form Report', classKey: 'form' };
+    case 'form_algoritmo_linkedin': return { label: 'via Form Algoritmo LinkedIn', classKey: 'form' };
     case 'form_case_semrush': return { label: 'via Form Case Semrush', classKey: 'form' };
     case 'form_proposta': return { label: 'via Form Proposta', classKey: 'form' };
     case 'manual': return { label: 'via Manual', classKey: 'manual' };

@@ -7,7 +7,7 @@
  * Decisões:
  *  - Mora dentro do route group `(lp)` pra ficar isolada do header/footer
  *    globais (escondidos pelo `ConditionalChrome` quando a rota é uma LP).
- *  - Form leve: nome + email + empresa. Server action `sendReportLead`
+ *  - Form leve: nome + email + empresa. Server action `submitAlgoritmoLinkedinLead`
  *    sincroniza com ActiveCampaign (sem Notion DB), tag
  *    'Form: Algoritmo LinkedIn 2026' dispara cadência de email com o PDF.
  *  - Entrega dupla: tela de sucesso mostra botão de download direto
@@ -20,7 +20,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { sendReportLead } from '@/app/actions/report-leads';
+import { submitAlgoritmoLinkedinLead } from '@/app/actions/algoritmo-linkedin-leads';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
@@ -167,7 +167,7 @@ export default function AlgoritmoLinkedinPage() {
   ];
 
   const scrollToForm = (source: string) => {
-    trackEvent('cta_click', { cta_type: 'report_download', source });
+    trackEvent('cta_click', { cta_type: 'algoritmo_linkedin_download', source });
     document.getElementById(FORM_SECTION_ID)?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -185,11 +185,11 @@ export default function AlgoritmoLinkedinPage() {
     setSending(true);
 
     trackEvent('form_submit_start', {
-      form_type: 'report',
+      form_type: 'algoritmo-linkedin',
       source: 'algoritmo-linkedin-page',
     });
 
-    const result = await sendReportLead({
+    const result = await submitAlgoritmoLinkedinLead({
       nome,
       email,
       intencaoUso,
@@ -204,7 +204,7 @@ export default function AlgoritmoLinkedinPage() {
     if (result.success) {
       setSent(true);
       trackEvent('form_submit_success', {
-        form_type: 'report',
+        form_type: 'algoritmo-linkedin',
         source: 'algoritmo-linkedin-page',
       });
       // Dispara o download automaticamente — o lead também recebe por email.
@@ -217,7 +217,7 @@ export default function AlgoritmoLinkedinPage() {
       const msg = result.error || 'Não foi possível enviar. Tente de novo em instantes.';
       setError(msg);
       trackEvent('form_submit_error', {
-        form_type: 'report',
+        form_type: 'algoritmo-linkedin',
         error_message: msg,
       });
     }

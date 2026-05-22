@@ -19,10 +19,9 @@ import type { z } from 'zod';
 
 type BetaLeadInput = z.input<typeof BetaLeadSchema>;
 
-export async function sendBetaLeadToNotion(
+export async function submitBetaLead(
   rawInput: BetaLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
-  // Nome do export mantido pra não quebrar imports existentes.
   const parsed = parseInput(BetaLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };

@@ -4,9 +4,13 @@
  * Server action para capturar leads da LP do Case Semrush ELG
  * (/case-semrush).
  *
- * Fluxo CRM-first (idêntico ao report-leads.ts):
- *  - ClassifiedLead canônico via adaptCase → recordLeadFromForm grava no CRM
- *    ANTES de tentar AC. Se AC falhar, lead já está salvo no Postgres.
+ * Naming: arquivo + função espelham o slug da URL pública. Não usar termos
+ * genéricos tipo 'case' — quando o segundo case chegar, deixa de identificar
+ * de qual estamos falando. Ver AGENTS.md.
+ *
+ * Fluxo CRM-first (idêntico ao algoritmo-linkedin-leads.ts):
+ *  - ClassifiedLead canônico via adaptCaseSemrush → recordLeadFromForm grava
+ *    no CRM ANTES de tentar AC. Se AC falhar, lead já está salvo no Postgres.
  *  - syncContact pro AC roda DENTRO de recordLeadFromForm (com try/catch que
  *    emite activity ac_sync_failed).
  *  - Nota descritiva no AC pra equipe ver contexto rápido (best-effort, não
@@ -18,17 +22,17 @@
 
 import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
-import { adaptCase } from '@/lib/form-adapters/case';
-import { CaseLeadSchema, parseInput } from './_schemas';
+import { adaptCaseSemrush } from '@/lib/form-adapters/case-semrush';
+import { CaseSemrushLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
-export type CaseLeadInput = z.input<typeof CaseLeadSchema>;
+export type CaseSemrushLeadInput = z.input<typeof CaseSemrushLeadSchema>;
 
-export async function sendCaseLead(
-  rawInput: CaseLeadInput,
+export async function submitCaseSemrushLead(
+  rawInput: CaseSemrushLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
   // 1. Validação Zod — bloqueia inputs malformados antes de qualquer call.
-  const parsed = parseInput(CaseLeadSchema, rawInput);
+  const parsed = parseInput(CaseSemrushLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
   }
@@ -36,14 +40,14 @@ export async function sendCaseLead(
 
   try {
     // 2. Adapter — payload do form → ClassifiedLead canônico.
-    const lead = adaptCase(input);
+    const lead = adaptCaseSemrush(input);
 
     // 3. recordLeadFromForm faz TUDO: upsertCompany → upsertPerson →
-    //    logActivity (form_submit_case + field_changed + ac_sync_*) →
+    //    logActivity (form_submit_case_semrush + field_changed + ac_sync_*) →
     //    classifyPersonBySourceMethod → syncContact (com fallback).
     const result = await recordLeadFromForm(lead);
     if (!result.ok) {
-      console.error('[case-leads] recordLeadFromForm failed:', result.error);
+      console.error('[case-semrush-leads] recordLeadFromForm failed:', result.error);
       return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
     }
 
@@ -84,12 +88,12 @@ export async function sendCaseLead(
         await addNoteToContact(acContactId, note);
       }
     } catch (err) {
-      console.error('[case-leads] Error adding note (non-blocking):', err);
+      console.error('[case-semrush-leads] Error adding note (non-blocking):', err);
     }
 
     return { success: true };
   } catch (error) {
-    console.error('[case-leads] Error:', error);
+    console.error('[case-semrush-leads] Error:', error);
     return { success: false, error: 'Erro de conexão. Tente novamente.' };
   }
 }

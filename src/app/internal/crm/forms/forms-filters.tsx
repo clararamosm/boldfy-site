@@ -42,8 +42,8 @@ const FORM_CHIPS: Array<{ value: 'all' | FormType; emoji: string; label: string 
   { value: 'all', emoji: '👥', label: 'Todos' },
   { value: 'form_submit_demo', emoji: '🎯', label: 'Demo' },
   { value: 'form_submit_beta', emoji: '🧪', label: 'Beta' },
-  { value: 'form_submit_report', emoji: '📥', label: 'Report' },
-  { value: 'form_submit_case', emoji: '📑', label: 'Case' },
+  { value: 'form_submit_algoritmo_linkedin', emoji: '📥', label: 'Algoritmo LinkedIn' },
+  { value: 'form_submit_case_semrush', emoji: '📑', label: 'Case Semrush' },
   { value: 'form_submit_proposta', emoji: '💼', label: 'Proposta' },
 ];
 

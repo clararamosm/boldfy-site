@@ -5,15 +5,18 @@
  * e 1 entrada no FORM_DEFS_SEED (código) — usado como fallback caso a tabela
  * esteja vazia ou DB esteja inacessível durante render.
  *
- * Convenção:
- *  - `slug`   → chave humana ('report', 'beta', ...). É o FormSlug.
- *  - `kind`   → 'topo_funil' (Report — pergunta intenção, gera 3 segments)
- *              ou 'lider_b2b_only' (Beta/Demo/Proposta/extensão — sempre Líder B2B).
+ * Convenção (AGENTS.md §"Convenção de nomes para forms/materiais"):
+ *  - `slug`   → SEMPRE igual ao slug da URL pública do material/form. Ex:
+ *              'algoritmo-linkedin' (não 'report'), 'case-semrush' (não 'case').
+ *              Termo genérico é proibido — quando o segundo material chegar, o
+ *              slug `report` deixaria de ser identificável. Para forms sem URL
+ *              pública (ex: linkedin_extension), slug = descritor específico.
+ *  - `kind`   → 'topo_funil' (pergunta intenção, gera 3 segments) ou
+ *              'lider_b2b_only' (Beta/Demo/Proposta/extensão — sempre Líder B2B).
  *  - `ac_tag` → nome legível da tag aplicada no AC pra disparar cadências.
- *              NAMING ESPECÍFICO POR SLUG: a tag atual `Form: Algoritmo
- *              LinkedIn 2026` é MANTIDA (não vira `Form: Report`) — pra
- *              suportar múltiplos materiais futuros (Form: Algoritmo TikTok
- *              2027 etc) sem ter que migrar cadências.
+ *              Específico por material (`Form: Algoritmo LinkedIn 2026`, não
+ *              `Form: Report`) — quando o segundo material chegar, ele tem
+ *              tag própria sem migrar cadência existente.
  *
  * Helpers:
  *  - getFormDefinition(slug) → lê do DB com cache 60s; fallback no seed.
@@ -33,7 +36,13 @@ import { eq } from 'drizzle-orm';
 /*  Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-export type FormSlug = 'report' | 'beta' | 'demo' | 'proposta' | 'linkedin_extension' | 'case';
+export type FormSlug =
+  | 'algoritmo-linkedin'
+  | 'beta'
+  | 'demo'
+  | 'proposta'
+  | 'linkedin_extension'
+  | 'case-semrush';
 export type FormKind = 'topo_funil' | 'lider_b2b_only';
 
 export type LeadSegment = 'lider_b2b' | 'parceiro' | 'profissional_individual';
@@ -55,8 +64,8 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
   kind: FormKind;
   acTag: string;
 }> = {
-  report: {
-    slug: 'report',
+  'algoritmo-linkedin': {
+    slug: 'algoritmo-linkedin',
     name: 'Report Algoritmo LinkedIn 2026',
     kind: 'topo_funil',
     acTag: 'Form: Algoritmo LinkedIn 2026',
@@ -85,13 +94,13 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     kind: 'lider_b2b_only',
     acTag: 'Form: LinkedIn',
   },
-  // Case de meio-funil (Semrush ELG). Mesma natureza topo_funil do report —
-  // pergunta intencao_uso, gera 3 segments (lider_b2b/parceiro/profissional).
-  // Pede mais campos que o report (cargo + tamanho da empresa) só pra quem
+  // Case de meio-funil (Semrush ELG). Mesma natureza topo_funil do algoritmo-
+  // linkedin — pergunta intencao_uso, gera 3 segments (lider_b2b/parceiro/
+  // profissional). Pede mais campos (cargo + tamanho da empresa) só pra quem
   // marca 'marca-empresa', porque audiência de case é mais qualificada e
   // aguenta atrito extra de fundo de funil.
-  case: {
-    slug: 'case',
+  'case-semrush': {
+    slug: 'case-semrush',
     name: 'Case Semrush ELG',
     kind: 'topo_funil',
     acTag: 'Form: Case Semrush ELG',
@@ -167,15 +176,15 @@ export function getFormDefinitionSync(slug: FormSlug): typeof FORM_DEFS_SEED[For
  * entre form_definitions e o enum `source_method` do Postgres.
  */
 const SLUG_TO_SOURCE_METHOD: Record<FormSlug, SourceMethod> = {
-  report: 'form_report',
+  'algoritmo-linkedin': 'form_algoritmo_linkedin',
   beta: 'form_beta',
   demo: 'form_demo',
   proposta: 'form_proposta',
   linkedin_extension: 'extension_linkedin',
-  // Case usa source_method dedicado pra diferenciar do report nos analytics
-  // do CRM. Migration 0002_form_case_semrush.sql adiciona 'form_case_semrush'
-  // ao enum sourceMethodEnum — precisa rodar no Neon antes do deploy.
-  case: 'form_case_semrush',
+  // Case-semrush usa source_method dedicado pra diferenciar nos analytics
+  // do CRM. Migration 0002_form_case_semrush.sql adicionou 'form_case_semrush'
+  // ao enum. Migration 0003a renomeou 'form_report' → 'form_algoritmo_linkedin'.
+  'case-semrush': 'form_case_semrush',
 };
 
 export function formSlugToSourceMethod(slug: FormSlug): SourceMethod {
@@ -183,20 +192,24 @@ export function formSlugToSourceMethod(slug: FormSlug): SourceMethod {
 }
 
 /**
- * Mapping slug → tipo do activity (mantém compat com ACTIVITY_WEIGHTS atual).
- * Activity type continua sendo `form_submit_<slug-curto>` pra preservar
- * filtros do kanban e os pesos definidos em crm.ts.
+ * Mapping slug → tipo do activity. Activity type segue o slug do form (em
+ * snake_case porque convive com outros tipos snake como `status_change`,
+ * `ac_synced`, etc).
  *
  * linkedin_extension cai em `form_submit_extension_linkedin` (sem peso definido
  * em ACTIVITY_WEIGHTS — Task 5 ajusta quando a extensão for ligada).
+ *
+ * Migration 0003a renomeou os tipos antigos genéricos:
+ *   form_submit_report → form_submit_algoritmo_linkedin
+ *   form_submit_case   → form_submit_case_semrush
  */
 export function formSlugToActivityType(slug: FormSlug): string {
   switch (slug) {
-    case 'report': return 'form_submit_report';
+    case 'algoritmo-linkedin': return 'form_submit_algoritmo_linkedin';
     case 'beta': return 'form_submit_beta';
     case 'demo': return 'form_submit_demo';
     case 'proposta': return 'form_submit_proposta';
     case 'linkedin_extension': return 'form_submit_extension_linkedin';
-    case 'case': return 'form_submit_case';
+    case 'case-semrush': return 'form_submit_case_semrush';
   }
 }

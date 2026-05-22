@@ -1,8 +1,12 @@
 'use server';
 
 /**
- * Server action para capturar leads do report "Algoritmo LinkedIn 2026"
+ * Server action para capturar leads do report Algoritmo LinkedIn 2026
  * (LP /algoritmo-linkedin).
+ *
+ * Naming: arquivo + função espelham o slug da URL pública. Não usar termos
+ * genéricos tipo 'report' — quando o segundo material chegar, deixa de
+ * identificar de qual estamos falando. Ver AGENTS.md.
  *
  * Task 1 (mai/2026 — spec crm-source-of-truth):
  *  - Fluxo CRM-first: ClassifiedLead canônico via adapter → recordLeadFromForm
@@ -16,17 +20,17 @@
 
 import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
-import { adaptReport } from '@/lib/form-adapters/report';
-import { ReportLeadSchema, parseInput } from './_schemas';
+import { adaptAlgoritmoLinkedin } from '@/lib/form-adapters/algoritmo-linkedin';
+import { AlgoritmoLinkedinLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
-export type ReportLeadInput = z.input<typeof ReportLeadSchema>;
+export type AlgoritmoLinkedinLeadInput = z.input<typeof AlgoritmoLinkedinLeadSchema>;
 
-export async function sendReportLead(
-  rawInput: ReportLeadInput,
+export async function submitAlgoritmoLinkedinLead(
+  rawInput: AlgoritmoLinkedinLeadInput,
 ): Promise<{ success: boolean; error?: string }> {
   // 1. Validação Zod — bloqueia inputs malformados antes de qualquer call.
-  const parsed = parseInput(ReportLeadSchema, rawInput);
+  const parsed = parseInput(AlgoritmoLinkedinLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
   }
@@ -34,14 +38,14 @@ export async function sendReportLead(
 
   try {
     // 2. Adapter — payload do form → ClassifiedLead canônico.
-    const lead = adaptReport(input);
+    const lead = adaptAlgoritmoLinkedin(input);
 
     // 3. recordLeadFromForm faz TUDO: upsertCompany → upsertPerson →
     //    logActivity (form_submit + field_changed + ac_sync_*) →
     //    classifyPersonBySourceMethod → syncContact (com fallback).
     const result = await recordLeadFromForm(lead);
     if (!result.ok) {
-      console.error('[report-leads] recordLeadFromForm failed:', result.error);
+      console.error('[algoritmo-linkedin-leads] recordLeadFromForm failed:', result.error);
       return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
     }
 
@@ -81,12 +85,12 @@ export async function sendReportLead(
         await addNoteToContact(acContactId, note);
       }
     } catch (err) {
-      console.error('[report-leads] Error adding note (non-blocking):', err);
+      console.error('[algoritmo-linkedin-leads] Error adding note (non-blocking):', err);
     }
 
     return { success: true };
   } catch (error) {
-    console.error('[report-leads] Error:', error);
+    console.error('[algoritmo-linkedin-leads] Error:', error);
     return { success: false, error: 'Erro de conexão. Tente novamente.' };
   }
 }

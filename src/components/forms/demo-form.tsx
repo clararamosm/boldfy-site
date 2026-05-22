@@ -9,8 +9,8 @@
  *
  * Renderiza:
  *   - Step 1 (status idle/loading/error): form com nome, email, telefone,
- *     cargo, empresa, funcionários. Submit chama `sendDemoLeadToNotion`,
- *     que sincroniza com AC + Folk.
+ *     cargo, empresa, funcionários. Submit chama `submitDemoLead`,
+ *     que grava no CRM Boldfy (source of truth) e sincroniza pro AC.
  *   - Step 2 (status success): título "Tudo certo, {firstName}!" + Cal.com
  *     embed pré-preenchido com nome e email do lead.
  *
@@ -24,7 +24,7 @@
 
 import * as React from 'react';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { sendDemoLeadToNotion, DemoLeadInput } from '@/app/actions/demo-leads';
+import { submitDemoLead, DemoLeadInput } from '@/app/actions/demo-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
 import { trackEvent } from '@/lib/track';
 import { CalComEmbed } from './cal-com-embed';
@@ -105,7 +105,7 @@ export function DemoForm({
       ...utms,
     };
 
-    const res = await sendDemoLeadToNotion(data);
+    const res = await submitDemoLead(data);
 
     if (res.success) {
       setStatus('success');

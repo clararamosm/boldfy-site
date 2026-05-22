@@ -35,7 +35,8 @@ const DAYS = 30;
 const FORM_META: Record<string, { label: string; Icon: React.ComponentType<{ size?: number }> }> = {
   form_demo: { label: 'Demo', Icon: TargetIcon },
   form_beta: { label: 'Beta', Icon: FlaskConical },
-  form_report: { label: 'Report B2B', Icon: Download },
+  form_algoritmo_linkedin: { label: 'Algoritmo LinkedIn', Icon: Download },
+  form_case_semrush: { label: 'Case Semrush', Icon: Download },
   form_proposta: { label: 'Proposta', Icon: BriefcaseIcon },
 };
 

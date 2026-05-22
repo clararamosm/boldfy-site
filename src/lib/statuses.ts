@@ -205,7 +205,8 @@ export async function getStatusByLabel(
  *   o segundo elemento é maior que Reunião marcada → promove pra Em andamento.
  *
  * Regras do produto (mai/2026 ciclo 2):
- *   - form_report             → ['Ativo']                       (lead frio, só acumula score)
+ *   - form_algoritmo_linkedin → ['Ativo']                       (lead frio, só acumula score)
+ *   - form_case_semrush       → ['Ativo']                       (meio-funil, mesma ladder)
  *   - form_beta               → ['Quente', 'Em andamento']      (sinal forte; promove em cadeia)
  *   - form_demo               → []                              (relevado — Cal webhook salta direto pra Reunião marcada)
  *   - form_proposta           → ['Quente', 'Em andamento']
@@ -226,14 +227,14 @@ export async function getStatusByLabel(
  *   activity tá lá pra revisão manual.
  */
 export type SourceMethodForClassify =
-  | 'form_demo' | 'form_beta' | 'form_report' | 'form_case_semrush' | 'form_proposta'
+  | 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta'
   | 'extension_linkedin' | 'imported_folk' | 'manual';
 
 const METHOD_TO_LADDER: Record<SourceMethodForClassify, string[]> = {
-  form_report: ['Ativo'],
-  // form_case_semrush é meio-funil — mais qualificado que report mas ainda
-  // não pediu reunião nem proposta. Cai em 'Ativo' acumulando score; lead
-  // score promove pra 'Em andamento' quando passa o threshold.
+  form_algoritmo_linkedin: ['Ativo'],
+  // form_case_semrush é meio-funil — mais qualificado que algoritmo-linkedin,
+  // mas ainda não pediu reunião nem proposta. Cai em 'Ativo' acumulando score;
+  // lead score promove pra 'Em andamento' quando passa o threshold.
   form_case_semrush: ['Ativo'],
   form_beta: ['Quente', 'Em andamento'],
   form_demo: [],

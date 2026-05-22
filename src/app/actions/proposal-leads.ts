@@ -329,7 +329,7 @@ async function appendProposalJSON(
 /*  Main export                                                                */
 /* -------------------------------------------------------------------------- */
 
-export async function sendProposalLeadToNotion(
+export async function submitProposalLead(
   rawInput: ProposalLeadInput,
 ): Promise<ProposalLeadResult> {
   // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC

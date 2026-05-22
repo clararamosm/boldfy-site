@@ -2,7 +2,7 @@
  * Schemas zod para validação de inputs das server actions.
  *
  * Cada server action faz `safeParse` na entrada antes de qualquer chamada
- * externa (Notion / ActiveCampaign). Se inválido, retorna erro genérico
+ * externa (CRM Boldfy / ActiveCampaign). Se inválido, retorna erro genérico
  * (não vaza detalhes do schema pro client).
  *
  * Building blocks reusáveis ficam no topo; schemas compostos por action
@@ -156,7 +156,7 @@ const IntencaoUsoSchema = z.enum([
   'marca-pessoal',
 ]);
 
-export const ReportLeadSchema = z
+export const AlgoritmoLinkedinLeadSchema = z
   .object({
     nome: NameSchema,
     email: EmailSchema,
@@ -170,10 +170,10 @@ export const ReportLeadSchema = z
 /**
  * Schema do form do Case Semrush ELG (LP /case-semrush).
  *
- * Mesma base do Report (nome+email+intencao+newsletter) MAIS três campos
- * extras de qualificação B2B (empresa, cargo, tamanho_empresa) que só são
- * exigidos quando intencaoUso='marca-empresa'. Pros outros casos (agência,
- * criador) o lead segue o fluxo enxuto do report.
+ * Mesma base do Algoritmo LinkedIn (nome+email+intencao+newsletter) MAIS três
+ * campos extras de qualificação B2B (empresa, cargo, tamanho_empresa) que só
+ * são exigidos quando intencaoUso='marca-empresa'. Pros outros casos (agência,
+ * criador) o lead segue o fluxo enxuto do algoritmo-linkedin.
  *
  * Validação cruzada via superRefine: se a pessoa marca 'marca-empresa',
  * os 3 campos B2B passam a ser obrigatórios (mesma lógica do gate UI).
@@ -186,7 +186,7 @@ const TamanhoEmpresaSchema = z.enum([
   '500+',
 ]);
 
-export const CaseLeadSchema = z
+export const CaseSemrushLeadSchema = z
   .object({
     nome: NameSchema,
     email: EmailSchema,
