@@ -53,7 +53,7 @@ const EMPTY_FIELDS: FormFields = {
 
 export type DemoFormProps = {
   /**
-   * Origem do clique/abertura — vai pro AC/Folk como rastreamento.
+   * Origem do clique/abertura — vai pro CRM Boldfy + AC como rastreamento.
    * Ex: 'home:hero', 'header', 'LP Agendar Demo'.
    */
   source: string;

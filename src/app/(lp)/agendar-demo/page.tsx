@@ -8,10 +8,10 @@
  *  - Sem copy de venda pesada — só logo, título curto, frase de contexto,
  *    form. Pra mandar link direto pra pessoas vindo de outras origens
  *    (LinkedIn, WhatsApp, indicação).
- *  - Origem rastreada como 'LP Agendar Demo' no AC/Folk.
+ *  - Origem rastreada como 'LP Agendar Demo' no CRM Boldfy + AC.
  *  - noindex (LP de captura, não conteúdo público) — ver metadata em layout.
  *  - Pós-agendamento: lead vê a confirmação dentro do iframe do Cal.com
- *    e o webhook do Cal atualiza tags do AC + status no Folk em background.
+ *    e o webhook do Cal atualiza tags do AC + status no CRM Boldfy em background.
  *    Não tem redirect automático (mesmo comportamento do popup).
  */
 
