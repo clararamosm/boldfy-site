@@ -270,6 +270,39 @@ export const meetings = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/*  proposals (storage do JSON de propostas geradas pelo Simulador)            */
+/*                                                                              */
+/*  Substitui o storage no Notion (mai/2026). A URL /proposta/[uuid] resolve   */
+/*  pra row aqui, e o route handler renderiza o HTML compartilhável a partir   */
+/*  do proposal_data + total_current/full/beta_active.                         */
+/*                                                                              */
+/*  1 lead → N propostas (cliente pode reabrir simulador e regenerar; cada     */
+/*  geração vira row nova, preserva histórico).                                */
+/* -------------------------------------------------------------------------- */
+
+export const proposals = pgTable(
+  'proposals',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    personId: uuid('person_id').notNull().references(() => people.id, { onDelete: 'cascade' }),
+    /** Snapshot completo do payload do simulador (platform, design, fullService, totals, team). */
+    proposalData: jsonb('proposal_data').notNull(),
+    /** Cache do total mensal corrente (com beta aplicado se houver). Pra ORDER BY sem parse de JSONB. */
+    totalCurrent: integer('total_current').notNull(),
+    /** Total full (sem desconto beta) — pra calcular "savings" no HTML sem reler JSON. */
+    totalFull: integer('total_full').notNull(),
+    /** Gate visual no HTML: exibe "30% off" só quando true. */
+    betaActive: boolean('beta_active').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('idx_proposals_person').on(t.personId),
+    index('idx_proposals_created').on(t.createdAt),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
 /*  pr_articles (Mídia & PR — tracking de artigos publicados via SaaS de PR)  */
 /* -------------------------------------------------------------------------- */
 
@@ -487,6 +520,8 @@ export type Activity = typeof activities.$inferSelect;
 export type NewActivity = typeof activities.$inferInsert;
 export type Meeting = typeof meetings.$inferSelect;
 export type NewMeeting = typeof meetings.$inferInsert;
+export type Proposal = typeof proposals.$inferSelect;
+export type NewProposal = typeof proposals.$inferInsert;
 export type ExtensionToken = typeof extensionTokens.$inferSelect;
 export type NewExtensionToken = typeof extensionTokens.$inferInsert;
 export type PrArticle = typeof prArticles.$inferSelect;

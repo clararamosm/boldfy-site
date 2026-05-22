@@ -8,7 +8,7 @@
  * - Self-contained (can be viewed standalone or embedded in an email)
  */
 
-import type { ProposalData } from '@/lib/notion-crm';
+import type { ProposalData } from '@/lib/proposals';
 
 /* -------------------------------------------------------------------------- */
 /*  Brand tokens (hardcoded for inline CSS — HSL 279 71% 63% ≈ #8B6CDB)       */

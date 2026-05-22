@@ -1,28 +1,24 @@
 /**
- * Route handler that serves a standalone HTML proposal page.
+ * Route handler que serve o HTML standalone da proposta gerada pelo Simulador.
  *
- * GET /proposta/[id] → returns full HTML (no Next.js layout, no header/footer)
+ * GET /proposta/[id] → retorna HTML completo (sem layout do Next, sem
+ * header/footer). HTML é self-contained com CSS inline — pode abrir direto
+ * no browser do cliente, virar template de email, etc.
  *
- * The HTML is self-contained with inline CSS — can be viewed in a browser
- * or used as the basis for an email template.
- *
- * Data is fetched from the Notion Interações database by page ID.
- * The proposal JSON is stored as a code block inside the Interação page.
+ * Fonte dos dados (mai/2026 — refactor "kill Notion-de-proposta"):
+ *   Tabela `proposals` no nosso Postgres (substitui Notion DB). O `id` na URL
+ *   é o UUID da row; `proposal_data` (JSONB) contém o snapshot completo.
  */
 
 import { NextResponse } from 'next/server';
-import {
-  getInteracaoById,
-  getInteracaoBlocks,
-  parseProposalFromBlocks,
-} from '@/lib/notion-crm';
+import { getProposalById, type ProposalData } from '@/lib/proposals';
 import { generateProposalHTML } from '@/components/proposal-html';
 import { verifyProposalToken } from '@/lib/proposal-token';
 
 export const revalidate = 3600; // ISR: cache for 1 hour
 
-// Valida formato do id antes de qualquer outra coisa.
-// Aceita 32-char hex puro ou UUID com hifens (8-4-4-4-12).
+// Aceita 32-char hex puro (sem hífens) OU UUID com hífens (8-4-4-4-12).
+// O ID na URL pública é sempre o UUID gerado por `proposals.id`.
 const ID_HEX_32 = /^[a-f0-9]{32}$/i;
 const ID_UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 
@@ -52,24 +48,25 @@ export async function GET(
     });
   }
 
-  // Normalize: 32-char hex (no dashes) → UUID with dashes for Notion API
+  // 3. Normaliza pra UUID com hífens (formato canônico no Postgres).
   const normalizedId =
     id.length === 32 && !id.includes('-')
       ? `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`
       : id;
 
-  const meta = await getInteracaoById(normalizedId);
-  if (!meta) {
+  // 4. Busca a row em `proposals`.
+  const row = await getProposalById(normalizedId);
+  if (!row) {
     return new NextResponse(notFoundHTML(), {
       status: 404,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
   }
 
-  const blocks = await getInteracaoBlocks(normalizedId);
-  const proposal = parseProposalFromBlocks(blocks);
-
-  if (!proposal) {
+  // proposal_data é JSONB tipado como `unknown` no Drizzle — fazemos o
+  // cast aqui depois de validar que tem o shape mínimo de ProposalData.
+  const proposal = row.proposalData as ProposalData;
+  if (!proposal?.totals || !proposal?.lead) {
     return new NextResponse(notFoundHTML(), {
       status: 404,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
@@ -84,7 +81,7 @@ export async function GET(
     : `${siteUrl}/proposta/${id}`;
   const html = generateProposalHTML(proposal, proposalUrl);
 
-  // Shorter cache when proposal is close to expiring (or already expired)
+  // Shorter cache quando proposta tá perto de expirar (ou já expirou).
   const VALIDITY_DAYS = 15;
   const createdDate = new Date(proposal.createdAt);
   const daysElapsed = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);

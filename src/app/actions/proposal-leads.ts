@@ -1,32 +1,34 @@
 'use server';
 
 /**
- * Server action to capture proposal builder leads.
+ * Server action para capturar leads do Simulador de Proposta.
  *
- * Arquitetura simplificada (a partir de Abr/2026):
- * - UM único database no Notion: "Propostas" — recebe cada proposta como uma page
- * - O link da proposta (/proposta/[id]) é salvo em uma propriedade URL do DB
- * - CRM fica no ActiveCampaign (fonte de verdade) — syncContact taggeia tudo
+ * Arquitetura atual (mai/2026 — refactor "kill Notion-de-proposta"):
+ *  - Proposta vive em tabela própria `proposals` no nosso Postgres.
+ *  - URL pública /proposta/[uuid] resolve pra row na tabela proposals.
+ *  - CRM Boldfy é source-of-truth pro lead (people + activities + proposals).
+ *  - AC recebe sync via recordLeadFromForm + nota descritiva best-effort.
+ *
+ * Fluxo:
+ *   1. Valida Zod.
+ *   2. recordLeadFromForm — cria/atualiza pessoa+empresa+activity.
+ *   3. createProposal — insere row na tabela proposals com snapshot do JSON.
+ *   4. Atualiza people.proposal_url com a URL pública final.
+ *   5. Nota descritiva no AC (best-effort, não bloqueia).
+ *   6. Retorna {proposalUrl, propostaId} pro proposal-builder.tsx exibir.
  */
 
-import type { ProposalData } from '@/lib/notion-crm';
 import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
+import { db, people } from '@/db';
+import { eq } from 'drizzle-orm';
 import { adaptProposal } from '@/lib/form-adapters/proposal';
+import { createProposal, type ProposalData } from '@/lib/proposals';
 import { ProposalLeadSchema, parseInput } from './_schemas';
 import { buildProposalUrl } from '@/lib/proposal-token';
 import type { z } from 'zod';
 
-const NOTION_API_KEY = process.env.NOTION_API_KEY;
-const NOTION_PROPOSTAS_DB_ID = process.env.NOTION_PROPOSTAS_DB_ID;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://boldfy.com.br';
-
-const NOTION_API = 'https://api.notion.com/v1';
-const NOTION_HEADERS = () => ({
-  Authorization: `Bearer ${NOTION_API_KEY}`,
-  'Content-Type': 'application/json',
-  'Notion-Version': '2022-06-28',
-});
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -118,268 +120,59 @@ function buildProposalSummary(input: ProposalLeadData): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Create proposal page in Notion (single database)                           */
-/* -------------------------------------------------------------------------- */
-
-async function createPropostaPage(
-  input: ProposalLeadData,
-): Promise<string | null> {
-  if (!NOTION_PROPOSTAS_DB_ID) {
-    console.error('[proposal-leads] NOTION_PROPOSTAS_DB_ID not configured');
-    return null;
-  }
-
-  const today = new Date().toISOString().slice(0, 10);
-  const title = `${input.nome} — ${input.empresa}`;
-  const summary = buildProposalSummary(input);
-
-  // Discover database schema so we only send properties that exist
-  const dbRes = await fetch(
-    `${NOTION_API}/databases/${NOTION_PROPOSTAS_DB_ID}`,
-    { headers: NOTION_HEADERS() },
-  );
-  let dbProperties: Record<string, { type: string }> = {};
-  if (dbRes.ok) {
-    const dbData = await dbRes.json();
-    dbProperties = dbData.properties || {};
-  }
-
-  const properties: Record<string, unknown> = {};
-
-  // 1. Title (required by Notion) — find the title property (any name)
-  const titleKey = Object.keys(dbProperties).find(
-    (k) => dbProperties[k].type === 'title',
-  );
-  if (titleKey) {
-    properties[titleKey] = { title: [{ text: { content: title } }] };
-  }
-
-  // Helpers — só preenche propriedades que existem no DB
-  const addEmail = (name: string, value?: string) => {
-    if (value && dbProperties[name]?.type === 'email') {
-      properties[name] = { email: value };
-    }
-  };
-  const addRich = (name: string, value?: string) => {
-    if (value && dbProperties[name]?.type === 'rich_text') {
-      properties[name] = {
-        rich_text: [{ text: { content: value.slice(0, 2000) } }],
-      };
-    }
-  };
-  const addSelect = (name: string, value?: string) => {
-    if (value && dbProperties[name]?.type === 'select') {
-      properties[name] = { select: { name: value } };
-    }
-  };
-  const addMultiSelect = (name: string, values: string[]) => {
-    if (values.length > 0 && dbProperties[name]?.type === 'multi_select') {
-      properties[name] = {
-        multi_select: values.map((v) => ({ name: v })),
-      };
-    }
-  };
-  const addNumber = (name: string, value?: number) => {
-    if (value !== undefined && dbProperties[name]?.type === 'number') {
-      properties[name] = { number: value };
-    }
-  };
-  const addDate = (name: string, value: string) => {
-    if (dbProperties[name]?.type === 'date') {
-      properties[name] = { date: { start: value } };
-    }
-  };
-
-  addEmail('Email', input.email);
-  addRich('Empresa', input.empresa);
-  addRich('Cargo', input.cargo);
-  addRich('Resumo', summary);
-  addDate('Data', today);
-  addSelect('Status', 'Novo');
-  addSelect('Origem', input.origem);
-  addSelect('utm_source', input.utm_source);
-  addSelect('utm_medium', input.utm_medium);
-  addSelect('utm_campaign', input.utm_campaign);
-  addNumber('Total mensal', input.totalCurrent);
-  addNumber('Seats plataforma', input.plataformaSeats);
-
-  // Módulos selecionados como multi_select
-  // Beta tester saiu — info do beta já está refletida no valor da proposta
-  // (total_mensal_proposta) e no resumo da note.
-  const modulos: string[] = [];
-  if (input.plataformaEnabled) modulos.push('SaaS');
-  if (input.designPlan) modulos.push('Design on Demand');
-  if (input.fsTls > 0 && input.fsFreq > 0) modulos.push('Content Full-Service');
-  addMultiSelect('Módulos', modulos);
-
-  // Step 1: Try with all properties
-  const res = await fetch(`${NOTION_API}/pages`, {
-    method: 'POST',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      parent: { database_id: NOTION_PROPOSTAS_DB_ID },
-      properties,
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    console.error('[proposal-leads] Error creating proposta:', res.status, errText);
-
-    // Step 2: Fallback — minimum viable (just title)
-    if (titleKey) {
-      const fallbackRes = await fetch(`${NOTION_API}/pages`, {
-        method: 'POST',
-        headers: NOTION_HEADERS(),
-        body: JSON.stringify({
-          parent: { database_id: NOTION_PROPOSTAS_DB_ID },
-          properties: {
-            [titleKey]: { title: [{ text: { content: title } }] },
-          },
-        }),
-      });
-      if (fallbackRes.ok) {
-        return (await fallbackRes.json()).id;
-      }
-    }
-    return null;
-  }
-
-  return (await res.json()).id;
-}
-
-/**
- * Preenche a propriedade do tipo URL no row com o link da proposta.
- * Precisa rodar depois que a page foi criada (dependemos do ID pra montar a URL).
- *
- * Descobre automaticamente a propriedade URL — aceita qualquer nome
- * (ex: "URL", "Link", "Link da proposta", "Proposta").
- * Se o DB tiver mais de uma URL, usa a primeira.
- */
-async function setUrlProperty(pageId: string, proposalUrl: string): Promise<void> {
-  if (!NOTION_PROPOSTAS_DB_ID) return;
-
-  const dbRes = await fetch(
-    `${NOTION_API}/databases/${NOTION_PROPOSTAS_DB_ID}`,
-    { headers: NOTION_HEADERS() },
-  );
-  if (!dbRes.ok) return;
-  const dbData = await dbRes.json();
-  const dbProperties: Record<string, { type: string }> = dbData.properties || {};
-
-  const urlKey = Object.keys(dbProperties).find(
-    (k) => dbProperties[k].type === 'url',
-  );
-  if (!urlKey) {
-    console.warn(
-      '[proposal-leads] No "url" property found in Propostas DB — proposal link not attached to row.',
-    );
-    return;
-  }
-
-  const res = await fetch(`${NOTION_API}/pages/${pageId}`, {
-    method: 'PATCH',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      properties: {
-        [urlKey]: { url: proposalUrl },
-      },
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    console.error(
-      '[proposal-leads] Error setting url property:',
-      res.status,
-      errText,
-    );
-  }
-}
-
-/**
- * Append only the JSON block to the page body.
- * A rota /proposta/[id] lê esse bloco pra renderizar a proposta compartilhável.
- */
-async function appendProposalJSON(
-  pageId: string,
-  proposalJSON: ProposalData,
-): Promise<void> {
-  await fetch(`${NOTION_API}/blocks/${pageId}/children`, {
-    method: 'PATCH',
-    headers: NOTION_HEADERS(),
-    body: JSON.stringify({
-      children: [
-        {
-          object: 'block',
-          type: 'code',
-          code: {
-            language: 'json',
-            rich_text: [
-              { type: 'text', text: { content: JSON.stringify(proposalJSON, null, 2) } },
-            ],
-          },
-        },
-      ],
-    }),
-  });
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Main export                                                                */
 /* -------------------------------------------------------------------------- */
 
 export async function submitProposalLead(
   rawInput: ProposalLeadInput,
 ): Promise<ProposalLeadResult> {
-  // Validação zod — bloqueia inputs malformados antes de chamar Notion/AC
+  // 1. Validação Zod — bloqueia inputs malformados antes de qualquer call.
   const parsed = parseInput(ProposalLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
   }
   const input = parsed.data;
 
-  if (!NOTION_API_KEY || !NOTION_PROPOSTAS_DB_ID) {
-    console.error('[proposal-leads] NOTION_API_KEY or NOTION_PROPOSTAS_DB_ID not configured');
-    return { success: false, error: 'Integração com Notion não configurada.' };
-  }
-
   try {
-    const proposalJSON = buildProposalJSON(input);
-
-    // 1. Create proposal page in Notion
-    const propostaId = await createPropostaPage(input);
-
-    const cleanId = propostaId ? propostaId.replace(/-/g, '') : '';
-    // URL com token HMAC quando PROPOSAL_TOKEN_SECRET estiver configurada.
-    // Sem secret = URL sem token (modo legado).
-    const proposalUrl = cleanId ? buildProposalUrl(SITE_URL, cleanId) : '';
-
-    // 2. Preenche a URL no campo do row + guarda o JSON no corpo
-    //    IMPORTANTE: precisamos de await aqui — em serverless (Vercel),
-    //    fire-and-forget é descartado quando a função retorna.
-    if (propostaId && proposalUrl) {
-      await Promise.allSettled([
-        setUrlProperty(propostaId, proposalUrl),
-        appendProposalJSON(propostaId, proposalJSON),
-      ]);
-    }
-
-    // 3. Adapter + recordLeadFromForm (CRM-first; AC sync rola dentro).
-    //    proposalUrl precisa estar populado ANTES (passo 1-2 acima).
-    const lead = adaptProposal(input, {
-      proposalUrl,
-      propostaNotionId: propostaId ?? undefined,
+    // 2. recordLeadFromForm — CRM-first. Cria pessoa+empresa+activity e
+    //    sincroniza pro AC. Passamos sem proposalUrl ainda — adicionamos no
+    //    passo 4 depois que a row em `proposals` é criada e gera o UUID.
+    const leadForCrm = adaptProposal(input, {
+      proposalUrl: undefined,
+      propostaNotionId: undefined,
     });
-
-    const crmResult = await recordLeadFromForm(lead);
+    const crmResult = await recordLeadFromForm(leadForCrm);
     if (!crmResult.ok) {
       console.error('[proposal-leads] recordLeadFromForm failed:', crmResult.error);
-      // Não bloqueia retorno — proposta no Notion já foi criada,
-      // user merece ver o link da proposta mesmo se CRM falhar.
+      return { success: false, error: 'Erro ao salvar seu contato. Tente novamente.' };
+    }
+    const personId = crmResult.data.personId;
+
+    // 3. createProposal — insere row na tabela proposals, retorna id (UUID).
+    //    Esse UUID vira o slug da URL pública /proposta/{id}.
+    const proposalJSON = buildProposalJSON(input);
+    const { id: propostaId } = await createProposal({
+      personId,
+      data: proposalJSON,
+      totalCurrent: input.totalCurrent,
+      totalFull: input.totalFull,
+      betaActive: input.betaActive,
+    });
+
+    // URL com token HMAC quando PROPOSAL_TOKEN_SECRET estiver configurada.
+    // Sem secret = URL sem token (modo legado, ainda funcional).
+    const proposalUrl = buildProposalUrl(SITE_URL, propostaId);
+
+    // 4. UPDATE people.proposal_url — botão "Ver proposta" no perfil do CRM
+    //    aponta pra última proposta gerada. Não-bloqueante: se falhar, a
+    //    proposta continua acessível pelo link no AC + Notion legado.
+    try {
+      await db.update(people).set({ proposalUrl }).where(eq(people.id, personId));
+    } catch (urlErr) {
+      console.error('[proposal-leads] people.proposal_url update failed:', urlErr);
     }
 
-    // 4. Nota descritiva no AC com link da proposta + resumo (best-effort).
+    // 5. Nota descritiva no AC com link da proposta + resumo (best-effort).
     try {
       const acContactId = await findContactByEmail(input.email);
       if (acContactId) {
@@ -389,7 +182,7 @@ export async function submitProposalLead(
           ``,
           summary,
           ``,
-          proposalUrl ? `🔗 Ver proposta: ${proposalUrl}` : '',
+          `🔗 Ver proposta: ${proposalUrl}`,
           ``,
           `— Tracking —`,
           `Origem no site: ${input.origem}`,
@@ -407,8 +200,8 @@ export async function submitProposalLead(
 
     return {
       success: true,
-      proposalUrl: proposalUrl || undefined,
-      propostaId: propostaId ?? undefined,
+      proposalUrl,
+      propostaId,
     };
   } catch (error) {
     console.error('[proposal-leads] Error:', error);
