@@ -1388,7 +1388,7 @@ const ptBR = {
     section5Title: '5. Seus direitos (LGPD)',
     section5Text: 'Conforme a Lei Geral de Proteção de Dados (LGPD), você tem direito a: acessar seus dados, solicitar correção, exclusão, portabilidade, e revogar consentimento. Para exercer esses direitos, entre em contato conosco.',
     section6Title: '6. Contato',
-    section6Text: 'Para dúvidas sobre privacidade, entre em contato pelo email: contato@boldfy.com.br',
+    section6Text: 'Para dúvidas sobre privacidade, entre em contato pelo email: admin@boldfy.com.br',
   },
 
   // Termos page
@@ -1408,7 +1408,7 @@ const ptBR = {
     section6Title: '6. Limitação de Responsabilidade',
     section6Text: 'A Boldfy não se responsabiliza por danos indiretos, incidentais ou consequenciais resultantes do uso ou impossibilidade de uso da plataforma.',
     section7Title: '7. Contato',
-    section7Text: 'Para dúvidas sobre estes termos, entre em contato pelo email: contato@boldfy.com.br',
+    section7Text: 'Para dúvidas sobre estes termos, entre em contato pelo email: admin@boldfy.com.br',
   },
 
   // Battle Card (SaaS × CaaS comparison popup)

@@ -757,8 +757,17 @@ function IdentificationView({
             required
           />
           <span>
-            Aceito que minhas respostas sejam usadas anonimamente em pesquisas agregadas da Boldfy.{' '}
-            <span className="text-primary">*</span>
+            Aceito que minhas respostas sejam usadas anonimamente em pesquisas agregadas da Boldfy
+            (saiba mais na nossa{' '}
+            <a
+              href="/legal#privacidade"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-primary underline underline-offset-2"
+            >
+              Política de Privacidade
+            </a>
+            ). <span className="text-primary">*</span>
           </span>
         </label>
       </div>

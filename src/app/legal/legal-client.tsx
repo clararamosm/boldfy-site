@@ -122,7 +122,7 @@ function UL({ children }: { children: React.ReactNode }) {
 /*  Legal client                                                       */
 /* ------------------------------------------------------------------ */
 export default function LegalClient() {
-  const LAST_UPDATE = '8 de maio de 2026';
+  const LAST_UPDATE = '24 de maio de 2026';
 
   return (
     <>
@@ -242,10 +242,10 @@ export default function LegalClient() {
               <P>
                 Para exercer qualquer direito, envie um e-mail para{' '}
                 <a
-                  href="mailto:contato@boldfy.com.br"
+                  href="mailto:admin@boldfy.com.br"
                   className="font-semibold text-primary underline underline-offset-2"
                 >
-                  contato@boldfy.com.br
+                  admin@boldfy.com.br
                 </a>{' '}
                 com o assunto &quot;LGPD - solicitação&quot;. Respondemos em até 15 dias úteis.
               </P>
@@ -257,6 +257,57 @@ export default function LegalClient() {
                 trânsito (HTTPS), controles de acesso e backups regulares. Nenhum sistema é 100%
                 invulnerável, mas fazemos o possível para manter seus dados protegidos.
               </P>
+
+              <H3>1.7 Playbook de Employee-Led Growth (ferramenta gratuita)</H3>
+              <P>
+                A ferramenta em <strong>boldfy.com.br/ferramentas/playbook-employee-led-growth</strong>{' '}
+                gera uma página personalizada (Playbook) a partir das suas respostas. Como tratamos
+                esses dados:
+              </P>
+              <UL>
+                <li>
+                  <strong>O que coletamos no quiz</strong> — porte da empresa, setor, sua área e
+                  senioridade, voz da empresa no LinkedIn hoje, tentativas anteriores, dores
+                  principais, prioridades, status de orçamento, sponsorship da liderança e
+                  observações livres (opcional). No fim, pedimos nome, e-mail corporativo, empresa
+                  e telefone (opcional) para te entregar o Playbook.
+                </li>
+                <li>
+                  <strong>Página personalizada (link compartilhável)</strong> — o Playbook gerado
+                  fica em uma URL única do tipo <code>boldfy.com.br/playbook/[empresa-código]</code>.
+                  Essa página é configurada como <em>noindex, nofollow, noarchive</em>: ela não aparece
+                  no Google e quem tem o link consegue acessar (você pode compartilhar com seu time).
+                </li>
+                <li>
+                  <strong>Visualizações da página</strong> — registramos quantas vezes a página foi
+                  aberta e a data da última visita, para o nosso time identificar quando você
+                  voltou. O IP do visualizador é armazenado de forma anonimizada (hash criptográfico
+                  com sal secreto), sem possibilidade de reverter pra IP original.
+                </li>
+                <li>
+                  <strong>Uso anônimo em pesquisas agregadas</strong> — ao aceitar a LGPD no fim do
+                  quiz, você consente que suas respostas sejam usadas de forma{' '}
+                  <strong>anônima e agregada</strong> para construir benchmarks de mercado (relatório{' '}
+                  &quot;State of Employee-Led Growth&quot;). Nesses agregados não há nome, e-mail nem
+                  empresa identificáveis: só contagens (ex.: &quot;42% das empresas marketing relatam CAC
+                  subindo&quot;).
+                </li>
+                <li>
+                  <strong>Active Campaign</strong> — seu contato é registrado no nosso provedor de
+                  e-mail (ActiveCampaign) com a tag &quot;Form: Playbook Employee-Led Growth&quot; e
+                  alguns campos do quiz (cargo, dores, budget) para que possamos enviar conteúdos
+                  relevantes. Você pode descadastrar a qualquer momento via link no e-mail.
+                </li>
+                <li>
+                  <strong>Retenção do Playbook</strong> — a página do seu Playbook fica disponível
+                  por tempo indeterminado, para que você possa revisitar ou compartilhar com o time.
+                  Se quiser que removamos a página e seus dados associados, é só pedir por e-mail
+                  para <a
+                    href="mailto:admin@boldfy.com.br"
+                    className="font-semibold text-primary underline underline-offset-2"
+                  >admin@boldfy.com.br</a> com o assunto &quot;LGPD - exclusão Playbook&quot;.
+                </li>
+              </UL>
             </section>
 
             {/* ============================================== */}
@@ -461,10 +512,10 @@ export default function LegalClient() {
                 Se você identificar conteúdo ou comportamento que viole esta política — seja
                 de outro usuário, de cliente ou da própria Boldfy —, mande um e-mail para{' '}
                 <a
-                  href="mailto:contato@boldfy.com.br"
+                  href="mailto:admin@boldfy.com.br"
                   className="font-semibold text-primary underline underline-offset-2"
                 >
-                  contato@boldfy.com.br
+                  admin@boldfy.com.br
                 </a>{' '}
                 com o assunto &quot;Uso aceitável - denúncia&quot;. Apuramos toda denúncia
                 recebida e respondemos em até 5 dias úteis.
@@ -545,10 +596,10 @@ export default function LegalClient() {
               <P>
                 Qualquer pergunta sobre cookies ou privacidade, fala com a gente:{' '}
                 <a
-                  href="mailto:contato@boldfy.com.br"
+                  href="mailto:admin@boldfy.com.br"
                   className="font-semibold text-primary underline underline-offset-2"
                 >
-                  contato@boldfy.com.br
+                  admin@boldfy.com.br
                 </a>
                 .
               </P>
@@ -567,7 +618,7 @@ export default function LegalClient() {
                   Voltar pra home
                 </Link>
                 <a
-                  href="mailto:contato@boldfy.com.br"
+                  href="mailto:admin@boldfy.com.br"
                   className="font-semibold text-primary underline underline-offset-2"
                 >
                   Falar com a Boldfy

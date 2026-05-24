@@ -53,7 +53,7 @@ Atração de talentos via Employee-Generated Content, cultura real visível, red
 ## Informações de Contato
 
 - Site: https://boldfy.com.br
-- Email: contato@boldfy.com.br
+- Email: admin@boldfy.com.br
 - LinkedIn: https://linkedin.com/company/boldfy-branding
 - WhatsApp: +55 11 91368-8100
 `;

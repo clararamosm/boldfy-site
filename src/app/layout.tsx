@@ -79,7 +79,7 @@ const organizationJsonLd = {
   logo: 'https://boldfy.com.br/images/boldfy-logo-white.svg',
   description:
     'Content Intelligence para Employee-Led Growth. A Boldfy transforma colaboradores em criadores de conteúdo autoral no LinkedIn, combinando plataforma SaaS com serviço especializado (CaaS).',
-  email: 'contato@boldfy.com.br',
+  email: 'admin@boldfy.com.br',
   telephone: '+55-11-91368-8100',
   sameAs: [
     'https://www.linkedin.com/company/boldfy-branding',
