@@ -36,6 +36,7 @@ const ACTIVITY_WEIGHTS: Record<string, number> = {
   blog_read: 2,
   form_submit_algoritmo_linkedin: 10,
   form_submit_case_semrush: 15,  // Case é meio-funil — mais qualificado que algoritmo-linkedin, menos que beta
+  form_submit_playbook_employee_led_growth: 25,  // Quem termina quiz de 11 perguntas é lead bem qualificado — peso igual ao beta
   form_submit_beta: 25,
   form_submit_demo: 50,
   form_submit_proposta: 50,
@@ -68,7 +69,7 @@ export function weightForActivity(type: string, subtype?: string): number {
 /* -------------------------------------------------------------------------- */
 
 export type SourceChannel = 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown';
-export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'extension_linkedin' | 'manual' | 'imported_folk';
+export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'form_playbook_employee_led_growth' | 'extension_linkedin' | 'manual' | 'imported_folk';
 
 export type UpsertPersonInput = {
   name: string;
@@ -108,6 +109,27 @@ export type UpsertPersonInput = {
    * people.forms_submitted (dedup atômico via SQL).
    */
   formsSubmittedAppend?: string;
+  /**
+   * Senioridade do cargo (introduzida no form Playbook ELG, mai/2026).
+   * Sobrescreve em cada submit que carregue essa info — última resposta vence.
+   * Enums vão pra colunas dedicadas em people (não JSONB) — virou padrão
+   * recorrente. Forms que NÃO coletam cargo (Algoritmo LinkedIn, etc) podem
+   * deixar undefined.
+   */
+  jobSeniority?: 'analista' | 'coordenador' | 'gerente' | 'diretor' | 'c_level' | null;
+  /**
+   * Área funcional (introduzida no form Playbook ELG, mai/2026).
+   * Mesma regra do jobSeniority — overwrite por submit, nullable.
+   */
+  jobArea?:
+    | 'marketing'
+    | 'growth'
+    | 'vendas'
+    | 'rh'
+    | 'employer_branding'
+    | 'comunicacao'
+    | 'outro'
+    | null;
   /**
    * Set EXPLÍCITO de acTags (rebuild — não merge). Quando passado,
    * substitui completamente o array. Quando undefined, mantém atual.
@@ -360,6 +382,26 @@ export async function upsertPerson(
       if (input.lastTouchSource !== undefined) updates.lastTouchSource = input.lastTouchSource;
       if (input.lastTouchCampaign !== undefined) updates.lastTouchCampaign = input.lastTouchCampaign;
 
+      // jobSeniority + jobArea (mai/2026): última-resposta vence. Emite
+      // field_changed quando muda — útil pra trilha de promoção (pessoa
+      // virou C-level entre forms, mudou de área, etc).
+      if (input.jobSeniority !== undefined && input.jobSeniority !== prev.jobSeniority) {
+        updates.jobSeniority = input.jobSeniority;
+        fieldChanges.push({
+          field: 'jobSeniority',
+          oldValue: prev.jobSeniority,
+          newValue: input.jobSeniority,
+        });
+      }
+      if (input.jobArea !== undefined && input.jobArea !== prev.jobArea) {
+        updates.jobArea = input.jobArea;
+        fieldChanges.push({
+          field: 'jobArea',
+          oldValue: prev.jobArea,
+          newValue: input.jobArea,
+        });
+      }
+
       // Resubscribe: form novo numa pessoa unsubscribed = volta pra ativo.
       let resubscribed = false;
       if (prev.unsubscribed && input.formsSubmittedAppend) {
@@ -433,6 +475,9 @@ export async function upsertPerson(
         proposalUrl: input.proposalUrl,
         acTags: input.acTagsSet ?? null,
         metadata: input.metadataPatch ?? null,
+        // Playbook ELG (mai/2026) — enums novos. Nullable em INSERT.
+        jobSeniority: input.jobSeniority ?? null,
+        jobArea: input.jobArea ?? null,
       })
       .returning();
     return {
@@ -609,6 +654,9 @@ export async function recordLeadFromForm(
       formsSubmittedAppend: lead.formSlug,
       acTagsSet: lead.acTags,
       metadataPatch: lead.personMetadataPatch,
+      // Playbook ELG (mai/2026): forms que coletam cargo passam aqui.
+      jobSeniority: lead.jobSeniority,
+      jobArea: lead.jobArea,
     },
     companyId,
   );

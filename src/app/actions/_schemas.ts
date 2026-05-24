@@ -228,6 +228,105 @@ export const CaseSemrushLeadSchema = z
   });
 
 /* -------------------------------------------------------------------------- */
+/*  Playbook de Employee-Led Growth (mai/2026)                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Schema do quiz /ferramentas/playbook-employee-led-growth.
+ *
+ * 11 perguntas obrigatórias + 1 aberta opcional + 4 campos de identificação.
+ * Sempre Líder B2B — o gate de elegibilidade (porteColaboradores ≥ 5) na 1ª
+ * pergunta filtra autônomos antes do submit chegar aqui, então a validação
+ * só rejeita inputs malformados (não filtra de novo).
+ *
+ * Enums em pares — seniority/area refletem os enums Postgres (job_seniority,
+ * job_area) criados na migration 0004. Valores precisam bater exatamente.
+ *
+ * Honeypot: campo `website` deve vir VAZIO. Se preenchido = bot, server action
+ * retorna success silenciosamente sem gravar.
+ */
+const JobSenioritySchema = z.enum([
+  'analista', 'coordenador', 'gerente', 'diretor', 'c_level',
+]);
+const JobAreaSchema = z.enum([
+  'marketing', 'growth', 'vendas', 'rh', 'employer_branding', 'comunicacao', 'outro',
+]);
+const VozAtualSchema = z.enum([
+  'founder_solo', 'alguns_executivos', 'time_esparso', 'ninguem', 'programa_rodando',
+]);
+const TentativasSchema = z.enum([
+  'nunca', 'morreu', 'baixa_adesao', 'maduro',
+]);
+const DorPrincipalSchema = z.enum([
+  'company_page_morta',
+  'cac_subindo',
+  'concorrente_dominando',
+  'vendedor_invisivel',
+  'talento_saindo',
+  'marca_uma_pessoa',
+  'outra',
+]);
+const ResultadoPrioritarioSchema = z.enum([
+  'awareness', 'pipeline', 'reducao_paid', 'talento', 'autoridade', 'engajamento',
+]);
+const BudgetStatusSchema = z.enum([
+  'aprovado', 'planejando', 'precisa_justificar', 'sem_budget',
+]);
+const SponsorshipSchema = z.enum([
+  'sim_alguns_postam', 'sim_com_ajuda', 'talvez', 'nao',
+]);
+const ColaboradoresPostandoSchema = z.enum([
+  'nenhum', '1_3', '4_10', 'mais_10', 'nao_sei',
+]);
+
+export const PlaybookEmployeeLedGrowthLeadSchema = z
+  .object({
+    // Identificação (fim do quiz)
+    nome: NameSchema,
+    email: EmailSchema,
+    empresa: CompanyNameSchema,
+    telefone: PhoneOptionalSchema,
+    newsletterOptIn: z.boolean().optional(),
+    lgpdConsent: z.boolean().refine((v) => v === true, {
+      message: 'Consentimento LGPD obrigatório',
+    }),
+
+    // P1 — porte (gate validado client-side; server aceita ≥1 só pra defesa
+    // em profundidade; gate real é UI). Aceita 1..100000.
+    porteColaboradores: z.number().int().min(1).max(100_000),
+
+    // P2 + P3
+    cargoSenioridade: JobSenioritySchema,
+    cargoArea: JobAreaSchema,
+
+    // P4 — setor (string controlada pela UI dropdown, validamos só limite)
+    setor: z.string().trim().min(1).max(120),
+
+    // P5
+    colaboradoresPostando: ColaboradoresPostandoSchema,
+
+    // P6 + P7
+    vozAtual: VozAtualSchema,
+    tentativasAnteriores: TentativasSchema,
+
+    // P8 + P9 + P10 + P11
+    dorPrincipal: DorPrincipalSchema,
+    resultadosPrioritarios: z.array(ResultadoPrioritarioSchema).min(1).max(2),
+    budgetStatus: BudgetStatusSchema,
+    sponsorshipLideranca: SponsorshipSchema,
+
+    // Aberta opcional
+    observacoesLivres: optionalText(500),
+
+    // Honeypot — humanos não preenchem
+    website: z.string().max(0).optional().or(z.literal('')),
+
+    // Tracking
+    origem: optionalText(200),
+  })
+  .extend(UtmFieldsSchema.shape);
+
+/* -------------------------------------------------------------------------- */
 /*  Helper genérico                                                            */
 /* -------------------------------------------------------------------------- */
 

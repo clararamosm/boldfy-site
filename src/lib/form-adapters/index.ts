@@ -14,3 +14,4 @@ export { adaptBeta } from './beta';
 export { adaptDemo } from './demo';
 export { adaptProposal, type ProposalAdapterContext } from './proposal';
 export { adaptLinkedInExtension, type LinkedInExtensionInput } from './linkedin-extension';
+export { adaptPlaybookEmployeeLedGrowth } from './playbook-employee-led-growth';

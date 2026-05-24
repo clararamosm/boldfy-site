@@ -42,7 +42,8 @@ export type FormSlug =
   | 'demo'
   | 'proposta'
   | 'linkedin_extension'
-  | 'case-semrush';
+  | 'case-semrush'
+  | 'playbook-employee-led-growth';
 export type FormKind = 'topo_funil' | 'lider_b2b_only';
 
 export type LeadSegment = 'lider_b2b' | 'parceiro' | 'profissional_individual';
@@ -104,6 +105,16 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     name: 'Case Semrush ELG',
     kind: 'topo_funil',
     acTag: 'Form: Case Semrush ELG',
+  },
+  // Playbook ELG (mai/2026): quiz interativo de 11 perguntas em
+  // /ferramentas/playbook-employee-led-growth. Gera página pessoal /playbook/[slug]
+  // com estratégia personalizada. Sempre Líder B2B — gate de elegibilidade
+  // (≥5 colab) na 1ª pergunta filtra autônomos/profissionais individuais.
+  'playbook-employee-led-growth': {
+    slug: 'playbook-employee-led-growth',
+    name: 'Playbook de Employee-Led Growth',
+    kind: 'lider_b2b_only',
+    acTag: 'Form: Playbook Employee-Led Growth',
   },
 };
 
@@ -185,6 +196,8 @@ const SLUG_TO_SOURCE_METHOD: Record<FormSlug, SourceMethod> = {
   // do CRM. Migration 0002_form_case_semrush.sql adicionou 'form_case_semrush'
   // ao enum. Migration 0003a renomeou 'form_report' → 'form_algoritmo_linkedin'.
   'case-semrush': 'form_case_semrush',
+  // Playbook ELG (mai/2026): migration 0004 adicionou o valor ao enum.
+  'playbook-employee-led-growth': 'form_playbook_employee_led_growth',
 };
 
 export function formSlugToSourceMethod(slug: FormSlug): SourceMethod {
@@ -211,5 +224,6 @@ export function formSlugToActivityType(slug: FormSlug): string {
     case 'proposta': return 'form_submit_proposta';
     case 'linkedin_extension': return 'form_submit_extension_linkedin';
     case 'case-semrush': return 'form_submit_case_semrush';
+    case 'playbook-employee-led-growth': return 'form_submit_playbook_employee_led_growth';
   }
 }

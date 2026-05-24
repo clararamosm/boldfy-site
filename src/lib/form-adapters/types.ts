@@ -40,6 +40,20 @@ export type ClassifiedLead = {
   newsletterOptIn: boolean;
   formSlug: FormSlug;
 
+  /* ---------------- Cargo (forms que coletam — mai/2026) ---------------- */
+  /** Senioridade — enum job_seniority. Undefined em forms que não pedem cargo. */
+  jobSeniority?: 'analista' | 'coordenador' | 'gerente' | 'diretor' | 'c_level' | null;
+  /** Área funcional — enum job_area. Undefined em forms que não pedem. */
+  jobArea?:
+    | 'marketing'
+    | 'growth'
+    | 'vendas'
+    | 'rh'
+    | 'employer_branding'
+    | 'comunicacao'
+    | 'outro'
+    | null;
+
   /* ---------------- Tags AC (4 famílias) ---------------- */
   /** Set explícito — substitui completamente people.acTags. */
   acTags: string[];
