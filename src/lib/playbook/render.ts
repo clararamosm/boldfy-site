@@ -404,9 +404,12 @@ export function renderPlaybookData(
   // === Dicas selecionadas ===
   const dicas = selectTipsForPlaybook(quiz);
 
-  // === Checklist antes — começa em PLACEHOLDER (sessão de copy não fechou
-  // os 5 itens variáveis por área × seniority × tentativas; vão entrar em
-  // sessão de copy futura). Item-zero condicional quando tentou_morreu.
+  // === Checklist antes ===
+  // 5 itens fixos validados na sessão de copy editorial (preview Lumify cac-morreu).
+  // Variações por área × seniority × tentativas podem entrar em sessão futura,
+  // mas a base atual funciona pros 10 templates (a primeira linha "Alinhar com
+  // Vendas/RH" se adapta pelo nome da área via interpolação).
+  // Item-zero condicional aparece QUANDO tentou_morreu.
   const checklistAntes: ChecklistItem[] = [];
   if (quiz.tentativasAnteriores !== 'nunca') {
     checklistAntes.push({
@@ -416,6 +419,50 @@ export function renderPlaybookData(
       prazo: '30min',
     });
   }
+  // Os 5 itens-base. O primeiro varia o "parceiro interno" por área do respondente.
+  const base = areaToBase(quiz.cargoArea);
+  const parceiroInterno =
+    base === 'marketing' ? 'Vendas (e RH, se for o caso)' :
+    base === 'vendas'    ? 'Marketing' :
+    /* base === 'rh' */    'Marketing';
+  const parceiroExplicacao =
+    base === 'marketing' ? 'Employee-Led Growth é canal de mídia, não comunicação interna nem cultura. Sem esse acordo prévio, Vendas trata como concorrência ao SDR e RH como tarefa de engajamento.' :
+    base === 'vendas'    ? 'Sem esse alinhamento, vira "vendedor postando solto" e o conteúdo conflita com a estratégia editorial da empresa. Marketing precisa entrar pra cuidar dos pilares.' :
+    /* rh */               'Sem Marketing, RH herda o projeto como cultura/comunicação interna. Com Marketing junto, vira canal de mídia que também atrai talento.';
+  checklistAntes.push(
+    {
+      titulo: `Alinhar com ${parceiroInterno}`,
+      descricao: `Senta 30min com cada head antes de envolver mais gente. ${parceiroExplicacao}`,
+      prazo: '2 reuniões',
+    },
+    {
+      titulo: 'Travar 1 C-level como sponsor real',
+      descricao:
+        'Sem manifesto bonito. Precisa de alguém da diretoria comprometido a postar 1x/semana e a aprovar pauta em até 24h. Programa que entra sem esse compromisso vê o ritmo cair entre o mês 2 e o mês 3.',
+      prazo: '1 conversa',
+    },
+    {
+      titulo: 'Selecionar primeiro grupo (5-8 colaboradores)',
+      descricao:
+        'Não tenta a empresa inteira de uma vez. Critério: SSI no LinkedIn acima de 30, pessoas que já postam pelo menos 1x/mês, ou os comunicativos naturais do time. O resto entra depois, vendo o primeiro grupo funcionar.',
+      prazo: '1 semana',
+    },
+    {
+      titulo: 'Decidir o pacote de recompensas iniciais',
+      descricao:
+        'Day-off, voucher iFood, assinatura Spotify, almoço com C-level, qualquer combinação que faça sentido pra cultura de vocês. Não precisa ser caro, precisa existir antes do primeiro post. Recompensa que aparece no mês 2 não funciona como recompensa, vira condicional duvidosa.',
+      prazo: '1 reunião',
+    },
+    {
+      titulo: quiz.tentativasAnteriores !== 'nunca'
+        ? 'Apresentar a estratégia (com a lição do que morreu) pro primeiro grupo + sponsor'
+        : 'Apresentar a estratégia pro primeiro grupo + sponsor',
+      descricao: quiz.tentativasAnteriores !== 'nunca'
+        ? '30min de pitch interno mostrando: o porquê novo, o que mudou desde a última vez (a Boldfy assume o operacional), o que cada um ganha pessoalmente. Mencionar explicitamente o programa anterior é o que evita o efeito "já tentamos isso e não funcionou" no time-teste.'
+        : '30min de pitch interno mostrando: o porquê do programa, como rola no dia a dia, e o que cada um ganha pessoalmente. Alinhamento curto antes de subir.',
+      prazo: '30min',
+    },
+  );
 
   // === Calculadora ===
   const calculadora = {
