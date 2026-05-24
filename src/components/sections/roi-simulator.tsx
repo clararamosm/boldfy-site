@@ -11,9 +11,13 @@
  * — aquele calcula "qual o pacote Boldfy ideal pra sua empresa?". Este aqui
  * é "quanto de mídia equivalente sua empresa ganha?".
  *
- * Componente sem props — sempre renderiza igual em qualquer lugar (home,
- * /beta-test, futuras LPs). Toda a lógica de preços e CPM vem de
- * `src/lib/constants.ts` — uma fonte da verdade só.
+ * Aceita defaults opcionais via props (mai/2026) — usado pelo Playbook ELG
+ * pra pré-preencher os sliders com o porte da empresa do respondente. Sem
+ * props mantém comportamento antigo (defaults internos), preservando os
+ * usos atuais em home / beta-test / case-semrush / materiais.
+ *
+ * Toda a lógica de preços e CPM vem de `src/lib/constants.ts` — uma fonte
+ * da verdade só.
  */
 
 import { useMemo, useState } from 'react';
@@ -45,11 +49,34 @@ function formatBRL(value: number): string {
   });
 }
 
-export function RoiSimulator() {
+export type RoiSimulatorProps = {
+  /**
+   * Pré-popula o slider de colaboradores. Será clampado pra [MIN_COLLABORATORS,
+   * MAX_COLLABORATORS] (5..70) caso esteja fora. Default: 5.
+   */
+  initialCollaborators?: number;
+  /**
+   * Pré-popula o slider de impressões/mês. Será clampado pra [MIN_IMPRESSIONS,
+   * MAX_IMPRESSIONS] (1k..50k). Default: 10k.
+   */
+  initialImpressions?: number;
+};
+
+export function RoiSimulator({
+  initialCollaborators = DEFAULT_COLLABORATORS,
+  initialImpressions = DEFAULT_IMPRESSIONS,
+}: RoiSimulatorProps = {}) {
   const t = useT();
 
-  const [collaborators, setCollaborators] = useState(DEFAULT_COLLABORATORS);
-  const [impressionsPerCollab, setImpressionsPerCollab] = useState(DEFAULT_IMPRESSIONS);
+  // Clamp pros bounds do slider — protege contra props inválidas vindas de
+  // outras pages (Playbook gera baseado em quiz.porteColaboradores, que pode
+  // ser >70 ou <5 em casos raros — gate de elegibilidade já filtra <5 mas
+  // o clamp aqui é defesa em profundidade).
+  const clampedCollab = Math.max(MIN_COLLABORATORS, Math.min(MAX_COLLABORATORS, initialCollaborators));
+  const clampedImp = Math.max(MIN_IMPRESSIONS, Math.min(MAX_IMPRESSIONS, initialImpressions));
+
+  const [collaborators, setCollaborators] = useState(clampedCollab);
+  const [impressionsPerCollab, setImpressionsPerCollab] = useState(clampedImp);
 
   const results = useMemo(() => {
     const totalImpressions = collaborators * impressionsPerCollab;
