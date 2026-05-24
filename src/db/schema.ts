@@ -52,9 +52,44 @@ export const sourceMethodEnum = pgEnum('source_method', [
   'form_algoritmo_linkedin',
   'form_case_semrush',
   'form_proposta',
+  'form_playbook_employee_led_growth',
   'extension_linkedin',
   'manual',
   'imported_folk',
+]);
+
+/**
+ * Senioridade do cargo do respondente (padrão recorrente — começa no Playbook
+ * de Employee-Led Growth, mai/2026, e deve ser retrofit em forms futuros que
+ * coletam cargo: beta, demo, proposta).
+ *
+ * Razão: alimenta lead score (C-Level + budget + sponsorship = lead quente),
+ * filtros no kanban do CRM, segmentação no AC.
+ */
+export const jobSeniorityEnum = pgEnum('job_seniority', [
+  'analista',
+  'coordenador',
+  'gerente',
+  'diretor',
+  'c_level',
+]);
+
+/**
+ * Área funcional do respondente dentro da empresa. Define qual template do
+ * Playbook é renderizado (marketing/vendas/rh têm angulações diferentes).
+ *
+ * 'outro' é fallback consciente — NÃO usar pra forçar respondentes a se
+ * encaixarem; documenta o cenário real e cai num template genérico de
+ * marketing como default no render.
+ */
+export const jobAreaEnum = pgEnum('job_area', [
+  'marketing',
+  'growth',
+  'vendas',
+  'rh',
+  'employer_branding',
+  'comunicacao',
+  'outro',
 ]);
 
 export const meetingStatusEnum = pgEnum('meeting_status', [
@@ -197,6 +232,18 @@ export const people = pgTable(
     formsSubmitted: text('forms_submitted').array().notNull().default(sql`'{}'::text[]`),
     /** URL da proposta HTML gerada (form Proposta). Botão destacado no perfil. */
     proposalUrl: text('proposal_url'),
+    /**
+     * Senioridade do cargo (introduzida no form Playbook ELG, mai/2026).
+     * Nullable — pessoas vindas de forms antigos não têm. Forms novos
+     * devem popular. Padrão recorrente: usar nos próximos forms que
+     * coletarem cargo.
+     */
+    jobSeniority: jobSeniorityEnum('job_seniority'),
+    /**
+     * Área funcional (introduzida no form Playbook ELG, mai/2026).
+     * Define template do Playbook + segmentação de leads no kanban.
+     */
+    jobArea: jobAreaEnum('job_area'),
     /** UTM source do ÚLTIMO toque — atualiza a cada form/captura nova. */
     lastTouchSource: text('last_touch_source'),
     /** UTM campaign do último toque. firstTouch* permanecem imutáveis. */
@@ -217,6 +264,9 @@ export const people = pgTable(
     // pra drizzle-kit não tentar dropar caso a Clara rode push no futuro.
     index('idx_people_segment').on(t.segment),
     index('idx_people_forms_gin').using('gin', t.formsSubmitted),
+    // Índices do Playbook ELG (mai/2026) — segmentação no kanban e State of ELG.
+    index('idx_people_seniority').on(t.jobSeniority),
+    index('idx_people_area').on(t.jobArea),
   ],
 );
 
@@ -299,6 +349,69 @@ export const proposals = pgTable(
   (t) => [
     index('idx_proposals_person').on(t.personId),
     index('idx_proposals_created').on(t.createdAt),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
+/*  playbook_outputs (storage dos playbooks gerados pela ferramenta ELG)       */
+/*                                                                              */
+/*  Cada submit do quiz /ferramentas/playbook-employee-led-growth gera uma row */
+/*  aqui + uma página acessível em /playbook/[slug] (noindex/nofollow).        */
+/*  Pessoa pode revisitar a página dela / compartilhar com C-level, e a equipe */
+/*  Boldfy vê quem voltou a abrir (view_count + last_viewed_at) como sinal     */
+/*  comercial dentro do CRM interno.                                           */
+/*                                                                              */
+/*  rendered_data é snapshot — se a gente atualizar templates depois, páginas  */
+/*  antigas continuam renderizando o que viram no momento original. Não força  */
+/*  re-render retroativo (que pode quebrar links compartilhados).              */
+/*                                                                              */
+/*  1 pessoa → N outputs (pessoa pode refazer o quiz; cada execução vira row   */
+/*  nova preservando histórico).                                               */
+/* -------------------------------------------------------------------------- */
+
+export const playbookOutputs = pgTable(
+  'playbook_outputs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** Slug público URL-facing: `[empresa-kebab]-[6-char-hash]`. Único globalmente. */
+    slug: text('slug').notNull().unique(),
+    personId: uuid('person_id').notNull().references(() => people.id, { onDelete: 'cascade' }),
+    /** Nullable: empresa pode ser deletada sem perder o playbook (histórico). */
+    companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+
+    /** Snapshot completo das respostas do quiz (todas as 11 perguntas + livre). */
+    quizData: jsonb('quiz_data').notNull(),
+
+    /**
+     * Chave do template renderizado, no formato `{area}-{dor-curta}-{tentativas-curta}`.
+     * Ex: 'marketing-cac-morreu', 'vendas-coldoutreach-nunca', 'rh-talento-morreu'.
+     * Permite regenerar/auditar com qual template a página foi montada.
+     */
+    templateKey: text('template_key').notNull(),
+
+    /**
+     * Variáveis injetadas no template (hero number, paragrafo conector,
+     * checklist items condicionais, calculadora defaults, etc).
+     * Estrutura definida em /source-of-truth/specs/playbook-employee-led-growth.md §6.2.
+     */
+    renderedData: jsonb('rendered_data').notNull(),
+
+    /** Tracking de revisitas — sinal comercial pro CRM. Incrementado a cada view. */
+    viewCount: integer('view_count').notNull().default(0),
+    lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }),
+    /** IP do visualizador HASHED (sha256 com salt do COOKIE_SECRET) — LGPD. */
+    lastViewedIp: text('last_viewed_ip'),
+
+    /** Marca quando a pessoa clicou em "Exportar PDF" (window.print). */
+    pdfExportedAt: timestamp('pdf_exported_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('idx_playbook_outputs_person').on(t.personId),
+    index('idx_playbook_outputs_created').on(t.createdAt),
+    index('idx_playbook_outputs_template').on(t.templateKey),
   ],
 );
 
