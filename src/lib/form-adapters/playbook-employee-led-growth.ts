@@ -65,6 +65,11 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
   // Custom fields AC — gates da cadência + segmentação. Incluem dados do
   // quiz pra automation segmentar (ex: dispara nurture diferente pra
   // budget=aprovado vs precisa_justificar).
+  //
+  // P8 vira multi (mai/2026): `dores_principais` chega como array. No AC
+  // sincronizamos como STRING CONCATENADA com vírgula (`"CAC subindo, Concorrente
+  // dominando"`) pra simplificar segmentação — AC não suporta arrays nativos em
+  // custom fields, e regras de automation com `contains` cobrem o caso.
   const acFields: ClassifiedLead['acFields'] = {
     tipo_de_lead: TIPO_LEAD_LABEL,
     empresa: input.empresa,
@@ -72,7 +77,7 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     setor: input.setor,
     cargo_senioridade: input.cargoSenioridade,
     cargo_area: input.cargoArea,
-    dor_principal: input.dorPrincipal,
+    dores_principais: input.doresPrincipais.join(', '),
     budget_status: input.budgetStatus,
     sponsorship_lideranca: input.sponsorshipLideranca,
     tentativas_anteriores: input.tentativasAnteriores,
@@ -100,7 +105,7 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     colaboradores_postando: input.colaboradoresPostando,
     voz_atual: input.vozAtual,
     tentativas_anteriores: input.tentativasAnteriores,
-    dor_principal: input.dorPrincipal,
+    dores_principais: input.doresPrincipais,
     resultados_prioritarios: input.resultadosPrioritarios,
     budget_status: input.budgetStatus,
     sponsorship_lideranca: input.sponsorshipLideranca,

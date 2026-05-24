@@ -42,7 +42,8 @@ type Answers = {
   colaboradoresPostando?: string;
   vozAtual?: string;
   tentativasAnteriores?: string;
-  dorPrincipal?: string;
+  /** P8 vira multi-select de até 2 dores (mai/2026 — copy-final §4.3). */
+  doresPrincipais?: string[];
   resultadosPrioritarios?: string[];
   budgetStatus?: string;
   sponsorshipLideranca?: string;
@@ -213,7 +214,7 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         colaboradoresPostando: a.colaboradoresPostando as never,
         vozAtual: a.vozAtual as never,
         tentativasAnteriores: a.tentativasAnteriores as never,
-        dorPrincipal: a.dorPrincipal as never,
+        doresPrincipais: (a.doresPrincipais ?? []) as never,
         resultadosPrioritarios: (a.resultadosPrioritarios ?? []) as never,
         budgetStatus: a.budgetStatus as never,
         sponsorshipLideranca: a.sponsorshipLideranca as never,
@@ -356,7 +357,7 @@ function RecapPanel({ answers }: { answers: Answers }) {
   if (answers.colaboradoresPostando) items.push({ q: 'Postando hoje', a: labelOf(QUESTIONS.colaboradoresPostando.options, answers.colaboradoresPostando) });
   if (answers.vozAtual) items.push({ q: 'Voz atual', a: labelOf(QUESTIONS.vozAtual.options, answers.vozAtual) });
   if (answers.tentativasAnteriores) items.push({ q: 'Tentativas', a: labelOf(QUESTIONS.tentativasAnteriores.options, answers.tentativasAnteriores) });
-  if (answers.dorPrincipal) items.push({ q: 'Dor #1', a: labelOf(QUESTIONS.dorPrincipal.options, answers.dorPrincipal) });
+  if (answers.doresPrincipais?.length) items.push({ q: 'Dores principais', a: answers.doresPrincipais.map((v) => labelOf(QUESTIONS.doresPrincipais.options, v)).join(', ') });
   if (answers.resultadosPrioritarios?.length) items.push({ q: 'Prioridades', a: answers.resultadosPrioritarios.map((v) => labelOf(QUESTIONS.resultadosPrioritarios.options, v)).join(', ') });
   if (answers.budgetStatus) items.push({ q: 'Budget', a: labelOf(QUESTIONS.budgetStatus.options, answers.budgetStatus) });
   if (answers.sponsorshipLideranca) items.push({ q: 'Sponsorship', a: labelOf(QUESTIONS.sponsorshipLideranca.options, answers.sponsorshipLideranca) });
@@ -438,21 +439,24 @@ function QuestionView({
       </FaiQuestion>
     );
   }
-  if (stepKey === 'resultadosPrioritarios') {
-    const selected = answers.resultadosPrioritarios ?? [];
-    const max = QUESTIONS.resultadosPrioritarios.max;
+  // Multi-select: P8 (doresPrincipais até 2) e P9 (resultadosPrioritarios até 2)
+  // Mesma lógica FIFO — quando passa do max, remove o item mais antigo.
+  if (stepKey === 'resultadosPrioritarios' || stepKey === 'doresPrincipais') {
+    const cfg = QUESTIONS[stepKey];
+    const selected = (answers[stepKey] as string[] | undefined) ?? [];
+    const max = cfg.max;
     return (
       <FaiQuestion
-        pretitle={`Pergunta ${QUESTIONS.resultadosPrioritarios.n} de ${TOTAL_QUESTIONS}`}
-        faiSay={QUESTIONS.resultadosPrioritarios.faiSay}
-        title={QUESTIONS.resultadosPrioritarios.title}
-        sub={QUESTIONS.resultadosPrioritarios.sub}
+        pretitle={`Pergunta ${cfg.n} de ${TOTAL_QUESTIONS}`}
+        faiSay={cfg.faiSay}
+        title={cfg.title}
+        sub={cfg.sub}
       >
         <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           Selecionadas: <span className="text-primary">{selected.length}</span> de {max}
         </p>
         <div className="grid gap-2">
-          {QUESTIONS.resultadosPrioritarios.options.map((opt) => {
+          {cfg.options.map((opt) => {
             const checked = selected.includes(opt.v);
             return (
               <OptionCard
@@ -467,7 +471,7 @@ function QuestionView({
                     if (next.length >= max) next.shift(); // FIFO — remove o mais antigo
                     next.push(opt.v);
                   }
-                  onAnswer('resultadosPrioritarios', next);
+                  onAnswer(stepKey, next as never);
                 }}
               />
             );
@@ -842,7 +846,7 @@ function isNextDisabled(stepKey: StepKey, answers: Answers): boolean {
   if (stepKey === 'colaboradoresPostando') return !answers.colaboradoresPostando;
   if (stepKey === 'vozAtual') return !answers.vozAtual;
   if (stepKey === 'tentativasAnteriores') return !answers.tentativasAnteriores;
-  if (stepKey === 'dorPrincipal') return !answers.dorPrincipal;
+  if (stepKey === 'doresPrincipais') return !answers.doresPrincipais?.length;
   if (stepKey === 'resultadosPrioritarios') return !answers.resultadosPrioritarios?.length;
   if (stepKey === 'budgetStatus') return !answers.budgetStatus;
   if (stepKey === 'sponsorshipLideranca') return !answers.sponsorshipLideranca;

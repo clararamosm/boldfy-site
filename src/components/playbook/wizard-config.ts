@@ -152,12 +152,16 @@ export const QUESTIONS = {
     ] satisfies Array<ChoiceOption<TentativasValue>>,
   },
 
-  // P8 — dor principal
-  dorPrincipal: {
+  // P8 — dores principais (multi-select de até 2, mai/2026)
+  // Reconhece combinações comuns no B2B BR (ex: CAC subindo + Company Page morta)
+  // que a primeira versão de radio único forçava o respondente a escolher uma só.
+  // Primeira dor selecionada define template-key + soco numérico + CTA final.
+  doresPrincipais: {
     n: 8,
-    faiSay: 'Essa decide o "soco no estômago" do seu playbook.',
-    title: 'Qual sua dor #1 hoje?',
-    sub: '',
+    faiSay: 'Essa decide o "soco no estômago" do seu playbook. Pode marcar até 2.',
+    title: 'Quais suas dores principais hoje?',
+    sub: 'Se cabem duas no seu cenário, marca as duas. A primeira define o foco da estratégia.',
+    max: 2,
     options: [
       { v: 'company_page_morta', label: 'Nossa Company Page tem baixo engajamento e não gera demanda' },
       { v: 'cac_subindo', label: 'CAC subindo, dependência alta de paid media' },
@@ -242,7 +246,7 @@ export const STEP_ORDER = [
   'colaboradoresPostando',
   'vozAtual',
   'tentativasAnteriores',
-  'dorPrincipal',
+  'doresPrincipais',
   'resultadosPrioritarios',
   'budgetStatus',
   'sponsorshipLideranca',

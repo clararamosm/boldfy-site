@@ -310,7 +310,10 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     tentativasAnteriores: TentativasSchema,
 
     // P8 + P9 + P10 + P11
-    dorPrincipal: DorPrincipalSchema,
+    // P8 vira multi-select de até 2 dores (mai/2026 — copy editorial decidiu
+    // expandir o quiz pra reconhecer combinações comuns tipo CAC + Company
+    // Page morta). Primeiro item da array define template-key no render.
+    doresPrincipais: z.array(DorPrincipalSchema).min(1).max(2),
     resultadosPrioritarios: z.array(ResultadoPrioritarioSchema).min(1).max(2),
     budgetStatus: BudgetStatusSchema,
     sponsorshipLideranca: SponsorshipSchema,

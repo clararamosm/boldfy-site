@@ -402,8 +402,8 @@ export const playbookOutputs = pgTable(
     /** IP do visualizador HASHED (sha256 com salt do COOKIE_SECRET) — LGPD. */
     lastViewedIp: text('last_viewed_ip'),
 
-    /** Marca quando a pessoa clicou em "Exportar PDF" (window.print). */
-    pdfExportedAt: timestamp('pdf_exported_at', { withTimezone: true }),
+    // Coluna pdf_exported_at removida na migration 0006 (mai/2026) — PDF
+    // export saiu de escopo. Decisão registrada em copy-final §4.9.
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
