@@ -86,6 +86,7 @@ export default async function PlaybookSlugPage({ params }: PageProps) {
   return (
     <PlaybookOutput
       slug={row.slug}
+      templateKey={row.templateKey}
       data={row.renderedData as RenderedData}
     />
   );

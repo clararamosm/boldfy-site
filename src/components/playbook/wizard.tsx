@@ -21,12 +21,13 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, ChevronLeft, ListChecks, Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { submitPlaybookEmployeeLedGrowthLead } from '@/app/actions/playbook-employee-led-growth-leads';
+import { trackEvent } from '@/lib/track';
 import { QUESTIONS, STEP_ORDER } from './wizard-config';
 import type { StepKey, ChoiceOption } from './wizard-config';
 
@@ -127,12 +128,26 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
   });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRecapOpen, setIsRecapOpen] = useState(false);
+  // Flag de "já trackei o start" — useRef pra não disparar re-render.
+  const quizStartTrackedRef = useRef(false);
 
   // Salva a cada mudança
   useEffect(() => {
     if (state.currentStep === 'success' || state.currentStep === 'loading') return;
     saveToStorage(state);
   }, [state]);
+
+  // Dispara `playbook_quiz_started` na primeira vez que o componente monta
+  // mostrando a 1ª pergunta (P1 porte). Só uma vez por sessão.
+  useEffect(() => {
+    if (quizStartTrackedRef.current) return;
+    if (state.currentStep === 'porte' && state.history.length === 0) {
+      trackEvent('playbook_quiz_started', {
+        source: isMobileModal ? 'mobile_modal' : 'desktop_embed',
+      });
+      quizStartTrackedRef.current = true;
+    }
+  }, [state.currentStep, state.history.length, isMobileModal]);
 
   const progressN = useMemo(() => {
     if (state.currentStep === 'not-eligible' || state.currentStep === 'loading') return 0;
@@ -155,6 +170,11 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
       const currIdx = STEP_ORDER.indexOf(prev.currentStep as StepKey);
       if (currIdx === -1 || currIdx === STEP_ORDER.length - 1) return prev;
       const nextStep = STEP_ORDER[currIdx + 1];
+      // Trackeia conclusão do step atual antes de avançar.
+      trackEvent('playbook_quiz_step_completed', {
+        step: prev.currentStep as StepKey,
+        step_number: currIdx + 1,
+      });
       return {
         ...prev,
         currentStep: nextStep,
@@ -176,6 +196,10 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
   const submitPorte = useCallback(() => {
     const porte = state.answers.porte ?? 0;
     if (porte < PORTE_MIN_VIAVEL) {
+      trackEvent('playbook_quiz_gate_triggered', {
+        reason: 'porte_baixo',
+        porte,
+      });
       setState((prev) => ({
         ...prev,
         currentStep: 'not-eligible',
@@ -195,6 +219,12 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
       setSubmitError('Preencha nome, email, empresa e aceite a LGPD.');
       return;
     }
+    // Honeypot: lê o input escondido do DOM. Bots simples vão preencher;
+    // humanos não veem nem tabulam. Server descarta silenciosamente se != ''.
+    const honeypotEl = typeof document !== 'undefined'
+      ? (document.querySelector('input[name="website"]') as HTMLInputElement | null)
+      : null;
+    const honeypotValue = honeypotEl?.value ?? '';
 
     setSubmitError(null);
     setState((prev) => ({ ...prev, currentStep: 'loading' }));
@@ -219,7 +249,7 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         budgetStatus: a.budgetStatus as never,
         sponsorshipLideranca: a.sponsorshipLideranca as never,
         observacoesLivres: a.observacoesLivres || undefined,
-        website: '', // honeypot vazio
+        website: honeypotValue, // honeypot — vazio em humanos, preenchido em bots
         origem: '/ferramentas/playbook-employee-led-growth',
       });
 
@@ -228,6 +258,17 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         setState((prev) => ({ ...prev, currentStep: 'identificacao' }));
         return;
       }
+
+      // Trackeia o submit bem-sucedido com snapshot das respostas-chave
+      // (sem PII — não mandamos email/nome).
+      trackEvent('playbook_quiz_submitted', {
+        area: a.cargoArea ?? 'unknown',
+        dores_principais: (a.doresPrincipais ?? []).join(','),
+        porte_colaboradores: a.porte ?? 0,
+        seniority: a.cargoSenioridade ?? 'unknown',
+        tentativas: a.tentativasAnteriores ?? 'unknown',
+        budget_status: a.budgetStatus ?? 'unknown',
+      });
 
       clearStorage();
       // Redirect pra página do playbook gerado
@@ -656,6 +697,17 @@ function IdentificationView({
       sub={QUESTIONS.identificacao.sub}
     >
       <div className="space-y-3 rounded-2xl border border-border bg-background p-5">
+        {/* Honeypot: humanos não veem (left:-9999px) nem tabulam (tabIndex=-1).
+            Bots simples preenchem qualquer input do form e cai no descarte
+            silencioso do server. */}
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, width: 0 }}
+        />
         <Field label="Nome completo">
           <Input
             value={answers.nome ?? ''}

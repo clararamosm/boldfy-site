@@ -10,15 +10,18 @@
 
 import { Building2, ChevronDown, Info, RotateCcw, User, Wifi } from 'lucide-react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
+import { trackEvent } from '@/lib/track';
 
 export function PlaybookSnapshot({
   snapshot,
   curvaAtivacao,
   empresa,
+  slug,
 }: {
   snapshot: RenderedData['snapshot'];
   curvaAtivacao: RenderedData['curvaAtivacao'];
   empresa: string;
+  slug: string;
 }) {
   return (
     <section className="py-16 sm:py-24">
@@ -42,7 +45,14 @@ export function PlaybookSnapshot({
           {snapshot.paragrafoConector}
         </p>
 
-        <details className="group rounded-xl border border-border bg-card open:shadow-[0_8px_32px_rgba(93,42,103,.06)]">
+        <details
+          className="group rounded-xl border border-border bg-card open:shadow-[0_8px_32px_rgba(93,42,103,.06)]"
+          onToggle={(e) => {
+            if ((e.currentTarget as HTMLDetailsElement).open) {
+              trackEvent('playbook_curva_expanded', { slug });
+            }
+          }}
+        >
           <summary className="flex cursor-pointer items-center gap-3 px-5 py-4 text-sm font-semibold text-foreground hover:text-primary">
             <Info className="h-4 w-4 text-primary" />
             <span className="flex-1">

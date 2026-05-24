@@ -15,9 +15,15 @@
  *   trackEvent('cta_click', { cta_type: 'demo', source: 'header:desktop' });
  */
 
-type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush';
+type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-employee-led-growth';
 
 type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_download' | 'case_semrush_download' | 'schedule_meeting';
+
+/** Tipos dos botões do CTA do playbook (Bloco 8). */
+type PlaybookCtaType = 'demo' | 'pacote' | 'compartilhar';
+
+/** Razão do gate de não-elegibilidade no quiz do playbook. */
+type PlaybookGateReason = 'porte_baixo';
 
 /**
  * Uni\u00e3o discriminada dos eventos que tem nome + params bem definidos.
@@ -62,6 +68,54 @@ type TrackedEvent =
         form_type: FormType;
         error_message: string;
       };
+    }
+  /* ---------------- Playbook ELG (mai/2026) ---------------- */
+  | {
+      /** Quando a 1ª pergunta do quiz aparece pra pessoa. */
+      name: 'playbook_quiz_started';
+      params: { source: string };
+    }
+  | {
+      /** A cada pergunta respondida — `step` = StepKey, `step_number` = índice 1..N. */
+      name: 'playbook_quiz_step_completed';
+      params: { step: string; step_number: number };
+    }
+  | {
+      /** Gate de não-elegibilidade disparou (porte < 5). */
+      name: 'playbook_quiz_gate_triggered';
+      params: { reason: PlaybookGateReason; porte?: number };
+    }
+  | {
+      /** Submit final OK — o playbook foi gerado. */
+      name: 'playbook_quiz_submitted';
+      params: {
+        area: string;
+        dores_principais: string; // string concatenada com vírgula
+        porte_colaboradores: number;
+        seniority: string;
+        tentativas: string;
+        budget_status: string;
+      };
+    }
+  | {
+      /** Page view de /playbook/[slug]. */
+      name: 'playbook_viewed';
+      params: { template_key: string; slug: string };
+    }
+  | {
+      /** Clique em qualquer um dos 3 CTAs do Bloco 8. */
+      name: 'playbook_cta_clicked';
+      params: { cta_type: PlaybookCtaType; slug: string };
+    }
+  | {
+      /** Accordion "Como a Boldfy resolve" aberto em uma dica (Bloco 4). */
+      name: 'playbook_tip_expanded';
+      params: { tip_id: string; slug: string };
+    }
+  | {
+      /** Accordion da curva de ativação aberto (Bloco 2). */
+      name: 'playbook_curva_expanded';
+      params: { slug: string };
     };
 
 /**

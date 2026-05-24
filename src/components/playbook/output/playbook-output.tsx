@@ -10,7 +10,9 @@
  * Spec: source-of-truth/specs/playbook-employee-led-growth-copy-final.md §1.
  */
 
+import { useEffect } from 'react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
+import { trackEvent } from '@/lib/track';
 import { PlaybookHero } from './playbook-hero';
 import { PlaybookSnapshot } from './playbook-snapshot';
 import { PlaybookTese } from './playbook-tese';
@@ -22,10 +24,17 @@ import { PlaybookCTA } from './playbook-cta';
 
 export type PlaybookOutputProps = {
   slug: string;
+  templateKey: string;
   data: RenderedData;
 };
 
-export function PlaybookOutput({ slug, data }: PlaybookOutputProps) {
+export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps) {
+  // Trackeia view da página no client (uma vez por mount). Tracking server-side
+  // (view_count em playbook_outputs) acontece separadamente em track-action.ts.
+  useEffect(() => {
+    trackEvent('playbook_viewed', { template_key: templateKey, slug });
+  }, [templateKey, slug]);
+
   const shareUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/playbook/${slug}`
@@ -43,13 +52,18 @@ export function PlaybookOutput({ slug, data }: PlaybookOutputProps) {
       <PlaybookHero hero={data.hero} colabAtivos={data.curvaAtivacao.colabAtivos} shareUrl={shareUrl} />
 
       {/* Bloco 2 — Snapshot + accordion curva */}
-      <PlaybookSnapshot snapshot={data.snapshot} curvaAtivacao={data.curvaAtivacao} empresa={data.hero.headlineEmpresa} />
+      <PlaybookSnapshot
+        snapshot={data.snapshot}
+        curvaAtivacao={data.curvaAtivacao}
+        empresa={data.hero.headlineEmpresa}
+        slug={slug}
+      />
 
       {/* Bloco 3 — Tese (fixa) */}
       <PlaybookTese motivos={data.tese.motivos} />
 
       {/* Bloco 4 — Dicas + Boldfy (accordion) */}
-      <PlaybookDicas dicas={data.dicas} />
+      <PlaybookDicas dicas={data.dicas} slug={slug} />
 
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
@@ -61,7 +75,7 @@ export function PlaybookOutput({ slug, data }: PlaybookOutputProps) {
       <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
 
       {/* Bloco 8 — CTA final */}
-      <PlaybookCTA ctaTitulo={data.ctaTitulo} shareUrl={shareUrl} />
+      <PlaybookCTA ctaTitulo={data.ctaTitulo} shareUrl={shareUrl} slug={slug} />
     </main>
   );
 }

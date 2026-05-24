@@ -15,17 +15,29 @@
 import { ArrowRight, Package, Upload } from 'lucide-react';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { trackEvent } from '@/lib/track';
 import { ShareButton } from './share-button';
 
 export function PlaybookCTA({
   ctaTitulo,
   shareUrl,
+  slug,
 }: {
   ctaTitulo: string;
   shareUrl: string;
+  slug: string;
 }) {
   const { openPopup } = useDemoPopup();
   const { openBuilder } = useProposalBuilder();
+
+  const handleDemo = () => {
+    trackEvent('playbook_cta_clicked', { cta_type: 'demo', slug });
+    openPopup('playbook:cta');
+  };
+  const handlePacote = () => {
+    trackEvent('playbook_cta_clicked', { cta_type: 'pacote', slug });
+    openBuilder('playbook:cta');
+  };
 
   return (
     <section className="py-20 sm:py-28">
@@ -45,7 +57,7 @@ export function PlaybookCTA({
           <div className="flex flex-wrap justify-center gap-3">
             <button
               type="button"
-              onClick={() => openPopup('playbook:cta')}
+              onClick={handleDemo}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-[0_8px_24px_rgba(205,80,241,.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(205,80,241,.38)]"
             >
               Agendar demo
@@ -54,7 +66,7 @@ export function PlaybookCTA({
 
             <button
               type="button"
-              onClick={() => openBuilder('playbook:cta')}
+              onClick={handlePacote}
               className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(249,115,22,.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(249,115,22,.45)]"
               style={{
                 backgroundImage: 'linear-gradient(135deg, #F97316, #FBBF24)',
@@ -64,7 +76,11 @@ export function PlaybookCTA({
               <Package className="h-3.5 w-3.5" strokeWidth={2.5} />
             </button>
 
-            <ShareButton url={shareUrl} variant="light">
+            <ShareButton
+              url={shareUrl}
+              variant="light"
+              onShare={() => trackEvent('playbook_cta_clicked', { cta_type: 'compartilhar', slug })}
+            >
               <Upload className="mr-2 h-3.5 w-3.5" />
               Compartilhar link
             </ShareButton>

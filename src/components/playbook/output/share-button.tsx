@@ -13,22 +13,44 @@ import { Check } from 'lucide-react';
 export function ShareButton({
   url,
   variant = 'light',
+  onShare,
   children,
 }: {
   url: string;
   variant?: 'dark' | 'light';
+  /** Callback opcional pra trackear cliques (GA4 event). */
+  onShare?: () => void;
   children: React.ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = async () => {
+    onShare?.();
+
+    // 1. Em mobile com Web Share API (iOS Safari + Chrome Android), abre o
+    //    share sheet nativo — UX certa pra ambientes tipo Web Summit onde
+    //    a pessoa quer mandar pelo WhatsApp/Mail/Slack direto sem copiar.
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({
+          title: 'Meu Playbook de Employee-Led Growth',
+          text: 'Estratégia personalizada de Employee-Led Growth pra minha empresa.',
+          url,
+        });
+        return; // Sucesso — não mostra "copiado" (já compartilhou)
+      } catch (err) {
+        // Pessoa cancelou ou erro — cai pro fallback de clipboard
+        if ((err as { name?: string })?.name === 'AbortError') return;
+      }
+    }
+
+    // 2. Fallback: copia pra clipboard com feedback visual
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: prompt do navegador (clipboard API pode falhar em iframes
-      // ou contextos sem HTTPS — prompt manual cobre o caso raro).
+      // 3. Fallback final: prompt manual (contextos sem HTTPS, iframes restritos)
       window.prompt('Copia o link:', url);
     }
   };

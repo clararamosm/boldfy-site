@@ -28,6 +28,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { Tip } from '@/lib/playbook/templates/types';
+import { trackEvent } from '@/lib/track';
 import { SectionTag } from './playbook-snapshot';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -49,7 +50,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   BookOpen,
 };
 
-export function PlaybookDicas({ dicas }: { dicas: Tip[] }) {
+export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
   const especificas = dicas.filter((d) => !d.selectors.universal);
   const tagsList = especificas.map((d) => d.tagEspecifica).filter(Boolean).join(', ');
 
@@ -70,7 +71,7 @@ export function PlaybookDicas({ dicas }: { dicas: Tip[] }) {
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {dicas.map((tip) => (
-            <DicaCard key={tip.id} tip={tip} />
+            <DicaCard key={tip.id} tip={tip} slug={slug} />
           ))}
         </div>
       </div>
@@ -78,7 +79,7 @@ export function PlaybookDicas({ dicas }: { dicas: Tip[] }) {
   );
 }
 
-function DicaCard({ tip }: { tip: Tip }) {
+function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
   const Icon = ICON_MAP[tip.icon] ?? Compass;
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_16px_40px_rgba(205,80,241,.12)]">
@@ -97,7 +98,14 @@ function DicaCard({ tip }: { tip: Tip }) {
         {tip.titulo}
       </h3>
       <p className="mb-4 flex-1 text-[13px] leading-relaxed text-muted-foreground">{tip.texto}</p>
-      <details className="group rounded-lg border-t border-border/50 pt-3">
+      <details
+        className="group rounded-lg border-t border-border/50 pt-3"
+        onToggle={(e) => {
+          if ((e.currentTarget as HTMLDetailsElement).open) {
+            trackEvent('playbook_tip_expanded', { tip_id: tip.id, slug });
+          }
+        }}
+      >
         <summary className="flex cursor-pointer items-center justify-between gap-2 text-[12px] font-bold text-primary hover:text-primary/80">
           <span>→ Como a Boldfy resolve</span>
           <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
