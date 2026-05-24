@@ -629,7 +629,10 @@ export default function CaseSemrushPage() {
                 <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
                   Ao baixar, você recebe o PDF na hora pra leitura. A gente
                   guarda seus dados pra entender melhor a audiência da Boldfy.
-                  Pode sair quando quiser.
+                  Pode sair quando quiser. Ao enviar, você concorda com nossa{' '}
+                  <a href="/legal#privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">
+                    Política de Privacidade
+                  </a>.
                 </p>
               </form>
             </>

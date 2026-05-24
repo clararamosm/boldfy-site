@@ -596,6 +596,10 @@ export default function AlgoritmoLinkedinPage() {
                 <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
                   Ao baixar, você recebe o PDF por email + uma sequência curta
                   com aprofundamentos sobre o tema. Pode sair quando quiser.
+                  Ao enviar, você concorda com nossa{' '}
+                  <a href="/legal#privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">
+                    Política de Privacidade
+                  </a>.
                 </p>
               </form>
             </>

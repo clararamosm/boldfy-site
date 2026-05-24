@@ -275,6 +275,12 @@ export function DemoForm({
               'Agendar Demo'
             )}
           </button>
+          <p className="text-center text-[11px] text-muted-foreground">
+            Ao enviar, você concorda com nossa{' '}
+            <a href="/legal#privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">
+              Política de Privacidade
+            </a>.
+          </p>
         </form>
       )}
     </div>

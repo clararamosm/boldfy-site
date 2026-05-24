@@ -796,6 +796,10 @@ function ProposalBuilderModal({
 
                   <p className="text-[10px] text-muted-foreground text-center">
                     Não fazemos spam. Usamos seus dados só pra enviar a proposta.
+                    Ao enviar, você concorda com nossa{' '}
+                    <a href="/legal#privacidade" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2">
+                      Política de Privacidade
+                    </a>.
                   </p>
                 </div>
               </div>
