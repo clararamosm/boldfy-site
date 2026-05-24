@@ -8,7 +8,7 @@
  * accordion <details> "Por que estimamos N e não M?" com tabela das 4 faixas.
  */
 
-import { Building2, ChevronDown, Info, RotateCcw, User, Wifi } from 'lucide-react';
+import { Building2, ChevronDown, Factory, Info, RotateCcw, Wifi } from 'lucide-react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { trackEvent } from '@/lib/track';
 
@@ -36,7 +36,7 @@ export function PlaybookSnapshot({
 
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Mini icon={<Building2 className="h-5 w-5" />} label="Porte" value={snapshot.portePretty} />
-          <Mini icon={<User className="h-5 w-5" />} label="Área" value={snapshot.areaPretty} />
+          <Mini icon={<Factory className="h-5 w-5" />} label="Setor" value={snapshot.setorPretty ?? snapshot.areaPretty} />
           <Mini icon={<Wifi className="h-5 w-5" />} label="Voz hoje" value={snapshot.vozAtualPretty} />
           <Mini icon={<RotateCcw className="h-5 w-5" />} label="Tentativas" value={snapshot.tentativasPretty} />
         </div>

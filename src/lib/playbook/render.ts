@@ -389,10 +389,15 @@ export function renderPlaybookData(
   };
 
   // === Snapshot ===
+  // O snapshot é sobre a EMPRESA (não sobre o respondente), então o card 2
+  // mostra o setor da empresa (Tech/SaaS, Fintech…). A área pessoal é
+  // capturada implicitamente pelo template-key (e fica no `areaPretty`
+  // pra compat retroativa de playbooks antigos).
   const snapshot: RenderedData['snapshot'] = {
     porte: quiz.porteColaboradores,
     portePretty: `${quiz.porteColaboradores} colaboradores`,
     areaPretty: areaPretty(quiz.cargoArea),
+    setorPretty: quiz.setor || '—',
     vozAtualPretty: vozAtualPretty(quiz.vozAtual),
     tentativasPretty: tentativasPretty(quiz.tentativasAnteriores),
     paragrafoConector: SNAPSHOT_FECHAMENTO[templateKey],

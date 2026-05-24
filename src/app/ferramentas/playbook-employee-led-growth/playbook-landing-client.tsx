@@ -15,6 +15,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowRight, Check, Clock, Lock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaybookWizard } from '@/components/playbook/wizard';
@@ -43,6 +45,15 @@ export function PlaybookLandingClient() {
         <div className="absolute -left-48 -top-48 h-[600px] w-[600px] rounded-full bg-primary opacity-[0.06] blur-[120px]" />
         <div className="absolute -bottom-48 -right-48 h-[600px] w-[600px] rounded-full bg-primary opacity-[0.05] blur-[120px]" />
       </div>
+
+      {/* Header minimalista — só o logo, sem nav (LP standalone, foco no quiz) */}
+      <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-5 py-3 lg:px-12">
+          <Link href="/" aria-label="Boldfy — voltar pra home" className="shrink-0 transition-opacity hover:opacity-80">
+            <Image src="/images/boldfy-logo.svg" alt="Boldfy" width={84} height={24} priority />
+          </Link>
+        </div>
+      </header>
 
       <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-12 md:gap-16 md:py-20 lg:grid-cols-[1fr_520px] lg:px-12">
 

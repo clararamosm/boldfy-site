@@ -7,6 +7,8 @@
  * único "Compartilhar link" (PDF foi removido).
  */
 
+import Image from 'next/image';
+import Link from 'next/link';
 import { Upload } from 'lucide-react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { ShareButton } from './share-button';
@@ -35,11 +37,16 @@ export function PlaybookHero({
       />
 
       <div className="relative mx-auto max-w-[1080px] px-6 text-center">
-        {/* Logo mini */}
-        <div className="mb-6 inline-flex font-headline text-base font-black tracking-tight">
-          <span className="text-white/85">bold</span>
-          <span className="text-[#E875FF]">fy</span>
-        </div>
+        {/* Logo Boldfy oficial — linka pra home pra quem recebe o link via compartilhamento */}
+        <Link href="/" aria-label="Boldfy — voltar pra home" className="mb-6 inline-block transition-opacity hover:opacity-80">
+          <Image
+            src="/images/boldfy-logo-white.svg"
+            alt="Boldfy"
+            width={84}
+            height={24}
+            priority
+          />
+        </Link>
 
         {/* Pretitle */}
         <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.15em] text-white/55">

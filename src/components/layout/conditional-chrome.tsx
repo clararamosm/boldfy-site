@@ -22,6 +22,10 @@ const LP_ROUTES = [
   '/algoritmo-linkedin',
   '/agendar-demo',
   '/case-semrush',
+  // Playbook ELG (mai/2026): LP + página de output personalizada — ambas
+  // standalone (sem chrome global). Cada uma traz seu próprio logo no header.
+  '/ferramentas/playbook-employee-led-growth',
+  '/playbook',
 ];
 
 /**

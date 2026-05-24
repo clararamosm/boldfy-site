@@ -82,8 +82,20 @@ export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
 function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
   const Icon = ICON_MAP[tip.icon] ?? Compass;
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_16px_40px_rgba(205,80,241,.12)]">
-      <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+    <div
+      className="dica-card group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition duration-300 hover:-translate-y-1.5 hover:border-primary/60 hover:shadow-[0_24px_56px_rgba(205,80,241,.22)]"
+    >
+      {/* Shine effect — varre o card no hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
+      />
+      {/* Glow gradient atrás do card no hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-[#CD50F1]/0 via-[#E875FF]/0 to-[#CD50F1]/0 opacity-0 blur-2xl transition-opacity duration-500 group-hover:from-[#CD50F1]/15 group-hover:via-[#E875FF]/10 group-hover:to-[#CD50F1]/15 group-hover:opacity-100"
+      />
+      <div className="relative mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition group-hover:bg-gradient-to-br group-hover:from-[#CD50F1] group-hover:to-[#E875FF] group-hover:text-white group-hover:shadow-[0_4px_14px_rgba(205,80,241,.4)]">
         <Icon className="h-[18px] w-[18px]" />
       </div>
       <div className="mb-1.5 flex items-center justify-between gap-2">

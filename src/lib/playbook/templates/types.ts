@@ -145,7 +145,9 @@ export type RenderedData = {
   snapshot: {
     porte: number;
     portePretty: string;          // "80 colaboradores"
+    /** @deprecated mantido pra compat retroativa — use `setorPretty` no Bloco 2. */
     areaPretty: string;           // "Marketing"
+    setorPretty: string;          // "Tech / SaaS" — o que aparece no snapshot do output
     vozAtualPretty: string;       // "Founder solo"
     tentativasPretty: string;     // "Já tentou e o programa morreu"
     paragrafoConector: string;    // SNAPSHOT_FECHAMENTO[templateKey]
