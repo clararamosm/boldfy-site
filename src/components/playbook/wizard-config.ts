@@ -84,7 +84,7 @@ export const QUESTIONS = {
     title: 'Em qual área você trabalha?',
     sub: 'Cada grupo de área tem angulação diferente pra Employee-Led Growth.',
     options: [
-      { v: 'marketing', label: 'Marketing & Growth', desc: 'Inclui Comunicação' },
+      { v: 'marketing', label: 'Marketing & Growth' },
       { v: 'vendas', label: 'Vendas' },
       { v: 'rh', label: 'RH & Employer Branding' },
       { v: 'outro', label: 'Outra' },
