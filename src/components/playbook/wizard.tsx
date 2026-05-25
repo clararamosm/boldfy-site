@@ -543,7 +543,9 @@ function QuestionView({
           <OptionCard
             key={opt.v}
             option={opt}
-            selected={currentValue === opt.v}
+            // Setor armazena LABEL (não slug) em answers — então o estado
+            // selected também compara contra o label. Resto compara contra o slug.
+            selected={stepKey === 'setor' ? currentValue === opt.label : currentValue === opt.v}
             onClick={() => {
               // Setor envia o label (string controlada — coluna industry recebe texto legível)
               if (stepKey === 'setor') {
