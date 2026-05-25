@@ -40,13 +40,15 @@ type Answers = {
   cargoSenioridade?: string;
   cargoArea?: string;
   setor?: string;
-  colaboradoresPostando?: string;
   vozAtual?: string;
   tentativasAnteriores?: string;
   /** P8 vira multi-select de até 2 dores (mai/2026 — copy-final §4.3). */
   doresPrincipais?: string[];
-  resultadosPrioritarios?: string[];
   budgetStatus?: string;
+  /**
+   * P11 reformulada (mai/2026 — curadoria pós-teste): detector de oportunidade
+   * Full Content. Valores: `sim_proprio | sim_full_content | nao_foco`.
+   */
   sponsorshipLideranca?: string;
   observacoesLivres?: string;
   nome?: string;
@@ -64,7 +66,7 @@ type WizardState = {
 };
 
 const STORAGE_KEY = 'playbook-elg-quiz-state-v1';
-const TOTAL_QUESTIONS = 11;
+const TOTAL_QUESTIONS = 9;
 
 /** Limites coerentes com Zod no server. */
 const PORTE_MIN_VIAVEL = 5;
@@ -241,11 +243,9 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         cargoSenioridade: a.cargoSenioridade as never,
         cargoArea: a.cargoArea as never,
         setor: a.setor ?? '',
-        colaboradoresPostando: a.colaboradoresPostando as never,
         vozAtual: a.vozAtual as never,
         tentativasAnteriores: a.tentativasAnteriores as never,
         doresPrincipais: (a.doresPrincipais ?? []) as never,
-        resultadosPrioritarios: (a.resultadosPrioritarios ?? []) as never,
         budgetStatus: a.budgetStatus as never,
         sponsorshipLideranca: a.sponsorshipLideranca as never,
         observacoesLivres: a.observacoesLivres || undefined,
@@ -395,11 +395,9 @@ function RecapPanel({ answers }: { answers: Answers }) {
   if (answers.cargoSenioridade) items.push({ q: 'Senioridade', a: labelOf(QUESTIONS.cargoSenioridade.options, answers.cargoSenioridade) });
   if (answers.cargoArea) items.push({ q: 'Área', a: labelOf(QUESTIONS.cargoArea.options, answers.cargoArea) });
   if (answers.setor) items.push({ q: 'Setor', a: answers.setor });
-  if (answers.colaboradoresPostando) items.push({ q: 'Postando hoje', a: labelOf(QUESTIONS.colaboradoresPostando.options, answers.colaboradoresPostando) });
   if (answers.vozAtual) items.push({ q: 'Voz atual', a: labelOf(QUESTIONS.vozAtual.options, answers.vozAtual) });
   if (answers.tentativasAnteriores) items.push({ q: 'Tentativas', a: labelOf(QUESTIONS.tentativasAnteriores.options, answers.tentativasAnteriores) });
   if (answers.doresPrincipais?.length) items.push({ q: 'Dores principais', a: answers.doresPrincipais.map((v) => labelOf(QUESTIONS.doresPrincipais.options, v)).join(', ') });
-  if (answers.resultadosPrioritarios?.length) items.push({ q: 'Prioridades', a: answers.resultadosPrioritarios.map((v) => labelOf(QUESTIONS.resultadosPrioritarios.options, v)).join(', ') });
   if (answers.budgetStatus) items.push({ q: 'Budget', a: labelOf(QUESTIONS.budgetStatus.options, answers.budgetStatus) });
   if (answers.sponsorshipLideranca) items.push({ q: 'Sponsorship', a: labelOf(QUESTIONS.sponsorshipLideranca.options, answers.sponsorshipLideranca) });
 
@@ -480,9 +478,10 @@ function QuestionView({
       </FaiQuestion>
     );
   }
-  // Multi-select: P8 (doresPrincipais até 2) e P9 (resultadosPrioritarios até 2)
-  // Mesma lógica FIFO — quando passa do max, remove o item mais antigo.
-  if (stepKey === 'resultadosPrioritarios' || stepKey === 'doresPrincipais') {
+  // Multi-select: P8 (doresPrincipais até 2). Lógica FIFO — quando passa do
+  // max, remove o item mais antigo. (P9 resultadosPrioritarios foi removida
+  // na curadoria mai/2026; agora só doresPrincipais usa multi.)
+  if (stepKey === 'doresPrincipais') {
     const cfg = QUESTIONS[stepKey];
     const selected = (answers[stepKey] as string[] | undefined) ?? [];
     const max = cfg.max;
@@ -904,11 +903,9 @@ function isNextDisabled(stepKey: StepKey, answers: Answers): boolean {
   if (stepKey === 'cargoSenioridade') return !answers.cargoSenioridade;
   if (stepKey === 'cargoArea') return !answers.cargoArea;
   if (stepKey === 'setor') return !answers.setor;
-  if (stepKey === 'colaboradoresPostando') return !answers.colaboradoresPostando;
   if (stepKey === 'vozAtual') return !answers.vozAtual;
   if (stepKey === 'tentativasAnteriores') return !answers.tentativasAnteriores;
   if (stepKey === 'doresPrincipais') return !answers.doresPrincipais?.length;
-  if (stepKey === 'resultadosPrioritarios') return !answers.resultadosPrioritarios?.length;
   if (stepKey === 'budgetStatus') return !answers.budgetStatus;
   if (stepKey === 'sponsorshipLideranca') return !answers.sponsorshipLideranca;
   if (stepKey === 'observacoesLivres') return false; // sempre pode pular

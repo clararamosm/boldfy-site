@@ -17,9 +17,11 @@ import { PlaybookHero } from './playbook-hero';
 import { PlaybookSnapshot } from './playbook-snapshot';
 import { PlaybookTese } from './playbook-tese';
 import { PlaybookDicas } from './playbook-dicas';
+import { PlaybookResultadosEsperados } from './playbook-resultados-esperados';
 import { PlaybookChecklist } from './playbook-checklist';
 import { PlaybookCalculadora } from './playbook-calculadora';
 import { PlaybookBattleCard } from './playbook-battle-card';
+import { PlaybookSobreBoldfy } from './playbook-sobre-boldfy';
 import { PlaybookCTA } from './playbook-cta';
 
 export type PlaybookOutputProps = {
@@ -65,6 +67,11 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 4 — Dicas + Boldfy (accordion) */}
       <PlaybookDicas dicas={data.dicas} slug={slug} />
 
+      {/* Bloco 4.5 — Resultados esperados (derivados das dores P8 — mai/2026) */}
+      {data.resultadosEsperados && data.resultadosEsperados.length > 0 && (
+        <PlaybookResultadosEsperados resultados={data.resultadosEsperados} />
+      )}
+
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
 
@@ -73,6 +80,11 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
 
       {/* Bloco 7 — Battle card (gráfico 2 colunas) */}
       <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
+
+      {/* Bloco 7.5 — Sobre a Boldfy (SaaS sempre + CaaS condicional — mai/2026) */}
+      {data.sobreBoldfy && (
+        <PlaybookSobreBoldfy sobreBoldfy={data.sobreBoldfy} slug={slug} />
+      )}
 
       {/* Bloco 8 — CTA final */}
       <PlaybookCTA ctaTitulo={data.ctaTitulo} shareUrl={shareUrl} slug={slug} />

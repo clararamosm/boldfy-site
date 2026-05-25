@@ -2,9 +2,16 @@
 
 /**
  * Bloco 4 — Dicas + Boldfy (com accordion).
- * Spec §2.3 do copy-final. Grid de cards de dicas, cada uma com ícone Lucide,
- * número renumerado, título, texto editorial e accordion <details> "Como a
- * Boldfy resolve" que abre embaixo com bullets.
+ * Spec §2.3 do copy-final + curadoria mai/2026.
+ *
+ * Grid de cards de dicas. Cada card tem ícone Lucide, número renumerado,
+ * título descritivo (verb-led — diz o que fazer) e accordion <details>
+ * "Como a Boldfy resolve" que abre embaixo com bullets.
+ *
+ * Curadoria mai/2026:
+ *   - Removido o parágrafo `tip.texto` — título descritivo + bullets bastam.
+ *   - Accordion mais convidativo (label "Veja como a Boldfy resolve",
+ *     destaque de cor mais forte e CTA visualmente mais clicável).
  */
 
 import {
@@ -15,11 +22,15 @@ import {
   Compass,
   Crown,
   DollarSign,
+  Feather,
+  FileText,
   Globe,
   Heart,
   MessageSquare,
   Network,
+  PiggyBank,
   RotateCcw,
+  Sparkles,
   Target,
   TrendingUp,
   Trophy,
@@ -48,6 +59,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Network,
   Crown,
   BookOpen,
+  FileText,
+  PiggyBank,
+  Sparkles,
+  Feather,
 };
 
 export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
@@ -106,23 +121,27 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
           </span>
         )}
       </div>
-      <h3 className="mb-2 font-headline text-base font-black leading-tight tracking-tight text-foreground">
+      <h3 className="mb-4 flex-1 font-headline text-base font-black leading-snug tracking-tight text-foreground">
         {tip.titulo}
       </h3>
-      <p className="mb-4 flex-1 text-[13px] leading-relaxed text-muted-foreground">{tip.texto}</p>
       <details
-        className="group rounded-lg border-t border-border/50 pt-3"
+        className="group/details rounded-lg"
         onToggle={(e) => {
           if ((e.currentTarget as HTMLDetailsElement).open) {
             trackEvent('playbook_tip_expanded', { tip_id: tip.id, slug });
           }
         }}
       >
-        <summary className="flex cursor-pointer items-center justify-between gap-2 text-[12px] font-bold text-primary hover:text-primary/80">
-          <span>→ Como a Boldfy resolve</span>
-          <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
+        <summary
+          className="-mx-1 flex cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[12px] font-bold text-primary transition hover:border-primary/40 hover:bg-primary/10 group-open/details:rounded-b-none group-open/details:border-b-0"
+        >
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3" />
+            Veja como a Boldfy resolve
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 transition-transform group-open/details:rotate-180" />
         </summary>
-        <div className="mt-3 rounded-lg bg-secondary/50 p-3">
+        <div className="-mx-1 rounded-b-lg border border-t-0 border-primary/20 bg-primary/[0.03] p-3">
           <div className="mb-2 text-[12px] font-bold text-foreground">{tip.boldfy.titulo}</div>
           <ul className="space-y-1.5 text-[12px] leading-relaxed text-muted-foreground">
             {tip.boldfy.items.map((item, i) => (

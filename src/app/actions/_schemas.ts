@@ -266,15 +266,33 @@ const DorPrincipalSchema = z.enum([
   'marca_uma_pessoa',
   'outra',
 ]);
+/**
+ * `ResultadoPrioritarioSchema` mantido como deprecated (compat — playbooks
+ * antigos no banco têm esse campo). Wizard novo não pede mais.
+ */
 const ResultadoPrioritarioSchema = z.enum([
   'awareness', 'pipeline', 'reducao_paid', 'talento', 'autoridade', 'engajamento',
 ]);
 const BudgetStatusSchema = z.enum([
   'aprovado', 'planejando', 'precisa_justificar', 'sem_budget',
 ]);
+/**
+ * Sponsorship reformulado (mai/2026 — curadoria pós-teste).
+ * Detecta oportunidade de Full Content (CaaS) sem desviar do foco SaaS.
+ * Mantém suporte aos valores antigos pra retrocompat (playbooks no banco).
+ */
 const SponsorshipSchema = z.enum([
-  'sim_alguns_postam', 'sim_com_ajuda', 'talvez', 'nao',
+  // Valores novos (P11 reformulada)
+  'sim_proprio',
+  'sim_full_content',
+  'nao_foco',
+  // Valores antigos preservados pra retrocompat (playbooks pré-mai/2026)
+  'sim_alguns_postam',
+  'sim_com_ajuda',
+  'talvez',
+  'nao',
 ]);
+/** `ColaboradoresPostandoSchema` mantido só pra compat. Wizard novo não pede mais. */
 const ColaboradoresPostandoSchema = z.enum([
   'nenhum', '1_3', '4_10', 'mais_10', 'nao_sei',
 ]);
@@ -302,8 +320,9 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     // P4 — setor (string controlada pela UI dropdown, validamos só limite)
     setor: z.string().trim().min(1).max(120),
 
-    // P5
-    colaboradoresPostando: ColaboradoresPostandoSchema,
+    // P5 — REMOVIDA na curadoria (mai/2026). Agora opcional pra retrocompat
+    // (playbooks antigos no banco ainda têm essa key no quiz_data).
+    colaboradoresPostando: ColaboradoresPostandoSchema.optional(),
 
     // P6 + P7
     vozAtual: VozAtualSchema,
@@ -314,7 +333,9 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     // expandir o quiz pra reconhecer combinações comuns tipo CAC + Company
     // Page morta). Primeiro item da array define template-key no render.
     doresPrincipais: z.array(DorPrincipalSchema).min(1).max(2),
-    resultadosPrioritarios: z.array(ResultadoPrioritarioSchema).min(1).max(2),
+    // P9 — REMOVIDA na curadoria. Resultado é derivado das dores agora.
+    // Opcional pra retrocompat de playbooks antigos.
+    resultadosPrioritarios: z.array(ResultadoPrioritarioSchema).min(1).max(2).optional(),
     budgetStatus: BudgetStatusSchema,
     sponsorshipLideranca: SponsorshipSchema,
 

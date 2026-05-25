@@ -151,11 +151,9 @@ export async function submitPlaybookEmployeeLedGrowthLead(
       cargoSenioridade: input.cargoSenioridade,
       cargoArea: input.cargoArea,
       setor: input.setor,
-      colaboradoresPostando: input.colaboradoresPostando,
       vozAtual: input.vozAtual,
       tentativasAnteriores: input.tentativasAnteriores,
       doresPrincipais: input.doresPrincipais,
-      resultadosPrioritarios: input.resultadosPrioritarios,
       budgetStatus: input.budgetStatus,
       sponsorshipLideranca: input.sponsorshipLideranca,
       observacoesLivres: input.observacoesLivres,
@@ -199,7 +197,10 @@ export async function submitPlaybookEmployeeLedGrowthLead(
           `Voz atual: ${input.vozAtual}`,
           `Tentativas anteriores: ${input.tentativasAnteriores}`,
           `Dores principais: ${input.doresPrincipais.join(', ')}`,
-          `Resultados prioritários: ${input.resultadosPrioritarios.join(', ')}`,
+          // P9 removida na curadoria mai/2026 — só inclui na nota se vier (compat retroativa).
+          input.resultadosPrioritarios && input.resultadosPrioritarios.length > 0
+            ? `Resultados prioritários: ${input.resultadosPrioritarios.join(', ')}`
+            : '',
           `Budget: ${input.budgetStatus}`,
           `Sponsorship liderança: ${input.sponsorshipLideranca}`,
           input.observacoesLivres ? `\n💬 ${input.observacoesLivres}` : '',

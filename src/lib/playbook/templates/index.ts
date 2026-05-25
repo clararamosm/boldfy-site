@@ -3,13 +3,17 @@
  *
  * Spec: source-of-truth/specs/playbook-employee-led-growth-copy-final.md
  *
- * Estrutura (pós sessão de copy editorial mai/2026):
+ * Estrutura (pós curadoria mai/2026):
  *   - SNAPSHOT_FECHAMENTO: 10 strings, 1 por template-key (Bloco 2)
- *   - TIPS_LIBRARY: 15 dicas com metadados de seleção (Bloco 4)
+ *   - TIPS_LIBRARY: 19 dicas com metadados de seleção (Bloco 4)
+ *     · 15 da copy-final original + 4 da curadoria (B_PRECISA_JUSTIFICAR,
+ *       B_SEM_BUDGET, L_PROPRIO, L_FULL_CONTENT)
  *   - HERO_LEGENDA_POR_DOR: legenda do soco numérico (Bloco 1, varia por dor 1)
  *   - CTA_TITULO_POR_DOR: título do CTA final (Bloco 8, varia por dor 1)
  *   - CHECKLIST_BOLDFY: 4 itens fixos do "Na Boldfy" (Bloco 5)
  *   - TESE_MOTIVOS: 3 cards fixos da Tese (Bloco 3)
+ *   - RESULTADOS_POR_DOR: 1 string por dor — Bloco 4.5 derivado de P8
+ *   - SOBRE_BOLDFY_SAAS / SOBRE_BOLDFY_CAAS: cards do Bloco 7.5
  *
  * `TemplateKey` continua existindo (10 entradas) pra `playbook_outputs.template_key`
  * permanecer estável historicamente, mas o conteúdo da página NÃO é mais matriz
@@ -20,9 +24,14 @@
  *   - "crédito de IA" sai do checklist (é default da Boldfy, não decisão do cliente)
  *   - em-dashes (—) viram vírgula ou dois pontos em texto editorial
  *   - sem emojis, só ícones Lucide
+ *
+ * Curadoria mai/2026:
+ *   - Títulos de dicas reescritos como verbos de ação (diz o que fazer)
+ *   - Campo `texto` dos tips deixou de ser renderizado (título + bullets bastam)
+ *   - 4 novos tips condicionais: 2 por budget (P10) + 2 por sponsorship (P11)
  */
 
-import type { ChecklistItem, TeseMotivo, Tip } from './types';
+import type { ChecklistItem, SobreBoldfyCard, TeseMotivo, Tip } from './types';
 
 /* -------------------------------------------------------------------------- */
 /*  Tipos                                                                      */
@@ -186,21 +195,26 @@ export const CHECKLIST_BOLDFY: ChecklistItem[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Bloco 4 — TIPS_LIBRARY (15 dicas com metadados de seleção)                 */
+/*  Bloco 4 — TIPS_LIBRARY (19 dicas com metadados de seleção)                 */
 /* -------------------------------------------------------------------------- */
 /**
  * Pool completo. Seleção runtime via `selectTipsForPlaybook` em render.ts
- * (spec copy-final §2.4). Universais sempre entram; específicas pegam por
- * área, dor (até 2), tentativas, voz e seniority.
+ * (spec copy-final §2.4 + curadoria mai/2026). Universais sempre entram;
+ * específicas pegam por área, dor (até 2), tentativas, voz, seniority,
+ * budget e sponsorship.
+ *
+ * Curadoria mai/2026:
+ *   - Títulos reescritos como verbos de ação (diz o que fazer)
+ *   - Campo `texto` mantido como string vazia (compat — não renderizado)
+ *   - 4 dicas novas: B_PRECISA_JUSTIFICAR, B_SEM_BUDGET (P10),
+ *     L_PROPRIO, L_FULL_CONTENT (P11 reformulada)
  */
 export const TIPS_LIBRARY: Tip[] = [
   // ===================== UNIVERSAIS (5) =====================
   {
     id: 'U1',
     numero: 'Dica 01',
-    titulo: 'Comece pequeno, com vozes estratégicas',
-    texto:
-      'Tentar ativar 30 pessoas de uma vez esfria em 6 semanas. Comece com 5 a 8 colaboradores pra testar o programa, cada um cobrindo um território diferente. Quando vira caso interno, o resto vem sozinho.',
+    titulo: 'Comece com 5 a 8 vozes, não com a empresa inteira',
     icon: 'Users',
     boldfy: {
       titulo: 'Primeiro grupo + territórios editoriais',
@@ -216,9 +230,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'U2',
     numero: 'Dica 02',
-    titulo: 'Gargalo é posicionamento, não escrita',
-    texto:
-      'Pessoa trava porque não sabe sobre o que falar nem qual ângulo dela cabe na marca. Marca pessoal e corporativa precisam conversar pra parar de soar genérico.',
+    titulo: 'Resolva posicionamento antes de cobrar escrita',
     icon: 'Compass',
     boldfy: {
       titulo: 'Trilhas de discovery + Brand Context',
@@ -234,15 +246,13 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'U3',
     numero: 'Dica 03',
-    titulo: 'Conteúdo pessoal supera institucional',
-    texto:
-      'Post "tenho orgulho de anunciar" não gera autoridade. Bastidor de projeto, lição de call difícil, opinião sobre o mercado, sim. Aumenta autoridade da empresa por efeito halo.',
+    titulo: 'Substitua post institucional por bastidor pessoal',
     icon: 'MessageSquare',
     boldfy: {
       titulo: 'IA contextual de voz pessoal',
       items: [
         'IA lê histórico e estilo de cada colaborador',
-        'Sugere ideias e ângulos a partir do ponto de vista único',
+        'Sugere ângulos a partir do ponto de vista único',
         'Conteúdo sai pessoal, não institucional disfarçado',
       ],
     },
@@ -251,9 +261,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'U4',
     numero: 'Dica 04',
-    titulo: 'Recompensa real, suporte invisível',
-    texto:
-      'Curtida não paga tempo investido. ELG sobrevive com ganho real percebido (autoridade, carreira) e suporte invisível (ideação, refino, calendário) embutido.',
+    titulo: 'Ofereça ganho real e tire fricção do caminho',
     icon: 'Trophy',
     boldfy: {
       titulo: 'Gamificação + recompensas + IA assistente',
@@ -269,9 +277,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'U5',
     numero: 'Dica 05',
-    titulo: 'Resultado é indireto e acumulativo',
-    texto:
-      'ELG não viraliza. Vira reunião sem fila, prospect respondendo mais rápido, deal aquecendo sozinho. Métrica certa é earned media e qualidade de inbound, não like.',
+    titulo: 'Meça earned media e qualidade de inbound, não curtida',
     icon: 'TrendingUp',
     boldfy: {
       titulo: 'Dashboard de earned media + tracking',
@@ -289,9 +295,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'A_MARKETING',
     numero: '',
-    titulo: 'Marketing trata como canal de mídia',
-    texto:
-      'Quando Marketing trata ELG como "engajamento de gente", cai pro RH ou some no organograma. Quando trata como canal de mídia (com métricas e calendário), ganha orçamento e protagonismo.',
+    titulo: 'Trate Employee-Led como canal de mídia, não como engajamento',
     tagEspecifica: 'Marketing',
     icon: 'BarChart3',
     boldfy: {
@@ -308,9 +312,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'A_VENDAS',
     numero: '',
-    titulo: 'Vendedor invisível é prospect que não responde',
-    texto:
-      'O prospect stalkeia o vendedor antes de responder a fria. Se o perfil é vazio (sem post, sem opinião, sem prova de competência), a taxa de resposta despenca. Antes de campanha de outbound nova, audita perfil de cada SDR e BDR.',
+    titulo: 'Audite o perfil de cada vendedor antes da próxima fria',
     tagEspecifica: 'Vendas',
     icon: 'UserCheck',
     boldfy: {
@@ -327,9 +329,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'A_RH',
     numero: '',
-    titulo: 'Conteúdo de cultura interna não converte talento',
-    texto:
-      'Post de "amamos nossa cultura" é bonito de dentro pra dentro, mas não puxa candidato sênior. Talento bom quer ver opinião técnica, bastidor de problema real, evidência de que vai aprender algo. RH precisa pensar conteúdo com lente de mercado, não de pesquisa de clima.',
+    titulo: 'Pare de postar cultura interna pra atrair talento sênior',
     tagEspecifica: 'RH',
     icon: 'Heart',
     boldfy: {
@@ -348,9 +348,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'D_CAC',
     numero: '',
-    titulo: 'Earned media é o número que defende',
-    texto:
-      'Cada R$ que entra como earned é R$ que não pagam em Ads. CPM equivalente medido desde o dia 1 vira argumento que diminui dependência de paid e protege o budget orgânico.',
+    titulo: 'Use CPM equivalente como argumento de orçamento',
     tagEspecifica: 'CAC subindo',
     icon: 'DollarSign',
     boldfy: {
@@ -367,9 +365,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'D_COMPANYPAGE',
     numero: '',
-    titulo: 'Page corporativa não puxa demanda sozinha',
-    texto:
-      'Page funciona como vitrine institucional, mas quase nunca como canal de demanda. O atalho não é melhorar o conteúdo da page, é distribuir voz pra 5-10 pessoas postando do perfil delas. O alcance orgânico de pessoa é 4 a 6 vezes maior.',
+    titulo: 'Distribua voz pra 5-10 perfis e libere a page de carregar tudo',
     tagEspecifica: 'Company Page morta',
     icon: 'Globe',
     boldfy: {
@@ -386,9 +382,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'D_CONCORRENTE',
     numero: '',
-    titulo: 'Concorrente tem mais vozes, não mais orçamento',
-    texto:
-      'Concorrente menor que aparece mais no feed quase sempre tem mais gente postando, não mais mídia paga. Mapear 3-5 perfis dele que crescem vira benchmark de pauta e ritmo pro primeiro grupo.',
+    titulo: 'Mapeie 3-5 vozes do concorrente pra calibrar pauta e ritmo',
     tagEspecifica: 'Concorrente dominando',
     icon: 'Target',
     boldfy: {
@@ -405,9 +399,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'D_TALENTO',
     numero: '',
-    titulo: 'Marca empregadora vive no feed do colaborador',
-    texto:
-      'Talento bom não procura Glassdoor, procura LinkedIn. Cada colaborador ativo é uma referência viva que o próximo candidato vai stalkear antes de aplicar. Sem colaborador presente, o concorrente mais visível atrai.',
+    titulo: 'Ative colaboradores como referência viva pro próximo candidato',
     tagEspecifica: 'Talento saindo',
     icon: 'Award',
     boldfy: {
@@ -426,9 +418,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'T_MORREU',
     numero: '',
-    titulo: 'Faça autópsia do programa anterior',
-    texto:
-      'Programa morreu por 1 dos 3 motivos clássicos. Subir o próximo sem identificar qual falhou é repetir o erro. Conversa de 30min com quem participou basta.',
+    titulo: 'Faça autópsia do programa anterior antes de subir o próximo',
     tagEspecifica: 'Tentou e morreu',
     icon: 'RotateCcw',
     boldfy: {
@@ -447,9 +437,7 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'V_FOUNDER_SOLO',
     numero: '',
-    titulo: 'Founder solo é fragilidade operacional',
-    texto:
-      'Founder postando sozinho funciona até a primeira semana de férias. Distribuir voz pra 3-5 pessoas internas não tira protagonismo do founder, multiplica os canais da marca. O feed da empresa não morre quando ele para.',
+    titulo: 'Distribua a voz do founder pra 3-5 pessoas internas',
     tagEspecifica: 'Founder solo',
     icon: 'Network',
     boldfy: {
@@ -468,13 +456,11 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'S_CLEVEL',
     numero: '',
-    titulo: 'Você é C-level: o sponsor é você',
-    texto:
-      'Não terceiriza sponsorship pro gestor que toca. Se você é C-level e está nessa página, o sponsor visível precisa ser você. Compromisso mínimo: 1 post seu por semana e aprovação de pauta dos colaboradores em até 24h.',
+    titulo: 'Assuma o papel de sponsor: 1 post/semana e aprovação em 24h',
     tagEspecifica: 'C-Level',
     icon: 'Crown',
     boldfy: {
-      titulo: 'Comitê admin + missões pro sponsor',
+      titulo: 'Painel admin + missões pro sponsor',
       items: [
         'Painel admin específico pra sponsor',
         'Missões de exemplo pra C-level postar consistentemente',
@@ -484,4 +470,140 @@ export const TIPS_LIBRARY: Tip[] = [
     },
     selectors: { seniority: ['c_level'] },
   },
+
+  // ===================== BUDGET-ESPECÍFICAS (2 — curadoria mai/2026) =======
+  {
+    id: 'B_PRECISA_JUSTIFICAR',
+    numero: '',
+    titulo: 'Construa o caso com earned media antes de pedir budget',
+    tagEspecifica: 'Precisa justificar',
+    icon: 'FileText',
+    boldfy: {
+      titulo: 'Slide de defesa de budget pré-pronto',
+      items: [
+        'CPM equivalente medido desde o primeiro post',
+        'Comparativo earned vs paid sai automático',
+        'Slide de board exportável, sem planilha manual',
+        'Linguagem pronta pra finance e CFO',
+      ],
+    },
+    selectors: { budget: ['precisa_justificar'] },
+  },
+  {
+    id: 'B_SEM_BUDGET',
+    numero: '',
+    titulo: 'Comece pequeno e gere dado pra desbloquear budget no Q seguinte',
+    tagEspecifica: 'Sem budget',
+    icon: 'PiggyBank',
+    boldfy: {
+      titulo: 'Trial guiado + plano sem fricção',
+      items: [
+        'Setup mínimo com 5-8 colaboradores',
+        'Resultado em 60 dias vira argumento de board',
+        'Sem contrato anual de cara — destrava no Q seguinte',
+        'Estrategista da Boldfy acompanha desde o trial',
+      ],
+    },
+    selectors: { budget: ['sem_budget'] },
+  },
+
+  // ===================== SPONSORSHIP-ESPECÍFICAS (2 — curadoria mai/2026) ==
+  {
+    id: 'L_PROPRIO',
+    numero: '',
+    titulo: 'Acelere os líderes que topam postar com método e ferramenta',
+    tagEspecifica: 'Líder topa postar',
+    icon: 'Sparkles',
+    boldfy: {
+      titulo: 'IA assistente + território editorial por líder',
+      items: [
+        'Cada líder ganha território editorial no Brand Context',
+        'IA sugere ângulos a partir do dia a dia da pessoa',
+        'Refino e calendário sem trocar de app',
+        'Métrica individual mostra quem está puxando o feed',
+      ],
+    },
+    selectors: { sponsorship: ['sim_proprio'] },
+  },
+  {
+    id: 'L_FULL_CONTENT',
+    numero: '',
+    titulo: 'Terceirize a produção, mas mantenha a autoria do líder',
+    tagEspecifica: 'Full Content',
+    icon: 'Feather',
+    boldfy: {
+      titulo: 'Modalidade Full Content (CaaS) da Boldfy',
+      items: [
+        'Estrategista entrevista o líder pra captar ponto de vista',
+        'Equipe Boldfy produz posts no tom da pessoa',
+        'Líder revisa e aprova em minutos, sem escrever',
+        'Sai opinião autêntica, sem custo de tempo do líder',
+      ],
+    },
+    selectors: { sponsorship: ['sim_full_content'] },
+  },
 ];
+
+/* -------------------------------------------------------------------------- */
+/*  Bloco 4.5 — RESULTADOS_POR_DOR (novo mai/2026)                             */
+/* -------------------------------------------------------------------------- */
+/**
+ * Mapeia cada dor P8 pra 1 frase curta com o resultado esperado.
+ * Render escolhe as frases correspondentes às dores selecionadas e renderiza
+ * como micro-bloco entre Dicas (Bloco 4) e Checklist (Bloco 5).
+ *
+ * 'outra' fica de fora (sem mapeamento) — micro-bloco só renderiza se sobrar
+ * pelo menos 1 resultado mapeado.
+ */
+export const RESULTADOS_POR_DOR: Partial<Record<DorPrincipalValue, string>> = {
+  cac_subindo:
+    'CAC menor com earned media substituindo parte da mídia paga',
+  company_page_morta:
+    'Voz da empresa cresce no feed sem depender da Company Page',
+  concorrente_dominando:
+    'Vocês passam a aparecer onde antes só o concorrente aparecia',
+  vendedor_invisivel:
+    'Vendedores com perfil cheio aumentam taxa de resposta de outbound',
+  talento_saindo:
+    'Marca empregadora visível atrai talento sênior sem subir custo de hiring',
+  marca_uma_pessoa:
+    'Voz da marca deixa de depender de uma única pessoa',
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Bloco 7.5 — SOBRE A BOLDFY (SaaS sempre + CaaS condicional)                */
+/* -------------------------------------------------------------------------- */
+/**
+ * Cards da seção "Sobre a Boldfy", entre Battle card e CTA final.
+ *
+ * SOBRE_BOLDFY_SAAS aparece sempre (é o produto core).
+ * SOBRE_BOLDFY_CAAS aparece SOMENTE se P11 = sim_full_content — quando o
+ * respondente sinaliza que líderes topam postar mas precisam de quem produza.
+ */
+export const SOBRE_BOLDFY_SAAS: SobreBoldfyCard = {
+  badge: 'Plataforma',
+  titulo: 'Plataforma Boldfy',
+  subtitulo:
+    'O software que destrava Employee-Led Growth no dia a dia, sem montar máquina interna.',
+  bullets: [
+    'IA contextual pra ideação, refino e calendário de cada colaborador',
+    'Brand Context: tom, pilares e territórios em um setup único',
+    'Trilhas LXP, missões semanais e gamificação rodando sem cobrança manual',
+    'Dashboard de earned media e alcance pronto pra board',
+  ],
+  ctaLabel: 'Quero conhecer a plataforma',
+};
+
+export const SOBRE_BOLDFY_CAAS: SobreBoldfyCard = {
+  badge: 'Full Content',
+  titulo: 'Boldfy Full Content',
+  subtitulo:
+    'Pra líderes que topam aparecer, mas não têm tempo de escrever: nossa equipe produz, o líder aprova.',
+  bullets: [
+    'Estrategista da Boldfy entrevista o líder pra captar ponto de vista',
+    'Time de conteúdo produz posts no tom autêntico da pessoa',
+    'Líder revisa e aprova em minutos pelo próprio painel',
+    'Mantém autoria e voz, sem custo de tempo do líder',
+  ],
+  ctaLabel: 'Quero entender o Full Content',
+};

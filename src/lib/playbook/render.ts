@@ -23,7 +23,10 @@ import {
   CHECKLIST_BOLDFY,
   CTA_TITULO_POR_DOR,
   HERO_LEGENDA_POR_DOR,
+  RESULTADOS_POR_DOR,
   SNAPSHOT_FECHAMENTO,
+  SOBRE_BOLDFY_SAAS,
+  SOBRE_BOLDFY_CAAS,
   TESE_MOTIVOS,
   TIPS_LIBRARY,
   type DorPrincipalValue,
@@ -47,17 +50,38 @@ export type PlaybookQuizData = {
   cargoArea:
     | 'marketing' | 'growth' | 'vendas' | 'rh' | 'employer_branding' | 'comunicacao' | 'outro';
   setor: string;
-  colaboradoresPostando: 'nenhum' | '1_3' | '4_10' | 'mais_10' | 'nao_sei';
+  /**
+   * P5 removida na curadoria (mai/2026). Mantida como opcional pra compat
+   * retroativa de playbooks antigos no banco.
+   */
+  colaboradoresPostando?: 'nenhum' | '1_3' | '4_10' | 'mais_10' | 'nao_sei';
   vozAtual:
     | 'founder_solo' | 'alguns_executivos' | 'time_esparso' | 'ninguem' | 'programa_rodando';
   tentativasAnteriores: 'nunca' | 'morreu' | 'baixa_adesao' | 'maduro';
-  /** P8 multi (mai/2026) — primeira dor define template-key + hero soco + CTA título. */
+  /** P8 multi — primeira dor define template-key + hero soco + CTA título. */
   doresPrincipais: DorPrincipalValue[];
-  resultadosPrioritarios: Array<
+  /**
+   * P9 removida na curadoria (mai/2026). Resultado agora é DERIVADO das dores.
+   * Opcional pra compat retroativa.
+   */
+  resultadosPrioritarios?: Array<
     'awareness' | 'pipeline' | 'reducao_paid' | 'talento' | 'autoridade' | 'engajamento'
   >;
   budgetStatus: 'aprovado' | 'planejando' | 'precisa_justificar' | 'sem_budget';
-  sponsorshipLideranca: 'sim_alguns_postam' | 'sim_com_ajuda' | 'talvez' | 'nao';
+  /**
+   * P11 reformulada (mai/2026): detector de oportunidade Full Content (CaaS).
+   * Mantém valores antigos como union pra compat retroativa de playbooks no banco.
+   */
+  sponsorshipLideranca:
+    // Valores novos
+    | 'sim_proprio'
+    | 'sim_full_content'
+    | 'nao_foco'
+    // Valores antigos (compat)
+    | 'sim_alguns_postam'
+    | 'sim_com_ajuda'
+    | 'talvez'
+    | 'nao';
   observacoesLivres?: string;
 };
 
@@ -210,6 +234,20 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   // 6. Seniority específica (c_level)
   if (quiz.cargoSenioridade === 'c_level') {
     pushUnique(findById('S_CLEVEL'));
+  }
+
+  // 7. Budget específica (P10 — adicionado na curadoria mai/2026)
+  if (quiz.budgetStatus === 'precisa_justificar') {
+    pushUnique(findById('B_PRECISA_JUSTIFICAR'));
+  } else if (quiz.budgetStatus === 'sem_budget') {
+    pushUnique(findById('B_SEM_BUDGET'));
+  }
+
+  // 8. Sponsorship/Full Content específica (P11 reformulada mai/2026)
+  if (quiz.sponsorshipLideranca === 'sim_proprio') {
+    pushUnique(findById('L_PROPRIO'));
+  } else if (quiz.sponsorshipLideranca === 'sim_full_content') {
+    pushUnique(findById('L_FULL_CONTENT'));
   }
 
   // Renumera "Dica 01" ... "Dica N" conforme ordem final
@@ -482,6 +520,21 @@ export function renderPlaybookData(
   // === CTA ===
   const ctaTitulo = interp(CTA_TITULO_POR_DOR[dor1] ?? CTA_TITULO_POR_DOR.outra, { empresa });
 
+  // === Resultados esperados (derivados das dores P8 — mai/2026) ===
+  // Cada dor mapeia pra 1 string curta com o resultado esperado.
+  // Aparece como micro-bloco entre Bloco 4 (Dicas) e Bloco 5 (Checklist).
+  const resultadosEsperados = quiz.doresPrincipais
+    .map((d) => RESULTADOS_POR_DOR[d])
+    .filter((r): r is string => Boolean(r));
+
+  // === Sobre a Boldfy (modalidades SaaS e CaaS — mai/2026) ===
+  // SaaS sempre visível. CaaS aparece SE sponsorship = sim_full_content
+  // (sinal de que líderes querem postar mas precisam de quem produza).
+  const sobreBoldfy = {
+    saas: SOBRE_BOLDFY_SAAS,
+    caas: quiz.sponsorshipLideranca === 'sim_full_content' ? SOBRE_BOLDFY_CAAS : null,
+  };
+
   // === Outras áreas (Bloco 6 antigo virou parte do CTA / footer) ===
   const outras = outrasAreas(areaToBase(quiz.cargoArea));
 
@@ -492,10 +545,12 @@ export function renderPlaybookData(
     curvaAtivacao,
     tese,
     dicas,
+    resultadosEsperados,
     checklistAntes,
     checklistBoldfy: CHECKLIST_BOLDFY,
     calculadora,
     battleCard,
+    sobreBoldfy,
     ctaTitulo,
     outrasAreas: outras,
   };

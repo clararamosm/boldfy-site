@@ -79,6 +79,8 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     cargo_area: input.cargoArea,
     dores_principais: input.doresPrincipais.join(', '),
     budget_status: input.budgetStatus,
+    // P11 reformulada: 'sim_proprio' | 'sim_full_content' | 'nao_foco' (mai/2026)
+    // Detecta oportunidade de Full Content (CaaS) — segmentação no AC.
     sponsorship_lideranca: input.sponsorshipLideranca,
     tentativas_anteriores: input.tentativasAnteriores,
     newsletter_opt_in: newsletterOptIn ? 'SIM' : 'NAO',
@@ -102,11 +104,13 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     cargo_senioridade: input.cargoSenioridade,
     cargo_area: input.cargoArea,
     setor: input.setor,
-    colaboradores_postando: input.colaboradoresPostando,
+    // P5 (colaboradores_postando) e P9 (resultados_prioritarios) removidas
+    // na curadoria mai/2026. Preservadas no payload SE chegarem (retrocompat).
+    ...(input.colaboradoresPostando ? { colaboradores_postando: input.colaboradoresPostando } : {}),
     voz_atual: input.vozAtual,
     tentativas_anteriores: input.tentativasAnteriores,
     dores_principais: input.doresPrincipais,
-    resultados_prioritarios: input.resultadosPrioritarios,
+    ...(input.resultadosPrioritarios ? { resultados_prioritarios: input.resultadosPrioritarios } : {}),
     budget_status: input.budgetStatus,
     sponsorship_lideranca: input.sponsorshipLideranca,
     observacoes_livres: input.observacoesLivres ?? null,

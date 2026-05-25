@@ -116,6 +116,11 @@ type TrackedEvent =
       /** Accordion da curva de ativação aberto (Bloco 2). */
       name: 'playbook_curva_expanded';
       params: { slug: string };
+    }
+  | {
+      /** Clique em um dos cards do bloco "Sobre a Boldfy" (Bloco 7.5 — mai/2026). */
+      name: 'playbook_sobre_boldfy_clicked';
+      params: { modalidade: 'saas' | 'caas'; slug: string };
     };
 
 /**

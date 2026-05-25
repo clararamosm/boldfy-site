@@ -42,13 +42,19 @@ export type ChecklistItem = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Cada dica tem 30-40 palavras de texto editorial + um accordion "Como a
- * Boldfy resolve" com 3-4 bullets. O `numero` é renumerado no render conforme
- * a posição na lista selecionada ("Dica 01", "Dica 02", ...).
+ * Cada dica tem um título descritivo (ação direta) + accordion "Como a Boldfy
+ * resolve" com 3-4 bullets. O `numero` é renumerado no render conforme a
+ * posição na lista selecionada ("Dica 01", "Dica 02", ...).
+ *
+ * Curadoria mai/2026: O campo `texto` (parágrafo editorial de 30-40 palavras)
+ * foi removido da renderização — virou redundante com o título descritivo + os
+ * bullets do accordion. Mantido como opcional pra compat retroativa de
+ * playbooks gerados antes da curadoria.
  *
  * `selectors` é a regra que liga essa dica a um perfil de respondente.
  * Universais entram em todo playbook; específicas entram conforme a regra
- * em `selectTipsForPlaybook` em render.ts (spec copy-final §2.4).
+ * em `selectTipsForPlaybook` em render.ts (spec copy-final §2.4 + curadoria
+ * mai/2026: novos selectors `budget` e `sponsorship`).
  */
 export type TipSelectors = {
   universal?: true;
@@ -67,15 +73,38 @@ export type TipSelectors = {
     'founder_solo' | 'alguns_executivos' | 'time_esparso' | 'ninguem' | 'programa_rodando'
   >;
   seniority?: Array<'analista' | 'coordenador' | 'gerente' | 'diretor' | 'c_level'>;
+  /** P10 — só dispara em precisa_justificar / sem_budget. */
+  budget?: Array<'aprovado' | 'planejando' | 'precisa_justificar' | 'sem_budget'>;
+  /**
+   * P11 reformulada (mai/2026): detector de oportunidade Full Content.
+   * `sim_proprio` → líderes topam postar, mas precisam de método/ferramenta.
+   * `sim_full_content` → líderes topam, mas precisam de quem produza por eles.
+   */
+  sponsorship?: Array<
+    // Valores novos (mai/2026)
+    | 'sim_proprio'
+    | 'sim_full_content'
+    | 'nao_foco'
+    // Valores antigos (compat retroativa)
+    | 'sim_alguns_postam'
+    | 'sim_com_ajuda'
+    | 'talvez'
+    | 'nao'
+  >;
 };
 
 export type Tip = {
   id: string;
   /** "Dica 01" — preenchido no render conforme ordem na lista selecionada. */
   numero: string;
+  /** Título descritivo, verb-led: diz o que fazer. */
   titulo: string;
-  /** 30-40 palavras. */
-  texto: string;
+  /**
+   * @deprecated removido da renderização na curadoria mai/2026 — o título
+   * descritivo + bullets do accordion já cobrem o ponto. Mantido como opcional
+   * pra playbooks antigos no banco que ainda têm o campo populado.
+   */
+  texto?: string;
   /** "Marketing", "CAC subindo", etc. Universais = undefined. Vira pill. */
   tagEspecifica?: string;
   /** Nome do ícone Lucide (ex: 'Users', 'Compass'). */
@@ -108,6 +137,30 @@ export type BattleCard = {
   economiaMensalHoras: number;
   /** Equivalente em FTEs (full-time equivalents) — ex: 0.5. */
   economiaFTEs: number;
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Sobre a Boldfy (Bloco 7.5 — novo bloco mai/2026)                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Card de modalidade da Boldfy (SaaS ou CaaS).
+ *
+ * Aparece no novo bloco "Sobre a Boldfy" entre o Battle card e o CTA.
+ * Sempre renderiza SaaS. CaaS aparece SOMENTE se P11 = sim_full_content
+ * (sinal claro de que líderes querem postar mas precisam de quem produza).
+ */
+export type SobreBoldfyCard = {
+  /** Etiqueta curta no topo do card (ex: "SaaS", "Full Content"). */
+  badge: string;
+  /** Headline do card. */
+  titulo: string;
+  /** 1 linha de pitch — descreve a modalidade em uma frase. */
+  subtitulo: string;
+  /** 3-4 bullets do que está incluído. */
+  bullets: string[];
+  /** Label do CTA do card. */
+  ctaLabel: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -164,6 +217,15 @@ export type RenderedData = {
   /* Bloco 4 — Dicas (selecionadas via selectTipsForPlaybook) */
   dicas: Tip[];
 
+  /**
+   * Bloco 4.5 — Resultados esperados (novo mai/2026).
+   * Strings curtas derivadas das dores P8 — 1 string por dor escolhida.
+   * Aparece como micro-bloco entre Dicas e Checklist.
+   *
+   * Opcional pra retrocompat com playbooks gerados antes da curadoria.
+   */
+  resultadosEsperados?: string[];
+
   /* Bloco 5 — Checklist (antes + na Boldfy) */
   checklistAntes: ChecklistItem[];   // 5 itens (+1 condicional se tentou_morreu)
   checklistBoldfy: ChecklistItem[];  // sempre os 4 itens fixos reformulados
@@ -178,6 +240,18 @@ export type RenderedData = {
 
   /* Bloco 7 — Battle card (gráfico 2 colunas) */
   battleCard: BattleCard;
+
+  /**
+   * Bloco 7.5 — Sobre a Boldfy (novo mai/2026).
+   * SaaS sempre visível. CaaS = null quando P11 ≠ sim_full_content
+   * (líder não topa ou já topa postar sozinho).
+   *
+   * Opcional pra retrocompat com playbooks gerados antes da curadoria.
+   */
+  sobreBoldfy?: {
+    saas: SobreBoldfyCard;
+    caas: SobreBoldfyCard | null;
+  };
 
   /* Bloco 8 — CTA final */
   /** Título dor-específico (CTA_TITULO_POR_DOR interpolado com {empresa}). */

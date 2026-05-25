@@ -54,8 +54,7 @@ function toKebab(input: string): string {
   return input
     .toLowerCase()
     .normalize('NFD')
-    // eslint-disable-next-line no-misleading-character-class
-    .replace(/[̀-ͯ]/g, '')   // remove combining diacritics
+    .replace(/[̀-ͯ]/g, '')    // remove combining diacritics (acentos)
     .replace(/[^a-z0-9]+/g, '-')        // tudo que não é alphanumeric vira hífen
     .replace(/^-+|-+$/g, '')            // trim hyphens nas pontas
     .slice(0, SLUG_KEBAB_MAX);
