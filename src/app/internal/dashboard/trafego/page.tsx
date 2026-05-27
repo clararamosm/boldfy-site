@@ -20,6 +20,7 @@ import {
 import { getStackedTrafficByChannel } from '@/lib/dashboard-queries';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 import { StackedAreaChart, BOLDFY_PURPLES } from '@/components/dashboard/charts';
+import { GoogleConnectionBadge } from '@/components/dashboard/google-connection-badge';
 import { Globe2, Radio, TrendingUp, FileText } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -59,6 +60,7 @@ export default async function TrafegoPage() {
 
   return (
     <div>
+      <GoogleConnectionBadge kind="ga4" />
       <div className="dash-header">
         <div>
           <h1 className="dash-title">Tráfego</h1>

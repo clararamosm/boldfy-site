@@ -40,6 +40,10 @@ export function PlaybookCalculadora({
         <RoiSimulator
           initialCollaborators={calculadora.initialCollaborators}
           initialImpressions={calculadora.initialImpressions}
+          // Esconde o card "Mesmo alcance via Ads" — não casa com o framing
+          // editorial do playbook (a comparação relevante aqui é earned vs
+          // custo Boldfy, não earned vs custo Ads).
+          hideAdsComparison
         />
 
         {/* Bridge curto pras outras áreas */}

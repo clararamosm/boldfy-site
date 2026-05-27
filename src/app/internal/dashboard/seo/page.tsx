@@ -19,6 +19,7 @@ import {
 import { getLowCtrForPosition, getTopicGaps, getQueriesScatter } from '@/lib/dashboard-queries';
 import { DailyLineChart } from '@/components/dashboard/daily-line-chart';
 import { ScatterChart } from '@/components/dashboard/charts';
+import { GoogleConnectionBadge } from '@/components/dashboard/google-connection-badge';
 import { Search, MousePointer, Eye, BarChart3, MapPin, Microscope, Lightbulb, PenTool, Target, Tag, FileText } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -63,6 +64,7 @@ export default async function SeoPage() {
 
   return (
     <div>
+      <GoogleConnectionBadge kind="search-console" />
       <div className="dash-header">
         <div>
           <h1 className="dash-title">SEO</h1>

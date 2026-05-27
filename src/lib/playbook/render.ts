@@ -508,8 +508,16 @@ export function renderPlaybookData(
   );
 
   // === Calculadora ===
+  // initialCollaborators: usa colabAtivos (não porteColaboradores) — assim o
+  // slider abre com o MESMO número que o header diz ("Considerando X
+  // colaboradores ativos"). Antes abria com o porte total e dava incoerência:
+  // header dizia 18 ativos, slider abria em 60.
+  //
+  // Clamp 5-70 é defesa em profundidade pros bounds do slider; o gate de
+  // elegibilidade do quiz já filtra porte<5, e empresas gigantes (porte>411,
+  // onde ativos>70) ficam clampadas — caso raro e aceitável.
   const calculadora = {
-    initialCollaborators: Math.max(5, Math.min(70, quiz.porteColaboradores)),
+    initialCollaborators: Math.max(5, Math.min(70, colabAtivos)),
     initialImpressions: IMPRESSIONS_PER_COLAB_DEFAULT,
     colabAtivosEstimados: colabAtivos,
   };

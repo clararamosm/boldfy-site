@@ -174,28 +174,67 @@ export async function getUnifiedFunnel(days = 30): Promise<UnifiedFunnelV2> {
     formsTotal = await getContactCountSince(days);
   } catch { /* ignore */ }
 
-  // Forms B2B = people no CRM (já filtrados na entrada)
+  // Forms B2B = people no CRM com segment='lider_b2b' (mesmo filtro do Kanban
+  // CRM — KANBAN_B2B_CLAUSE em crm-queries.ts:108). Antes contava todo people
+  // (inflava o número porque incluía contatos AC não-B2B).
+  //
+  // Stages seguintes (MQL/Reuniões/Fechados) são CUMULATIVOS por sortOrder:
+  // quem está num stage avançado conta também nos anteriores. Senão Fechado
+  // ficaria > Reuniões quando alguém pulou de status, quebrando o funil
+  // visualmente. Como não temos histórico de status (audit log), usamos o
+  // status atual como proxy — pessoa em Fechado obviamente passou por
+  // Reunião marcada antes.
+  //
+  // Status sortOrder (statuses.ts:32-46):
+  //   Ativo=0 · LinkedIn Lead=1 · Lead=2 · Quente=3 ·
+  //   Reunião marcada=4 · Em andamento=5 · Fechado=6 (terminal) · Perdido=7 (terminal)
+  //
+  // Perdido (sortOrder 7) NÃO entra em nenhum stage avançado porque é saída
+  // lateral, não progressão. Já entra em "Líderes B2B" porque foi qualificado
+  // antes de sair.
+  const B2B_BASE = and(
+    eq(people.archived, false),
+    isNull(people.mergedIntoId),
+    eq(people.segment, 'lider_b2b'),
+    gte(people.createdAt, since),
+  );
   let formsB2b = 0;
   let mql = 0;
   let reunioes = 0;
   let fechados = 0;
   try {
     const [b2bRow, mqlRow, reuRow, fechRow] = await Promise.all([
-      db.select({ n: count() }).from(people)
-        .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since))),
+      // Líderes B2B = todos B2B, qualquer status (inclui Perdido — cumulativo)
+      db.select({ n: count() }).from(people).where(B2B_BASE),
+      // MQL/Quente = qualquer status MENOS Ativo (entrada) e Perdido (saída).
+      // Inclui: LinkedIn Lead, Lead, Quente, Reunião marcada, Em andamento, Fechado.
+      // Lógica: "Ativo" é só presença no CRM (sem sinal). A partir do momento
+      // que ganha rótulo (LinkedIn Lead via extensão, Lead via score 21+,
+      // Quente via score 50+, ou degraus de vendas), é MQL cumulativo.
       db.select({ n: count() }).from(people)
         .leftJoin(statuses, eq(people.statusId, statuses.id))
         .where(and(
-          eq(people.archived, false),
-          isNull(people.mergedIntoId),
-          sql`${statuses.label} IN ('Quente', 'MQL', 'Líderes B2B')`,
-          gte(people.createdAt, since),
+          B2B_BASE,
+          sql`${statuses.label} IN ('LinkedIn Lead', 'Lead', 'Quente', 'Reunião marcada', 'Em andamento', 'Fechado')`,
         )),
-      db.select({ n: count() }).from(meetings)
-        .where(gte(meetings.scheduledAt, since)),
-      db.select({ n: count() }).from(companies)
-        .leftJoin(statuses, eq(companies.statusId, statuses.id))
-        .where(and(sql`${statuses.label} = 'Fechado'`, gte(companies.updatedAt, since))),
+      // Reuniões = cumulativo: Reunião marcada + Em andamento + Fechado
+      // (antes contava tabela `meetings` — Cal.com bookings — que é métrica
+      // de fluxo, não de funil. Trocado pra status pra ser consistente.)
+      db.select({ n: count() }).from(people)
+        .leftJoin(statuses, eq(people.statusId, statuses.id))
+        .where(and(
+          B2B_BASE,
+          sql`${statuses.label} IN ('Reunião marcada', 'Em andamento', 'Fechado')`,
+        )),
+      // Fechados = só status Fechado (terminal feliz)
+      // (antes contava `companies` com status Fechado — agora é people pra
+      // mesma unidade de medida do resto do funil.)
+      db.select({ n: count() }).from(people)
+        .leftJoin(statuses, eq(people.statusId, statuses.id))
+        .where(and(
+          B2B_BASE,
+          sql`${statuses.label} = 'Fechado'`,
+        )),
     ]);
     formsB2b = b2bRow[0]?.n ?? 0;
     mql = mqlRow[0]?.n ?? 0;

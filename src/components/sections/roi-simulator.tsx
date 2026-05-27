@@ -60,11 +60,18 @@ export type RoiSimulatorProps = {
    * MAX_IMPRESSIONS] (1k..50k). Default: 10k.
    */
   initialImpressions?: number;
+  /**
+   * Esconde o card "Mesmo alcance via Ads" e ajusta o grid de 4 → 3 cards
+   * (mai/2026 — usado no Playbook ELG, onde a comparação com Ads não casa
+   * com o framing editorial da página). Default: false (mostra como sempre).
+   */
+  hideAdsComparison?: boolean;
 };
 
 export function RoiSimulator({
   initialCollaborators = DEFAULT_COLLABORATORS,
   initialImpressions = DEFAULT_IMPRESSIONS,
+  hideAdsComparison = false,
 }: RoiSimulatorProps = {}) {
   const t = useT();
 
@@ -188,8 +195,14 @@ export function RoiSimulator({
           </div>
         </div>
 
-        {/* Cards de resultado */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {/*
+          Cards de resultado.
+          Sem hideAdsComparison: 4 cards (md:grid-cols-4)
+          Com hideAdsComparison: 3 cards (md:grid-cols-3) — usado no Playbook ELG.
+        */}
+        <div
+          className={`grid grid-cols-2 gap-3 mb-5 ${hideAdsComparison ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}
+        >
           {/* Total impressões */}
           <div className="bg-secondary rounded-xl p-4 text-center">
             <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
@@ -211,18 +224,20 @@ export function RoiSimulator({
             <p className="text-[8px] text-muted-foreground">{t.betaTest.perImpression}</p>
           </div>
 
-          {/* Custo equivalente em Ads */}
-          <div className="bg-secondary rounded-xl p-4 text-center">
-            <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-              {t.betaTest.sameReachViaAds}
-            </p>
-            <p className="font-headline text-lg font-black text-accent-foreground">
-              R$ {formatBRL(results.custoAdsLow)}
-              <span className="text-xs font-normal text-muted-foreground"> a </span>
-              R$ {formatBRL(results.custoAdsHigh)}
-            </p>
-            <p className="text-[8px] text-muted-foreground">{t.betaTest.cpmRange}</p>
-          </div>
+          {/* Custo equivalente em Ads — escondido no Playbook ELG (mai/2026). */}
+          {!hideAdsComparison && (
+            <div className="bg-secondary rounded-xl p-4 text-center">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                {t.betaTest.sameReachViaAds}
+              </p>
+              <p className="font-headline text-lg font-black text-accent-foreground">
+                R$ {formatBRL(results.custoAdsLow)}
+                <span className="text-xs font-normal text-muted-foreground"> a </span>
+                R$ {formatBRL(results.custoAdsHigh)}
+              </p>
+              <p className="text-[8px] text-muted-foreground">{t.betaTest.cpmRange}</p>
+            </div>
+          )}
 
           {/* Custo Boldfy */}
           <div className="bg-secondary rounded-xl p-4 text-center border-2 border-primary/30">
