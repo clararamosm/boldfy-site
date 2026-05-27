@@ -1,9 +1,10 @@
 /**
  * Lista de UTMs de uma campanha — client wrapper.
  *
- * Usa o componente reutilizável <UtmLinkCard /> e inclui o <QrModal /> no
- * próprio escopo (o drill-down de campanha é uma página separada do
- * /internal/utm, então precisa do seu próprio modal).
+ * Usa o componente reutilizável <UtmLinkCard /> sem QrModal interno.
+ * Mai/2026: agora a página de detalhe renderiza grupos por utm_source, com
+ * múltiplas instâncias deste componente. O <QrModal /> é renderizado UMA
+ * ÚNICA VEZ no escopo da page.tsx pra evitar listeners e modais duplicados.
  *
  * Sem actions de Reusar/Encurtar/Remover aqui — esses só fazem sentido em
  * /internal/utm onde o form de edição existe. Aqui o card fica em modo
@@ -14,7 +15,6 @@
 
 import { UtmLinkCard, type UtmLinkData } from '@/components/utm/utm-link-card';
 import { analyticsKey, type UtmAnalytics } from '@/lib/ga4-utm-analytics';
-import { QrModal } from '@/app/internal/utm/qr-modal';
 
 export function CampaignUtmList({
   links,
@@ -36,22 +36,19 @@ export function CampaignUtmList({
   }
 
   return (
-    <>
-      <ul className="flex flex-col gap-3">
-        {links.map((link) => {
-          const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
-          const analytics = analyticsByKey[key] ?? null;
-          return (
-            <UtmLinkCard
-              key={link.id}
-              link={link}
-              analytics={analytics}
-              actions={{ onQrOpen: handleQrOpen }}
-            />
-          );
-        })}
-      </ul>
-      <QrModal />
-    </>
+    <ul className="flex flex-col gap-3">
+      {links.map((link) => {
+        const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+        const analytics = analyticsByKey[key] ?? null;
+        return (
+          <UtmLinkCard
+            key={link.id}
+            link={link}
+            analytics={analytics}
+            actions={{ onQrOpen: handleQrOpen }}
+          />
+        );
+      })}
+    </ul>
   );
 }

@@ -25,6 +25,7 @@ import {
   type UtmAnalytics,
 } from '@/lib/ga4-utm-analytics';
 import { CampaignUtmList } from './utm-list';
+import { QrModal } from '@/app/internal/utm/qr-modal';
 import { Settings2, FileText, Calendar, Trophy, Link2, Users, StickyNote } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -102,6 +103,19 @@ export default async function CampaignDetailPage({ params }: { params: Params })
     createdAt: link.createdAt,
   }));
 
+  // Mai/2026: Canais & touchpoints agora vêm AUTOMATICAMENTE dos utm_source
+  // dos links da campanha (não mais do setup manual em campaigns.channels).
+  // Agrupa preservando ordem de aparição (primeiro link criado por source
+  // define a ordem do grupo). Usa Map pra dedup + insertion order.
+  const linksBySource = new Map<string, typeof enrichedCampaignLinks>();
+  for (const link of enrichedCampaignLinks) {
+    const src = link.utmSource || 'sem-source';
+    const arr = linksBySource.get(src) ?? [];
+    arr.push(link);
+    linksBySource.set(src, arr);
+  }
+  const sourceGroups = Array.from(linksBySource.entries()).map(([source, links]) => ({ source, links }));
+
   const statusMap = new Map((statusBreakdown ?? []).map((s) => [s.statusLabel ?? 'Sem status', s.n]));
   const fechados = statusMap.get('Fechado') ?? 0;
   const reunioes = (statusMap.get('Reunião marcada') ?? 0) + (statusMap.get('Em andamento') ?? 0);
@@ -154,40 +168,36 @@ export default async function CampaignDetailPage({ params }: { params: Params })
           } />
         </div>
 
-        {/* Canais + touchpoints */}
+        {/* Canais & touchpoints — gerado automaticamente do utm_source dos
+            UTMs da campanha (mai/2026 — antes era setup manual via editor). */}
         <div>
           <div style={{ fontSize: 11, color: '#9D85B3', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.06, marginBottom: 10 }}>
             Canais & touchpoints
           </div>
-          {(campaign.channels ?? []).length === 0 ? (
+          {sourceGroups.length === 0 ? (
             <div style={{ padding: 12, background: '#FAF7FF', borderRadius: 8, fontSize: 12, color: '#9D85B3' }}>
-              Nenhum canal configurado. Use o botão Editar pra adicionar.
+              Nenhum link UTM criado ainda. Gere em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/internal/utm</Link> usando <code style={{ background: '#F0E5F8', padding: '1px 5px', borderRadius: 3 }}>utm_campaign={campaign.utmCampaign}</code> e os canais aparecem aqui automaticamente.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(campaign.channels ?? []).map((c) => {
-                const tps = c.touchpoints ?? [];
-                return (
-                <div key={c.name} style={{ padding: 12, background: '#FAF7FF', borderRadius: 10, border: '1px solid #E4D8ED' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: tps.length ? 8 : 0 }}>
-                    <strong style={{ fontSize: 13, color: '#5E2A67' }}>{c.name}</strong>
-                    <span style={{ fontSize: 10, color: '#9D85B3' }}>· {tps.length} touchpoint{tps.length !== 1 ? 's' : ''}</span>
+              {sourceGroups.map(({ source, links }) => (
+                <div key={source} style={{ padding: 12, background: '#FAF7FF', borderRadius: 10, border: '1px solid #E4D8ED' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <strong style={{ fontSize: 13, color: '#5E2A67' }}>{channelLabel(source)}</strong>
+                    <span style={{ fontSize: 10, color: '#9D85B3' }}>· {links.length} touchpoint{links.length !== 1 ? 's' : ''}</span>
                   </div>
-                  {tps.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      {tps.map((tp, ti) => (
-                        <div key={ti} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#FFFFFF', borderRadius: 6, fontSize: 12 }}>
-                          <a href={tp.url} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1', textDecoration: 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {tp.url}
-                          </a>
-                          {tp.label ? <span className="dash-pill">{tp.label}</span> : null}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {links.map((link) => (
+                      <div key={link.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#FFFFFF', borderRadius: 6, fontSize: 12 }}>
+                        <a href={link.fullUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#CD50F1', textDecoration: 'none', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {link.baseUrl}
+                        </a>
+                        {link.label ? <span className="dash-pill">{link.label}</span> : null}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                );
-              })}
+              ))}
             </div>
           )}
         </div>
@@ -214,15 +224,35 @@ export default async function CampaignDetailPage({ params }: { params: Params })
         </div>
       </div>
 
-      {/* UTMs cadastrados nessa campanha */}
+      {/* UTMs cadastrados nessa campanha — agrupados por utm_source */}
       <div className="dash-card">
         <div className="dash-card-title"><Link2 /> Links UTM dessa campanha</div>
         <div className="dash-card-subtitle">
-          Todos os links rastreáveis criados pra <code>utm_campaign={campaign.utmCampaign}</code> · gere mais em{' '}
+          Todos os links rastreáveis criados pra <code>utm_campaign={campaign.utmCampaign}</code>, agrupados por canal · gere mais em{' '}
           <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/internal/utm</Link>
         </div>
-        <CampaignUtmList links={enrichedCampaignLinks} analyticsByKey={analyticsByKey} />
+        {sourceGroups.length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>
+            Nenhum link UTM cadastrado pra essa campanha ainda.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {sourceGroups.map(({ source, links }) => (
+              <div key={source}>
+                <div style={{ fontSize: 12, color: '#5E2A67', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="dash-pill blue" style={{ fontSize: 11 }}>{channelLabel(source)}</span>
+                  <span style={{ color: '#9D85B3', fontWeight: 500, fontSize: 11 }}>· {links.length} link{links.length !== 1 ? 's' : ''}</span>
+                </div>
+                <CampaignUtmList links={links} analyticsByKey={analyticsByKey} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* QrModal único pra toda a página — escuta 'utm:qr-open' de qualquer
+          CampaignUtmList renderizado acima (1 por grupo de utm_source) */}
+      <QrModal />
 
       {/* Leads */}
       <div className="dash-card">

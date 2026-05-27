@@ -1,19 +1,24 @@
 /**
  * Form de campanha (modal). Compartilhado entre criar e editar.
  *
- * Schema rico: cada canal tem N touchpoints (URL + label opcional).
- * Sempre on = checkbox que desabilita a data de fim.
+ * Sempre-on = checkbox que desabilita a data de fim.
+ *
+ * Mai/2026 (Clara): removido o setup manual de canais e touchpoints. Antes
+ * a Clara cadastrava na mão "LinkedIn → 2 touchpoints", "Email → 1", etc.
+ * Agora os canais aparecem automaticamente na visualização da campanha,
+ * agrupados pelo utm_source dos UTMs criados em /internal/utm. Editor
+ * cuida só dos campos editoriais (nome, slug, objetivo, janela, notas).
+ * Coluna campaigns.channels (jsonb) mantida pra back-compat com dados
+ * antigos — sempre escrita como [] daqui pra frente.
  */
 
 'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, X, Trash2, Link as LinkIcon } from 'lucide-react';
-import type { Campaign, CampaignInput, ChannelEntry } from '@/lib/campaigns';
+import { X, Trash2 } from 'lucide-react';
+import type { Campaign, CampaignInput } from '@/lib/campaigns';
 import { createCampaignAction, updateCampaignAction, deleteCampaignAction } from './actions';
-
-const CHANNEL_OPTIONS = ['SEO', 'LinkedIn', 'Eventos', 'PR', 'Email', 'Ads', 'Indicação', 'Outros'];
 
 type Mode = { kind: 'create' } | { kind: 'edit'; campaign: Campaign };
 
@@ -37,12 +42,6 @@ export function CampaignFormModal({
   const [startDate, setStartDate] = useState(initial?.startDate ?? '');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
   const [alwaysOn, setAlwaysOn] = useState(initial?.alwaysOn ?? false);
-  // Normaliza channels: campanhas legadas (Web Summit Rio etc) podem ter
-  // touchpoints undefined no jsonb. Garante array vazio aqui pra evitar
-  // crash nos map/filter/spread abaixo.
-  const [channels, setChannels] = useState<ChannelEntry[]>(
-    (initial?.channels ?? []).map((c) => ({ name: c.name, touchpoints: c.touchpoints ?? [] })),
-  );
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   function autoSlug(value: string) {
@@ -53,37 +52,6 @@ export function CampaignFormModal({
         .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       setSlug(auto);
     }
-  }
-
-  function addChannel(name: string) {
-    if (channels.some((c) => c.name === name)) return; // já existe
-    setChannels([...channels, { name, touchpoints: [{ url: '', label: '' }] }]);
-  }
-
-  function removeChannel(idx: number) {
-    setChannels(channels.filter((_, i) => i !== idx));
-  }
-
-  function addTouchpoint(channelIdx: number) {
-    setChannels(channels.map((c, i) =>
-      i === channelIdx ? { ...c, touchpoints: [...c.touchpoints, { url: '', label: '' }] } : c
-    ));
-  }
-
-  function updateTouchpoint(channelIdx: number, tpIdx: number, field: 'url' | 'label', value: string) {
-    setChannels(channels.map((c, i) =>
-      i === channelIdx
-        ? { ...c, touchpoints: c.touchpoints.map((t, ti) => ti === tpIdx ? { ...t, [field]: value } : t) }
-        : c
-    ));
-  }
-
-  function removeTouchpoint(channelIdx: number, tpIdx: number) {
-    setChannels(channels.map((c, i) =>
-      i === channelIdx
-        ? { ...c, touchpoints: c.touchpoints.filter((_, ti) => ti !== tpIdx) }
-        : c
-    ));
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -97,7 +65,9 @@ export function CampaignFormModal({
       startDate,
       endDate: alwaysOn ? null : (endDate || null),
       alwaysOn,
-      channels,
+      // channels é coluna legada — daqui pra frente sempre [] (canais vêm
+      // dos utm_links automaticamente na visualização da campanha).
+      channels: [],
       notes: notes.trim() || undefined,
     };
 
@@ -183,79 +153,9 @@ export function CampaignFormModal({
             <span style={{ fontSize: 13, fontWeight: 600, color: '#45336B' }}>Always-on (sem data de fim)</span>
           </label>
 
-          {/* Canais + touchpoints */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#45336B' }}>Canais e touchpoints</span>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
-              {CHANNEL_OPTIONS.map((c) => {
-                const already = channels.some((x) => x.name === c);
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => addChannel(c)}
-                    className={`channel-chip ${already ? 'active' : ''}`}
-                    disabled={already}
-                  >
-                    {already ? '✓ ' : '+ '}{c}
-                  </button>
-                );
-              })}
-            </div>
-
-            {channels.length === 0 ? (
-              <div style={{ padding: 14, background: '#FAF7FF', borderRadius: 8, fontSize: 12, color: '#9D85B3', textAlign: 'center' }}>
-                Clica num canal acima pra adicionar
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {channels.map((c, ci) => (
-                  <div key={ci} style={{ border: '1px solid #E4D8ED', borderRadius: 10, padding: 12, background: '#FAF7FF' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <strong style={{ fontSize: 13, color: '#5E2A67' }}>{c.name}</strong>
-                      <button type="button" onClick={() => removeChannel(ci)} className="touchpoint-remove" aria-label="Remover canal" title="Remover canal">
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                    {c.touchpoints.map((tp, ti) => (
-                      <div key={ti} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-                        <LinkIcon size={13} color="#9D85B3" />
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 4 }}>
-                          <input
-                            type="url"
-                            value={tp.url}
-                            onChange={(e) => updateTouchpoint(ci, ti, 'url', e.target.value)}
-                            placeholder="https://... ou /l/shortlink"
-                            style={{ padding: '6px 8px', fontSize: 12 }}
-                          />
-                          <input
-                            type="text"
-                            value={tp.label ?? ''}
-                            onChange={(e) => updateTouchpoint(ci, ti, 'label', e.target.value)}
-                            placeholder="label (opc)"
-                            style={{ padding: '6px 8px', fontSize: 12 }}
-                          />
-                        </div>
-                        <button type="button" onClick={() => removeTouchpoint(ci, ti)} className="touchpoint-remove" aria-label="Remover touchpoint">
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => addTouchpoint(ci)}
-                      style={{ marginTop: 4, padding: '5px 10px', fontSize: 11, color: '#CD50F1', background: 'transparent', border: '1px dashed #CD50F1', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
-                    >
-                      <Plus size={11} style={{ verticalAlign: -2 }} /> Touchpoint
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Canais e touchpoints removidos (mai/2026 — Clara): agora vêm
+              automaticamente do utm_source dos UTMs criados em /internal/utm.
+              Editor cuida só dos campos editoriais. */}
 
           <label>
             <span>Notes</span>
