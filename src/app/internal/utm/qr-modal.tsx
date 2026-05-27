@@ -24,26 +24,74 @@ declare global {
   }
 }
 
-const QRCODE_CDN = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+// Lista de CDNs em ordem de preferência. Se primeiro falhar (adblocker,
+// jsdelivr fora do ar, CSP bloqueando), tenta o próximo.
+const QRCODE_CDNS = [
+  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+  'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js',
+];
 
+/**
+ * Carrega qrcode.js do CDN com fallbacks múltiplos + timeout + polling.
+ *
+ * Por que não usa só `script.onload`:
+ *   - React 18 strict mode roda useEffect 2x. Primeira chamada cria <script>,
+ *     segunda chamada o vê e tenta `addEventListener('load')` — mas se o
+ *     script já terminou (com sucesso ou erro silente), o event nunca
+ *     dispara e ficaria preso pra sempre.
+ *   - Adblocker pode retornar 200 OK com conteúdo vazio/HTML — onload
+ *     dispara mas `window.QRCode` continua undefined.
+ *
+ * Solução:
+ *   - Após criar script, faz polling de 100ms em `window.QRCode` por até 8s.
+ *   - Se nenhum CDN carregar em 8s cada, tenta o próximo da lista.
+ *   - Se todos falharem, rejeita com erro claro pro usuário.
+ */
 function loadQrLib(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
   if (window.QRCode) return Promise.resolve();
+
   return new Promise((resolve, reject) => {
-    // Reaproveita script tag se já tem
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${QRCODE_CDN}"]`);
-    if (existing) {
+    let cdnIndex = 0;
+
+    function tryNextCdn() {
       if (window.QRCode) return resolve();
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('Falha ao carregar qrcode.js')));
-      return;
+      if (cdnIndex >= QRCODE_CDNS.length) {
+        reject(new Error('Não consegui carregar a biblioteca de QR Code de nenhum CDN. Verifica se algum adblocker está bloqueando.'));
+        return;
+      }
+      const url = QRCODE_CDNS[cdnIndex++];
+
+      // Se script tag já existe pra esse CDN, pula direto pro polling
+      const existing = document.querySelector<HTMLScriptElement>(`script[src="${url}"]`);
+      if (!existing) {
+        const s = document.createElement('script');
+        s.src = url;
+        s.async = true;
+        s.onerror = () => {
+          // Erro de rede claro — tenta próximo CDN imediatamente
+          tryNextCdn();
+        };
+        document.body.appendChild(s);
+      }
+
+      // Polling: checa window.QRCode a cada 100ms por 8s
+      const startedAt = Date.now();
+      const interval = window.setInterval(() => {
+        if (window.QRCode) {
+          window.clearInterval(interval);
+          resolve();
+          return;
+        }
+        if (Date.now() - startedAt > 8000) {
+          window.clearInterval(interval);
+          tryNextCdn(); // timeout neste CDN, tenta próximo
+        }
+      }, 100);
     }
-    const s = document.createElement('script');
-    s.src = QRCODE_CDN;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Falha ao carregar qrcode.js'));
-    document.body.appendChild(s);
+
+    tryNextCdn();
   });
 }
 
@@ -69,23 +117,52 @@ export function QrModal() {
     return () => window.removeEventListener('utm:qr-open', onOpen);
   }, []);
 
-  // Renderiza QR quando abre
+  // Renderiza QR quando abre. cancelled flag impede setState após unmount
+  // ou re-open rápido (strict mode dispara 2x — segunda corrida pode setar
+  // estado antigo).
   useEffect(() => {
     if (!open || !url) return;
+    let cancelled = false;
+    // setState aqui é intencional — precisamos resetar loading/error toda
+    // vez que o usuário abre o modal com uma URL nova. Sem isso, modal
+    // reaberto mostraria o erro/loading antigo do click anterior.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
+
     loadQrLib()
       .then(() => {
+        if (cancelled) return;
         if (!canvasRef.current || !window.QRCode) {
-          setError('Lib QR não disponível');
+          setError('Biblioteca de QR não disponível. Tenta recarregar a página.');
+          setLoading(false);
           return;
         }
-        window.QRCode.toCanvas(canvasRef.current, url, { width: 256, margin: 2, color: { dark: '#5E2A67', light: '#FFFFFF' } }, (err) => {
-          if (err) setError('Erro ao gerar QR: ' + err.message);
-        });
+        // toCanvas é assíncrono com callback — só sai do loading quando ele
+        // termina (não no .then). Antes setLoading(false) ia pro .finally
+        // imediato, deixando "Gerando…" preso quando dava erro silente.
+        window.QRCode.toCanvas(
+          canvasRef.current,
+          url,
+          { width: 256, margin: 2, color: { dark: '#5E2A67', light: '#FFFFFF' } },
+          (err) => {
+            if (cancelled) return;
+            if (err) {
+              setError('Erro ao gerar QR: ' + err.message);
+            }
+            setLoading(false);
+          },
+        );
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, url]);
 
   // ESC fecha
@@ -153,9 +230,16 @@ export function QrModal() {
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">Aponte a câmera pra abrir o link rastreável.</p>
 
-        <div className="my-5 flex items-center justify-center rounded-lg bg-secondary/40 p-4" style={{ minHeight: 280 }}>
-          {loading ? <span className="text-sm text-muted-foreground">Gerando…</span> : null}
-          <canvas ref={canvasRef} className={loading ? 'hidden' : ''} />
+        <div className="my-5 flex items-center justify-center rounded-lg bg-secondary/40 p-4 relative" style={{ minHeight: 280 }}>
+          {/* Canvas sempre montado (não usa display:none) — algumas libs
+              falham silenciosamente quando o canvas tá escondido durante
+              toCanvas. Loading aparece sobreposto via absolute. */}
+          <canvas ref={canvasRef} />
+          {loading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary/40">
+              <span className="text-sm text-muted-foreground">Gerando…</span>
+            </div>
+          ) : null}
         </div>
 
         {url ? (
