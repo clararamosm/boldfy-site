@@ -25,6 +25,7 @@ import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import {
   Loader2,
   CheckCircle2,
@@ -199,6 +200,7 @@ export default function AlgoritmoLinkedinPage() {
       origem: 'LP Algoritmo LinkedIn',
       newsletterOptIn,
       ...utms,
+      ...captureSubmissionMeta(),
     });
 
     if (result.success) {

@@ -84,6 +84,18 @@ const UtmFieldsSchema = z.object({
   utm_campaign: optionalText(200),
   utm_content: optionalText(200),
   utm_term: optionalText(200),
+  /**
+   * URL atual no momento do submit (window.location.pathname) — adapter
+   * combina com `origem` (slot) pra montar sourcePage rico tipo
+   * 'header:desktop em /solucoes/saas'. Antes só salvávamos o slot.
+   */
+  landing_pathname: optionalText(500),
+  /**
+   * document.referrer no momento do submit. Adapter usa pra inferir canal
+   * quando utm_source não veio (LinkedIn orgânico, Google, etc.). Antes
+   * caía sempre em 'unknown'.
+   */
+  referrer: optionalText(500),
 });
 
 /* -------------------------------------------------------------------------- */

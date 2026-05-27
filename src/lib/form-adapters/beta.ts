@@ -13,22 +13,17 @@ import type { z } from 'zod';
 import type { BetaLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type BetaInput = z.infer<typeof BetaLeadSchema>;
 
 const FORM_SLUG = 'beta' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
-
 export function adaptBeta(input: BetaInput): ClassifiedLead {
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
+  const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
   const acTags = buildLegibleACTags({
     segment: 'lider_b2b',
@@ -108,7 +103,8 @@ export function adaptBeta(input: BetaInput): ClassifiedLead {
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: input.origem ?? 'LP Beta Test',
+    // Slot do botão + URL real (ex: 'CTA Beta Hero em /beta-test')
+    sourcePage: combineSourcePage(input.origem ?? 'LP Beta Test', input.landing_pathname),
     sourceMethod: 'form_beta',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

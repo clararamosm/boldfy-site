@@ -26,6 +26,7 @@ import * as React from 'react';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { submitDemoLead, DemoLeadInput } from '@/app/actions/demo-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 import { CalComEmbed } from './cal-com-embed';
 
@@ -103,6 +104,11 @@ export function DemoForm({
       ...fields,
       origem: source,
       ...utms,
+      // Captura window.location.pathname + document.referrer NO MOMENTO do
+      // submit (não no mount) pra inferir página real + canal real. Spread
+      // depois de ...utms pra UTMs explícitas (que têm prioridade) não
+      // serem sobrescritas.
+      ...captureSubmissionMeta(),
     };
 
     const res = await submitDemoLead(data);

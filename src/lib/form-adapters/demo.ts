@@ -14,22 +14,22 @@ import type { z } from 'zod';
 import type { DemoLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type DemoInput = z.infer<typeof DemoLeadSchema>;
 
 const FORM_SLUG = 'demo' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
-
 export function adaptDemo(input: DemoInput): ClassifiedLead {
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: prefere utm_source explícito; senão infere via referrer
+  // (linkedin.com→linkedin, google.com→organic, sem referrer→direct, etc).
+  // Antes só usava utm_source — sem UTM tudo virava 'unknown'.
+  const channel = getChannelHint({
+    utmSource: input.utm_source,
+    referrer: input.referrer,
+  });
 
   const acTags = buildLegibleACTags({
     segment: 'lider_b2b',
@@ -86,7 +86,9 @@ export function adaptDemo(input: DemoInput): ClassifiedLead {
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: input.origem ?? 'Popup Demo',
+    // sourcePage rico: slot do botão + URL real (ex: 'header:desktop em /solucoes/saas').
+    // Antes salvava só o slot — você sabia o BOTÃO clicado mas não a página.
+    sourcePage: combineSourcePage(input.origem ?? 'Popup Demo', input.landing_pathname),
     sourceMethod: 'form_demo',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

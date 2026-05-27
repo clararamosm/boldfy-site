@@ -22,6 +22,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { submitProposalLead, type ProposalLeadInput, type ProposalLeadResult } from '@/app/actions/proposal-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 
 /* -------------------------------------------------------------------------- */
@@ -215,6 +216,7 @@ function ProposalBuilderModal({
       savings,
       origem: source || 'Simulador de Proposta',
       ...utms,
+      ...captureSubmissionMeta(),
       teamItems,
     };
 

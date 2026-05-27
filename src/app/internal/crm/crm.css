@@ -572,6 +572,58 @@
 .crm-timeline-dot.pink { border-color: #EC4899; color: #EC4899; }
 .crm-timeline-dot.gray { border-color: #9D85B3; color: #9D85B3; }
 
+/* -------------------------------------------------------------------------- */
+/*  Hierarquia visual da timeline (Clara 2026-05-26)                           */
+/*  Lead = bolinha cheia roxa + ícone Lucide branco + título grande/forte     */
+/*  Sistema = bolinha pequena sólida + texto pequeno/leve em cinza            */
+/* -------------------------------------------------------------------------- */
+
+/* ---- Ações do lead (form submit, cal scheduled, page view, etc.) ---- */
+.crm-timeline-dot.lead {
+  background: #CD50F1;
+  border-color: #CD50F1;
+  color: #FFFFFF;
+  /* Sobrescreve a cor herdada das classes blue/green/amber/etc. */
+}
+.crm-timeline-dot.lead svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.5;
+}
+.crm-timeline-item.lead .crm-timeline-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5E2A67;
+  line-height: 1.4;
+}
+
+/* ---- Ações do sistema/usuário (status change, sync, manual_note, etc.) ---- */
+/* Bolinha pequena sólida roxa, centrada na linha (sem ícone dentro) */
+.crm-timeline-dot.system {
+  width: 8px;
+  height: 8px;
+  background: #CD50F1;
+  border: none;
+  /* Reposiciona pra ficar centralizada no eixo da linha (que está em left:9px
+     com width:2px, então o centro é left:10px). Bolinha de 8px → left = 6px
+     pra centro ficar em 10px. Em vez disso ajusto via translateX já que o
+     .crm-timeline-dot tinha left:-22px na referência grande. */
+  left: -18px; /* alinha com o eixo da linha (9px do parent crm-timeline) */
+  top: 17px;
+}
+.crm-timeline-dot.system svg {
+  display: none; /* sistema não mostra ícone */
+}
+.crm-timeline-item.system .crm-timeline-title {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9D85B3;
+  line-height: 1.4;
+}
+.crm-timeline-item.system .crm-timeline-time {
+  color: #C4B0D4;
+}
+
 .crm-timeline-content { display: flex; flex-direction: column; gap: 4px; }
 .crm-timeline-header {
   display: flex;

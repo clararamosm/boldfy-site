@@ -29,6 +29,7 @@ import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { IntencaoUso } from '@/lib/ac-tags';
 import { trackEvent } from '@/lib/track';
 import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import {
   Loader2,
   CheckCircle2,
@@ -203,6 +204,7 @@ export default function CaseSemrushPage() {
       origem: 'LP Case Semrush ELG',
       newsletterOptIn,
       ...utms,
+      ...captureSubmissionMeta(),
     });
 
     if (result.success) {

@@ -28,6 +28,14 @@ export function timeAgo(date: Date | string | null | undefined): string {
   return `${Math.floor(days / 365)} ano`;
 }
 
+/**
+ * Timezone canônico do app — toda renderização de data/hora em prosa usa SP.
+ * Sem isso, SSR no Vercel (Node em UTC) mostraria datas 3h adiantadas pra
+ * quem está no Brasil. Datas continuam armazenadas em UTC no DB; só o display
+ * é em SP.
+ */
+const BR_TZ = 'America/Sao_Paulo';
+
 export function formatScheduledAt(date: Date | string): string {
   const d = date instanceof Date ? date : new Date(date);
   return d.toLocaleString('pt-BR', {
@@ -35,14 +43,15 @@ export function formatScheduledAt(date: Date | string): string {
     month: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: BR_TZ,
   });
 }
 
 /**
- * Data + hora absoluto pt-BR (DD/MM/YYYY HH:MM). Pedido Clara 2026-05-18:
- * preferir timestamp explícito ao relativo ("há 28 min") em timeline, cards
- * de pessoas/empresas, e tabelas. timeAgo() segue disponível pra contextos
- * onde "agora" / "ontem" são mais legíveis (notificações, etc).
+ * Data + hora absoluto pt-BR (DD/MM/YYYY HH:MM) em horário de SP. Pedido
+ * Clara 2026-05-18: preferir timestamp explícito ao relativo ("há 28 min")
+ * em timeline, cards de pessoas/empresas, e tabelas. timeAgo() segue
+ * disponível pra contextos onde "agora" / "ontem" são mais legíveis.
  */
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '—';
@@ -53,6 +62,22 @@ export function formatDateTime(date: Date | string | null | undefined): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: BR_TZ,
+  });
+}
+
+/**
+ * Data sem hora (DD de mês de YYYY) em horário de SP. Use pra primeiro toque,
+ * datas de cadastro, etc — qualquer lugar que mostre só dia.
+ */
+export function formatDateBR(date: Date | string | null | undefined): string {
+  if (!date) return '—';
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: BR_TZ,
   });
 }
 
@@ -310,6 +335,99 @@ export function timelineDotClass(category: ActivityDisplay['category']): string 
     case 'cal': return 'green';
     case 'manual': return 'pink';
     case 'system': return 'blue';
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Activity kind — hierarquia visual da timeline (Clara 2026-05-26)          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Distinção visual entre o que o LEAD fez e o que o SISTEMA/usuário fez:
+ *
+ *  - 'lead'   → ação direta da pessoa (submeteu form, agendou reunião,
+ *               clicou email, visitou página). Renderiza com bolinha cheia
+ *               roxa + ícone Lucide branco + título grande/forte.
+ *
+ *  - 'system' → ação automática (mudança de status, sync AC, classification)
+ *               ou ação interna (nota livre, log de interação). Renderiza
+ *               com bolinha pequena sólida na linha (sem ícone) + texto
+ *               menor e mais leve em cinza.
+ *
+ * Critério: "se o lead não estivesse ali, isso teria acontecido?" — se não,
+ * é ação dele (lead). Se sim (sistema disparou sozinho ou Clara registrou),
+ * é system.
+ */
+export function activityKind(type: string): 'lead' | 'system' {
+  // Ações diretas do lead
+  if (type.startsWith('form_submit_')) return 'lead';
+  if (type.startsWith('page_view')) return 'lead';
+  switch (type) {
+    case 'blog_read':
+    case 'material_download':
+    case 'cal_scheduled':
+    case 'cal_attended':
+    case 'cal_noshow':
+    case 'cal_cancelled':
+    case 'email_open':
+    case 'email_click':
+    case 'email_reply':
+    case 'email_forwarded':
+    case 'lead_unsubscribed':
+    case 'lead_resubscribed':
+    case 'email_unsubscribed':
+      return 'lead';
+    default:
+      // status_change, field_changed, classification_skipped, automation_started,
+      // ac_sync_*, imported_from_ac, tag_added, manual_note, manual_interaction,
+      // email_sent, email_bounce, extension_save → sistema/usuário
+      return 'system';
+  }
+}
+
+/**
+ * Nome do ícone Lucide pra cada tipo de activity. Só usado em ações 'lead'
+ * (sistema não mostra ícone). Retorna null pra system pra forçar erro se
+ * tentar renderizar (defesa). String em vez de import direto pra manter
+ * essa lib sem dependência do React.
+ *
+ * O caller (people/[id]/page.tsx) tem um mapeamento string → componente
+ * Lucide pra renderizar. Adicionar tipo novo: adiciona aqui + lá.
+ */
+export type LucideIconName =
+  | 'Target' | 'FlaskConical' | 'Download' | 'FileSearch' | 'Briefcase' | 'BookOpen'
+  | 'Calendar' | 'CalendarCheck' | 'CalendarX' | 'CalendarMinus'
+  | 'Eye' | 'DollarSign' | 'Puzzle' | 'CalendarPlus'
+  | 'MailOpen' | 'MousePointerClick' | 'Reply' | 'Forward'
+  | 'UserMinus' | 'UserPlus' | 'Ban'
+  | 'CircleDot'; // fallback genérico
+
+export function activityIconName(type: string): LucideIconName {
+  switch (type) {
+    case 'form_submit_demo': return 'Target';
+    case 'form_submit_beta': return 'FlaskConical';
+    case 'form_submit_algoritmo_linkedin': return 'Download';
+    case 'form_submit_case_semrush': return 'FileSearch';
+    case 'form_submit_proposta': return 'Briefcase';
+    case 'form_submit_playbook_employee_led_growth': return 'BookOpen';
+    case 'cal_scheduled': return 'Calendar';
+    case 'cal_attended': return 'CalendarCheck';
+    case 'cal_noshow': return 'CalendarX';
+    case 'cal_cancelled': return 'CalendarMinus';
+    case 'page_view': return 'Eye';
+    case 'page_view_precos': return 'DollarSign';
+    case 'page_view_solucoes': return 'Puzzle';
+    case 'page_view_agendar_demo': return 'CalendarPlus';
+    case 'blog_read': return 'BookOpen';
+    case 'material_download': return 'Download';
+    case 'email_open': return 'MailOpen';
+    case 'email_click': return 'MousePointerClick';
+    case 'email_reply': return 'Reply';
+    case 'email_forwarded': return 'Forward';
+    case 'lead_unsubscribed':
+    case 'email_unsubscribed': return 'UserMinus';
+    case 'lead_resubscribed': return 'UserPlus';
+    default: return 'CircleDot';
   }
 }
 

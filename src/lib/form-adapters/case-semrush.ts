@@ -23,8 +23,8 @@ import type { z } from 'zod';
 import type { CaseSemrushLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags, segmentFromIntencao } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type CaseSemrushInput = z.infer<typeof CaseSemrushLeadSchema>;
 
@@ -47,16 +47,6 @@ function tamanhoEmpresaLabel(v: CaseSemrushInput['tamanhoEmpresa']): string | un
   }
 }
 
-/**
- * Mapeia utm_source pro enum SourceChannel. Fallback 'unknown' quando
- * UTM não bate com nenhum canal conhecido. Mesma lógica do algoritmo-linkedin.
- */
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
-
 export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
   const segment = segmentFromIntencao(input.intencaoUso);
   const newsletterOptIn = input.newsletterOptIn === true;
@@ -68,7 +58,8 @@ export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
   const cargoInformado = isB2B ? input.cargo?.trim() || undefined : undefined;
   const porteInformado = isB2B ? tamanhoEmpresaLabel(input.tamanhoEmpresa) : undefined;
 
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
+  const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
   // Tag-mãe + segment + newsletter. Cadência da tag-mãe ainda não está
   // configurada no AC — Clara cria depois. Por enquanto, lead recebe o PDF
@@ -143,7 +134,7 @@ export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: input.origem || 'LP Case Semrush ELG',
+    sourcePage: combineSourcePage(input.origem || 'LP Case Semrush ELG', input.landing_pathname),
     sourceMethod: 'form_case_semrush',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

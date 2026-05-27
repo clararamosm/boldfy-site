@@ -27,6 +27,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { submitPlaybookEmployeeLedGrowthLead } from '@/app/actions/playbook-employee-led-growth-leads';
+import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 import { QUESTIONS, STEP_ORDER } from './wizard-config';
 import type { StepKey, ChoiceOption } from './wizard-config';
@@ -130,6 +132,9 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
   });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isRecapOpen, setIsRecapOpen] = useState(false);
+  // UTMs da URL (persistidos em sessionStorage). Spread no payload do submit
+  // pra atribuir canal/campanha mesmo se a pessoa navegou antes de preencher.
+  const utms = useUtmParams();
   // Flag de "já trackei o start" — useRef pra não disparar re-render.
   const quizStartTrackedRef = useRef(false);
 
@@ -251,6 +256,8 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         observacoesLivres: a.observacoesLivres || undefined,
         website: honeypotValue, // honeypot — vazio em humanos, preenchido em bots
         origem: '/ferramentas/playbook-employee-led-growth',
+        ...utms,
+        ...captureSubmissionMeta(),
       });
 
       if (!result.success) {
@@ -278,7 +285,7 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
       setSubmitError('Erro de conexão. Tente novamente.');
       setState((prev) => ({ ...prev, currentStep: 'identificacao' }));
     }
-  }, [state.answers, router]);
+  }, [state.answers, router, utms]);
 
   /* ---------------- Render ---------------- */
 

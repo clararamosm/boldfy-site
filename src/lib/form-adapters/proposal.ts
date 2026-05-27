@@ -14,19 +14,13 @@ import type { z } from 'zod';
 import type { ProposalLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type ProposalInput = z.infer<typeof ProposalLeadSchema>;
 
 const FORM_SLUG = 'proposta' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
-
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
 
 export type ProposalAdapterContext = {
   /** URL HTML pública da proposta gerada (após criar page no Notion). */
@@ -39,7 +33,8 @@ export function adaptProposal(
   input: ProposalInput,
   ctx: ProposalAdapterContext = {},
 ): ClassifiedLead {
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
+  const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
   const acTags = buildLegibleACTags({
     segment: 'lider_b2b',
@@ -133,7 +128,7 @@ export function adaptProposal(
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: input.origem || 'Simulador de Proposta',
+    sourcePage: combineSourcePage(input.origem || 'Simulador de Proposta', input.landing_pathname),
     sourceMethod: 'form_proposta',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

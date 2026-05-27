@@ -24,6 +24,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { submitBetaLead } from '@/app/actions/beta-leads';
+import { useUtmParams } from '@/hooks/use-utm-params';
+import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 import {
   Loader2,
@@ -179,6 +181,9 @@ export default function BetaTestPage() {
   const [objetivoPrincipal, setObjetivoPrincipal] = useState('');
   const [comoConheceu, setComoConheceu] = useState('');
   const [observacoes, setObservacoes] = useState('');
+  // UTMs persistidos em sessionStorage (use-utm-params.ts) — capturados na
+  // chegada na LP, sobrevivem à navegação interna.
+  const utms = useUtmParams();
 
   const scrollToForm = (source: string) => {
     trackEvent('cta_click', { cta_type: 'beta', source });
@@ -195,6 +200,9 @@ export default function BetaTestPage() {
     const result = await submitBetaLead({
       nome, email, telefone, cargo, empresa, setor,
       colaboradores, objetivoPrincipal, comoConheceu, observacoes,
+      origem: 'LP Beta Test',
+      ...utms,
+      ...captureSubmissionMeta(),
     });
 
     if (result.success) {

@@ -16,23 +16,13 @@ import type { z } from 'zod';
 import type { AlgoritmoLinkedinLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags, segmentFromIntencao } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type AlgoritmoLinkedinInput = z.infer<typeof AlgoritmoLinkedinLeadSchema>;
 
 const FORM_SLUG = 'algoritmo-linkedin' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
-
-/**
- * Mapeia utm_source pro enum SourceChannel. Fallback 'unknown' quando
- * UTM não bate com nenhum canal conhecido (ex: 'newsletter-junho-2026').
- */
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = ['linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual'];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
 
 export function adaptAlgoritmoLinkedin(input: AlgoritmoLinkedinInput): ClassifiedLead {
   const segment = segmentFromIntencao(input.intencaoUso);
@@ -42,7 +32,8 @@ export function adaptAlgoritmoLinkedin(input: AlgoritmoLinkedinInput): Classifie
   const empresaInformada =
     input.intencaoUso === 'marca-empresa' ? input.empresa?.trim() || undefined : undefined;
 
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
+  const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
   // Tag-mãe (Form: Algoritmo LinkedIn 2026 — naming mantido) + segment +
   // newsletter conforme opt-in.
@@ -114,7 +105,7 @@ export function adaptAlgoritmoLinkedin(input: AlgoritmoLinkedinInput): Classifie
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: input.origem || 'LP Algoritmo LinkedIn',
+    sourcePage: combineSourcePage(input.origem || 'LP Algoritmo LinkedIn', input.landing_pathname),
     sourceMethod: 'form_algoritmo_linkedin',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

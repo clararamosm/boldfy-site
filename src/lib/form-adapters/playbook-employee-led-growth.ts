@@ -22,25 +22,13 @@ import type { z } from 'zod';
 import type { PlaybookEmployeeLedGrowthLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
+import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
-import type { SourceChannel } from '../crm';
 
 type PlaybookInput = z.infer<typeof PlaybookEmployeeLedGrowthLeadSchema>;
 
 const FORM_SLUG = 'playbook-employee-led-growth' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
-
-/**
- * Mapeia utm_source pro enum SourceChannel. Fallback 'unknown' quando UTM
- * não bate com nenhum canal conhecido. Mesmo padrão de algoritmo-linkedin.ts.
- */
-function utmSourceToChannel(src: string | undefined): SourceChannel {
-  const known: SourceChannel[] = [
-    'linkedin', 'organic', 'direct', 'email', 'indicacao', 'pr', 'manual',
-  ];
-  if (src && (known as string[]).includes(src)) return src as SourceChannel;
-  return 'unknown';
-}
 
 /**
  * Label legível pra exibição no AC (custom field tipo_de_lead).
@@ -53,7 +41,8 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
   // garantia do Beta/Demo/Proposta.
   const segment = 'lider_b2b' as const;
   const newsletterOptIn = input.newsletterOptIn === true;
-  const channel = utmSourceToChannel(input.utm_source);
+  // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
+  const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
   // Tags AC (4 famílias): Líder B2B + Form: Playbook ELG + Newsletter (opcional).
   const acTags = buildLegibleACTags({
@@ -154,7 +143,8 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
 
     // Tracking
     sourceChannel: channel,
-    sourcePage: '/ferramentas/playbook-employee-led-growth',
+    // Quiz tem URL canônica fixa, mas combineSourcePage tolera (path repetido vai pro mesmo lugar)
+    sourcePage: combineSourcePage('Quiz Playbook ELG', input.landing_pathname ?? '/ferramentas/playbook-employee-led-growth'),
     sourceMethod: 'form_playbook_employee_led_growth',
     firstTouchSource: input.utm_source ?? input.origem ?? channel,
     firstTouchCampaign: input.utm_campaign ?? undefined,

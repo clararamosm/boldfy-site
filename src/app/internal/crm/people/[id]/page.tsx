@@ -20,10 +20,32 @@ import {
   timeAgo,
   formatScheduledAt,
   formatDateTime,
+  formatDateBR,
   describeActivity,
-  timelineDotClass,
+  activityKind,
+  activityIconName,
   channelLabel,
+  type LucideIconName,
 } from '@/lib/crm-format';
+import {
+  Target, FlaskConical, Download, FileSearch, Briefcase, BookOpen,
+  Calendar, CalendarCheck, CalendarX, CalendarMinus,
+  Eye, DollarSign, Puzzle, CalendarPlus,
+  MailOpen, MousePointerClick, Reply, Forward,
+  UserMinus, UserPlus, Ban, CircleDot,
+} from 'lucide-react';
+
+/**
+ * Mapeamento string → componente Lucide. Espelha LucideIconName em crm-format.
+ * Adicionar tipo novo: adiciona aqui + lá.
+ */
+const LUCIDE_ICONS: Record<LucideIconName, typeof Target> = {
+  Target, FlaskConical, Download, FileSearch, Briefcase, BookOpen,
+  Calendar, CalendarCheck, CalendarX, CalendarMinus,
+  Eye, DollarSign, Puzzle, CalendarPlus,
+  MailOpen, MousePointerClick, Reply, Forward,
+  UserMinus, UserPlus, Ban, CircleDot,
+};
 import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
@@ -294,7 +316,11 @@ export default async function LeadDetailPage({ params }: Props) {
               <div className="crm-timeline">
                 {activitiesList.map((act) => {
                   const display = describeActivity(act.type, act.data as Record<string, unknown> | null);
-                  const dotClass = timelineDotClass(display.category);
+                  // Hierarquia visual (Clara 2026-05-26): ações do lead têm
+                  // destaque (bolinha cheia + ícone Lucide + texto forte);
+                  // ações do sistema/usuário ficam discretas (dot pequeno + texto leve).
+                  const kind = activityKind(act.type);
+                  const IconComponent = kind === 'lead' ? LUCIDE_ICONS[activityIconName(act.type)] : null;
                   const data = (act.data as Record<string, unknown> | null) ?? {};
                   const observation = data.observation as string | undefined;
                   const isFormSubmit = act.type.startsWith('form_submit_');
@@ -308,8 +334,8 @@ export default async function LeadDetailPage({ params }: Props) {
                      Labels conhecidos viram label legível; desconhecidos viram
                      humanize(key). Forms futuros (sem código novo) já aparecem
                      completos. */
-                  let canonicalChips: Array<{ k: string; v: string }> = [];
-                  let utmChips: Array<{ k: string; v: string }> = [];
+                  const canonicalChips: Array<{ k: string; v: string }> = [];
+                  const utmChips: Array<{ k: string; v: string }> = [];
                   let obsBlock: string | undefined;
 
                   if (isFormSubmit) {
@@ -399,11 +425,11 @@ export default async function LeadDetailPage({ params }: Props) {
                   return (
                     <div
                       key={act.id}
-                      className="crm-timeline-item"
+                      className={`crm-timeline-item ${kind}`}
                       id={isFormSubmit ? `form-${formSlug}` : undefined}
                     >
-                      <div className={`crm-timeline-dot ${dotClass}`}>
-                        <span>{display.icon}</span>
+                      <div className={`crm-timeline-dot ${kind}`}>
+                        {IconComponent ? <IconComponent /> : null}
                       </div>
                       <div className="crm-timeline-content">
                         <div className="crm-timeline-header">
@@ -579,7 +605,7 @@ export default async function LeadDetailPage({ params }: Props) {
                   {person.firstTouchAt ? (
                     <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px solid #F0E5F8' }}>
                       <span style={{ color: '#9D85B3' }}>Primeiro toque:</span>{' '}
-                      <strong style={{ color: '#45336B' }}>{new Date(person.firstTouchAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>
+                      <strong style={{ color: '#45336B' }}>{formatDateBR(person.firstTouchAt)}</strong>
                       <div style={{ fontSize: 10, color: '#9D85B3', marginTop: 2 }}>{timeAgo(person.firstTouchAt)}</div>
                     </div>
                   ) : null}
