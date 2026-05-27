@@ -448,6 +448,25 @@ export function channelLabel(channel: string | null | undefined): string {
   }
 }
 
+/**
+ * Label legível pra utm_source — texto LIVRE (não o enum fixo do CRM).
+ *
+ * Diferente de channelLabel (que cobre só o enum sourceChannel), aqui o
+ * source pode ser qualquer string que a Clara cadastra no gerador
+ * (ex: 'material', 'webinar', 'newsletter'). Se for um dos canais
+ * canônicos, usa o label legível; senão, capitaliza a string crua.
+ *
+ * Use em listas que agrupam por utm_source (página de campanha, UTM
+ * generator). NÃO use pra sourceChannel do CRM — esse é fixo.
+ */
+export function sourceLabel(source: string | null | undefined): string {
+  if (!source) return '—';
+  const known = channelLabel(source);
+  if (known !== '—') return known;
+  // Capitaliza primeira letra do source bruto: 'material' → 'Material'
+  return source.charAt(0).toUpperCase() + source.slice(1);
+}
+
 export function methodVia(method: string | null | undefined): { label: string; classKey: 'linkedin' | 'form' | 'manual' | 'imported' } | null {
   switch (method) {
     case 'extension_linkedin': return { label: 'via LinkedIn', classKey: 'linkedin' };

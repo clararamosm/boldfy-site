@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { db, people, companies, statuses, utmLinks } from '@/db';
 import { eq, and, isNull, desc, count } from 'drizzle-orm';
 import { getCampaignBySlug, getCampaignStatus, listCampaigns } from '@/lib/campaigns';
-import { timeAgo, channelLabel } from '@/lib/crm-format';
+import { timeAgo, channelLabel, sourceLabel } from '@/lib/crm-format';
 import { EditCampaignButton } from '../edit-campaign-button';
 import { safeBlock } from '@/lib/safe-block';
 import { isGa4Configured } from '@/lib/ga4';
@@ -183,7 +183,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
               {sourceGroups.map(({ source, links }) => (
                 <div key={source} style={{ padding: 12, background: '#FAF7FF', borderRadius: 10, border: '1px solid #E4D8ED' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <strong style={{ fontSize: 13, color: '#5E2A67' }}>{channelLabel(source)}</strong>
+                    <strong style={{ fontSize: 13, color: '#5E2A67' }}>{sourceLabel(source)}</strong>
                     <span style={{ fontSize: 10, color: '#9D85B3' }}>· {links.length} touchpoint{links.length !== 1 ? 's' : ''}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -240,7 +240,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
             {sourceGroups.map(({ source, links }) => (
               <div key={source}>
                 <div style={{ fontSize: 12, color: '#5E2A67', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="dash-pill blue" style={{ fontSize: 11 }}>{channelLabel(source)}</span>
+                  <span className="dash-pill blue" style={{ fontSize: 11 }}>{sourceLabel(source)}</span>
                   <span style={{ color: '#9D85B3', fontWeight: 500, fontSize: 11 }}>· {links.length} link{links.length !== 1 ? 's' : ''}</span>
                 </div>
                 <CampaignUtmList links={links} analyticsByKey={analyticsByKey} />
