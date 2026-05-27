@@ -209,6 +209,9 @@ export function describeActivity(
         phone: 'Telefone',
         linkedinUrl: 'LinkedIn',
         location: 'Localização',
+        companyName: 'Empresa',
+        jobSeniority: 'Senioridade',
+        jobArea: 'Área',
       };
       const fieldLabel = FIELD_LABELS[field] ?? field;
       // Renderiza segmento internal slug pra label legível

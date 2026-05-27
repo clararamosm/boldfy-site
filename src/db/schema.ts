@@ -151,6 +151,14 @@ export const companies = pgTable(
     description: text('description'),
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
     internalNotes: text('internal_notes'),
+    /**
+     * Merge de empresas (mai/2026 — migration 0007). Espelha o pattern de
+     * people. `archived=true` + `mergedIntoId` apontando pra principal =
+     * soft-delete auditável. Queries que listam companies devem filtrar
+     * `WHERE archived = false AND merged_into_id IS NULL`.
+     */
+    archived: boolean('archived').notNull().default(false),
+    mergedIntoId: uuid('merged_into_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -158,6 +166,8 @@ export const companies = pgTable(
     uniqueIndex('idx_companies_name_lower').on(sql`LOWER(${t.name})`),
     index('idx_companies_status').on(t.statusId),
     index('idx_companies_next_action').on(t.nextActionAt),
+    index('idx_companies_archived').on(t.archived),
+    index('idx_companies_merged_into').on(t.mergedIntoId),
   ],
 );
 

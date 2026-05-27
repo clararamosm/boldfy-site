@@ -138,6 +138,20 @@
 }
 .crm-card-checkbox:hover { border-color: #CD50F1; }
 
+/* Espelho do crm-person-card-wrap pra empresas (merge UI — mai/2026) */
+.crm-company-card-wrap {
+  cursor: grab;
+  position: relative;
+}
+.crm-company-card-wrap:active {
+  cursor: grabbing;
+}
+.crm-company-card-wrap.selected .crm-company-card {
+  border-color: #CD50F1;
+  box-shadow: 0 0 0 2px rgba(205, 80, 241, 0.18);
+}
+.crm-company-card-wrap:hover .crm-card-checkbox { opacity: 1; }
+
 /* Selection toolbar (flutuante) */
 .crm-select-toolbar {
   position: fixed;

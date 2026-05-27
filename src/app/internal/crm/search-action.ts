@@ -48,7 +48,8 @@ export async function searchCrm(query: string): Promise<SearchHit[]> {
       db
         .select({ id: companies.id, name: companies.name, industry: companies.industry })
         .from(companies)
-        .where(ilike(companies.name, term))
+        // Migration 0007: search global ignora companies archivadas/mergeadas
+        .where(and(ilike(companies.name, term), eq(companies.archived, false), isNull(companies.mergedIntoId)))
         .limit(5),
     ]);
 

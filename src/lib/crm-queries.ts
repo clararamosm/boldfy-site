@@ -228,8 +228,15 @@ const COMPANY_INACTIVE_CLAUSE = sql`(
   )
 )`;
 
+/**
+ * Filtro padrão de companies vivas (migration 0007 — Clara mai/2026).
+ * Excluir archived/merged em TODA query que lista companies pra UI.
+ * Queries por id direto (getCompanyById) podem ignorar — id é UUID exato.
+ */
+const COMPANY_ALIVE_CLAUSE = sql`(${companies.archived} = FALSE AND ${companies.mergedIntoId} IS NULL)`;
+
 export async function getCompaniesByStatus(perColumn = 100, filters: CrmFilters = {}): Promise<CompaniesByStatus> {
-  const filterClauses: SQL[] = [];
+  const filterClauses: SQL[] = [COMPANY_ALIVE_CLAUSE];
 
   // Task 2 (spec §8): filtro implícito de inativos na empresa. Default
   // exclui empresas inativas (todos linkados unsubscribed). onlyUnsubscribed
@@ -326,7 +333,7 @@ export async function getInactiveCompanies(perColumn = 100): Promise<CompanyWith
     })
     .from(companies)
     .leftJoin(statuses, eq(companies.statusId, statuses.id))
-    .where(COMPANY_INACTIVE_CLAUSE)
+    .where(and(COMPANY_ALIVE_CLAUSE, COMPANY_INACTIVE_CLAUSE))
     .orderBy(desc(companies.updatedAt))
     .limit(perColumn);
 
@@ -579,7 +586,7 @@ export async function getCrmCounts(): Promise<{
       eq(people.unsubscribed, false),
       KANBAN_B2B_CLAUSE,
     )),
-    db.select({ n: count() }).from(companies).where(sql`NOT ${COMPANY_INACTIVE_CLAUSE}`),
+    db.select({ n: count() }).from(companies).where(and(COMPANY_ALIVE_CLAUSE, sql`NOT ${COMPANY_INACTIVE_CLAUSE}`)),
     db.select({ n: count() }).from(activities),
   ]);
   return {
