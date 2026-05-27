@@ -21,12 +21,13 @@ import {
 import { getTopQueries } from '@/lib/search-console';
 import { channelLabel, timeAgo } from '@/lib/crm-format';
 import {
-  Sparkline,
+  InteractiveSparkline,
   SourcedFunnel,
   StackedAreaChart,
   DonutChart,
   HeatmapChart,
   BOLDFY_PURPLES,
+  type SparkPoint,
 } from '@/components/dashboard/charts';
 import { MultiLineCard } from '@/components/dashboard/multi-line-card';
 import {
@@ -158,8 +159,8 @@ export default async function DashboardOverviewPage() {
             <DonutChart
               data={origin.map((o) => ({ key: o.source, value: o.count }))}
               labelMap={SOURCE_LABELS}
-              size={160}
-              thickness={24}
+              size={200}
+              thickness={28}
             />
           </div>
         </div>
@@ -255,7 +256,7 @@ function KpiBento({ label, value, deltaPct, sparkline, color }: {
   label: string;
   value: number;
   deltaPct: number | null;
-  sparkline: number[];
+  sparkline: SparkPoint[];
   color: string;
 }) {
   const delta = deltaPill(deltaPct);
@@ -265,7 +266,7 @@ function KpiBento({ label, value, deltaPct, sparkline, color }: {
       <div className="bento-value">{value.toLocaleString('pt-BR')}</div>
       {delta ? <div className={`bento-delta ${delta.className}`}><delta.Icon size={11} /> {delta.text}</div> : null}
       <div className="bento-sparkline-wrap">
-        <Sparkline data={sparkline} color={color} height={32} />
+        <InteractiveSparkline data={sparkline} color={color} height={32} />
       </div>
     </div>
   );

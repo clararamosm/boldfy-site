@@ -69,7 +69,9 @@ export function StackedAreaChart({
         ))}
       </div>
       <div className="dash-chart-svg-wrap">
-        <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height, display: 'block' }}>
+        {/* preserveAspectRatio="xMidYMid meet" mantém proporção (texto não
+            distorce). Antes "none" esticava labels do eixo Y/X. */}
+        <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height, display: 'block' }}>
           {yTicks.map((t, i) => {
             const y = PAD.top + innerH - (t / maxTotal) * innerH;
             return (

@@ -661,12 +661,21 @@
 .bento-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 6px;
   font-family: var(--font-headline);
   font-weight: 900;
   font-size: 14px;
   color: #5E2A67;
   margin-bottom: 4px;
+}
+/* Helper opcional à direita (ex: "últimos 30 dias" no card Funil).
+   Usa margin-left: auto inline ou esta classe pra empurrar pro fim. */
+.bento-title-helper {
+  margin-left: auto;
+  font-size: 11px;
+  color: #9D85B3;
+  font-weight: 600;
 }
 .bento-subtitle {
   font-size: 11px;

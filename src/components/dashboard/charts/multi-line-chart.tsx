@@ -55,7 +55,11 @@ export function MultiLineChart({
         ))}
       </div>
       <div className="dash-chart-svg-wrap">
-        <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" style={{ width: '100%', height, display: 'block' }}>
+        {/* preserveAspectRatio="xMidYMid meet" mantém proporção (texto não
+            distorce). Antes "none" esticava o viewBox horizontalmente e os
+            <text> ficavam achatados. Pode aparecer pequena margem lateral
+            em containers muito estreitos — preferível a texto distorcido. */}
+        <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height, display: 'block' }}>
           {yTicks.map((t, i) => {
             const y = PAD.top + innerH - (t / maxValue) * innerH;
             return (

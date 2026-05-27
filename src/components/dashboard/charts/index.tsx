@@ -19,6 +19,7 @@
 
 export { BOLDFY_PALETTE, BOLDFY_PURPLES } from './_shared';
 export { Sparkline } from './sparkline';
+export { InteractiveSparkline, type SparkPoint } from './interactive-sparkline';
 export { MultiLineChart } from './multi-line-chart';
 export { StackedAreaChart } from './stacked-area-chart';
 export { DonutChart } from './donut-chart';

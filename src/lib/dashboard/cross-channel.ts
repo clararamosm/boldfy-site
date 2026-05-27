@@ -8,7 +8,7 @@
  * no caller.
  */
 
-import { db, people, companies, meetings, statuses } from '@/db';
+import { db, people, companies, meetings, statuses, activities } from '@/db';
 import { eq, and, isNull, sql, desc, gte, count } from 'drizzle-orm';
 import { getTrafficByDay, getTrafficByChannel, getTrafficByDayAndChannel, getTopUtms, isGa4Configured } from '../ga4';
 import { getSeoSummary, isSearchConsoleConfigured } from '../search-console';
@@ -19,10 +19,10 @@ import { getContactCountSince } from '../activecampaign';
 /* -------------------------------------------------------------------------- */
 
 export type DailyActivityPoint = {
-  date: string;      // YYYY-MM-DD
+  date: string;      // YYYY-MM-DD em horário SP
   visitas: number;   // GA4 sessions
-  forms: number;     // people.createdAt count
-  reunioes: number;  // meetings.scheduledAt count
+  forms: number;     // count de activities form_submit_* (TODO submit conta, mesmo lead existente)
+  reunioes: number;  // count de meetings.createdAt (data do booking, não do evento)
 };
 
 export async function getActivityByDay(days = 28): Promise<DailyActivityPoint[]> {
@@ -32,31 +32,36 @@ export async function getActivityByDay(days = 28): Promise<DailyActivityPoint[]>
   const visitasByDay = isGa4Configured() ? await getTrafficByDay(days).catch(() => []) : [];
   const visitasMap = new Map(visitasByDay.map((v) => [v.date, v.sessions]));
 
-  // Forms (people criados) por dia
+  // Forms: conta TODO form_submit_* do dia (em activities), não só leads novos.
+  // Antes contava people.createdAt → leads que já estavam no CRM e preenchiam
+  // novo form não entravam na conta. Agora cada submit é um evento contável.
+  //
+  // Reuniões: conta meetings.createdAt (data do BOOKING), não scheduledAt
+  // (data do evento futuro). Antes a métrica "Reuniões 7d" zerava porque
+  // todas as reuniões agendadas estavam no futuro, fora da janela passada.
   let formsRows: { date: string; n: number }[] = [];
   let meetRows: { date: string; n: number }[] = [];
   try {
     formsRows = await db
       .select({
-        date: sql<string>`TO_CHAR(${people.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`,
+        date: sql<string>`TO_CHAR(${activities.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`,
         n: count(),
       })
-      .from(people)
+      .from(activities)
       .where(and(
-        eq(people.archived, false),
-        isNull(people.mergedIntoId),
-        gte(people.createdAt, since),
+        sql`${activities.type} LIKE 'form_submit_%'`,
+        gte(activities.createdAt, since),
       ))
-      .groupBy(sql`TO_CHAR(${people.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`);
+      .groupBy(sql`TO_CHAR(${activities.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`);
 
     meetRows = await db
       .select({
-        date: sql<string>`TO_CHAR(${meetings.scheduledAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`,
+        date: sql<string>`TO_CHAR(${meetings.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`,
         n: count(),
       })
       .from(meetings)
-      .where(gte(meetings.scheduledAt, since))
-      .groupBy(sql`TO_CHAR(${meetings.scheduledAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`);
+      .where(gte(meetings.createdAt, since))
+      .groupBy(sql`TO_CHAR(${meetings.createdAt} AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD')`);
   } catch (err) {
     console.error('[dashboard-queries] getActivityByDay db error:', err);
   }
@@ -425,6 +430,12 @@ export type LastLead = {
 
 export async function getLast5Leads(limit = 5): Promise<LastLead[]> {
   try {
+    // Antes ordenava por people.createdAt → só leads novos apareciam.
+    // Agora ordena pelas activities form_submit_* — mesma pessoa pode
+    // aparecer múltiplas vezes (cada submit é evento). createdAt no
+    // resultado vira a data do submit (não do cadastro), pra que o
+    // "ontem"/"3h" do live feed reflita o evento, não a primeira vez
+    // que a pessoa entrou no CRM.
     const rows = await db
       .select({
         id: people.id,
@@ -433,14 +444,19 @@ export async function getLast5Leads(limit = 5): Promise<LastLead[]> {
         source: people.sourceChannel,
         statusLabel: statuses.label,
         statusColor: statuses.color,
-        createdAt: people.createdAt,
+        createdAt: activities.createdAt, // ← data do submit, não do cadastro
         companyName: companies.name,
       })
-      .from(people)
+      .from(activities)
+      .innerJoin(people, eq(activities.personId, people.id))
       .leftJoin(statuses, eq(people.statusId, statuses.id))
       .leftJoin(companies, eq(people.companyId, companies.id))
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId)))
-      .orderBy(desc(people.createdAt))
+      .where(and(
+        sql`${activities.type} LIKE 'form_submit_%'`,
+        eq(people.archived, false),
+        isNull(people.mergedIntoId),
+      ))
+      .orderBy(desc(activities.createdAt))
       .limit(limit);
     return rows;
   } catch (err) {
@@ -457,7 +473,12 @@ export type SnapshotKpi = {
   label: string;
   value: number;
   deltaPct: number | null;
-  sparkline: number[];
+  /**
+   * Pontos {date, value} dos últimos 7 dias pra renderizar sparkline
+   * interativo com tooltip. Antes era só number[] — perdíamos a data,
+   * então não dava pra mostrar "30/05: 14" no hover.
+   */
+  sparkline: Array<{ date: string; value: number }>;
 };
 
 export async function getBentoSnapshot(): Promise<{
@@ -480,24 +501,30 @@ export async function getBentoSnapshot(): Promise<{
   const forms7 = last7.map((d) => d.forms);
   const reu7 = last7.map((d) => d.reunioes);
 
+  // Sparkline com data preservada — InteractiveSparkline usa pra mostrar
+  // "30/05: 14" no hover. Mapping é direto do DailyActivityPoint.
+  const sparkVisitas = last7.map((d) => ({ date: d.date, value: d.visitas }));
+  const sparkForms = last7.map((d) => ({ date: d.date, value: d.forms }));
+  const sparkReu = last7.map((d) => ({ date: d.date, value: d.reunioes }));
+
   return {
     visitas: {
       label: 'Visitas (7d)',
       value: sum(visitas7),
       deltaPct: pctDelta(sum(visitas7), sum(prev7.map((d) => d.visitas))),
-      sparkline: visitas7,
+      sparkline: sparkVisitas,
     },
     forms: {
       label: 'Forms (7d)',
       value: sum(forms7),
       deltaPct: pctDelta(sum(forms7), sum(prev7.map((d) => d.forms))),
-      sparkline: forms7,
+      sparkline: sparkForms,
     },
     reunioes: {
       label: 'Reuniões (7d)',
       value: sum(reu7),
       deltaPct: pctDelta(sum(reu7), sum(prev7.map((d) => d.reunioes))),
-      sparkline: reu7,
+      sparkline: sparkReu,
     },
     topCanal: await getTopCanalSnapshot(7),
   };
