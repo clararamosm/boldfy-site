@@ -103,7 +103,7 @@ export async function createUtmLink(_prev: CreateUtmLinkState, formData: FormDat
         shortCode = await createShortlink(fullUrl);
         if (shortCode) await db.update(utmLinks).set({ shortCode }).where(eq(utmLinks.id, existing.id));
       }
-      revalidatePath('/internal/utm');
+      revalidateAllUtmPaths();
       return { ok: true, id: existing.id, fullUrl, shortCode };
     }
 
@@ -124,7 +124,7 @@ export async function createUtmLink(_prev: CreateUtmLinkState, formData: FormDat
       })
       .returning({ id: utmLinks.id });
 
-    revalidatePath('/internal/utm');
+    revalidateAllUtmPaths();
     return { ok: true, id: created.id, fullUrl, shortCode };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -148,18 +148,63 @@ export async function shortenUtmLink(id: string): Promise<{ ok: boolean; shortCo
     if (!shortCode) return { ok: false, error: 'Falha ao gerar shortcode' };
 
     await db.update(utmLinks).set({ shortCode }).where(eq(utmLinks.id, id));
-    revalidatePath('/internal/utm');
+    revalidateAllUtmPaths();
     return { ok: true, shortCode };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
+/**
+ * Deleta as 4 chaves do KV associadas a um shortCode. Fire-and-forget:
+ * se uma chave não existir (raro), kv.del retorna 0 sem erro. Promise.all
+ * roda em paralelo. Se TODAS falharem, loga mas não bloqueia o delete do DB.
+ */
+async function deleteShortlinkFromKv(shortCode: string): Promise<void> {
+  try {
+    await Promise.all([
+      kv.del(`link:${shortCode}`),
+      kv.del(`meta:${shortCode}`),
+      kv.del(`link-clicks:${shortCode}`),
+      kv.del(`link-last:${shortCode}`),
+    ]);
+  } catch (err) {
+    console.warn(`[deleteShortlinkFromKv] falha ao limpar KV pra ${shortCode}:`, err);
+  }
+}
+
+/**
+ * Revalida TODOS os paths que mostram dados de UTM/shortlinks. Sem isso,
+ * /internal/dashboard/campanhas e os drill-downs ficam com cache até o
+ * usuário forçar refresh.
+ */
+function revalidateAllUtmPaths(): void {
+  revalidatePath('/internal/utm');
+  // 'layout' inclui as sub-rotas [slug] dinâmicas — sem isso, o drill-down
+  // de cada campanha não invalida.
+  revalidatePath('/internal/dashboard/campanhas', 'layout');
+}
+
 export async function deleteUtmLink(id: string): Promise<{ ok: boolean; error?: string }> {
   if (!z.string().uuid().safeParse(id).success) return { ok: false, error: 'ID inválido' };
   try {
+    // 1. Lê shortCode ANTES de deletar (precisa pra limpar KV)
+    const [row] = await db
+      .select({ shortCode: utmLinks.shortCode })
+      .from(utmLinks)
+      .where(eq(utmLinks.id, id))
+      .limit(1);
+
+    // 2. Deleta do Postgres
     await db.delete(utmLinks).where(eq(utmLinks.id, id));
-    revalidatePath('/internal/utm');
+
+    // 3. Limpa KV se tinha shortlink (link:, meta:, link-clicks:, link-last:)
+    if (row?.shortCode) {
+      await deleteShortlinkFromKv(row.shortCode);
+    }
+
+    // 4. Revalida TODOS os paths que mostram esse link
+    revalidateAllUtmPaths();
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -168,8 +213,23 @@ export async function deleteUtmLink(id: string): Promise<{ ok: boolean; error?: 
 
 export async function clearAllUtmLinks(): Promise<{ ok: boolean; deleted: number }> {
   try {
+    // 1. Lê TODOS os shortCodes antes (pra cascatear no KV)
+    const allWithShort = await db
+      .select({ shortCode: utmLinks.shortCode })
+      .from(utmLinks);
+
+    // 2. Deleta tudo do Postgres
     const result = await db.delete(utmLinks).returning({ id: utmLinks.id });
-    revalidatePath('/internal/utm');
+
+    // 3. Limpa KV em paralelo pra cada shortCode existente
+    await Promise.all(
+      allWithShort
+        .filter((r): r is { shortCode: string } => r.shortCode !== null)
+        .map((r) => deleteShortlinkFromKv(r.shortCode)),
+    );
+
+    // 4. Revalida
+    revalidateAllUtmPaths();
     return { ok: true, deleted: result.length };
   } catch (err) {
     console.error('[clearAllUtmLinks] failed:', err);

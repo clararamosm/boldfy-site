@@ -72,34 +72,83 @@ async function getCampaignStats(c: Campaign): Promise<CampaignStats> {
   }
 }
 
-type ShortlinkRow = { code: string; url: string; clicks: number; lastClickAt: number | null };
+/**
+ * Linha da tabela "Links rastreáveis". Antes era source-of-truth do KV
+ * (`type ShortlinkRow`); agora vem da tabela utm_links (DB) + cruza com:
+ *  - KV pra cliques no shortlink (0 quando não tem shortCode)
+ *  - GA4 pra sessões/usuários/engajamento (via getUtmAnalyticsBatch)
+ *
+ * Isso resolve 2 problemas (mai/2026 — Clara):
+ *  1. Delete em /internal/utm agora cascateia: linha some daqui também.
+ *  2. Paridade visual com /internal/utm: mesmas métricas (sessões, etc).
+ */
+type TrackableLinkRow = {
+  id: string;
+  shortCode: string | null;   // null se não tem shortlink (cliques=0)
+  destinationUrl: string;
+  label: string | null;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  clicks: number;             // do KV (0 quando sem shortCode)
+  lastClickAt: number | null;
+  // Analytics GA4 — podem ser null se GA4 não tem dados pra esse UTM ainda
+  sessions: number;
+  users: number;
+  engagementRate: number;
+};
 
-async function getShortlinks(): Promise<ShortlinkRow[]> {
+async function getTrackableLinks(): Promise<TrackableLinkRow[]> {
   try {
-    const keys: string[] = [];
-    let cursor: string | number = 0;
-    do {
-      const result = await kv.scan(cursor, { match: 'link:*', count: 100 });
-      const [next, batch] = result as [string | number, string[]];
-      keys.push(...batch);
-      cursor = next;
-    } while (cursor !== '0' && cursor !== 0);
+    // 1. Pega todos os utm_links (source of truth no DB)
+    const links = await db
+      .select()
+      .from(utmLinks)
+      .orderBy(desc(utmLinks.createdAt));
 
-    if (keys.length === 0) return [];
-    const rows: ShortlinkRow[] = [];
-    for (const key of keys) {
-      const code = key.replace('link:', '');
-      const [url, clicks, lastClick] = await Promise.all([
-        kv.get<string>(key),
-        kv.get<number>(`link-clicks:${code}`),
-        kv.get<number>(`link-last:${code}`),
-      ]);
-      if (!url) continue;
-      rows.push({ code, url, clicks: clicks ?? 0, lastClickAt: lastClick ?? null });
-    }
-    return rows.sort((a, b) => b.clicks - a.clicks);
+    if (links.length === 0) return [];
+
+    // 2. Pra cada link, busca cliques/lastClick no KV (paralelo).
+    //    Links sem shortCode pulam essa busca (cliques=0).
+    const kvResults = await Promise.all(
+      links.map(async (link) => {
+        if (!link.shortCode) return { clicks: 0, lastClickAt: null };
+        const [clicks, lastClick] = await Promise.all([
+          kv.get<number>(`link-clicks:${link.shortCode}`),
+          kv.get<number>(`link-last:${link.shortCode}`),
+        ]);
+        return { clicks: clicks ?? 0, lastClickAt: lastClick ?? null };
+      }),
+    );
+
+    // 3. Busca analytics GA4 a partir do utm_link mais antigo (cobre todos).
+    //    Skip se GA4 não configurado.
+    const oldest = new Date(Math.min(...links.map((l) => new Date(l.createdAt).getTime())));
+    const analyticsBatch = isGa4Configured()
+      ? await getUtmAnalyticsBatch(oldest).catch(() => new Map<string, UtmAnalytics>())
+      : new Map<string, UtmAnalytics>();
+
+    // 4. Compõe a linha cruzando DB + KV + GA4
+    return links.map((link, i) => {
+      const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+      const a = analyticsBatch.get(key);
+      return {
+        id: link.id,
+        shortCode: link.shortCode,
+        destinationUrl: link.baseUrl,
+        label: link.label,
+        utmSource: link.utmSource,
+        utmMedium: link.utmMedium,
+        utmCampaign: link.utmCampaign,
+        clicks: kvResults[i].clicks,
+        lastClickAt: kvResults[i].lastClickAt,
+        sessions: a?.totals.sessions ?? 0,
+        users: a?.totals.users ?? 0,
+        engagementRate: a?.totals.engagementRate ?? 0,
+      };
+    });
   } catch (err) {
-    console.error('[campanhas] shortlinks failed:', err);
+    console.error('[campanhas] getTrackableLinks failed:', err);
     return [];
   }
 }
@@ -113,7 +162,7 @@ export default async function CampanhasPage() {
     () => Promise.all(campaignsList.map((c) => getCampaignStats(c))),
     campaignsList.map(() => ({ leads: 0, reunioes: 0, fechados: 0 })),
   );
-  const shortlinks = await safeBlock('campanhas', 'shortlinks', () => getShortlinks(), []);
+  const trackableLinks = await safeBlock('campanhas', 'trackableLinks', () => getTrackableLinks(), []);
   const now = new Date();
 
   // Mídia & PR — migrado de /aquisicao
@@ -326,22 +375,44 @@ export default async function CampanhasPage() {
           </Link>
         </div>
         <div className="dash-card-subtitle">
-          Links UTM são criados em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
-          Shortlinks (KV) servem como alias curto pros UTMs em mídias com limite de caracteres ·
+          Links UTM criados em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/utm</Link>.
+          Sessões/usuários/engaj. vêm do GA4 (atribuição UTM). Cliques contam acessos ao shortlink
           <code style={{ background: '#F7EEFC', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>boldfy.com.br/l/&lt;code&gt;</code>
+          {' '}— inclui bots. UTMs sem shortlink mostram 0 cliques (não tem URL curta pra clicar).
         </div>
-        {(shortlinks ?? []).length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem shortlinks no KV.</div>
+        {(trackableLinks ?? []).length === 0 ? (
+          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Nenhum link UTM cadastrado. Crie em <Link href="/internal/utm" style={{ color: '#CD50F1' }}>/internal/utm</Link>.</div>
         ) : (
           <table className="dash-table">
-            <thead><tr><th>Code</th><th>Destino</th><th className="right">Cliques</th><th className="right">Último click</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Destino</th>
+                <th className="right" title="Sessões no GA4 atribuídas a esse UTM">Sessões</th>
+                <th className="right" title="Usuários únicos no GA4">Usuários</th>
+                <th className="right" title="Engagement rate do GA4 (% sessões engajadas)">Engaj.</th>
+                <th className="right" title="Cliques no shortlink /l/CODE (KV) — bots contam">Cliques</th>
+                <th className="right">Último click</th>
+              </tr>
+            </thead>
             <tbody>
-              {(shortlinks ?? []).map((s) => (
-                <tr key={s.code}>
-                  <td className="strong"><span className="dash-pill blue">/l/{s.code}</span></td>
-                  <td className="muted" style={{ maxWidth: 460, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.url}</td>
-                  <td className="right strong">{(s.clicks ?? 0).toLocaleString('pt-BR')}</td>
-                  <td className="right muted">{s.lastClickAt ? timeAgo(new Date(s.lastClickAt)) : '—'}</td>
+              {(trackableLinks ?? []).map((l) => (
+                <tr key={l.id}>
+                  <td className="strong">
+                    {l.shortCode
+                      ? <span className="dash-pill blue">/l/{l.shortCode}</span>
+                      : <span className="dash-pill" style={{ background: '#FAF7FF', color: '#9D85B3' }}>sem short</span>
+                    }
+                  </td>
+                  <td className="muted" style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {l.label ? <span style={{ color: '#5E2A67', fontWeight: 600, marginRight: 6 }}>{l.label}</span> : null}
+                    {l.destinationUrl}
+                  </td>
+                  <td className="right strong">{l.sessions.toLocaleString('pt-BR')}</td>
+                  <td className="right">{l.users.toLocaleString('pt-BR')}</td>
+                  <td className="right muted">{l.sessions > 0 ? `${(l.engagementRate * 100).toFixed(0)}%` : '—'}</td>
+                  <td className="right strong">{l.clicks.toLocaleString('pt-BR')}</td>
+                  <td className="right muted">{l.lastClickAt ? timeAgo(new Date(l.lastClickAt)) : '—'}</td>
                 </tr>
               ))}
             </tbody>
