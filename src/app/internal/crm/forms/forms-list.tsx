@@ -26,7 +26,12 @@ const FORMS_COLUMNS: readonly ColumnDef[] = [
   { key: 'cargo', label: 'Cargo' },
   { key: 'formularios', label: 'Formulários' },
   { key: 'segmento', label: 'Segmento' },
-  { key: 'optin', label: 'Opt-in' },
+  // 'optin' = checkbox de newsletter no form (campo `newsletter_opt_in` no DB).
+  // Label diz "Newsletter" pra explicitar o que a coluna representa — outros
+  // opt-ins (cadência do form etc.) são implícitos pela submissão e não
+  // entram aqui. Key continua 'optin' pra não invalidar preferências do
+  // column-picker salvas em localStorage.
+  { key: 'optin', label: 'Newsletter' },
   { key: 'status', label: 'Status' },
   { key: 'canal', label: 'Canal' },
   { key: 'empresa', label: 'Empresa' },
@@ -164,7 +169,7 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
               {visibleCols.has('cargo') ? <th style={thBase}>Cargo</th> : null}
               {visibleCols.has('formularios') ? <th style={thBase}>Formulários</th> : null}
               {visibleCols.has('segmento') ? <th style={thBase}>Segmento</th> : null}
-              {visibleCols.has('optin') ? <th style={thBase}>Opt-in</th> : null}
+              {visibleCols.has('optin') ? <th style={thBase}>Newsletter</th> : null}
               {visibleCols.has('status') ? <th style={thBase}>Status</th> : null}
               {visibleCols.has('canal') ? <th style={thBase}>Canal</th> : null}
               {visibleCols.has('empresa') ? <th style={thBase}>Empresa</th> : null}
