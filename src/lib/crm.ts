@@ -22,7 +22,7 @@ import { getDefaultStatus, statusForScore, shouldAutoPromote, classifyByMethod, 
 import { syncCompanyFromPeople } from './crm-sync';
 import { syncContact } from './activecampaign';
 import type { ClassifiedLead } from './form-adapters/types';
-import { formSlugToActivityType } from './form-definitions';
+import { formSlugToActivityType, FORM_DEFS_SEED, type FormSlug } from './form-definitions';
 
 /* -------------------------------------------------------------------------- */
 /*  Pesos pré-definidos por tipo de activity                                  */
@@ -599,6 +599,56 @@ export async function logActivity(
 }
 
 /* -------------------------------------------------------------------------- */
+/*  buildAcListNames — resolve as listas de AC pra inscrever um lead          */
+/*                                                                             */
+/*  Caminho 2 (mai/2026): CRM é source of truth. Em vez de depender de         */
+/*  automations do AC ("Tag X → adiciona em Lista Y") que ficaram inativas     */
+/*  depois do refactor de tags em 22/05, código resolve direto baseado em:     */
+/*    1. segment → lista de segmento                                           */
+/*    2. formSlug → lista de cadência (FORM_DEFS_SEED.acListName)              */
+/*    3. newsletterOptIn → "Newsletter Boldfy"                                 */
+/*                                                                             */
+/*  Listas que não existem no AC são silenciosamente puladas pelo activecampaign.ts */
+/*  via getListIdByNameMap() — sem erro, só warning no console.                */
+/*                                                                             */
+/*  Order matters apenas pra log/debug — AC trata o POST como idempotente.     */
+/* -------------------------------------------------------------------------- */
+
+function buildAcListNames(lead: ClassifiedLead): string[] {
+  const names: string[] = [];
+
+  // 1. Lista de segmento (Líderes B2B / Profissionais Individuais / Parceiros)
+  switch (lead.segment) {
+    case 'lider_b2b':
+      names.push('Líderes B2B');
+      break;
+    case 'profissional_individual':
+      names.push('Profissionais Individuais');
+      break;
+    case 'parceiro':
+      names.push('Parceiros estratégicos');
+      break;
+    default:
+      // segment=null → nenhuma lista de segmento (form lider_b2b_only sem
+      // intenção declarada, ou erro de classificação — não bloqueia o resto)
+      break;
+  }
+
+  // 2. Lista de cadência do form (algoritmo-linkedin, case-semrush, beta, etc)
+  const formDef = FORM_DEFS_SEED[lead.formSlug as FormSlug];
+  if (formDef?.acListName) {
+    names.push(formDef.acListName);
+  }
+
+  // 3. Newsletter Boldfy (opt-in explícito no form — futuro `opt_news`)
+  if (lead.newsletterOptIn) {
+    names.push('Newsletter Boldfy');
+  }
+
+  return names;
+}
+
+/* -------------------------------------------------------------------------- */
 /*  recordLeadFromForm — wrapper alto-nível pros server actions de form        */
 /*                                                                             */
 /*  Task 1 (mai/2026): aceita ClassifiedLead direto (vem de form-adapters).    */
@@ -715,6 +765,17 @@ export async function recordLeadFromForm(
   // truth). AC vem depois. Se falhar, emite activity ac_sync_failed e segue.
   if (lead.syncToAC !== false) {
     try {
+      // Listas do AC pra inscrever automaticamente (mai/2026 — Caminho 2):
+      // - Lista de segmento (Líderes B2B / Profissionais Individuais /
+      //   Parceiros estratégicos) baseada em lead.segment
+      // - Lista de cadência do form (form-definitions.acListName)
+      // - Newsletter Boldfy se opt-news=true
+      //
+      // Source of truth = CRM. Quando contato muda de segment ou marca
+      // newsletter, próximo sync reflete via re-inscrição. AC trata o
+      // POST /api/3/contactLists como idempotente — sem duplicação.
+      const listNames = buildAcListNames(lead);
+
       const acContactId = await syncContact({
         email: person.email,
         firstName: lead.acFirstName ?? lead.name.split(/\s+/)[0],
@@ -722,6 +783,7 @@ export async function recordLeadFromForm(
         phone: lead.phone,
         tags: lead.acTags,
         fields: lead.acFields,
+        listNames,
       });
       if (acContactId && !person.acContactId) {
         // Cacheia contactId no people pra futuros syncs serem diretos

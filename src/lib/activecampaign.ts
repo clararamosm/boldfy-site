@@ -38,6 +38,25 @@ export type ACContactInput = {
    * Fields são criados automaticamente no AC no primeiro uso.
    */
   fields?: Record<string, string | number | undefined | null>;
+  /**
+   * Listas de Email do AC pra inscrever o contato (mai/2026 — Caminho 2
+   * sustentável). Por padrão o AC bloqueia inscrição via API sem consent
+   * explícito — passamos `status: 1` ("Active") porque o usuário deu
+   * consent ao preencher o form do site. Sem isso, automações que tinham
+   * step "Inscrever em lista" falhavam silenciosamente: contato com tag
+   * mas fora da lista → AC não disparava emails da cadência.
+   *
+   * Usa NOMES das listas (não IDs) porque é mais estável: se Clara renomear
+   * uma lista no AC, basta o nome bater com a convenção em form-definitions.
+   * IDs do AC podem ser regenerados em migração de conta e quebrar tudo.
+   *
+   * Resolução nome → ID é via getAllListsById() (cached 10min). Nomes que
+   * não existem no AC são ignorados silenciosamente com log.
+   *
+   * Falha silenciosa: se uma inscrição falhar, NÃO bloqueia o sync inteiro
+   * (tags + fields continuam OK).
+   */
+  listNames?: string[];
 };
 
 type ACContactResponse = {
@@ -165,10 +184,66 @@ export async function syncContact(input: ACContactInput): Promise<string | null>
       });
     }
 
+    // Subscribe to Email lists with explicit consent (status: 1 = Active).
+    // Resolve nomes → IDs via cache (getListIdByNameMap, TTL 10min). Nomes
+    // que não existem no AC são ignorados com log. Non-blocking: cada
+    // falha individual loga mas não derruba o sync inteiro.
+    if (input.listNames && input.listNames.length > 0) {
+      const idByName = await getListIdByNameMap();
+      const listIds = input.listNames
+        .map((name) => {
+          const id = idByName.get(name);
+          if (!id) {
+            console.warn(`[activecampaign] Lista "${name}" não encontrada no AC — pulando inscrição`);
+          }
+          return id;
+        })
+        .filter((id): id is string => !!id);
+
+      await Promise.all(
+        listIds.map((listId) =>
+          addContactToList(contactId, listId).catch((err) => {
+            console.error(`[activecampaign] Error subscribing to list ${listId}:`, err);
+          }),
+        ),
+      );
+    }
+
     return contactId;
   } catch (error) {
     console.error('[activecampaign] Error:', error);
     return null;
+  }
+}
+
+/**
+ * Inscreve um contato existente numa lista com `status: 1` (Active).
+ *
+ * Por que `status: 1`: AC tem 5 status pra contactList (1=Active, 2=Unsubscribed,
+ * 0=Unconfirmed, etc.). Quando contato é criado via API SEM um status explícito,
+ * AC bloqueia inscrição em listas como proteção anti-spam — automações tentam
+ * adicionar mas falham. Passar status=1 declara que temos consent (o usuário
+ * preencheu o form pedindo o material; isso é opt-in legalmente válido).
+ *
+ * Endpoint: POST /api/3/contactLists
+ * Idempotente: se contato já tá na lista, AC retorna 200 sem duplicar.
+ */
+async function addContactToList(contactId: string, listId: string): Promise<void> {
+  if (!AC_API_URL || !AC_API_KEY) return;
+  const res = await fetch(`${AC_API_URL}/api/3/contactLists`, {
+    method: 'POST',
+    headers: acHeaders(),
+    body: JSON.stringify({
+      contactList: {
+        list: listId,
+        contact: contactId,
+        status: 1, // Active — consent explícito
+      },
+    }),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`AC list ${listId}: ${res.status} ${errText.slice(0, 200)}`);
   }
 }
 
@@ -408,6 +483,21 @@ export async function getAllListsById(): Promise<Map<string, string>> {
     console.error('[activecampaign] getAllListsById error:', err);
     return new Map();
   }
+}
+
+/**
+ * Inverso de getAllListsById — retorna Map<name, id> pra resolver nomes
+ * de listas em IDs. Usado pelo sync ao inscrever contato em listas
+ * declaradas por nome (mais estável que ID hardcoded).
+ *
+ * Compartilha o mesmo cache de getAllListsById — uma chamada de rede
+ * popula os 2 mapas. Se nome aparecer duplicado (raro), o último vence.
+ */
+export async function getListIdByNameMap(): Promise<Map<string, string>> {
+  const byId = await getAllListsById();
+  const byName = new Map<string, string>();
+  for (const [id, name] of byId) byName.set(name, id);
+  return byName;
 }
 
 /**

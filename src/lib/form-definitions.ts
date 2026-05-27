@@ -64,36 +64,50 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
   name: string;
   kind: FormKind;
   acTag: string;
+  /**
+   * Nome da lista no AC pra inscrever automaticamente o contato quando esse
+   * form é preenchido (mai/2026 — Caminho 2 sustentável). Resolvido em
+   * runtime via getListIdByNameMap(). Se a lista não existir no AC, sync
+   * pula com warning. Use null pra forms que NÃO disparam cadência própria
+   * (ex: extension_linkedin). Listas de SEGMENTO (Líderes B2B, Profissional,
+   * Parceiro) são adicionadas separadamente pelo crm.ts baseado em segment.
+   */
+  acListName?: string | null;
 }> = {
   'algoritmo-linkedin': {
     slug: 'algoritmo-linkedin',
     name: 'Report Algoritmo LinkedIn 2026',
     kind: 'topo_funil',
     acTag: 'Form: Algoritmo LinkedIn 2026',
+    acListName: '[Cadência] Report Algoritmo LinkedIn',
   },
   beta: {
     slug: 'beta',
     name: 'Beta Test',
     kind: 'lider_b2b_only',
     acTag: 'Form: Beta Test',
+    acListName: 'Beta tester',
   },
   demo: {
     slug: 'demo',
     name: 'Demo',
     kind: 'lider_b2b_only',
     acTag: 'Form: Demo',
+    acListName: null, // sem cadência de email — fluxo direto pro Cal.com
   },
   proposta: {
     slug: 'proposta',
     name: 'Simulador de Proposta',
     kind: 'lider_b2b_only',
     acTag: 'Form: Proposta',
+    acListName: null, // sem cadência — fundo de funil já em conversa direta
   },
   linkedin_extension: {
     slug: 'linkedin_extension',
     name: 'Extracao LinkedIn',
     kind: 'lider_b2b_only',
     acTag: 'Form: LinkedIn',
+    acListName: null, // captura interna, sem cadência associada
   },
   // Case de meio-funil (Semrush ELG). Mesma natureza topo_funil do algoritmo-
   // linkedin — pergunta intencao_uso, gera 3 segments (lider_b2b/parceiro/
@@ -105,6 +119,7 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     name: 'Case Semrush ELG',
     kind: 'topo_funil',
     acTag: 'Form: Case Semrush ELG',
+    acListName: '[Cadência] Case Semrush',
   },
   // Playbook ELG (mai/2026): quiz interativo de 11 perguntas em
   // /ferramentas/playbook-employee-led-growth. Gera página pessoal /playbook/[slug]
@@ -115,6 +130,7 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     name: 'Playbook de Employee-Led Growth',
     kind: 'lider_b2b_only',
     acTag: 'Form: Playbook Employee-Led Growth',
+    acListName: null, // futura lista — Clara cria quando estruturar a cadência
   },
 };
 
