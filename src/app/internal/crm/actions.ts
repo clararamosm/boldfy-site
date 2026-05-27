@@ -377,7 +377,7 @@ export async function updateCompany(_prev: UpdateCompanyState, formData: FormDat
     const classified = classifyUrl(parsed.data.primaryUrl);
     // Se user também forneceu linkedinExplicit, sobrescreve (intenção explícita ganha).
     let linkedinUrl = classified.linkedinUrl ?? null;
-    const website = classified.website ?? null;
+    let website = classified.website ?? null;
     if (parsed.data.linkedinExplicit && parsed.data.linkedinExplicit.length > 0) {
       const overrideClassified = classifyUrl(parsed.data.linkedinExplicit);
       linkedinUrl = overrideClassified.linkedinUrl ?? overrideClassified.website ?? linkedinUrl;
@@ -547,79 +547,6 @@ export async function archivePerson(personId: string): Promise<ActionResult> {
       .set({ archived: true, updatedAt: new Date() })
       .where(eq(people.id, personId));
     revalidatePath('/internal/crm');
-    return { ok: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: msg };
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Merge de companies — espelha mergePeople (mai/2026, migration 0007)        */
-/*                                                                             */
-/*  Quando uma pessoa muda de emprego e preenche form com empresa nova, o      */
-/*  crm.ts cria a empresa nova e re-linka a pessoa. Resultado: "Acme Ltda"     */
-/*  e "Acme SA" coexistem mesmo sendo a mesma. Esta action funde 2+ empresas: */
-/*  - `keepId` fica como principal                                             */
-/*  - outros têm `merged_into_id = keepId, archived = true`                   */
-/*  - people/activities/meetings das outras movem pra keep (FK reapontada)    */
-/*  - campos vazios do keep são preenchidos com dados das secundárias         */
-/* -------------------------------------------------------------------------- */
-export async function mergeCompanies(keepId: string, mergeIds: string[]): Promise<ActionResult> {
-  if (!UuidSchema.safeParse(keepId).success) return { ok: false, error: 'ID inválido' };
-  const toMerge = mergeIds.filter((id) => id !== keepId && UuidSchema.safeParse(id).success);
-  if (toMerge.length === 0) return { ok: false, error: 'Selecione 2 empresas diferentes' };
-
-  try {
-    const { db: database, companies: companiesTable, people: peopleTable, activities } = await import('@/db');
-    const { eq: eq2, inArray } = await import('drizzle-orm');
-
-    // Pega todas as envolvidas
-    const all = await database.select().from(companiesTable).where(inArray(companiesTable.id, [keepId, ...toMerge]));
-    const keep = all.find((c) => c.id === keepId);
-    const others = all.filter((c) => c.id !== keepId);
-    if (!keep || others.length === 0) return { ok: false, error: 'Empresas não encontradas' };
-
-    // Enriquece keep com campos vazios dos outros (último vence quando keep
-    // já tem o campo preenchido — pattern idêntico ao mergePeople).
-    const enrich: Partial<typeof companiesTable.$inferSelect> = { updatedAt: new Date() };
-    for (const other of others) {
-      if (!keep.industry && other.industry) enrich.industry = other.industry;
-      if (!keep.size && other.size) enrich.size = other.size;
-      if (!keep.website && other.website) enrich.website = other.website;
-      if (!keep.linkedinUrl && other.linkedinUrl) enrich.linkedinUrl = other.linkedinUrl;
-      if (!keep.estimatedValue && other.estimatedValue) enrich.estimatedValue = other.estimatedValue;
-      if (!keep.firstTouchAt && other.firstTouchAt) enrich.firstTouchAt = other.firstTouchAt;
-      if (!keep.firstTouchSource && other.firstTouchSource) enrich.firstTouchSource = other.firstTouchSource;
-      if (!keep.firstTouchCampaign && other.firstTouchCampaign) enrich.firstTouchCampaign = other.firstTouchCampaign;
-      if (!keep.description && other.description) enrich.description = other.description;
-    }
-
-    // Atualiza keep
-    await database.update(companiesTable).set(enrich).where(eq2(companiesTable.id, keepId));
-
-    // Move people, activities pros outros → keep (FK reaponta)
-    await database.update(peopleTable).set({ companyId: keepId }).where(inArray(peopleTable.companyId, toMerge));
-    await database.update(activities).set({ companyId: keepId }).where(inArray(activities.companyId, toMerge));
-
-    // Marca outras como mergeadas (soft delete auditável)
-    await database
-      .update(companiesTable)
-      .set({ mergedIntoId: keepId, archived: true, updatedAt: new Date() })
-      .where(inArray(companiesTable.id, toMerge));
-
-    // Log activity de merge na company keep (pra trilha)
-    await logActivity({
-      companyId: keepId,
-      type: 'merge',
-      weight: 0,
-      source: 'manual',
-      data: { mergedFrom: toMerge, mergedCount: toMerge.length, kind: 'company' },
-    });
-
-    revalidatePath('/internal/crm');
-    revalidatePath('/internal/crm/empresas');
-    revalidatePath(`/internal/crm/companies/${keepId}`);
     return { ok: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

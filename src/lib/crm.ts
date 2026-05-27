@@ -247,13 +247,10 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
       return { ok: false, error: `Nome "${name}" está na blacklist (não é empresa real)` };
     }
 
-    // Match por nome ignorando case. Migration 0007: ignora companies
-    // archivadas/mergeadas — se uma "Acme Ltda" foi arquivada e cair "Acme Ltda"
-    // novo, cria empresa nova (Clara decide manualmente se vale merge depois).
     const existing = await db
       .select()
       .from(companies)
-      .where(sql`LOWER(${companies.name}) = LOWER(${name}) AND ${companies.archived} = FALSE AND ${companies.mergedIntoId} IS NULL`)
+      .where(sql`LOWER(${companies.name}) = LOWER(${name})`)
       .limit(1);
 
     if (existing[0]) {
@@ -315,13 +312,6 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
 export async function upsertPerson(
   input: UpsertPersonInput,
   companyId?: string,
-  /**
-   * Nome da empresa nova — usado SÓ pra montar field_changed legível na
-   * timeline quando o re-link acontece (ex: "Empresa: Acme Ltda → Beta SA").
-   * Sem isso, salvaríamos só UUIDs e a timeline ficaria ilegível. Opcional
-   * pra retro-compat com callers antigos que só passam companyId.
-   */
-  companyName?: string,
 ): Promise<CrmResult<UpsertPersonResult>> {
   try {
     const email = input.email.trim().toLowerCase();
@@ -354,36 +344,7 @@ export async function upsertPerson(
       if (input.headline && !prev.headline) updates.headline = input.headline;
       if (input.location && !prev.location) updates.location = input.location;
       if (input.acContactId && !prev.acContactId) updates.acContactId = input.acContactId;
-
-      // Re-link de empresa: ANTES só linkava quando pessoa não tinha empresa
-      // (`!prev.companyId`). Bug: se pessoa mudava de emprego e preenchia
-      // form com empresa nova, empresa Y era CRIADA mas pessoa continuava
-      // linkada à X. Agora re-linka sempre que a empresa muda + emite
-      // field_changed pra trilha. Empresa antiga continua no DB (sem auto-
-      // dedup); merge manual via UI quando Clara quiser.
-      if (companyId && companyId !== prev.companyId) {
-        updates.companyId = companyId;
-        // Resolve nome da empresa antiga pra timeline (vazio se não tinha).
-        // Query simples — falha graceful em network blip (retorna null).
-        let oldCompanyName: string | null = null;
-        if (prev.companyId) {
-          try {
-            const [c] = await db
-              .select({ name: companies.name })
-              .from(companies)
-              .where(eq(companies.id, prev.companyId))
-              .limit(1);
-            oldCompanyName = c?.name ?? null;
-          } catch {
-            /* ignore — fica null */
-          }
-        }
-        fieldChanges.push({
-          field: 'companyName',
-          oldValue: oldCompanyName,
-          newValue: companyName ?? null,
-        });
-      }
+      if (companyId && !prev.companyId) updates.companyId = companyId;
 
       // jobTitle especial — sobrescreve E emite field_changed quando muda
       if (input.jobTitle && input.jobTitle !== prev.jobTitle) {
@@ -698,7 +659,6 @@ export async function recordLeadFromForm(
       jobArea: lead.jobArea,
     },
     companyId,
-    lead.companyName,
   );
   if (!p.ok) return { ok: false, error: p.error };
   const { person, isNew, fieldChanges, resubscribed } = p.data;
