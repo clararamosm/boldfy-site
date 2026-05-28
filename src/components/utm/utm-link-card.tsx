@@ -39,11 +39,14 @@ const SHORT_DOMAIN = 'https://boldfy.com.br';
 export function UtmLinkCard({
   link,
   analytics,
+  leads = null,
   actions,
   compact = false,
 }: {
   link: UtmLinkData;
   analytics: UtmAnalytics | null;
+  /** Leads atribuídos a esse UTM (first-touch dentro da campanha). null = sem dado. */
+  leads?: number | null;
   actions?: UtmLinkCardActions;
   compact?: boolean;
 }) {
@@ -85,7 +88,7 @@ export function UtmLinkCard({
       {shortUrl ? <div className="mb-2 break-all font-mono text-xs font-semibold text-primary">🔗 {shortUrl}</div> : null}
       <div className="mb-3 break-all font-mono text-[11px] leading-snug text-muted-foreground">{link.fullUrl}</div>
 
-      <MetricsBlock analytics={analytics} />
+      <MetricsBlock analytics={analytics} leads={leads} />
 
       {!compact && actions ? (
         <div className="mt-2 flex flex-wrap gap-1.5">

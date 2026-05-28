@@ -13,8 +13,13 @@
  *
  * NOTA sobre matching: GA4 retorna os valores literais do utm (case-
  * sensitive). Nosso DB já slugifica via slug() — então a key de match
- * é `slug(source)|slug(medium)|slug(campaign)`. Quem busca usa o helper
- * `analyticsKey()` exportado abaixo.
+ * é `slug(source)|slug(medium)|slug(campaign)|slug(content)|slug(term)`.
+ * Quem busca usa o helper `analyticsKey()` exportado abaixo.
+ *
+ * Mai/2026 (Clara): content + term entraram na chave. Antes a key só ia
+ * até campaign e dois UTMs com mesmo source/medium/campaign mas content
+ * ou term diferentes batiam no mesmo bucket — mostrando números idênticos
+ * em cards distintos. Agora cada combo único tem sua linha.
  */
 
 import { runReportPublic, EXCLUDE_INTERNAL_DIMENSION_FILTER } from './ga4';
@@ -31,9 +36,39 @@ export type UtmAnalytics = {
   daily: UtmDailyPoint[];
 };
 
-/** Constrói a chave canônica usada no Map retornado por getUtmAnalyticsBatch. */
-export function analyticsKey(source: string, medium: string, campaign: string): string {
-  return `${slug(source)}|${slug(medium)}|${slug(campaign)}`;
+/**
+ * Normaliza um valor opcional de UTM (content/term) pra string canônica.
+ *
+ * GA4 retorna '(not set)' quando a dimensão veio vazia da URL. Nosso DB
+ * armazena `null` no mesmo cenário. Ambos colapsam pra string vazia '',
+ * garantindo match entre row do GA4 e link do banco.
+ */
+function normalizeOptionalUtm(v: string | null | undefined): string {
+  if (v === null || v === undefined) return '';
+  const trimmed = v.trim();
+  if (trimmed === '' || trimmed === '(not set)' || trimmed === '(none)' || trimmed === '(not provided)') {
+    return '';
+  }
+  return slug(trimmed);
+}
+
+/**
+ * Constrói a chave canônica usada no Map retornado por getUtmAnalyticsBatch.
+ *
+ * Inclui content + term — UTMs com mesmo source/medium/campaign mas content
+ * ou term diferentes têm chaves distintas (não bateriam o mesmo bucket).
+ *
+ * Tanto links do DB quanto rows do GA4 normalizam ausência de content/term
+ * pra string vazia, então as duas pontas casam.
+ */
+export function analyticsKey(
+  source: string,
+  medium: string,
+  campaign: string,
+  content?: string | null,
+  term?: string | null,
+): string {
+  return `${slug(source)}|${slug(medium)}|${slug(campaign)}|${normalizeOptionalUtm(content)}|${normalizeOptionalUtm(term)}`;
 }
 
 /**
@@ -81,6 +116,8 @@ export async function getUtmAnalyticsBatch(sinceDate: Date): Promise<Map<string,
       { name: 'sessionSource' },
       { name: 'sessionMedium' },
       { name: 'sessionCampaignName' },
+      { name: 'sessionManualAdContent' }, // GA4 dimensão pro utm_content
+      { name: 'sessionManualTerm' },      // GA4 dimensão pro utm_term
       { name: 'date' },
     ],
     metrics: [
@@ -104,7 +141,9 @@ export async function getUtmAnalyticsBatch(sinceDate: Date): Promise<Map<string,
     const source = row.dimensionValues[0]?.value ?? '(direct)';
     const medium = row.dimensionValues[1]?.value ?? '(none)';
     const campaign = row.dimensionValues[2]?.value ?? '(not set)';
-    const dateRaw = row.dimensionValues[3]?.value ?? '';
+    const content = row.dimensionValues[3]?.value ?? '';
+    const term = row.dimensionValues[4]?.value ?? '';
+    const dateRaw = row.dimensionValues[5]?.value ?? '';
     // GA4 retorna YYYYMMDD — converte pra YYYY-MM-DD
     const date = dateRaw.length === 8 ? `${dateRaw.slice(0, 4)}-${dateRaw.slice(4, 6)}-${dateRaw.slice(6, 8)}` : dateRaw;
 
@@ -112,7 +151,7 @@ export async function getUtmAnalyticsBatch(sinceDate: Date): Promise<Map<string,
     const users = parseInt(row.metricValues[1]?.value ?? '0', 10);
     const engaged = parseInt(row.metricValues[2]?.value ?? '0', 10);
 
-    const key = analyticsKey(source, medium, campaign);
+    const key = analyticsKey(source, medium, campaign, content, term);
     let acc = byKey.get(key);
     if (!acc) {
       acc = { daily: new Map(), totals: { sessions: 0, users: 0, engagedSessions: 0 } };
@@ -148,9 +187,22 @@ export async function getUtmAnalyticsBatch(sinceDate: Date): Promise<Map<string,
 /** Para link específico: usa analyticsKey e filtra daily desde a criação. */
 export function analyticsForLink(
   batch: Map<string, UtmAnalytics>,
-  link: { utmSource: string; utmMedium: string; utmCampaign: string; createdAt: Date | string },
+  link: {
+    utmSource: string;
+    utmMedium: string;
+    utmCampaign: string;
+    utmContent?: string | null;
+    utmTerm?: string | null;
+    createdAt: Date | string;
+  },
 ): UtmAnalytics | null {
-  const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+  const key = analyticsKey(
+    link.utmSource,
+    link.utmMedium,
+    link.utmCampaign,
+    link.utmContent,
+    link.utmTerm,
+  );
   const full = batch.get(key);
   if (!full) return null;
 

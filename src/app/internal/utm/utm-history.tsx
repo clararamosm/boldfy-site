@@ -84,7 +84,13 @@ export function UtmHistory({
 
       <ul className="flex flex-col gap-3">
         {links.map((link) => {
-          const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+          const key = analyticsKey(
+            link.utmSource,
+            link.utmMedium,
+            link.utmCampaign,
+            link.utmContent,
+            link.utmTerm,
+          );
           const analytics = analyticsByKey[key] ?? null;
           return (
             <UtmLinkCard

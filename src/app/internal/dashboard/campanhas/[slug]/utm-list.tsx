@@ -19,9 +19,11 @@ import { analyticsKey, type UtmAnalytics } from '@/lib/ga4-utm-analytics';
 export function CampaignUtmList({
   links,
   analyticsByKey,
+  leadsByKey,
 }: {
   links: UtmLinkData[];
   analyticsByKey: Record<string, UtmAnalytics>;
+  leadsByKey?: Record<string, number>;
 }) {
   function handleQrOpen(url: string) {
     window.dispatchEvent(new CustomEvent('utm:qr-open', { detail: { url } }));
@@ -38,13 +40,21 @@ export function CampaignUtmList({
   return (
     <ul className="flex flex-col gap-3">
       {links.map((link) => {
-        const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+        const key = analyticsKey(
+          link.utmSource,
+          link.utmMedium,
+          link.utmCampaign,
+          link.utmContent,
+          link.utmTerm,
+        );
         const analytics = analyticsByKey[key] ?? null;
+        const leads = leadsByKey?.[key] ?? null;
         return (
           <UtmLinkCard
             key={link.id}
             link={link}
             analytics={analytics}
+            leads={leads}
             actions={{ onQrOpen: handleQrOpen }}
           />
         );

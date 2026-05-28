@@ -130,7 +130,13 @@ async function getTrackableLinks(): Promise<TrackableLinkRow[]> {
 
     // 4. Compõe a linha cruzando DB + KV + GA4
     return links.map((link, i) => {
-      const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+      const key = analyticsKey(
+        link.utmSource,
+        link.utmMedium,
+        link.utmCampaign,
+        link.utmContent,
+        link.utmTerm,
+      );
       const a = analyticsBatch.get(key);
       return {
         id: link.id,
@@ -196,7 +202,13 @@ export default async function CampanhasPage() {
   // compartilham mesma campaign
   const analyticsByUtmCampaign: Record<string, UtmAnalytics> = {};
   for (const link of articleUtmLinks) {
-    const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+    const key = analyticsKey(
+      link.utmSource,
+      link.utmMedium,
+      link.utmCampaign,
+      link.utmContent,
+      link.utmTerm,
+    );
     const found = articleAnalyticsBatch.get(key);
     if (found) {
       const existing = analyticsByUtmCampaign[link.utmCampaign];

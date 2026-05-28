@@ -24,6 +24,7 @@ import {
   analyticsKey,
   type UtmAnalytics,
 } from '@/lib/ga4-utm-analytics';
+import { getLeadsByUtm } from '@/lib/utm-leads';
 import { CampaignUtmList } from './utm-list';
 import { QrModal } from '@/app/internal/utm/qr-modal';
 import { Settings2, FileText, Calendar, Trophy, Link2, Users, StickyNote } from 'lucide-react';
@@ -78,16 +79,26 @@ export default async function CampaignDetailPage({ params }: { params: Params })
   const oldestUtm = campaignUtmLinks.length > 0
     ? new Date(Math.min(...campaignUtmLinks.map((l) => new Date(l.createdAt).getTime())))
     : new Date();
-  const analyticsBatch = isGa4Configured()
-    ? await safeBlock('campaign-detail', 'utmAnalytics', () => getUtmAnalyticsBatch(oldestUtm), new Map<string, UtmAnalytics>())
-    : new Map<string, UtmAnalytics>();
+  const [analyticsBatch, leadsByKey] = await Promise.all([
+    isGa4Configured()
+      ? safeBlock('campaign-detail', 'utmAnalytics', () => getUtmAnalyticsBatch(oldestUtm), new Map<string, UtmAnalytics>())
+      : Promise.resolve(new Map<string, UtmAnalytics>()),
+    safeBlock('campaign-detail', 'leadsByUtm', () => getLeadsByUtm(campaign.utmCampaign), new Map<string, number>()),
+  ]);
   const analyticsByKey: Record<string, UtmAnalytics> = {};
+  const leadsByKeyRec: Record<string, number> = {};
   for (const link of campaignUtmLinks) {
+    const key = analyticsKey(
+      link.utmSource,
+      link.utmMedium,
+      link.utmCampaign,
+      link.utmContent,
+      link.utmTerm,
+    );
     const a = analyticsForLink(analyticsBatch, link);
-    if (a) {
-      const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
-      analyticsByKey[key] = a;
-    }
+    if (a) analyticsByKey[key] = a;
+    const n = leadsByKey.get(key);
+    if (n) leadsByKeyRec[key] = n;
   }
   const enrichedCampaignLinks = campaignUtmLinks.map((link) => ({
     id: link.id,
@@ -243,7 +254,7 @@ export default async function CampaignDetailPage({ params }: { params: Params })
                   <span className="dash-pill blue" style={{ fontSize: 11 }}>{sourceLabel(source)}</span>
                   <span style={{ color: '#9D85B3', fontWeight: 500, fontSize: 11 }}>· {links.length} link{links.length !== 1 ? 's' : ''}</span>
                 </div>
-                <CampaignUtmList links={links} analyticsByKey={analyticsByKey} />
+                <CampaignUtmList links={links} analyticsByKey={analyticsByKey} leadsByKey={leadsByKeyRec} />
               </div>
             ))}
           </div>

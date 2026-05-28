@@ -51,7 +51,13 @@ export default async function UtmGeneratorPage() {
   for (const link of links) {
     const a = analyticsForLink(analyticsBatch, link);
     if (a) {
-      const key = analyticsKey(link.utmSource, link.utmMedium, link.utmCampaign);
+      const key = analyticsKey(
+        link.utmSource,
+        link.utmMedium,
+        link.utmCampaign,
+        link.utmContent,
+        link.utmTerm,
+      );
       analyticsByKey[key] = a;
     }
   }

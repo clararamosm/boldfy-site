@@ -9,16 +9,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Activity, Users, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, Users, Sparkles, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import type { UtmAnalytics, UtmDailyPoint } from '@/lib/ga4-utm-analytics';
 
-export function MetricsBlock({ analytics }: { analytics: UtmAnalytics | null }) {
+export function MetricsBlock({
+  analytics,
+  leads = null,
+}: {
+  analytics: UtmAnalytics | null;
+  /**
+   * Leads atribuídos a esse UTM (first-touch DENTRO da campanha — primeira
+   * submissão da pessoa cujo `data.utms` casa com a chave do link). null =
+   * sem dado / não computado (ex: tela `/internal/utm` onde não há campanha
+   * pra atribuir).
+   */
+  leads?: number | null;
+}) {
   const [expanded, setExpanded] = useState(false);
   const hasDaily = !!(analytics && analytics.daily.length > 0);
+  const showLeads = leads !== null;
 
   return (
     <>
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className={`mb-3 grid gap-2 ${showLeads ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
         <StatBox
           icon={<Activity size={14} />}
           label="Sessões"
@@ -34,6 +47,13 @@ export function MetricsBlock({ analytics }: { analytics: UtmAnalytics | null }) 
           label="Engajamento"
           value={analytics ? `${Math.round(analytics.totals.engagementRate * 100)}%` : null}
         />
+        {showLeads ? (
+          <StatBox
+            icon={<UserPlus size={14} />}
+            label="Leads"
+            value={leads}
+          />
+        ) : null}
       </div>
 
       {hasDaily ? (
