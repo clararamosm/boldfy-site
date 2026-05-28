@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type Point = {
   date: string;
@@ -46,9 +46,27 @@ function formatDateLong(iso: string): string {
 
 export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height = 260 }: Props) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  // W mede a largura real do container via ResizeObserver pra o viewBox
+  // crescer junto. Default 800 enquanto SSR/primeira pintura. Mai/2026
+  // (Clara): antes o viewBox era fixo em 800 e o SVG ficava centralizado
+  // no card largo do dashboard — barras/linhas espremidas no meio com
+  // espaço branco nos lados. Agora preenche 100%.
+  const [W, setW] = useState(800);
 
-  // Viewbox fixo + escala SVG faz o gráfico ser responsivo sem JS de resize
-  const W = 800;
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const el = wrapRef.current;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w > 0) setW(Math.max(320, w));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const H = height;
   // Padding lateral menor agora que só temos um eixo Y (esquerda).
   const PAD = { top: 22, right: 16, bottom: 28, left: 52 };
@@ -128,11 +146,14 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
         </div>
       </div>
 
-      <div className="dash-chart-svg-wrap">
-        {/* preserveAspectRatio="xMidYMid meet" — antes era "none" e esticava
-            texto/linhas em containers mais largos que 800px. Agora SVG
-            mantém proporção e fica responsivo via width:100% sem distorção. */}
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: H, display: 'block' }}>
+      <div className="dash-chart-svg-wrap" ref={wrapRef}>
+        {/* viewBox SEGUE o container (W vem do ResizeObserver). Combinado
+            com preserveAspectRatio="none" o SVG ocupa 100% sem distorção
+            de texto — porque o viewBox em si tem mesma proporção que o
+            container. Antes o viewBox era fixo em 800: com "meet" sobrava
+            espaço branco lateral, com "none" texto esticava. Agora os
+            dois problemas estão resolvidos. */}
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: H, display: 'block' }}>
           {/* Y-grid (linhas horizontais) + labels neutras (uma régua só) */}
           {ticksY.map((t, i) => {
             const y = PAD.top + innerH - (t / maxY) * innerH;

@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatBR, formatDateLong, formatDateShort } from './_shared';
 
 export function StackedBarChart({
@@ -26,8 +26,25 @@ export function StackedBarChart({
   height?: number;
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  // W mede a largura real do container — viewBox cresce junto pra o SVG
+  // preencher 100% sem espaço lateral nem distorção (mesmo padrão do
+  // DailyLineChart). Mai/2026 (Clara).
+  const [W, setW] = useState(800);
 
-  const W = 800;
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const el = wrapRef.current;
+    const update = () => {
+      const w = el.clientWidth;
+      if (w > 0) setW(Math.max(320, w));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const PAD = { top: 18, right: 16, bottom: 26, left: 40 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = height - PAD.top - PAD.bottom;
@@ -66,10 +83,10 @@ export function StackedBarChart({
           </div>
         ))}
       </div>
-      <div className="dash-chart-svg-wrap">
+      <div className="dash-chart-svg-wrap" ref={wrapRef}>
         <svg
           viewBox={`0 0 ${W} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="none"
           style={{ width: '100%', height, display: 'block' }}
         >
           {/* Y-grid */}
