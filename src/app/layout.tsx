@@ -16,6 +16,7 @@ import {
   ConsentModeDefaults,
 } from '@/components/analytics/consent-banner';
 import { InternalTrafficMarker } from '@/components/analytics/internal-traffic-marker';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 
 // Fontes self-hosted via next/font (sem render-blocking, com preload automático)
 const inter = Inter({
@@ -190,6 +191,11 @@ export default async function RootLayout({
           <main className="flex-1">{children}</main>
           <ConditionalFooter />
           {!isInternalRoute ? <ConsentBanner /> : null}
+          {/* Vercel Analytics: edge-side pageview tracking. Não usa cookie,
+              não depende de consent (LGPD: legítimo interesse pra agregados
+              first-party). Só em páginas públicas — /internal e /proposta
+              ficam de fora pra não inflar números. */}
+          {!isInternalRoute ? <VercelAnalytics /> : null}
         </Providers>
       </body>
     </html>

@@ -96,6 +96,18 @@ const UtmFieldsSchema = z.object({
    * caía sempre em 'unknown'.
    */
   referrer: optionalText(500),
+  /**
+   * Engajamento — opcionais, capturados via useEngagementMeta() no client.
+   *
+   *   consent_status: 'granted' | 'denied' | 'unset'  — escolha do banner LGPD
+   *                                                    no momento exato do submit
+   *   ga4_client_id : identificador opaco do cookie _ga (presente só se
+   *                   consent=granted e adblocker não bloqueou). Permite
+   *                   cruzar a pessoa com sessões GA4 via Analytics Data API
+   *                   (aba "Engajamento" do perfil + sessões na timeline).
+   */
+  consent_status: z.enum(['granted', 'denied', 'unset']).optional(),
+  ga4_client_id: optionalText(200),
 });
 
 /* -------------------------------------------------------------------------- */

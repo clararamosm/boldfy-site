@@ -125,7 +125,56 @@ export function combineSourcePage(
 export type SubmissionMeta = {
   landing_pathname?: string;
   referrer?: string;
+  /**
+   * Estado do banner LGPD no momento exato do submit. Mai/2026 — começamos
+   * a salvar pra mostrar no perfil do lead (aba Engajamento) se a pessoa
+   * deu consentimento pra rastreamento via GA4. Compat: opcional, forms
+   * antigos que não enviam continuam funcionando.
+   */
+  consent_status?: 'granted' | 'denied' | 'unset';
+  /**
+   * client_id do GA4 lido do cookie `_ga` no momento do submit. Permite
+   * cruzar a pessoa do CRM com sessões/pageviews do GA4 via Analytics Data
+   * API. Só presente quando consent=granted e adblocker não bloqueou o
+   * cookie. Opcional — ausência não bloqueia nada.
+   */
+  ga4_client_id?: string;
 };
+
+/** Lê estado do banner LGPD do localStorage. SSR-safe. */
+function readConsentStatus(): 'granted' | 'denied' | 'unset' {
+  if (typeof window === 'undefined') return 'unset';
+  try {
+    const stored = localStorage.getItem('boldfy:consent');
+    if (stored === 'granted' || stored === 'denied') return stored;
+    return 'unset';
+  } catch {
+    return 'unset';
+  }
+}
+
+/**
+ * Lê client_id do GA4 do cookie `_ga`.
+ *
+ * Formato: `GA1.<domainHash>.<random>.<firstSeenTimestamp>` — o "client_id"
+ * usado na Analytics Data API é `<random>.<firstSeenTimestamp>`.
+ *
+ * Retorna undefined se cookie não existe (consent=denied, adblocker, ou
+ * antes do gtag carregar). Não é PII isolado — só identificador opaco
+ * de browser.
+ */
+function readGa4ClientId(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('_ga='));
+  if (!match) return undefined;
+  const value = match.split('=')[1];
+  if (!value) return undefined;
+  const parts = value.split('.');
+  if (parts.length < 4) return undefined;
+  return `${parts[2]}.${parts[3]}`;
+}
 
 /**
  * Captura URL atual + referrer NO MOMENTO DO SUBMIT (não no mount).
@@ -134,11 +183,18 @@ export type SubmissionMeta = {
  * Retorna `{}` no server (SSR-safe). No client, `referrer` pode ser string
  * vazia quando a pessoa entrou direto ou veio com `Referrer-Policy: no-referrer`
  * — nesse caso retorna `undefined` em vez de '' (mais limpo no DB).
+ *
+ * Mai/2026 (Clara): adicionado consent_status + ga4_client_id pra cruzar
+ * lead com sessões GA4 no perfil do CRM. Campos opcionais — schemas zod
+ * dos forms tratam ausência sem erro, então isso é zero-quebra pros forms
+ * antigos.
  */
 export function captureSubmissionMeta(): SubmissionMeta {
   if (typeof window === 'undefined') return {};
   return {
     landing_pathname: window.location.pathname,
     referrer: document.referrer || undefined,
+    consent_status: readConsentStatus(),
+    ga4_client_id: readGa4ClientId(),
   };
 }

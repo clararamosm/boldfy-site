@@ -109,6 +109,16 @@ export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
       content: input.utm_content,
       term: input.utm_term,
     },
+    /**
+     * Engajamento (mai/2026) — consent LGPD + ga4_client_id capturados em
+     * captureSubmissionMeta(). Aparece na aba "Engajamento" do perfil do
+     * lead pra cruzar com sessões do GA4. Campos opcionais — undefined
+     * quando o submit veio de form antigo sem captura, e não bloqueia.
+     */
+    engagement: {
+      consent_status: input.consent_status,
+      ga4_client_id: input.ga4_client_id,
+    },
   };
 
   // metadata.form_data — campos legíveis na sidebar do perfil.

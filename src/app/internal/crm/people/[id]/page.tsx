@@ -50,6 +50,7 @@ import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
 import { FormsSubmittedChipList } from '@/components/crm/forms-submitted-chip-list';
+import { EngagementSection } from '@/components/crm/engagement-section';
 
 export const metadata: Metadata = {
   title: 'Lead',
@@ -514,6 +515,11 @@ export default async function LeadDetailPage({ params }: Props) {
           <div id="log-form">
             <LogInteractionForm personId={person.id} />
           </div>
+
+          {/* Engajamento — consent LGPD + sessões GA4 da pessoa (mai/2026).
+              Server component standalone, render condicional dentro do
+              próprio componente (não polui perfis legados). */}
+          <EngagementSection personId={person.id} />
         </div>
 
         {/* === DIREITA (SIDEBAR) === */}
