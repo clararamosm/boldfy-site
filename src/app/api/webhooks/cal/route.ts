@@ -8,6 +8,7 @@ import {
 } from '@/lib/activecampaign';
 import { db, meetings, people, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
+import { syncCompanyFromPeople } from '@/lib/crm-sync';
 import { eq, and, sql } from 'drizzle-orm';
 
 /**
@@ -187,13 +188,13 @@ export async function POST(request: NextRequest) {
         // (caso anterior já tenha enriquecido). Quando achar, garante que o
         // email do attendee fica em alternate_emails pra futuros matches Folk.
         const emailLower = email.toLowerCase();
-        let personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata })
+        let personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata, companyId: people.companyId })
           .from(people)
           .where(eq(people.email, emailLower))
           .limit(1);
 
         if (!personRow[0]) {
-          personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata })
+          personRow = await db.select({ id: people.id, email: people.email, metadata: people.metadata, companyId: people.companyId })
             .from(people)
             .where(sql`${people.metadata}->'alternate_emails' @> ${JSON.stringify([emailLower])}::jsonb`)
             .limit(1);
@@ -276,15 +277,18 @@ export async function POST(request: NextRequest) {
               source: 'system',
               data: { toLabel: 'Reunião marcada', reason: 'cal_scheduled_auto' },
             });
+
+            // Propaga pra empresa (mai/2026 — antes esse caminho esquecia de
+            // chamar a sync, então empresa ficava parada quando Cal marcava
+            // a demo. Caso reportado pela Clara: Lorena/Abecom).
+            if (personRow[0].companyId) {
+              await syncCompanyFromPeople(personRow[0].companyId);
+            }
           }
         }
       } catch (crmErr) {
         console.error('[cal-webhook] CRM dual-write error (non-blocking):', crmErr);
       }
-
-      // Folk legacy removido em mai/2026. Status agora propaga pessoa→empresa
-      // automaticamente via syncCompanyFromPeople (em lib/crm-sync.ts), que é
-      // chamado dentro do dual-write do CRM acima quando o status muda.
     } else if (triggerEvent === 'BOOKING_CANCELLED') {
       // Demo cancelada → volta pra aguardando, marca tag de cancelamento
       await Promise.allSettled([

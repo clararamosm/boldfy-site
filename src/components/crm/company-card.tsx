@@ -1,30 +1,61 @@
 /**
  * Company card — usado no kanban Empresas. Compact + drag-drop nativo.
+ *
+ * Suporta seleção múltipla via props opcionais (selected, onToggleSelect).
+ * Quando anySelected=true, o checkbox aparece sempre. Quando false, só no
+ * hover. Mesmo padrão do PersonCard.
  */
 
 'use client';
 
 import Link from 'next/link';
 import type { CompanyWithDetails } from '@/lib/crm-queries';
-import { timeAgo, formatDateTime } from '@/lib/crm-format';
+import { formatDateTime } from '@/lib/crm-format';
 
-type Props = { company: CompanyWithDetails };
+type Props = {
+  company: CompanyWithDetails;
+  selected?: boolean;
+  anySelected?: boolean;
+  onToggleSelect?: (id: string) => void;
+};
 
 function daysSinceUpdate(date: Date | string): number {
   const d = date instanceof Date ? date : new Date(date);
   return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function CompanyCard({ company }: Props) {
+export function CompanyCard({ company, selected, anySelected, onToggleSelect }: Props) {
   const stale = daysSinceUpdate(company.updatedAt) > 14 && !company.status?.isTerminal;
+  const showCheckbox = onToggleSelect && (anySelected || selected);
 
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
     e.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'company', id: company.id, statusId: company.statusId }));
     e.dataTransfer.effectAllowed = 'move';
   }
 
+  function handleCheckboxClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    onToggleSelect?.(company.id);
+  }
+
   return (
-    <div draggable onDragStart={handleDragStart}>
+    <div
+      draggable={!anySelected}
+      onDragStart={handleDragStart}
+      className={`crm-person-card-wrap ${selected ? 'selected' : ''}`}
+    >
+      {onToggleSelect ? (
+        <button
+          type="button"
+          onClick={handleCheckboxClick}
+          className={`crm-card-checkbox ${selected ? 'checked' : ''} ${showCheckbox ? 'visible' : ''}`}
+          aria-label={selected ? 'Desmarcar' : 'Selecionar empresa'}
+        >
+          {selected ? '✓' : ''}
+        </button>
+      ) : null}
+
       <Link href={`/internal/crm/companies/${company.id}`} className="crm-company-card" draggable={false}>
         <div className="crm-company-name">{company.name}</div>
         <div className="crm-company-industry">

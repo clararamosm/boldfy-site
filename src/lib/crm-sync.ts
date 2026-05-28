@@ -33,7 +33,7 @@
  *   - moveCompany(): se newStatus é terminal, chamar propagateTerminalToCompanyPeople(companyId, statusId)
  */
 
-import { db, people, companies, activities, statuses } from '@/db';
+import { db, people, companies, activities } from '@/db';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { getStatuses, getStatusByLabel } from './statuses';
 import type { Status } from '@/db';
@@ -43,18 +43,29 @@ import type { Status } from '@/db';
  *
  * Retorna null quando não há equivalente direto — chamador NÃO muda empresa
  * nesse caso (mantém estado atual).
+ *
+ * Mai/2026 (Clara): expandido pra cobrir Lead/Quente/LinkedIn Lead →
+ * "Quero prospectar" e "Em andamento" → "Em andamento". Antes esses casos
+ * caíam no default e a empresa ficava parada em "No status" enquanto a
+ * pessoa já estava madura — exigia mexida manual. Agora propaga.
  */
 function mapPersonLabelToCompany(personLabel: string): string | null {
   const lower = personLabel.toLowerCase();
   switch (lower) {
+    case 'linkedin lead':
+    case 'lead':
+    case 'quente':
+      return 'Quero prospectar';
     case 'reunião marcada':
     case 'reuniao marcada':
       return 'Reunião marcada';
+    case 'em andamento':
+      return 'Em andamento';
     case 'fechado':
       return 'Fechado';
     case 'perdido':
       return 'Perdido';
-    // Ativo/Lead/Quente/LinkedIn Lead não têm equivalente em empresa
+    // Ativo → mantém empresa no status atual (entrada inicial não promove)
     default:
       return null;
   }
@@ -152,6 +163,128 @@ export async function syncCompanyFromPeople(companyId: string): Promise<void> {
     });
   } catch (err) {
     console.error('[crm-sync.syncCompanyFromPeople] failed:', err);
+  }
+}
+
+/**
+ * Mapeia label de status de EMPRESA → label equivalente em PESSOA, pra
+ * promoção quando empresa avança manualmente.
+ *
+ * Mai/2026 (Clara): empresa em "Quero prospectar" → pessoas em Ativo viram
+ * "Lead" (precisam aparecer no kanban como prospectáveis). Empresa em
+ * "Reunião marcada" → pessoas pré-reunião viram "Reunião marcada" (a pessoa
+ * que marcou a demo é a "destinatária" da promoção). Empresa em "Em
+ * andamento" idem.
+ *
+ * Nunca regride pessoa: chamador checa sortOrder.
+ */
+function mapCompanyLabelToPerson(companyLabel: string): string | null {
+  const lower = companyLabel.toLowerCase();
+  switch (lower) {
+    case 'quero prospectar':
+      return 'Lead';
+    case 'reunião marcada':
+    case 'reuniao marcada':
+      return 'Reunião marcada';
+    case 'em andamento':
+      return 'Em andamento';
+    // Terminais usam função separada (propagateTerminalToCompanyPeople)
+    default:
+      return null;
+  }
+}
+
+/**
+ * Propaga avanço NÃO-terminal de empresa pra pessoas linkadas.
+ *
+ * Mai/2026 (Clara): quando empresa avança manualmente pra "Quero prospectar"
+ * / "Reunião marcada" / "Em andamento", pessoas linkadas que estão MAIS
+ * ATRÁS no funil (sortOrder pessoal < equivalente) sobem pra o nível
+ * equivalente. Nunca regride pessoa — quem já está mais à frente fica.
+ *
+ * Casos cobertos:
+ *  - Empresa → "Quero prospectar": pessoa em "Ativo" vira "Lead".
+ *    Pessoas em LinkedIn Lead/Lead/Quente/etc não tocam (já estão à frente
+ *    ou no nível equivalente).
+ *  - Empresa → "Reunião marcada": pessoa em "Ativo"/"LinkedIn Lead"/
+ *    "Lead"/"Quente" vira "Reunião marcada".
+ *  - Empresa → "Em andamento": idem + "Reunião marcada" também sobe.
+ *
+ * Pessoas em terminal NÃO são tocadas (decisão própria).
+ *
+ * Side effect: insere activity de status_change em cada pessoa movida.
+ * Falha silenciosa.
+ */
+export async function propagateNonTerminalToCompanyPeople(
+  companyId: string,
+  newCompanyStatusId: string,
+): Promise<void> {
+  try {
+    const allCompanyStatuses = await getStatuses('company');
+    const newStatus = allCompanyStatuses.find((s) => s.id === newCompanyStatusId);
+    if (!newStatus || newStatus.isTerminal) return; // terminais usam outra função
+
+    const equivLabel = mapCompanyLabelToPerson(newStatus.label);
+    if (!equivLabel) return;
+
+    const equivPersonStatus = await getStatusByLabel('person', equivLabel);
+    if (!equivPersonStatus) return;
+
+    const allPersonStatuses = await getStatuses('person');
+    const terminalIds = new Set(
+      allPersonStatuses.filter((s) => s.isTerminal).map((s) => s.id),
+    );
+
+    // Pessoas linkadas (não-archived, não-merged)
+    const linked = await db
+      .select({ id: people.id, statusId: people.statusId })
+      .from(people)
+      .where(and(
+        eq(people.companyId, companyId),
+        eq(people.archived, false),
+        isNull(people.mergedIntoId),
+      ));
+
+    if (linked.length === 0) return;
+
+    // Filtra quem precisa subir: status atual sortOrder < equivPerson sortOrder
+    // (e quem não está em terminal). Sem status = sortOrder -1 → sempre sobe.
+    const personStatusMap = new Map(allPersonStatuses.map((s) => [s.id, s]));
+    const targetsToUpdate = linked.filter((p) => {
+      if (p.statusId && terminalIds.has(p.statusId)) return false; // terminal não toca
+      const currentSortOrder = p.statusId
+        ? (personStatusMap.get(p.statusId)?.sortOrder ?? -1)
+        : -1;
+      return currentSortOrder < equivPersonStatus.sortOrder;
+    });
+
+    if (targetsToUpdate.length === 0) return;
+
+    const ids = targetsToUpdate.map((p) => p.id);
+    await db
+      .update(people)
+      .set({ statusId: equivPersonStatus.id, updatedAt: new Date() })
+      .where(inArray(people.id, ids));
+
+    await db.insert(activities).values(
+      targetsToUpdate.map((p) => ({
+        personId: p.id,
+        companyId,
+        type: 'status_change',
+        weight: 0,
+        source: 'system' as const,
+        data: {
+          fromId: p.statusId,
+          toId: equivPersonStatus.id,
+          fromLabel: p.statusId ? personStatusMap.get(p.statusId)?.label ?? null : null,
+          toLabel: equivPersonStatus.label,
+          reason: 'propagated_from_company_advance',
+          companyStatusLabel: newStatus.label,
+        },
+      })),
+    );
+  } catch (err) {
+    console.error('[crm-sync.propagateNonTerminalToCompanyPeople] failed:', err);
   }
 }
 

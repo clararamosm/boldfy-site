@@ -15,7 +15,7 @@ import { db, people, companies, statuses } from '@/db';
 import { logActivity } from '@/lib/crm';
 import { invalidateStatusCache } from '@/lib/statuses';
 import { syncPersonStatusToAC, syncCompanyStatusToAC } from '@/lib/ac-sync';
-import { syncCompanyFromPeople, propagateTerminalToCompanyPeople } from '@/lib/crm-sync';
+import { syncCompanyFromPeople, propagateTerminalToCompanyPeople, propagateNonTerminalToCompanyPeople } from '@/lib/crm-sync';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -145,11 +145,15 @@ export async function moveCompany(companyId: string, newStatusId: string): Promi
     );
 
     // Empresa terminal → propaga pra pessoas linkadas (Fechado/Perdido).
-    // Empresa não-terminal NÃO toca pessoas (são agregação, mantêm autonomia).
+    // Empresa não-terminal → propaga avanço pra pessoas mais atrás no funil
+    // (mai/2026 — Clara: empresa em "Quero prospectar" promove pessoas em
+    // "Ativo" pra "Lead", e assim por diante). Nunca regride pessoa.
     if (statusRow.isTerminal) {
       await propagateTerminalToCompanyPeople(companyId, newStatusId);
-      revalidatePath('/internal/crm');
+    } else {
+      await propagateNonTerminalToCompanyPeople(companyId, newStatusId);
     }
+    revalidatePath('/internal/crm');
 
     revalidatePath('/internal/crm/empresas');
     revalidatePath(`/internal/crm/companies/${companyId}`);
@@ -377,7 +381,7 @@ export async function updateCompany(_prev: UpdateCompanyState, formData: FormDat
     const classified = classifyUrl(parsed.data.primaryUrl);
     // Se user também forneceu linkedinExplicit, sobrescreve (intenção explícita ganha).
     let linkedinUrl = classified.linkedinUrl ?? null;
-    let website = classified.website ?? null;
+    const website = classified.website ?? null;
     if (parsed.data.linkedinExplicit && parsed.data.linkedinExplicit.length > 0) {
       const overrideClassified = classifyUrl(parsed.data.linkedinExplicit);
       linkedinUrl = overrideClassified.linkedinUrl ?? overrideClassified.website ?? linkedinUrl;
@@ -550,6 +554,145 @@ export async function archivePerson(personId: string): Promise<ActionResult> {
     return { ok: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Companies — merge + delete bulk (mai/2026, Clara)                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Mescla várias empresas em uma só. Estratégia análoga ao mergePeople:
+ *  1. Enriquece keep com campos vazios das outras (industry/size/website/etc).
+ *  2. Move people, activities e meetings das outras pra keep.
+ *  3. Hard delete das outras (FK constraint impede se restou alguém apontando).
+ *  4. Activity de merge na keep pra rastro auditável.
+ *
+ * Por que hard delete: schema de companies não tem `archived` (diferente
+ * de people). Como antes do merge a gente reparenta pessoas + activities,
+ * a empresa "merged" fica órfã e pode sumir sem perda. Activities ficam
+ * preservadas na empresa keep com a referência transferida.
+ *
+ * Falha (rollback parcial possível) se algum recurso da empresa antiga
+ * não foi reparentado e o DELETE quebra por FK — chamador vê erro e tenta
+ * de novo.
+ */
+export async function mergeCompanies(keepId: string, mergeIds: string[]): Promise<ActionResult> {
+  if (!UuidSchema.safeParse(keepId).success) return { ok: false, error: 'ID inválido' };
+  const toMerge = mergeIds.filter((id) => id !== keepId && UuidSchema.safeParse(id).success);
+  if (toMerge.length === 0) return { ok: false, error: 'Selecione 2 empresas diferentes' };
+
+  try {
+    const { db: database, companies: companiesTable, people: peopleTable, activities } = await import('@/db');
+    const { eq: eq2, inArray } = await import('drizzle-orm');
+
+    const all = await database.select().from(companiesTable).where(inArray(companiesTable.id, [keepId, ...toMerge]));
+    const keep = all.find((c) => c.id === keepId);
+    const others = all.filter((c) => c.id !== keepId);
+    if (!keep || others.length === 0) return { ok: false, error: 'Empresas não encontradas' };
+
+    // Enriquece keep com campos vazios das outras (não sobrescreve nada existente)
+    const enrich: Partial<typeof companiesTable.$inferSelect> = { updatedAt: new Date() };
+    for (const other of others) {
+      if (!keep.industry && other.industry) enrich.industry = other.industry;
+      if (!keep.size && other.size) enrich.size = other.size;
+      if (!keep.website && other.website) enrich.website = other.website;
+      if (!keep.linkedinUrl && other.linkedinUrl) enrich.linkedinUrl = other.linkedinUrl;
+      if (!keep.description && other.description) enrich.description = other.description;
+      if (!keep.estimatedValue && other.estimatedValue) enrich.estimatedValue = other.estimatedValue;
+      if (!keep.firstTouchSource && other.firstTouchSource) enrich.firstTouchSource = other.firstTouchSource;
+      if (!keep.firstTouchCampaign && other.firstTouchCampaign) enrich.firstTouchCampaign = other.firstTouchCampaign;
+      if (!keep.firstTouchAt && other.firstTouchAt) enrich.firstTouchAt = other.firstTouchAt;
+    }
+    await database.update(companiesTable).set(enrich).where(eq2(companiesTable.id, keepId));
+
+    // Reparenta tudo que aponta pras companies antigas. Meetings não têm
+    // companyId direto (só personId), então não precisam ser tocadas — as
+    // pessoas movidas já carregam o vínculo via people.companyId.
+    await database.update(peopleTable).set({ companyId: keepId }).where(inArray(peopleTable.companyId, toMerge));
+    await database.update(activities).set({ companyId: keepId }).where(inArray(activities.companyId, toMerge));
+
+    // Activity de auditoria ANTES do delete (precisa registrar na keep enquanto
+    // ainda temos a referência ao nome das antigas)
+    await logActivity({
+      companyId: keepId,
+      type: 'merge',
+      weight: 0,
+      source: 'manual',
+      data: {
+        mergedFrom: toMerge,
+        mergedNames: others.map((c) => c.name),
+        mergedCount: toMerge.length,
+        entity: 'company',
+      },
+    });
+
+    // Hard delete das antigas — activities/meetings/people já foram reparentadas
+    await database.delete(companiesTable).where(inArray(companiesTable.id, toMerge));
+
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/empresas');
+    revalidatePath(`/internal/crm/companies/${keepId}`);
+    return { ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[mergeCompanies] failed:', msg);
+    return { ok: false, error: msg };
+  }
+}
+
+/**
+ * Deleta empresas em bulk. Bloqueia se alguma tem pessoa linkada (não-archived,
+ * não-merged) — nesses casos a Clara deve fazer merge antes.
+ *
+ * Activities/meetings associadas cascateiam (FK onDelete:cascade no schema).
+ *
+ * Pra deletar empresas em lote no kanban (duplicadas, fantasmas etc).
+ */
+export async function deleteCompanies(companyIds: string[]): Promise<ActionResult & { deleted?: number; blocked?: string[] }> {
+  const ids = companyIds.filter((id) => UuidSchema.safeParse(id).success);
+  if (ids.length === 0) return { ok: false, error: 'Nenhum ID válido' };
+
+  try {
+    const { db: database, companies: companiesTable, people: peopleTable } = await import('@/db');
+    const { eq: eq2, inArray, and: and2, isNull } = await import('drizzle-orm');
+
+    // Verifica quais têm pessoas linkadas ativas → bloqueia
+    const peopleStillLinked = await database
+      .select({ companyId: peopleTable.companyId })
+      .from(peopleTable)
+      .where(and2(
+        inArray(peopleTable.companyId, ids),
+        eq2(peopleTable.archived, false),
+        isNull(peopleTable.mergedIntoId),
+      ));
+
+    const blockedIds = Array.from(new Set(peopleStillLinked.map((p) => p.companyId).filter((id): id is string => !!id)));
+    const deletable = ids.filter((id) => !blockedIds.includes(id));
+
+    if (deletable.length === 0) {
+      return {
+        ok: false,
+        error: `Todas as ${ids.length} empresas têm pessoas linkadas ativas. Faça merge primeiro ou arquive as pessoas.`,
+        blocked: blockedIds,
+      };
+    }
+
+    // Deleta as elegíveis
+    const result = await database.delete(companiesTable).where(inArray(companiesTable.id, deletable)).returning({ id: companiesTable.id });
+
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/empresas');
+
+    return {
+      ok: true,
+      deleted: result.length,
+      blocked: blockedIds.length > 0 ? blockedIds : undefined,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[deleteCompanies] failed:', msg);
     return { ok: false, error: msg };
   }
 }

@@ -11,7 +11,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { getCompaniesByStatus, getInactiveCompanies, type CompaniesByStatus, type CompanyWithDetails, type CrmFilters } from '@/lib/crm-queries';
 import { getStatuses } from '@/lib/statuses';
-import { CompanyKanban } from '@/components/crm/company-kanban';
+import { CompanyKanbanWrap } from '@/components/crm/company-kanban-wrap';
 import { CompanyTable } from '@/components/crm/company-table';
 import { ViewToggle } from '@/components/crm/view-toggle';
 import { AddCompanyButton } from '@/components/crm/add-company-button';
@@ -99,7 +99,7 @@ export default async function CrmCompaniesPage({ searchParams }: { searchParams:
       ) : view === 'table' ? (
         <CompanyTable data={data} inactiveCompanies={inactiveCompanies} />
       ) : (
-        <CompanyKanban data={data} inactiveCompanies={inactiveCompanies} />
+        <CompanyKanbanWrap data={data} inactiveCompanies={inactiveCompanies} />
       )}
     </div>
   );

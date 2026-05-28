@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import type { CompaniesByStatus, CompanyWithDetails } from '@/lib/crm-queries';
 import { CompanyCard } from './company-card';
 import { moveCompany } from '@/app/internal/crm/actions';
+import { useCompanySelectionOptional } from './company-kanban-wrap';
 
 type Props = {
   data: CompaniesByStatus;
@@ -110,7 +111,7 @@ export function CompanyKanban({ data, inactiveCompanies = [] }: Props) {
                       key={company.id}
                       style={{ opacity: movingId === company.id ? 0.4 : 1, transition: 'opacity 0.2s' }}
                     >
-                      <CompanyCard company={company} />
+                      <CompanyCardWithSelection company={company} />
                     </div>
                   ))
                 )}
@@ -179,5 +180,23 @@ export function CompanyKanban({ data, inactiveCompanies = [] }: Props) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * Wrapper interno que conecta o CompanyCard ao contexto de seleção, se
+ * existir. Se não existir (drill-down sem wrap), renderiza card normal
+ * sem checkbox.
+ */
+function CompanyCardWithSelection({ company }: { company: CompanyWithDetails }) {
+  const sel = useCompanySelectionOptional();
+  if (!sel) return <CompanyCard company={company} />;
+  return (
+    <CompanyCard
+      company={company}
+      selected={sel.isSelected(company.id)}
+      anySelected={sel.anySelected}
+      onToggleSelect={sel.toggle}
+    />
   );
 }
