@@ -121,6 +121,30 @@ type TrackedEvent =
       /** Clique em um dos cards do bloco "Sobre a Boldfy" (Bloco 7.5 — mai/2026). */
       name: 'playbook_sobre_boldfy_clicked';
       params: { modalidade: 'saas' | 'caas'; slug: string };
+    }
+  /* ---------------- Sinais de interesse genéricos (mai/2026) ---------------- */
+  | {
+      /**
+       * Expansão de item da FAQ (qualquer página). Só dispara no abrir,
+       * não no fechar. Sinal forte de interesse — aparece na timeline do
+       * lead se ele tiver dado consent.
+       */
+      name: 'faq_expanded';
+      params: {
+        question: string; // primeiras palavras pra identificar
+        page: string;     // ex: 'home', 'precos', etc
+      };
+    }
+  | {
+      /**
+       * Download de material/recurso (PDF, ebook, etc) via link direto
+       * (não pelo botão dos forms — esses já têm form_submit_*).
+       */
+      name: 'material_downloaded';
+      params: {
+        material: string; // slug ou nome do material
+        source: string;
+      };
     };
 
 /**

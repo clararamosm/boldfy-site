@@ -158,6 +158,34 @@ export function describeActivity(
     case 'material_download':
       return { icon: '📦', text: `Baixou material ${(data?.material as string) ?? ''}`.trim(), category: 'form' };
 
+    /* ---------------- Activities virtuais do GA4 (mai/2026) ----------------
+     * Não existem na tabela activities — são criadas em runtime pela
+     * página do lead a partir de getEngagementByClientId(). Identificam
+     * sessões de browsing (uma por dia visitado) e eventos GA4 customizados
+     * (cliques, modais, FAQs abertos).
+     */
+    case 'ga4_session': {
+      const sessions = (data?.sessions as number) ?? 1;
+      const pv = (data?.pageViews as number) ?? 0;
+      const pages = (data?.pages as string[] | undefined) ?? [];
+      const firstPage = pages[0] ?? '/';
+      const more = pages.length > 1 ? ` (+${pages.length - 1})` : '';
+      return {
+        icon: '🌐',
+        text: `${sessions} sessão${sessions === 1 ? '' : 'es'} no site · ${pv} pageview${pv === 1 ? '' : 's'} · começou em ${firstPage}${more}`,
+        category: 'web',
+      };
+    }
+    case 'ga4_event': {
+      const eventName = (data?.eventName as string) ?? 'evento';
+      const page = (data?.page as string | undefined) ?? '';
+      const count = (data?.count as number) ?? 1;
+      const human = humanizeGa4EventName(eventName, data ?? {});
+      const where = page ? ` em ${page}` : '';
+      const repeat = count > 1 ? ` (${count}x)` : '';
+      return { icon: '✨', text: `${human}${where}${repeat}`, category: 'web' };
+    }
+
     case 'email_sent': {
       const campaign = data?.campaign_name as string | undefined;
       const subject = data?.message_subject as string | undefined;
@@ -363,6 +391,8 @@ export function activityKind(type: string): 'lead' | 'system' {
   if (type.startsWith('form_submit_')) return 'lead';
   if (type.startsWith('page_view')) return 'lead';
   switch (type) {
+    case 'ga4_session':
+    case 'ga4_event':
     case 'blog_read':
     case 'material_download':
     case 'cal_scheduled':
@@ -400,6 +430,7 @@ export type LucideIconName =
   | 'Eye' | 'DollarSign' | 'Puzzle' | 'CalendarPlus'
   | 'MailOpen' | 'MousePointerClick' | 'Reply' | 'Forward'
   | 'UserMinus' | 'UserPlus' | 'Ban'
+  | 'Globe' | 'Sparkles'  // ga4_session / ga4_event
   | 'CircleDot'; // fallback genérico
 
 export function activityIconName(type: string): LucideIconName {
@@ -427,7 +458,61 @@ export function activityIconName(type: string): LucideIconName {
     case 'lead_unsubscribed':
     case 'email_unsubscribed': return 'UserMinus';
     case 'lead_resubscribed': return 'UserPlus';
+    case 'ga4_session': return 'Globe';
+    case 'ga4_event': return 'Sparkles';
     default: return 'CircleDot';
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Humanização de event names do GA4                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Converte eventName do GA4 (snake_case, técnico) em texto humano pra
+ * exibir na timeline. Mapeia nomes conhecidos; pra desconhecidos, faz
+ * um beautify razoável (snake_case → Title Case).
+ *
+ * Mantém pequeno e síncrono — chamado por linha de timeline.
+ */
+function humanizeGa4EventName(name: string, data: Record<string, unknown>): string {
+  const ctaType = data.cta_type as string | undefined;
+  const formType = data.form_type as string | undefined;
+  const material = data.material as string | undefined;
+  const question = data.question as string | undefined;
+  const tipId = data.tip_id as string | undefined;
+  const modalidade = data.modalidade as string | undefined;
+
+  switch (name) {
+    case 'cta_click':
+      return `Clicou no CTA ${ctaType ?? ''}`.trim();
+    case 'form_open':
+      return `Abriu form ${formType ?? ''}`.trim();
+    case 'form_submit_start':
+      return `Começou a preencher form ${formType ?? ''}`.trim();
+    case 'form_submit_success':
+      return `Submeteu form ${formType ?? ''}`.trim();
+    case 'form_submit_error':
+      return `Erro ao submeter form ${formType ?? ''}`.trim();
+    case 'faq_expanded':
+      return `Expandiu FAQ${question ? `: "${question}"` : ''}`;
+    case 'material_downloaded':
+      return `Baixou material ${material ?? ''}`.trim();
+    case 'playbook_quiz_started': return 'Começou o quiz do Playbook';
+    case 'playbook_quiz_submitted': return 'Concluiu o quiz do Playbook';
+    case 'playbook_viewed': return 'Visualizou o Playbook gerado';
+    case 'playbook_cta_clicked':
+      return `Clicou no CTA do Playbook: ${ctaType ?? ''}`.trim();
+    case 'playbook_tip_expanded':
+      return `Expandiu dica do Playbook${tipId ? `: ${tipId}` : ''}`;
+    case 'playbook_curva_expanded':
+      return 'Expandiu a curva de ativação no Playbook';
+    case 'playbook_sobre_boldfy_clicked':
+      return `Clicou em "Sobre a Boldfy" (${modalidade ?? ''})`.trim();
+    default: {
+      // Beautify genérico: snake_case → Title Case
+      return name.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
   }
 }
 

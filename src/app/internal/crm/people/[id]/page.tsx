@@ -33,6 +33,7 @@ import {
   Eye, DollarSign, Puzzle, CalendarPlus,
   MailOpen, MousePointerClick, Reply, Forward,
   UserMinus, UserPlus, Ban, CircleDot,
+  Globe, Sparkles,
 } from 'lucide-react';
 
 /**
@@ -45,12 +46,15 @@ const LUCIDE_ICONS: Record<LucideIconName, typeof Target> = {
   Eye, DollarSign, Puzzle, CalendarPlus,
   MailOpen, MousePointerClick, Reply, Forward,
   UserMinus, UserPlus, Ban, CircleDot,
+  Globe, Sparkles,
 };
 import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
 import { FormsSubmittedChipList } from '@/components/crm/forms-submitted-chip-list';
 import { EngagementSection } from '@/components/crm/engagement-section';
+import { getGa4TimelineEntriesForPerson } from '@/lib/ga4-person';
+import { isGa4Configured } from '@/lib/ga4';
 
 export const metadata: Metadata = {
   title: 'Lead',
@@ -67,10 +71,26 @@ export default async function LeadDetailPage({ params }: Props) {
   const person = await getPersonById(id);
   if (!person) notFound();
 
-  const [activitiesList, meetings] = await Promise.all([
+  const [realActivities, meetings, ga4Entries] = await Promise.all([
     getActivitiesForPerson(id, 200),
     getUpcomingMeetingsForPerson(id),
+    // Activities virtuais do GA4 (sessões + eventos) — mergidas com as
+    // reais pra timeline. Falha silenciosa: se GA4 não tá configurado ou
+    // pessoa não tem ga4_client_id capturado, retorna [] e a timeline
+    // segue mostrando só as activities reais (zero regressão).
+    isGa4Configured()
+      ? getGa4TimelineEntriesForPerson(id, 180).catch(() => [])
+      : Promise.resolve([]),
   ]);
+
+  /**
+   * Timeline merged: activities reais + virtuais GA4, ordenadas desc por
+   * createdAt. Mantém o tipo Activity[] pra o loop existente consumir sem
+   * mudança. Se ga4Entries está vazio, comportamento === antes da feature.
+   */
+  const activitiesList = [...realActivities, ...ga4Entries].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   /**
    * Task 1 — 3 chips compostos no header:

@@ -69,6 +69,10 @@ export function adaptBeta(input: BetaInput): ClassifiedLead {
       content: input.utm_content,
       term: input.utm_term,
     },
+    engagement: {
+      consent_status: input.consent_status,
+      ga4_client_id: input.ga4_client_id,
+    },
   };
 
   const personMetadataPatch: Record<string, unknown> = {

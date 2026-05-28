@@ -83,6 +83,10 @@ export function adaptAlgoritmoLinkedin(input: AlgoritmoLinkedinInput): Classifie
       content: input.utm_content,
       term: input.utm_term,
     },
+    engagement: {
+      consent_status: input.consent_status,
+      ga4_client_id: input.ga4_client_id,
+    },
   };
 
   // metadata.form_data — campos legíveis que viram fonte de info na sidebar

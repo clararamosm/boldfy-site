@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useT } from '@/lib/i18n/context';
 import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { trackEvent } from '@/lib/track';
 
 /* ------------------------------------------------------------------ */
 /*  Single FAQ item (card-style accordion)                             */
@@ -70,8 +71,22 @@ export function FaqSection() {
   const t = useT();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggle = (idx: number) =>
-    setOpenIndex((prev) => (prev === idx ? null : idx));
+  // Mai/2026 (Clara): trackeia abertura de pergunta — sinal forte de
+  // interesse pra timeline do lead. Só dispara no abrir (não no fechar
+  // nem ao trocar de pergunta) pra não duplicar evento. Trim em 80
+  // chars pra não vazar conteúdo longo no GA4 event params.
+  const toggle = (idx: number, question: string) => {
+    setOpenIndex((prev) => {
+      if (prev !== idx) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return idx;
+      }
+      return null;
+    });
+  };
 
   /* JSON-LD for SEO */
   const faqPairs = useMemo(
@@ -155,7 +170,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq1Q}
             isOpen={openIndex === 0}
-            onToggle={() => toggle(0)}
+            onToggle={() => toggle(0, t.home.faq1Q)}
           >
             <p>{t.home.faq1A}</p>
           </FaqItem>
@@ -164,7 +179,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq2Q}
             isOpen={openIndex === 1}
-            onToggle={() => toggle(1)}
+            onToggle={() => toggle(1, t.home.faq2Q)}
           >
             <p>{t.home.faq2A}</p>
           </FaqItem>
@@ -173,7 +188,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq3Q}
             isOpen={openIndex === 2}
-            onToggle={() => toggle(2)}
+            onToggle={() => toggle(2, t.home.faq3Q)}
           >
             <p className="mb-3">{t.home.faq3A_intro}</p>
             <ul className="flex flex-col gap-1.5 pl-0">
@@ -201,7 +216,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq4Q}
             isOpen={openIndex === 3}
-            onToggle={() => toggle(3)}
+            onToggle={() => toggle(3, t.home.faq4Q)}
           >
             <p>
               {t.home.faq4A.split('Content Full-Service')[0]}
@@ -216,7 +231,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq5Q}
             isOpen={openIndex === 4}
-            onToggle={() => toggle(4)}
+            onToggle={() => toggle(4, t.home.faq5Q)}
           >
             <p className="mb-3">
               {t.home.faq5A_p1.split('lista dos perfis que engajaram')[0]}
@@ -232,7 +247,7 @@ export function FaqSection() {
           <FaqItem
             question={t.home.faq6Q}
             isOpen={openIndex === 5}
-            onToggle={() => toggle(5)}
+            onToggle={() => toggle(5, t.home.faq6Q)}
           >
             <p>
               Você usa o{' '}

@@ -112,6 +112,15 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     utm_campaign: input.utm_campaign ?? null,
     utm_content: input.utm_content ?? null,
     utm_term: input.utm_term ?? null,
+    /**
+     * Engajamento (mai/2026) — consent LGPD + ga4_client_id capturados em
+     * captureSubmissionMeta(). Aparece na aba Engajamento + timeline do
+     * perfil. Campos opcionais.
+     */
+    engagement: {
+      consent_status: input.consent_status,
+      ga4_client_id: input.ga4_client_id,
+    },
   };
 
   return {

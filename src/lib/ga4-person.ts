@@ -20,6 +20,9 @@
  */
 
 import { runReportPublic, EXCLUDE_INTERNAL_DIMENSION_FILTER } from './ga4';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+import type { Activity } from '@/db';
 
 export type Ga4PersonDailyVisit = {
   date: string;         // YYYY-MM-DD
@@ -170,4 +173,197 @@ export async function getEngagementByClientId(
     topPages: topPages.slice(0, 10),
     dailyVisits,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Eventos GA4 da pessoa (cliques, modais, CTAs etc.)                        */
+/* -------------------------------------------------------------------------- */
+
+export type Ga4PersonEvent = {
+  date: string;       // YYYY-MM-DD
+  eventName: string;  // ex: 'cta_demo_clicked', 'modal_opened'
+  page: string;       // pagePath onde o evento ocorreu
+  count: number;      // quantas vezes esse evento disparou no dia
+};
+
+/**
+ * Lista eventos GA4 customizados de uma pessoa específica (filtra por
+ * clientId). Exclui eventos automáticos do GA4 — `page_view`, `session_start`,
+ * `first_visit`, `user_engagement` — pra timeline mostrar só ações
+ * deliberadas (cliques, abertura de modal, scroll milestones).
+ *
+ * Como cada `trackEvent()` que disparamos no site (form_submit_start,
+ * cta_*, modal_*) chega aqui como uma row, isso vira a fonte de
+ * "ações do usuário" pra timeline do CRM.
+ *
+ * Retorna `[]` se sem dado ou GA4 indisponível — chamador trata como
+ * "nenhum evento conhecido", sem erro.
+ *
+ * @param clientId — `<random>.<firstSeenTs>` (sem prefixo GA1)
+ * @param days     — janela em dias (default 90)
+ */
+export async function getEventsByClientId(
+  clientId: string,
+  days = 90,
+): Promise<Ga4PersonEvent[]> {
+  if (!clientId) return [];
+
+  // Filtra: clientId match AND eventName NOT IN (auto events do GA4)
+  const filter = {
+    andGroup: {
+      expressions: [
+        EXCLUDE_INTERNAL_DIMENSION_FILTER,
+        {
+          filter: {
+            fieldName: 'clientId',
+            stringFilter: { matchType: 'EXACT', value: clientId, caseSensitive: false },
+          },
+        },
+        {
+          notExpression: {
+            filter: {
+              fieldName: 'eventName',
+              inListFilter: {
+                values: [
+                  'page_view',
+                  'session_start',
+                  'first_visit',
+                  'user_engagement',
+                  'scroll',
+                ],
+                caseSensitive: false,
+              },
+            },
+          },
+        },
+      ],
+    },
+  };
+
+  const report = await runReportPublic({
+    dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'today' }],
+    dimensions: [
+      { name: 'date' },
+      { name: 'eventName' },
+      { name: 'pagePath' },
+    ],
+    metrics: [{ name: 'eventCount' }],
+    orderBys: [{ dimension: { dimensionName: 'date' } }],
+    limit: '5000',
+    dimensionFilter: filter,
+  });
+
+  if (!report?.rows) return [];
+
+  const events: Ga4PersonEvent[] = [];
+  for (const row of report.rows) {
+    const dateRaw = row.dimensionValues[0]?.value ?? '';
+    const date = dateRaw.length === 8
+      ? `${dateRaw.slice(0, 4)}-${dateRaw.slice(4, 6)}-${dateRaw.slice(6, 8)}`
+      : dateRaw;
+    const eventName = row.dimensionValues[1]?.value ?? '';
+    const page = row.dimensionValues[2]?.value ?? '/';
+    const count = parseInt(row.metricValues[0]?.value ?? '0', 10);
+    if (eventName) {
+      events.push({ date, eventName, page, count });
+    }
+  }
+  return events;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Activities virtuais (timeline merge)                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Lê o último ga4_client_id salvo nas activities da pessoa. Compartilha
+ * a mesma lógica do <EngagementSection /> — duplicada aqui pra esse módulo
+ * ficar self-contained (chamável de qualquer page sem prop drilling).
+ */
+async function getLatestGa4ClientId(personId: string): Promise<string | null> {
+  try {
+    const rows = await db.execute<{ ga4_client_id: string | null }>(sql`
+      SELECT data->'engagement'->>'ga4_client_id' AS ga4_client_id
+      FROM activities
+      WHERE person_id = ${personId}
+        AND data->'engagement'->>'ga4_client_id' IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    `);
+    return rows.rows[0]?.ga4_client_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Gera "activities virtuais" da pessoa pro timeline merge.
+ *
+ * Não cria nada no DB — só shapes compatíveis com Activity pra a timeline
+ * existente consumir sem modificação. Cada dia de browsing vira UMA entry
+ * `ga4_session` (com `data.pages` agregando todas as páginas vistas), e
+ * cada evento GA4 customizado vira UMA entry `ga4_event` (cliques de CTA,
+ * FAQs abertos, modais).
+ *
+ * Timestamp: usamos meio-dia local (UTC-3 SP) do dia visitado pra ordenar
+ * cronologicamente sem precisar do timestamp exato (que o GA4 não expõe
+ * via Data API sem custo alto).
+ *
+ * Retorna array vazio se: pessoa sem consent, GA4 sem dado, ou erro.
+ * Chamador trata como "timeline GA4 não disponível" — não bloqueia.
+ */
+export async function getGa4TimelineEntriesForPerson(
+  personId: string,
+  days = 90,
+): Promise<Activity[]> {
+  const clientId = await getLatestGa4ClientId(personId);
+  if (!clientId) return [];
+
+  const [engagement, events] = await Promise.all([
+    getEngagementByClientId(clientId, days).catch(() => null),
+    getEventsByClientId(clientId, days).catch(() => []),
+  ]);
+
+  const entries: Activity[] = [];
+
+  // Sessões por dia → uma virtual activity por dia
+  if (engagement?.dailyVisits) {
+    for (const v of engagement.dailyVisits) {
+      entries.push({
+        id: `ga4-session-${v.date}`,
+        personId,
+        companyId: null,
+        type: 'ga4_session',
+        weight: 0,
+        source: 'ga4',
+        data: {
+          sessions: v.sessions,
+          pageViews: v.pageViews,
+          pages: v.pages,
+        },
+        createdAt: new Date(`${v.date}T12:00:00-03:00`),
+      });
+    }
+  }
+
+  // Eventos GA4 customizados
+  for (const e of events) {
+    entries.push({
+      id: `ga4-event-${e.date}-${e.eventName}-${e.page}`,
+      personId,
+      companyId: null,
+      type: 'ga4_event',
+      weight: 0,
+      source: 'ga4',
+      data: {
+        eventName: e.eventName,
+        page: e.page,
+        count: e.count,
+      },
+      // Eventos meia-hora depois das sessões pra ordenar logicamente
+      createdAt: new Date(`${e.date}T12:30:00-03:00`),
+    });
+  }
+
+  return entries;
 }
