@@ -16,6 +16,7 @@ const TABS = [
   { href: '/internal/dashboard/seo', label: 'SEO', match: 'prefix' },
   { href: '/internal/dashboard/linkedin', label: 'LinkedIn', match: 'prefix' },
   { href: '/internal/dashboard/forms', label: 'Forms', match: 'prefix' },
+  { href: '/internal/dashboard/acoes', label: 'Ações no site', match: 'prefix' },
   { href: '/internal/dashboard/campanhas', label: 'Campanhas', match: 'prefix' },
   { href: '/internal/dashboard/state-elg', label: 'State of ELG', match: 'prefix' },
 ] as const;
