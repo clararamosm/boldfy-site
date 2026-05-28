@@ -50,34 +50,37 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
   // Viewbox fixo + escala SVG faz o gráfico ser responsivo sem JS de resize
   const W = 800;
   const H = height;
-  // Mais padding nos lados pra acomodar labels coloridas dos 2 eixos Y
-  const PAD = { top: 22, right: 52, bottom: 28, left: 52 };
+  // Padding lateral menor agora que só temos um eixo Y (esquerda).
+  const PAD = { top: 22, right: 16, bottom: 28, left: 52 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const { maxA, maxB, ticksA, ticksB, ticksX, pathA, pathB } = useMemo(() => {
+  const { maxY, ticksY, ticksX, pathA, pathB } = useMemo(() => {
     if (data.length === 0) {
-      return { maxA: 0, maxB: 0, ticksA: [], ticksB: [], ticksX: [], pathA: '', pathB: '' };
+      return { maxY: 0, ticksY: [], ticksX: [], pathA: '', pathB: '' };
     }
 
-    const maxA = Math.max(...data.map((d) => d.a), 1);
-    const maxB = Math.max(...data.map((d) => d.b), 1);
+    // Mai/2026 (Clara): unificou pra UMA régua só. Antes tinha eixo Y duplo
+    // (escala separada pra cada série) — fazia as linhas parecerem coladas
+    // mesmo quando havia diferença real. Agora maxY = max global → a
+    // diferença entre sessões e usuários fica visível.
+    const maxY = Math.max(...data.map((d) => Math.max(d.a, d.b)), 1);
 
     // Step entre pontos (dist horizontal)
     const stepX = data.length > 1 ? innerW / (data.length - 1) : 0;
 
-    function buildPath(values: number[], max: number): string {
+    function buildPath(values: number[]): string {
       return values
         .map((v, i) => {
           const x = PAD.left + i * stepX;
-          const y = PAD.top + innerH - (v / max) * innerH;
+          const y = PAD.top + innerH - (v / maxY) * innerH;
           return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
         })
         .join(' ');
     }
 
-    const pathA = buildPath(data.map((d) => d.a), maxA);
-    const pathB = buildPath(data.map((d) => d.b), maxB);
+    const pathA = buildPath(data.map((d) => d.a));
+    const pathB = buildPath(data.map((d) => d.b));
 
     // Y-ticks: 5 níveis arredondados (max em cima, 0 embaixo)
     function niceTicks(max: number) {
@@ -93,10 +96,8 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
       .filter((_, i) => i % xTickStep === 0 || i === data.length - 1);
 
     return {
-      maxA,
-      maxB,
-      ticksA: niceTicks(maxA),
-      ticksB: niceTicks(maxB),
+      maxY,
+      ticksY: niceTicks(maxY),
       ticksX,
       pathA,
       pathB,
@@ -128,36 +129,20 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
       </div>
 
       <div className="dash-chart-svg-wrap">
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: H, display: 'block' }}>
-          {/* Label do eixo Y esquerdo (cor A) */}
-          <text x={PAD.left - 6} y={PAD.top - 10} fontSize={10} fontWeight={700} fill={colors.a} textAnchor="end" fontFamily="system-ui, sans-serif" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            {labels.a}
-          </text>
-          {/* Label do eixo Y direito (cor B) */}
-          <text x={PAD.left + innerW + 4} y={PAD.top - 10} fontSize={10} fontWeight={700} fill={colors.b} textAnchor="start" fontFamily="system-ui, sans-serif" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            {labels.b}
-          </text>
-
-          {/* Y-grid (linhas horizontais com base no max do A) + labels A coloridas */}
-          {ticksA.map((t, i) => {
-            const y = PAD.top + innerH - (t / maxA) * innerH;
+        {/* preserveAspectRatio="xMidYMid meet" — antes era "none" e esticava
+            texto/linhas em containers mais largos que 800px. Agora SVG
+            mantém proporção e fica responsivo via width:100% sem distorção. */}
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: H, display: 'block' }}>
+          {/* Y-grid (linhas horizontais) + labels neutras (uma régua só) */}
+          {ticksY.map((t, i) => {
+            const y = PAD.top + innerH - (t / maxY) * innerH;
             return (
               <g key={`gy-${i}`}>
                 <line x1={PAD.left} y1={y} x2={PAD.left + innerW} y2={y} stroke="#F0E6F7" strokeWidth={1} />
-                <text x={PAD.left - 6} y={y + 3} fontSize={10} fill={colors.a} textAnchor="end" fontFamily="system-ui, sans-serif" fontWeight={600}>
+                <text x={PAD.left - 6} y={y + 3} fontSize={10} fill="#9D85B3" textAnchor="end" fontFamily="system-ui, sans-serif" fontWeight={600}>
                   {t.toLocaleString('pt-BR')}
                 </text>
               </g>
-            );
-          })}
-
-          {/* Eixo Y direito (escala do B) — labels B coloridas */}
-          {ticksB.map((t, i) => {
-            const y = PAD.top + innerH - (t / maxB) * innerH;
-            return (
-              <text key={`yb-${i}`} x={PAD.left + innerW + 4} y={y + 3} fontSize={10} fill={colors.b} textAnchor="start" fontFamily="system-ui, sans-serif" fontWeight={600}>
-                {t.toLocaleString('pt-BR')}
-              </text>
             );
           })}
 
@@ -190,7 +175,7 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
               />
               <circle
                 cx={PAD.left + hoverIdx * stepX}
-                cy={PAD.top + innerH - (data[hoverIdx].a / maxA) * innerH}
+                cy={PAD.top + innerH - (data[hoverIdx].a / maxY) * innerH}
                 r={4}
                 fill={colors.a}
                 stroke="#FFFFFF"
@@ -198,7 +183,7 @@ export function DailyLineChart({ data, labels, colors = DEFAULT_COLORS, height =
               />
               <circle
                 cx={PAD.left + hoverIdx * stepX}
-                cy={PAD.top + innerH - (data[hoverIdx].b / maxB) * innerH}
+                cy={PAD.top + innerH - (data[hoverIdx].b / maxY) * innerH}
                 r={4}
                 fill={colors.b}
                 stroke="#FFFFFF"

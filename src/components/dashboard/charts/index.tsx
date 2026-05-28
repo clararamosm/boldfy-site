@@ -22,6 +22,7 @@ export { Sparkline } from './sparkline';
 export { InteractiveSparkline, type SparkPoint } from './interactive-sparkline';
 export { MultiLineChart } from './multi-line-chart';
 export { StackedAreaChart } from './stacked-area-chart';
+export { StackedBarChart } from './stacked-bar-chart';
 export { DonutChart } from './donut-chart';
 export { HeatmapChart } from './heatmap-chart';
 export { FunnelStages } from './funnel-stages';

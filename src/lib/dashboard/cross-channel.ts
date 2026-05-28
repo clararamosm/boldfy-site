@@ -293,6 +293,65 @@ export async function getLeadsByOrigin(days = 30): Promise<OriginSlice[]> {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Forms submetidos por canal (mai/2026, Clara)                              */
+/* -------------------------------------------------------------------------- */
+
+export type ChannelLeadsRow = {
+  channel: string;       // sourceChannel do CRM (linkedin/organic/direct/etc)
+  uniquePeople: number;  // people distintas que viraram lead nesse canal no período
+  formSubmits: number;   // total de activities form_submit_* (1 pessoa pode ter N)
+};
+
+/**
+ * Pra cada sourceChannel:
+ *  - uniquePeople: pessoas distintas com createdAt no período
+ *  - formSubmits: total de activities form_submit_* no período
+ *
+ * Usado na tabela "Canais" do dashboard de tráfego pra responder
+ * "quantos forms vieram de cada canal".
+ */
+export async function getLeadsByChannel(days = 28): Promise<ChannelLeadsRow[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  try {
+    // 1. People distintas por canal no período
+    const peopleRows = await db
+      .select({ channel: people.sourceChannel, n: count() })
+      .from(people)
+      .where(and(
+        eq(people.archived, false),
+        isNull(people.mergedIntoId),
+        gte(people.createdAt, since),
+      ))
+      .groupBy(people.sourceChannel);
+
+    // 2. Forms submetidos por canal — JOIN activities × people (pelo
+    //    sourceChannel da pessoa). Aproximação: atribui a activity ao
+    //    canal de origem da pessoa (não ao canal do form_submit em si,
+    //    que não é trackeado individualmente). Bom o suficiente pra
+    //    leitura de "qual canal traz mais conversões".
+    const submitRows = await db
+      .select({ channel: people.sourceChannel, n: count() })
+      .from(activities)
+      .innerJoin(people, eq(activities.personId, people.id))
+      .where(and(
+        sql`${activities.type} LIKE 'form_submit_%'`,
+        gte(activities.createdAt, since),
+      ))
+      .groupBy(people.sourceChannel);
+
+    const submitsMap = new Map(submitRows.map((r) => [r.channel ?? 'unknown', r.n]));
+    return peopleRows.map((r) => ({
+      channel: r.channel ?? 'unknown',
+      uniquePeople: r.n,
+      formSubmits: submitsMap.get(r.channel ?? 'unknown') ?? 0,
+    }));
+  } catch (err) {
+    console.error('[dashboard-queries] getLeadsByChannel db error:', err);
+    return [];
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Heatmap dia × hora — quando convertemos (forms preenchidos)               */
 /* -------------------------------------------------------------------------- */
 
