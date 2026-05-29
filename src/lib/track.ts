@@ -15,6 +15,31 @@
  *   trackEvent('cta_click', { cta_type: 'demo', source: 'header:desktop' });
  */
 
+declare global {
+  interface Window {
+    /** LinkedIn Insight Tag (carregada via GTM). Disponível após o insight.min.js. */
+    lintrk?: (action: 'track', data: { conversion_id: number }) => void;
+  }
+}
+
+/**
+ * Conversões do LinkedIn Campaign Manager (conta Boldfy 528720447,
+ * Insight Tag 10262873) mapeadas por evento de tracking. Criadas em 29/05/2026.
+ *
+ * A chave é `form_submit_success:<form_type>` para os forms que passam pelo
+ * evento unificado, ou o próprio nome do evento (ex: playbook_quiz_submitted).
+ * Quando um evento mapeado dispara, o trackEvent espelha a conversão no
+ * LinkedIn via window.lintrk (método "específico ao evento").
+ */
+const LINKEDIN_CONVERSION_IDS: Record<string, number> = {
+  'form_submit_success:demo': 28351801,
+  'form_submit_success:proposal': 28351841,
+  'form_submit_success:beta': 28351833,
+  'form_submit_success:algoritmo-linkedin': 28351817,
+  'form_submit_success:case-semrush': 28351825,
+  playbook_quiz_submitted: 28351809,
+};
+
 type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-employee-led-growth';
 
 type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_download' | 'case_semrush_download' | 'schedule_meeting';
@@ -174,6 +199,23 @@ export function trackEvent<E extends TrackedEvent>(
 
   try {
     window.gtag('event', name, params);
+  } catch {
+    // no-op: tracking nunca deve quebrar o fluxo do usuário
+  }
+
+  // Espelha conversões selecionadas no LinkedIn Insight Tag (método
+  // "específico ao evento", via window.lintrk). Só dispara se a Insight Tag
+  // (injetada pelo GTM) já tiver carregado. Conta Boldfy 528720447.
+  try {
+    const formType = (params as { form_type?: string }).form_type;
+    const conversionKey =
+      name === 'form_submit_success' && formType
+        ? `form_submit_success:${formType}`
+        : name;
+    const conversionId = LINKEDIN_CONVERSION_IDS[conversionKey];
+    if (conversionId && typeof window.lintrk === 'function') {
+      window.lintrk('track', { conversion_id: conversionId });
+    }
   } catch {
     // Silencioso — tracking nunca deve quebrar o fluxo do usu\u00e1rio
   }
