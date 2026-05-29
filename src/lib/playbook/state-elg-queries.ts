@@ -42,7 +42,7 @@ export type AggregateBucket = {
 export type LastResponder = {
   personId: string;
   personName: string;
-  personEmail: string;
+  personEmail: string | null;
   companyName: string | null;
   industry: string | null;
   slug: string;
@@ -169,7 +169,7 @@ export async function getLastPlaybookOutputs(limit: number = 20): Promise<LastRe
   const result = await db.execute<{
     person_id: string;
     person_name: string;
-    person_email: string;
+    person_email: string | null;
     company_name: string | null;
     industry: string | null;
     slug: string;

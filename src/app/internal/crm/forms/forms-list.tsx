@@ -208,7 +208,7 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                   {visibleCols.has('email') ? (
                     <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
                       {row.person.email ? (
-                        <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email}>
+                        <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email ?? undefined}>
                           {row.person.email}
                         </span>
                       ) : (

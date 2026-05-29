@@ -11,7 +11,7 @@ import { db, people, companies } from '@/db';
 import { ilike, and, eq, or, isNull, desc } from 'drizzle-orm';
 
 export type SearchHit =
-  | { kind: 'person'; id: string; name: string; email: string; jobTitle: string | null; companyName: string | null }
+  | { kind: 'person'; id: string; name: string; email: string | null; jobTitle: string | null; companyName: string | null }
   | { kind: 'company'; id: string; name: string; industry: string | null };
 
 export async function searchCrm(query: string): Promise<SearchHit[]> {

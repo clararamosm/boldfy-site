@@ -479,7 +479,7 @@ export async function getTopCanalSnapshot(days = 7): Promise<TopChannelSnapshot>
 export type LastLead = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   source: string | null;
   statusLabel: string | null;
   statusColor: string | null;

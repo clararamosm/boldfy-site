@@ -218,7 +218,7 @@ export function PersonTable({
                     ) : null}
                     {visibleCols.has('company') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.company?.name ?? '—'}</td> : null}
                     {visibleCols.has('jobTitle') ? <td style={{ padding: '10px 14px', color: '#45336B' }}>{p.jobTitle ?? '—'}</td> : null}
-                    {visibleCols.has('email') ? <td style={{ padding: '10px 14px', color: '#9D85B3', fontSize: 12 }}>{p.email}</td> : null}
+                    {visibleCols.has('email') ? <td style={{ padding: '10px 14px', color: '#9D85B3', fontSize: 12 }}>{p.email ?? <span style={{ fontStyle: 'italic', opacity: 0.6 }}>—</span>}</td> : null}
                     {visibleCols.has('status') ? (
                       <td style={{ padding: '10px 14px' }}>
                         {p.status ? <StatusPill label={p.status.label} color={p.status.color ?? 'gray'} /> : <span style={{ color: '#9D85B3' }}>—</span>}

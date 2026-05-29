@@ -21,7 +21,8 @@ type Props = {
 
 export function PersonCard({ person, lastActionText, selected, anySelected, onToggleSelect }: Props) {
   const via = methodVia(person.sourceMethod);
-  const hue = avatarHue(person.email);
+  // Fallback determinístico pra LinkedIn Leads sem email (mai/2026).
+  const hue = avatarHue(person.email ?? person.linkedinUrl ?? person.id);
   const channel = channelLabel(person.sourceChannel);
 
   const statusColor = person.status?.color ?? 'neutral';

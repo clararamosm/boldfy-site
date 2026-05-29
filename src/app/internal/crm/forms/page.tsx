@@ -161,7 +161,7 @@ async function getPeopleWithForms(params: Params): Promise<{
         person: {
           id: row.personId,
           name: row.personName ?? '',
-          email: row.personEmail ?? '',
+          email: row.personEmail,
           jobTitle: row.personJobTitle ?? null,
           phone: row.personPhone ?? null,
           sourceChannel: row.personSourceChannel,
@@ -203,7 +203,7 @@ async function getPeopleWithForms(params: Params): Promise<{
   people_.sort((a, b) => {
     let cmp = 0;
     if (params.sortBy === 'name') cmp = a.person.name.localeCompare(b.person.name);
-    else if (params.sortBy === 'email') cmp = a.person.email.localeCompare(b.person.email);
+    else if (params.sortBy === 'email') cmp = (a.person.email ?? '').localeCompare(b.person.email ?? '');
     else cmp = a.lastFormAt.getTime() - b.lastFormAt.getTime();
     return params.sortDir === 'asc' ? cmp : -cmp;
   });

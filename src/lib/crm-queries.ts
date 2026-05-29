@@ -467,7 +467,7 @@ export async function getAggregatedAcTagsForCompany(companyId: string): Promise<
 }
 
 export type FeedActivity = Activity & {
-  person: { id: string; name: string; email: string } | null;
+  person: { id: string; name: string; email: string | null } | null;
   company: { id: string; name: string } | null;
 };
 
@@ -486,7 +486,7 @@ export async function getFeedActivities(limit = 100): Promise<FeedActivity[]> {
 
   return rows.map((r) => ({
     ...r.activity,
-    person: r.person?.id ? (r.person as { id: string; name: string; email: string }) : null,
+    person: r.person?.id ? (r.person as { id: string; name: string; email: string | null }) : null,
     company: r.company?.id ? (r.company as { id: string; name: string }) : null,
   }));
 }

@@ -33,7 +33,12 @@ export type PersonRow = {
   person: {
     id: string;
     name: string;
-    email: string;
+    /**
+     * Pode ser null pra LinkedIn Leads capturados pela extensão Chrome
+     * (mai/2026). Forms do site continuam exigindo email via Zod, então
+     * pessoas com `forms` não-vazios podem assumir não-null na prática.
+     */
+    email: string | null;
     phone: string | null;
     sourceChannel: string | null;
     sourcePage: string | null;

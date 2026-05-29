@@ -143,7 +143,7 @@ export function CmdK() {
                   <div className="cmdk-hit-meta">
                     {hit.kind === 'person' ? (
                       <>
-                        {hit.email}
+                        {hit.email ?? <span style={{ opacity: 0.5 }}>sem email</span>}
                         {hit.jobTitle ? ` · ${hit.jobTitle}` : ''}
                         {hit.companyName ? ` · ${hit.companyName}` : ''}
                       </>
