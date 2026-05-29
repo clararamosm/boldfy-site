@@ -601,6 +601,63 @@ export const RESULTADOS_ESPERADOS: {
  */
 export const RESULTADOS_POR_DOR = RESULTADOS_ESPERADOS.porDor;
 
+/**
+ * Resumos curtos pra cada resultado esperado (jun/2026).
+ *
+ * O componente <ResultadosRadar /> usa esses 2–3 palavras pra mostrar
+ * dentro das bolhas circulares (texto completo seria ilegível em círculo
+ * de 130px). A frase completa aparece no hover via tooltip.
+ *
+ * Lookup é por igualdade de string com o resultado em `RESULTADOS_ESPERADOS`.
+ * `getResultadoShort()` tem fallback automático (pega as 2 primeiras palavras
+ * úteis) pra resultados novos não mapeados ou pra playbooks antigos no banco
+ * com strings ligeiramente diferentes.
+ */
+export const RESULTADOS_SHORT_LABELS: Record<string, string> = {
+  // Universais
+  'Menos conteúdo institucional, mais conteúdo de conexão vivido pelo time':
+    'Conteúdo de conexão',
+  'Aderência à cultura aumenta, colaboradores sentem que fazem parte de algo':
+    'Cultura mais forte',
+  'Lista de pessoas com ponto de contato com a marca, pronta pra remarketing direto sem CAC frio':
+    'Lista pra remarketing',
+  'Case de earned media na mesa pra defender budget na próxima revisão':
+    'Case pro board',
+  // Por dor
+  'CAC menor com earned media substituindo parte da mídia paga':
+    'CAC menor',
+  'Voz da empresa cresce no feed sem depender da Company Page':
+    'Voz própria',
+  'Vocês passam a aparecer onde antes só o concorrente aparecia':
+    'Sair da sombra',
+  'Vendedores com perfil cheio aumentam taxa de resposta de outbound':
+    'Outbound responde',
+  'Marca empregadora visível atrai talento sênior sem subir custo de hiring':
+    'Atração de talento',
+  'Voz da marca deixa de depender de uma única pessoa':
+    'Marca distribuída',
+  // Por budget
+  'Pacote Beta com 1º mês grátis (com 5 colaboradores) e valor beta nos 6 meses seguintes, pra começar sem comprometer Q atual':
+    '1º mês grátis',
+};
+
+/**
+ * Retorna um resumo curto (~2 palavras) pra um resultado esperado.
+ * Usa `RESULTADOS_SHORT_LABELS` se houver match exato; senão deriva
+ * pegando as 2-3 primeiras palavras significativas (pula stopwords).
+ */
+export function getResultadoShort(longText: string): string {
+  const mapped = RESULTADOS_SHORT_LABELS[longText];
+  if (mapped) return mapped;
+  // Fallback: pega 2 palavras significativas. Pula stopwords pequenas no início.
+  const STOP = new Set(['de', 'da', 'do', 'a', 'o', 'os', 'as', 'um', 'uma', 'com', 'em', 'no', 'na']);
+  const words = longText
+    .replace(/[,.;:!?]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP.has(w.toLowerCase()));
+  return words.slice(0, 2).join(' ') || longText.slice(0, 18);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Bloco 3.5 — SETOR APLICAÇÃO (novo mai/2026 3ª curadoria)                   */
 /* -------------------------------------------------------------------------- */

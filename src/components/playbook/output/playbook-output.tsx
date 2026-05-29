@@ -73,9 +73,14 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 4 — Dicas + Boldfy (accordion) */}
       <PlaybookDicas dicas={data.dicas} slug={slug} />
 
-      {/* Bloco 4.5 — Resultados esperados (derivados das dores P8 — mai/2026) */}
+      {/* Bloco 4.5 — Resultados esperados (radar orgânico — jun/2026).
+          Empresa no centro vem do hero.headlineEmpresa pra ser o mesmo
+          nome usado em todo o playbook. */}
       {data.resultadosEsperados && data.resultadosEsperados.length > 0 && (
-        <PlaybookResultadosEsperados resultados={data.resultadosEsperados} />
+        <PlaybookResultadosEsperados
+          resultados={data.resultadosEsperados}
+          empresa={data.hero.headlineEmpresa}
+        />
       )}
 
       {/* Bloco 5 — Checklist */}
