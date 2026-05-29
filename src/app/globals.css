@@ -459,47 +459,52 @@ html {
 }
 
 /* ============================================================== */
-/*  Bloco 4.5 — Radar de Resultados Esperados (jun/2026)            */
+/*  Bloco 4.5 — Rede orgânica de Resultados Esperados (jun/2026)    */
 /* ============================================================== */
-/* Componente <ResultadosRadar /> em playbook-resultados-esperados.tsx.
-   Empresa no centro com anéis pulsando (efeito sonar) + bolhas circulares
-   espalhadas em ângulos orgânicos (não cardeais) com flutuação suave. */
+/* Componente <PlaybookResultadosEsperados /> em
+   playbook-resultados-esperados.tsx (polish 5 jun/2026).
 
-@keyframes resultados-radar-anel {
-  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; border-width: 2.5px; }
-  20%  { opacity: 0.55; }
-  100% { transform: translate(-50%, -50%) scale(1.05); opacity: 0; border-width: 0.5px; }
+   Refactor do radar circular pra rede orgânica:
+   - Marca pulsa no centro com 2 anéis sonar emanando (efeito Opção C).
+   - Tags-pílulas espalhadas em posições semi-aleatórias (não radiais).
+   - 4 trajetórias de flutuação com MAIS amplitude (10-14px vs 6-8 antes)
+     pra reforçar a sensação de movimento orgânico que a Clara pediu. */
+
+/* Pulse do anel ao redor da marca — emana 2 anéis com delay escalonado. */
+@keyframes resultados-rede-pulse {
+  0%   { transform: translate(-50%, -50%) scale(1);    opacity: 0.55; border-width: 2px; }
+  100% { transform: translate(-50%, -50%) scale(1.65); opacity: 0;    border-width: 0.5px; }
+}
+.resultados-rede-pulse {
+  animation: resultados-rede-pulse 2.8s ease-out infinite;
 }
 
-@keyframes resultados-radar-twinkle {
-  0%, 100% { opacity: 0.25; }
-  50%      { opacity: 0.6; }
+/* 4 trajetórias de flutuação pras tags. Amplitude maior (10-14px) que o
+   radar anterior (6-8px) — Clara pediu "acentuar mais a flutuação". X/Y
+   base vem das CSS vars --rb-x / --rb-y setadas no JSX. */
+@keyframes resultados-rede-drift-0 {
+  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
+  33%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) + 10px), calc(var(--rb-y) - 12px)); }
+  66%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) -  8px), calc(var(--rb-y) +  6px)); }
+}
+@keyframes resultados-rede-drift-1 {
+  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
+  50%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) + 12px), calc(var(--rb-y) + 10px)); }
+}
+@keyframes resultados-rede-drift-2 {
+  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
+  40%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) - 14px), calc(var(--rb-y) -  8px)); }
+  80%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) +  6px), calc(var(--rb-y) + 12px)); }
+}
+@keyframes resultados-rede-drift-3 {
+  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
+  50%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) - 10px), calc(var(--rb-y) + 14px)); }
 }
 
-/* 8 trajetórias de flutuação — cada bolha tem a sua pra movimento orgânico.
-   X/Y base vem do `style={{ '--rb-x': '...', '--rb-y': '...' }}` no JSX.
-   Deslocamento secundário fica fixo aqui (pequeno, 6-10px). */
-@keyframes resultados-radar-drift-0 {
-  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
-  33%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) + 6px),  calc(var(--rb-y) - 8px)); }
-  66%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) - 6px),  calc(var(--rb-y) + 4px)); }
-}
-@keyframes resultados-radar-drift-1 {
-  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
-  50%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) + 8px),  calc(var(--rb-y) + 6px)); }
-}
-@keyframes resultados-radar-drift-2 {
-  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
-  40%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) - 8px),  calc(var(--rb-y) - 6px)); }
-  80%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) + 4px),  calc(var(--rb-y) + 8px)); }
-}
-@keyframes resultados-radar-drift-3 {
-  0%, 100% { transform: translate(-50%, -50%) translate(var(--rb-x), var(--rb-y)); }
-  50%      { transform: translate(-50%, -50%) translate(calc(var(--rb-x) - 8px),  calc(var(--rb-y) + 6px)); }
-}
+/* Pausa a flutuação enquanto a tag está sob hover (pra facilitar leitura). */
+.resultados-rede-tag:hover { animation-play-state: paused; }
 
 @media (prefers-reduced-motion: reduce) {
-  .resultados-radar-anel,
-  .resultados-radar-bolha,
-  .resultados-radar-stars { animation: none !important; }
+  .resultados-rede-pulse,
+  .resultados-rede-tag { animation: none !important; }
 }

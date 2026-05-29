@@ -1,37 +1,33 @@
 'use client';
 
 /**
- * Bloco 4.5 — Resultados esperados (radar orgânico, jun/2026).
+ * Bloco 4.5 — Resultados esperados (rede orgânica, jun/2026 polish 5).
  *
- * Antes (mai/2026): grid empilhado de cards com Trophy icon. Funcionava
- * mas era visualmente estático, parecido com checklist.
+ * Histórico curto:
+ * - Mai/2026: grid empilhado clássico de cards com Trophy icon.
+ * - Jun/2026 #1: radar circular com bolhas redondas — Clara achou
+ *   "monstruoso" (muito espaço vazio, radial demais, sem dinamismo).
+ * - Jun/2026 #2 (ATUAL): rede orgânica. Marca pulsa no centro (efeito
+ *   sonar). Tags-pílulas espalhadas em posições semi-aleatórias (não
+ *   distribuídas em ângulos uniformes), com algumas linhas tracejadas
+ *   conectando centro↔tag E tag↔tag pra formar teia. Flutuação ampliada
+ *   (10-14px). Mais tags (até 12) porque os labels viraram keywords
+ *   curtas que cabem em pílula.
  *
- * Agora (jun/2026): radar com a marca da empresa no centro emitindo
- * anéis pulsando (efeito sonar). Bolhas circulares orbitam ao redor —
- * cada uma com um resultado, mostra resumo curto (~2 palavras) por
- * default e expande pra frase completa no hover (tooltip rosa-escuro).
- *
- * Distribuição: ângulos não-cardeais (15°, 65°, 120°, 170°, 210°,
- * 260°, 305°, 340°) + 3 tamanhos de bolha rotacionando — quebra
- * sensação de tabuleiro. Flutuação suave de 8-12px em loop.
- *
- * Resumos curtos vêm de `RESULTADOS_SHORT_LABELS` em templates/index.ts
- * com fallback automático em `getResultadoShort`.
- *
- * Mobile (<768px): cai pro grid empilhado clássico — o radar precisa de
- * espaço lateral e fica apertado em viewports estreitos.
+ * Mobile (<md): grid empilhado clássico — rede não funciona em viewport
+ * estreito.
  */
 
-import { Trophy } from 'lucide-react';
 import { SectionTag } from './playbook-snapshot';
 import { getResultadoShort } from '@/lib/playbook/templates';
+import { Trophy } from 'lucide-react';
 
 export function PlaybookResultadosEsperados({
   resultados,
   empresa,
 }: {
   resultados: string[];
-  /** Nome da empresa pra colocar no centro do radar (jun/2026). */
+  /** Nome da empresa pra colocar no centro pulsando (jun/2026). */
   empresa: string;
 }) {
   if (!resultados || resultados.length === 0) return null;
@@ -46,14 +42,14 @@ export function PlaybookResultadosEsperados({
             podem destravar
           </span>
         </h2>
-        <p className="mb-8 max-w-[720px] text-sm leading-relaxed text-muted-foreground">
+        <p className="mb-6 max-w-[720px] text-sm leading-relaxed text-muted-foreground">
           Esses são os resultados típicos que aparecem nos 3 a 6 primeiros meses, quando o programa
           cobre os 3 motores: porquê, como e ferramenta.
         </p>
 
-        {/* Desktop: radar orgânico. Mobile (< md): grid empilhado abaixo. */}
+        {/* Desktop: rede orgânica. Mobile (<md): grid empilhado. */}
         <div className="hidden md:block">
-          <Radar resultados={resultados} empresa={empresa} />
+          <RedeOrganica resultados={resultados} empresa={empresa} />
         </div>
         <ul className="grid gap-3 sm:grid-cols-2 md:hidden">
           {resultados.map((r, i) => (
@@ -74,170 +70,173 @@ export function PlaybookResultadosEsperados({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Radar — centro + anéis + bolhas                                            */
+/*  Rede orgânica — marca pulsando no centro + tags-pílulas espalhadas         */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Distribuição angular orgânica de até 8 bolhas. Os ângulos foram escolhidos
- * pra NÃO bater nos pontos cardeais (0°/90°/180°/270°) nem nas diagonais
- * (45°/135°/225°/315°) — efeito menos "tabuleiro", mais "espaço".
+ * Posições das tags em coordenadas (x, y) em pixels do centro do canvas
+ * 800×520 (viewBox -400 -260 800 520). Posições CURADAS — não geradas em
+ * runtime — pra garantir que não sobrepõem o centro (raio 100px) nem
+ * entre si (distância mínima ~130px entre tags), mas semi-aleatórias o
+ * suficiente pra NÃO formar padrão radial. Mistura de distâncias (perto
+ * e longe) reforça a aleatoriedade.
  *
- * `distance` em pixels do centro do radar (max-width: 760px = raio útil
- * ~250px depois de descontar tamanho das bolhas e padding). Distâncias
- * variadas reforçam a sensação orgânica.
- *
- * Pra 6 resultados, usamos os 6 primeiros slots; pra 7, 7 primeiros; etc.
- * Acima de 8 resultados, módulo do array (raro — universais (4) + dor (até 2)
- * + budget (até 1) = 7 max).
+ * driftIdx (0-3): seleciona qual keyframe @resultados-radar-drift-* a tag
+ * usa pra flutuação. 4 keyframes diferentes garantem que tags vizinhas não
+ * floatam em sincronia (importante: animações em sync parecem grid).
  */
-const RADAR_SLOTS: Array<{ angle: number; distance: number; size: 'sm' | 'md' | 'lg' }> = [
-  { angle: 15,  distance: 215, size: 'md' },
-  { angle: 65,  distance: 230, size: 'lg' },
-  { angle: 120, distance: 215, size: 'md' },
-  { angle: 170, distance: 220, size: 'sm' },
-  { angle: 210, distance: 235, size: 'md' },
-  { angle: 260, distance: 220, size: 'lg' },
-  { angle: 305, distance: 240, size: 'sm' },
-  { angle: 340, distance: 200, size: 'md' },
+const TAG_POSITIONS: Array<{ x: number; y: number; driftIdx: number }> = [
+  { x: -280, y: -160, driftIdx: 0 },
+  { x:  -40, y: -210, driftIdx: 1 },
+  { x:  180, y: -180, driftIdx: 2 },
+  { x:  320, y:  -40, driftIdx: 3 },
+  { x:  290, y:  130, driftIdx: 0 },
+  { x:   40, y:  215, driftIdx: 1 },
+  { x: -200, y:  210, driftIdx: 2 },
+  { x: -310, y:   60, driftIdx: 3 },
+  { x: -160, y:  -60, driftIdx: 1 },
+  { x:  170, y:  -50, driftIdx: 2 },
+  { x: -100, y:  140, driftIdx: 3 },
+  { x:  200, y:   80, driftIdx: 0 },
 ];
 
-function Radar({ resultados, empresa }: { resultados: string[]; empresa: string }) {
+/**
+ * Pares de conexão (linhas tracejadas no SVG de fundo). Mistura:
+ *   - Algumas conexões centro (0,0) → tag (sugere "emana da marca")
+ *   - Algumas conexões tag → tag (sugere "resultados se reforçam entre si")
+ * Não é exaustivo (só algumas conexões pra ficar teia visual sem virar
+ * spaghetti). Índices se referem ao TAG_POSITIONS acima.
+ */
+const TAG_CONNECTIONS: Array<[number, number] | [null, number]> = [
+  // Centro → algumas tags (não todas — só as "linhas mestras")
+  [null, 0], [null, 2], [null, 5], [null, 7], [null, 9], [null, 10],
+  // Tag → tag (forma triângulos/teia entre vizinhas)
+  [0, 8],  // -280,-160 ↔ -160,-60
+  [1, 9],  // -40,-210 ↔ 170,-50
+  [2, 3],  // 180,-180 ↔ 320,-40
+  [4, 11], // 290,130 ↔ 200,80
+  [5, 10], // 40,215 ↔ -100,140
+  [6, 7],  // -200,210 ↔ -310,60
+  [8, 1],  // -160,-60 ↔ -40,-210
+];
+
+function RedeOrganica({ resultados, empresa }: { resultados: string[]; empresa: string }) {
+  // Limita a 12 (capacidade do TAG_POSITIONS). Empresas raras com mais
+  // resultados (universais + 2 dores + budget = max 7 hoje) sempre cabem.
+  const tags = resultados.slice(0, TAG_POSITIONS.length).map((r, i) => ({
+    short: getResultadoShort(r),
+    long: r,
+    pos: TAG_POSITIONS[i],
+  }));
+
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[760px] px-4 py-6">
-      {/* Background blob orgânico atrás do radar */}
+    <div className="relative mx-auto h-[560px] w-full max-w-[920px] overflow-visible">
+      {/* Background blob orgânico — sem cantos, sem retângulo */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-[-20px] z-0 rounded-full opacity-100"
+        className="pointer-events-none absolute inset-[-20px] z-0"
         style={{
           background:
-            'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(205,80,241,0.08), transparent 70%), radial-gradient(ellipse 40% 30% at 25% 35%, rgba(232,117,255,0.06), transparent 60%), radial-gradient(ellipse 35% 40% at 75% 65%, rgba(205,80,241,0.05), transparent 60%)',
-          filter: 'blur(8px)',
+            'radial-gradient(ellipse 55% 55% at 50% 50%, rgba(205,80,241,0.07), transparent 70%), radial-gradient(ellipse 35% 30% at 22% 30%, rgba(232,117,255,0.05), transparent 60%), radial-gradient(ellipse 30% 35% at 78% 70%, rgba(205,80,241,0.04), transparent 60%)',
+          filter: 'blur(10px)',
         }}
       />
-      {/* Estrelinhas no fundo */}
-      <div
+
+      {/* SVG das conexões em teia (centro↔tag + tag↔tag). viewBox cobre
+          800x520 ao redor do centro pra coincidir com as coords das tags. */}
+      <svg
         aria-hidden
-        className="resultados-radar-stars pointer-events-none absolute inset-0 z-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(1.5px 1.5px at 18% 22%, #CD50F1 50%, transparent),
-            radial-gradient(1.5px 1.5px at 82% 28%, #E875FF 50%, transparent),
-            radial-gradient(1px 1px at 55% 88%, #CD50F1 50%, transparent),
-            radial-gradient(1px 1px at 12% 78%, #E875FF 50%, transparent),
-            radial-gradient(1.5px 1.5px at 88% 62%, #CD50F1 50%, transparent),
-            radial-gradient(1px 1px at 40% 12%, #E875FF 50%, transparent),
-            radial-gradient(1px 1px at 65% 18%, #CD50F1 50%, transparent)
-          `,
-          backgroundSize: '100% 100%',
-          animation: 'resultados-radar-twinkle 4s ease-in-out infinite',
-        }}
-      />
-
-      {/* 3 anéis radar pulsando do centro */}
-      {[
-        { size: 260, delay: '0s' },
-        { size: 400, delay: '1.3s' },
-        { size: 560, delay: '2.6s' },
-      ].map((a, i) => (
-        <span
-          key={i}
-          aria-hidden
-          className="resultados-radar-anel pointer-events-none absolute left-1/2 top-1/2 rounded-full border border-primary/40"
-          style={{
-            width: `${a.size}px`,
-            height: `${a.size}px`,
-            transform: 'translate(-50%, -50%) scale(0.5)',
-            opacity: 0,
-            animation: `resultados-radar-anel 4s ease-out infinite ${a.delay}`,
-          }}
-        />
-      ))}
-
-      {/* Centro: empresa */}
-      <div
-        className="absolute left-1/2 top-1/2 z-[5] flex h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-gradient-to-br from-[#CD50F1] to-[#E875FF] p-3 text-center text-white shadow-[0_8px_28px_rgba(205,80,241,0.30),inset_0_-8px_16px_rgba(94,42,103,0.25),inset_0_4px_12px_rgba(255,255,255,0.20)]"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[1] -translate-x-1/2 -translate-y-1/2"
+        viewBox="-400 -260 800 520"
+        width="100%"
+        style={{ maxWidth: 920 }}
       >
-        <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.15em] opacity-85">
-          Sua marca
-        </div>
-        <div className="font-headline text-[22px] font-black leading-tight tracking-tight">
-          {empresa}
+        {TAG_CONNECTIONS.map(([from, to], i) => {
+          const fromPos = from === null ? { x: 0, y: 0 } : TAG_POSITIONS[from];
+          const toPos = TAG_POSITIONS[to];
+          if (!toPos) return null;
+          return (
+            <line
+              key={i}
+              x1={fromPos.x}
+              y1={fromPos.y}
+              x2={toPos.x}
+              y2={toPos.y}
+              stroke="rgba(205,80,241,0.20)"
+              strokeWidth="1"
+              strokeDasharray="2 6"
+            />
+          );
+        })}
+      </svg>
+
+      {/* Centro: marca com pulse (efeito sonar — vem da Opção C) */}
+      <div className="absolute left-1/2 top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2">
+        <span
+          aria-hidden
+          className="resultados-rede-pulse pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-primary/45"
+        />
+        <span
+          aria-hidden
+          className="resultados-rede-pulse pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-primary/45"
+          style={{ animationDelay: '1.4s' }}
+        />
+        <div
+          className="relative flex h-[140px] w-[140px] flex-col items-center justify-center rounded-full bg-gradient-to-br from-[#CD50F1] to-[#E875FF] p-3 text-center text-white shadow-[0_12px_36px_rgba(205,80,241,0.40),inset_0_-8px_16px_rgba(94,42,103,0.25),inset_0_4px_12px_rgba(255,255,255,0.20),0_0_60px_rgba(205,80,241,0.20)]"
+        >
+          <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.15em] opacity-85">
+            Sua marca
+          </div>
+          <div className="font-headline text-[22px] font-black leading-tight tracking-tight">
+            {empresa}
+          </div>
         </div>
       </div>
 
-      {/* Bolhas — uma pra cada resultado, posicionadas pelos slots */}
-      {resultados.slice(0, RADAR_SLOTS.length).map((r, i) => {
-        const slot = RADAR_SLOTS[i];
-        const rad = (slot.angle * Math.PI) / 180;
-        const x = Math.round(Math.cos(rad) * slot.distance);
-        const y = Math.round(Math.sin(rad) * slot.distance);
-        const driftIdx = i % 4;
-        return (
-          <RadarBolha
-            key={i}
-            x={x}
-            y={y}
-            size={slot.size}
-            driftIdx={driftIdx}
-            resumoCurto={getResultadoShort(r)}
-            textoCompleto={r}
-          />
-        );
-      })}
+      {/* Tags espalhadas */}
+      {tags.map((t, i) => (
+        <RedeTag
+          key={i}
+          x={t.pos.x}
+          y={t.pos.y}
+          driftIdx={t.pos.driftIdx}
+          short={t.short}
+          long={t.long}
+        />
+      ))}
     </div>
   );
 }
 
-function RadarBolha({
+function RedeTag({
   x,
   y,
-  size,
   driftIdx,
-  resumoCurto,
-  textoCompleto,
+  short,
+  long,
 }: {
   x: number;
   y: number;
-  size: 'sm' | 'md' | 'lg';
   driftIdx: number;
-  resumoCurto: string;
-  textoCompleto: string;
+  short: string;
+  long: string;
 }) {
-  const dimensions = size === 'lg' ? 145 : size === 'md' ? 130 : 120;
   return (
     <div
-      className="resultados-radar-bolha group absolute left-1/2 top-1/2 z-[2] flex cursor-default flex-col items-center justify-center rounded-full border-[1.5px] border-primary/20 bg-card p-3 text-center shadow-[0_6px_20px_rgba(93,42,103,0.06),0_12px_32px_rgba(205,80,241,0.08)] transition-[box-shadow,border-color] duration-300 hover:z-[10] hover:border-primary/55 hover:shadow-[0_10px_28px_rgba(93,42,103,0.10),0_20px_48px_rgba(205,80,241,0.30),0_0_0_4px_rgba(205,80,241,0.10)]"
+      className="resultados-rede-tag group absolute left-1/2 top-1/2 z-[3] inline-flex cursor-default items-center gap-2 whitespace-nowrap rounded-full border border-primary/25 bg-card px-4 py-2 font-headline text-[12px] font-bold text-foreground shadow-[0_4px_14px_rgba(93,42,103,0.06)] transition-[box-shadow,border-color,transform] duration-300 hover:z-[10] hover:border-primary/55 hover:shadow-[0_8px_20px_rgba(205,80,241,0.22),0_0_0_3px_rgba(205,80,241,0.10)]"
       style={
         {
-          width: `${dimensions}px`,
-          height: `${dimensions}px`,
+          // CSS vars consumidas pelo keyframe @resultados-rede-drift-*
           '--rb-x': `${x}px`,
           '--rb-y': `${y}px`,
           transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
-          animation: `resultados-radar-drift-${driftIdx} ${12 + driftIdx * 2}s ease-in-out infinite ${driftIdx * 0.4}s`,
+          animation: `resultados-rede-drift-${driftIdx} ${11 + driftIdx * 2}s ease-in-out infinite ${driftIdx * 0.4}s`,
         } as React.CSSProperties
       }
+      title={long}
     >
-      {/* hover pausa a animação (CSS native) */}
-      <style>{`.resultados-radar-bolha:hover { animation-play-state: paused; }`}</style>
-
-      <span className="mb-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/12 to-primary-light/5 text-primary transition-[transform,background,color] duration-300 group-hover:rotate-[-8deg] group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-primary group-hover:to-[#E875FF] group-hover:text-white">
-        <Trophy className="h-3.5 w-3.5" />
-      </span>
-      <span className="font-headline text-[11px] font-extrabold leading-tight tracking-tight text-foreground">
-        {resumoCurto}
-      </span>
-
-      {/* Tooltip com texto completo no hover */}
-      <span
-        className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-20 w-[220px] -translate-x-1/2 translate-y-1.5 rounded-lg bg-[#5E2A67] px-3 py-2 text-[11px] leading-snug text-white opacity-0 shadow-[0_8px_20px_rgba(94,42,103,0.25)] transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100"
-      >
-        {textoCompleto}
-        <span
-          aria-hidden
-          className="absolute -bottom-[5px] left-1/2 h-2.5 w-2.5 -translate-x-1/2 rotate-45 bg-[#5E2A67]"
-        />
-      </span>
+      <span className="block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+      <span>{short}</span>
     </div>
   );
 }
