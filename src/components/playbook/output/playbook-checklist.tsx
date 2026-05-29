@@ -206,11 +206,20 @@ function TimelineProximoMovimento() {
         </div>
 
         {/* Linha cronológica de fundo (gradient cinza → rosa marca a
-            entrada da Boldfy entre Semana 0 e Semana 1). Top alinhado
-            com o centro dos dots (período mb-2 + dot ~7px de raio). */}
+            entrada da Boldfy entre Semana 0 e Semana 1).
+
+            Cálculo do top pra alinhar com o centro vertical dos dots:
+              pt-12         = 48px
+              período "SEMANA 0" text-[10px] line-height-normal ≈ 15px
+              mb-2.5        = 10px
+              raio do dot   =  7px (h-3.5 = 14px / 2)
+              ────────────────────
+              total          = 80px
+
+            Margem de 1px pra compensar o border do dot. */}
         <div
           aria-hidden
-          className="absolute left-[8.33%] right-[8.33%] top-[63px] h-0.5 rounded-full"
+          className="absolute left-[8.33%] right-[8.33%] top-[81px] h-0.5 rounded-full"
           style={{
             background:
               'linear-gradient(to right, rgba(184,164,204,0.6) 0%, rgba(184,164,204,0.6) 9%, rgba(205,80,241,0.5) 18%, rgba(205,80,241,0.75) 100%)',
