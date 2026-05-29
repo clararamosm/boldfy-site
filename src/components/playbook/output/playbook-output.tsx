@@ -17,6 +17,7 @@ import { PlaybookHero } from './playbook-hero';
 import { PlaybookSnapshot } from './playbook-snapshot';
 import { PlaybookTese } from './playbook-tese';
 import { PlaybookDicas } from './playbook-dicas';
+import { PlaybookBannerSemBudget } from './playbook-banner-sem-budget';
 import { PlaybookResultadosEsperados } from './playbook-resultados-esperados';
 import { PlaybookChecklist } from './playbook-checklist';
 import { PlaybookCalculadora } from './playbook-calculadora';
@@ -61,8 +62,8 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
         slug={slug}
       />
 
-      {/* Bloco 3 — Tese (fixa) */}
-      <PlaybookTese motivos={data.tese.motivos} />
+      {/* Bloco 3 — Tese + Bloco 3.5 Setor aplicação (mai/2026 3ª curadoria) */}
+      <PlaybookTese motivos={data.tese.motivos} setorAplicacao={data.setorAplicacao} />
 
       {/* Bloco 4 — Dicas + Boldfy (accordion) */}
       <PlaybookDicas dicas={data.dicas} slug={slug} />
@@ -75,7 +76,9 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
 
-      {/* Bloco 6 — Calculadora interativa (RoiSimulator embed) */}
+      {/* Bloco 6 — Banner Sem Budget (condicional, mai/2026 3ª curadoria) +
+          Calculadora interativa (RoiSimulator embed) */}
+      {data.bannerSemBudget && <PlaybookBannerSemBudget banner={data.bannerSemBudget} />}
       <PlaybookCalculadora calculadora={data.calculadora} outrasAreas={data.outrasAreas} />
 
       {/* Bloco 7 — Battle card (gráfico 2 colunas) */}

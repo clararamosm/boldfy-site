@@ -109,26 +109,112 @@ export type Tip = {
   tagEspecifica?: string;
   /** Nome do ícone Lucide (ex: 'Users', 'Compass'). */
   icon: string;
-  /** Accordion "Como a Boldfy resolve" — abre embaixo da dica. */
+  /**
+   * Dica destaque (mai/2026 3ª curadoria): renderiza em largura total, com
+   * borda roxa marcada e layout especial (2 colunas de opções em vez do
+   * accordion padrão). Usado pra S_CLEVEL — quando o respondente é C-level
+   * e não posta, esse é o "putz, essa é a mais importante pra mim".
+   *
+   * Quando true, o componente DicaCard ignora `boldfy.items` padrão e busca
+   * `opcoes` no lugar (ver abaixo).
+   */
+  destaque?: boolean;
+  /**
+   * Opções pra renderizar dica em modo destaque (2 colunas).
+   * Usado quando `destaque: true`. Mutuamente exclusivo com `boldfy.items`.
+   */
+  opcoes?: Array<{ titulo: string; desc: string }>;
+  /**
+   * Dica imperativa (mai/2026 3ª curadoria): renderiza só com `texto`
+   * principal + menção curta "Boldfy ajuda" no rodapé, sem accordion.
+   * Usado pras dicas de dor reformuladas (D_CAC, D_COMPANYPAGE, D_CONCORRENTE,
+   * D_TALENTO) — foco no conselho prático, Boldfy entra como coadjuvante.
+   */
+  imperativa?: {
+    /** Parágrafo descritivo da dica (substitui accordion completo). */
+    paragrafo: string;
+    /** Menção curta de como a Boldfy ajuda. Aceita markup [[Feature]]. */
+    boldfyAjuda: string;
+  };
+  /**
+   * Accordion "Como a Boldfy resolve" — abre embaixo da dica. Usado pras
+   * dicas universais (modo padrão). Dicas imperativas usam `imperativa` em
+   * vez disso, e destaque usa `opcoes`.
+   *
+   * **Markup de features:** strings em `items` aceitam `[[Nome da Feature]]`
+   * pra marcar funcionalidade da Boldfy. O renderer substitui por uma pill
+   * rosa com ícone ✦ pra a pessoa identificar visualmente o que é feature
+   * vs dica genérica.
+   */
   boldfy: {
     titulo: string;
     items: string[];
     /**
-     * Callout opcional renderizado abaixo dos items, em destaque. Usado pra:
-     * 1. Link pra material externo relacionado (ex: case Semrush na dica de
-     *    variação visual).
-     * 2. Conteúdo dinâmico injetado em runtime (ex: dica da biblioteca ganha
-     *    callout do pacote de design grátis baseado no porte ≥40/60/70).
+     * Callout opcional renderizado abaixo dos items, em destaque.
      *
-     * Quando `href` está presente, renderiza como link clicável com seta.
-     * Quando ausente, renderiza como texto destacado (pill).
+     * - `style: 'default'` (omitido): pill simples, ou link clicável se tem
+     *   `href` (ex: case Semrush na Dica 05).
+     * - `style: 'gift'`: usa AnimatedGiftBox (caixinha animada do site,
+     *   reusada do MiniGift em product-motion.tsx) — usado no callout do
+     *   pacote de design grátis na Dica 04.
      */
     callout?: {
       label: string;
       href?: string;
+      style?: 'default' | 'gift';
     };
   };
   selectors: TipSelectors;
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Bloco 3.5 — Setor aplicação (novo mai/2026 3ª curadoria)                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Conteúdo do bloco que vem logo abaixo dos 3 cards da Tese (Bloco 3),
+ * mostrando como o setor do respondente aplica a estratégia.
+ *
+ * Layout do card horizontal:
+ * - Esquerda: título do setor + bullets de aplicação prática (varia por setor)
+ * - Direita: 3 mini-cards em 3 colunas (porquê/como/ferramenta) — fixos pra
+ *   todos os setores
+ * - Linha embaixo: jaba "E a Boldfy te ajuda nos três"
+ *
+ * Substituiu as antigas dicas A_MARKETING / A_VENDAS / A_RH no TIPS_LIBRARY.
+ */
+export type SetorAplicacao = {
+  /** Label pra badge no canto (ex: "Marketing/Growth"). */
+  setorBadge: string;
+  /** Título da seção (era título da dica A_*). */
+  titulo: string;
+  /** Bullets de aplicação prática (eram bullets de "Como a Boldfy resolve" do A_*). */
+  dicas: string[];
+};
+
+/** Os 3 mini-cards do lado direito do Bloco 3.5 — fixos pra todos os setores. */
+export type SetorResolucaoMotor = {
+  /** Pill ("Porquê", "Como", "Ferramenta"). */
+  tag: string;
+  /** Título do mini-card. */
+  titulo: string;
+  /** Descrição curta. */
+  desc: string;
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Banner Sem Budget (novo mai/2026 3ª curadoria)                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Banner condicional renderizado acima da calculadora (Bloco 6) quando
+ * `budgetStatus === 'sem_budget'`. Substituiu a antiga dica B_SEM_BUDGET no
+ * TIPS_LIBRARY — fica mais útil próximo da calculadora, onde a pessoa decide
+ * o orçamento, do que perdido entre as dicas.
+ */
+export type BannerOferta = {
+  titulo: string;
+  desc: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -228,6 +314,14 @@ export type RenderedData = {
     motivos: TeseMotivo[];        // sempre 3 cards
   };
 
+  /**
+   * Bloco 3.5 — Setor aplicação (mai/2026 3ª curadoria).
+   * Card horizontal abaixo dos 3 cards da tese mostrando como o setor do
+   * respondente aplica os 3 motores. Opcional pra retrocompat com playbooks
+   * gerados antes da curadoria.
+   */
+  setorAplicacao?: SetorAplicacao;
+
   /* Bloco 4 — Dicas (selecionadas via selectTipsForPlaybook) */
   dicas: Tip[];
 
@@ -243,6 +337,13 @@ export type RenderedData = {
   /* Bloco 5 — Checklist (antes + na Boldfy) */
   checklistAntes: ChecklistItem[];   // 5 itens (+1 condicional se tentou_morreu)
   checklistBoldfy: ChecklistItem[];  // sempre os 4 itens fixos reformulados
+
+  /**
+   * Banner condicional acima da calculadora (mai/2026 3ª curadoria).
+   * Aparece só quando o respondente marcou `budgetStatus === 'sem_budget'`.
+   * Disposto perto da calculadora pra disparar leitura nesse perfil.
+   */
+  bannerSemBudget?: BannerOferta | null;
 
   /* Bloco 6 — Calculadora (defaults do RoiSimulator) */
   calculadora: {

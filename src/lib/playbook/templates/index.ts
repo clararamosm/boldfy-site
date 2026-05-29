@@ -5,10 +5,13 @@
  *
  * Estrutura (pós curadoria mai/2026):
  *   - SNAPSHOT_FECHAMENTO: 10 strings, 1 por template-key (Bloco 2)
- *   - TIPS_LIBRARY: 21 dicas com metadados de seleção (Bloco 4)
- *     · 15 da copy-final original + 4 da curadoria mai/2026 (B_PRECISA_JUSTIFICAR,
- *       B_SEM_BUDGET, L_PROPRIO, L_FULL_CONTENT) + 2 da curadoria visual/biblioteca
- *       (U6 variação visual, U7 biblioteca de assets)
+ *   - TIPS_LIBRARY: 18 dicas com metadados de seleção (Bloco 4)
+ *     · 5 universais (U2 marca · U4 ganho real · U5 métricas · U7 biblioteca ·
+ *       U6 variação visual) + 13 condicionais
+ *     · Curadoria mai/2026 (3ª rodada — anti-redundância):
+ *       saíram U1 (foi pro Bloco 5), U3 (virou resultado universal),
+ *       B_PRECISA_JUSTIFICAR (virou resultado universal); U2/U5/U6/U7
+ *       refocadas, U7 vem antes de U6 (acervo antes de variação).
  *   - HERO_LEGENDA_POR_DOR: legenda do soco numérico (Bloco 1, varia por dor 1)
  *   - CTA_TITULO_POR_DOR: título do CTA final (Bloco 8, varia por dor 1)
  *   - CHECKLIST_BOLDFY: 4 itens fixos do "Na Boldfy" (Bloco 5)
@@ -32,7 +35,15 @@
  *   - 4 novos tips condicionais: 2 por budget (P10) + 2 por sponsorship (P11)
  */
 
-import type { ChecklistItem, SobreBoldfyCard, TeseMotivo, Tip } from './types';
+import type {
+  BannerOferta,
+  ChecklistItem,
+  SetorAplicacao,
+  SetorResolucaoMotor,
+  SobreBoldfyCard,
+  TeseMotivo,
+  Tip,
+} from './types';
 
 /* -------------------------------------------------------------------------- */
 /*  Tipos                                                                      */
@@ -196,7 +207,7 @@ export const CHECKLIST_BOLDFY: ChecklistItem[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Bloco 4 — TIPS_LIBRARY (21 dicas com metadados de seleção)                 */
+/*  Bloco 4 — TIPS_LIBRARY (18 dicas com metadados de seleção)                 */
 /* -------------------------------------------------------------------------- */
 /**
  * Pool completo. Seleção runtime via `selectTipsForPlaybook` em render.ts
@@ -212,64 +223,44 @@ export const CHECKLIST_BOLDFY: ChecklistItem[] = [
  */
 export const TIPS_LIBRARY: Tip[] = [
   // ===================== UNIVERSAIS (5) =====================
-  {
-    id: 'U1',
-    numero: 'Dica 01',
-    titulo: 'Comece com 5 a 8 vozes, não com a empresa inteira',
-    icon: 'Users',
-    boldfy: {
-      titulo: 'Primeiro grupo + territórios editoriais',
-      items: [
-        'Admin define os 5-8 primeiros no painel',
-        'Cada um recebe território no Brand Context',
-        'Missões e gamificação rodam só pro grupo',
-        'Escala adiciona sem refazer setup',
-      ],
-    },
-    selectors: { universal: true },
-  },
+  //
+  // Curadoria mai/2026 (3ª rodada — enxugar pra parar de competir com os
+  // resultados esperados). IDs antigos mantidos por retrocompat com playbooks
+  // já gerados (rendered_data tem snapshot completo, mas mantém id rastreável):
+  //   - U1 saiu (info já tá no Bloco 5, item "Workshop + primeiro grupo")
+  //   - U3 saiu (virou resultado universal "menos institucional, mais conexão")
+  //   - B_PRECISA_JUSTIFICAR saiu (virou resultado universal "case de earned
+  //     media pra defender budget")
+  //   - U2, U5, U6 refocadas; U7 vem antes de U6 (acervo > variação)
+  //
+  // Conteúdo do playbook fica com 18 dicas (5 universais + 13 específicas).
   {
     id: 'U2',
-    numero: 'Dica 02',
-    titulo: 'Resolva posicionamento antes de cobrar escrita',
+    numero: 'Dica 01',
+    titulo: 'Alinhe a marca internamente antes de cobrar assertividade do time',
     icon: 'Compass',
     boldfy: {
-      titulo: 'Trilhas de discovery + Brand Context',
+      titulo: 'Brand Context + trilha de marca da empresa',
       items: [
-        'Trilha de marca pessoal no app, no ritmo de cada um',
-        'Brand Context da empresa configurado uma vez',
-        'IA cruza voz pessoal × marca corporativa',
-        'Conteúdo soa pessoal e fica alinhado',
-      ],
-    },
-    selectors: { universal: true },
-  },
-  {
-    id: 'U3',
-    numero: 'Dica 03',
-    titulo: 'Substitua post institucional por bastidor pessoal',
-    icon: 'MessageSquare',
-    boldfy: {
-      titulo: 'IA contextual de voz pessoal',
-      items: [
-        'IA lê histórico e estilo de cada colaborador',
-        'Sugere ângulos a partir do ponto de vista único',
-        'Conteúdo sai pessoal, não institucional disfarçado',
+        '[[Brand Context]] configurado uma vez (pitch, posicionamento, tom)',
+        'Admin cria uma [[trilha personalizada de marca]] pro time aprender o pitch',
+        '[[IA contextual]] cruza voz pessoal com marca corporativa em cada conteúdo',
+        'Conteúdo sai pessoal mas alinhado com o que a empresa defende',
       ],
     },
     selectors: { universal: true },
   },
   {
     id: 'U4',
-    numero: 'Dica 04',
+    numero: 'Dica 02',
     titulo: 'Ofereça ganho real e tire fricção do caminho',
     icon: 'Trophy',
     boldfy: {
       titulo: 'Gamificação + recompensas + IA assistente',
       items: [
-        'Pontos automáticos por ação',
-        'Ranking interno e loja de recompensas',
-        'IA pra ideação, refino e calendário',
+        '[[Gamificação]] com pontos automáticos por ação',
+        '[[Ranking interno]] e [[loja de recompensas]]',
+        '[[IA assistente]] pra ideação, refino e calendário',
         'Suporte invisível embutido, sem máquina interna',
       ],
     },
@@ -277,162 +268,117 @@ export const TIPS_LIBRARY: Tip[] = [
   },
   {
     id: 'U5',
-    numero: 'Dica 05',
-    titulo: 'Meça earned media e qualidade de inbound, não curtida',
+    numero: 'Dica 03',
+    titulo: 'Tenha visão das métricas e da performance da estratégia, não siga cego',
     icon: 'TrendingUp',
     boldfy: {
-      titulo: 'Dashboard de earned media + tracking',
+      titulo: 'Dashboard de adoção + qualidade do programa',
       items: [
-        'Earned media em R$ calculado automaticamente',
-        'Alcance por colaborador rastreado',
-        'Inbound qualificado conectado ao dashboard',
-        'Métrica que defende em board, não like',
+        '[[Métricas de adoção]]: quem postou, com que frequência, ranking interno',
+        '[[Métricas de qualidade]]: como o conteúdo performa no LinkedIn',
+        'Tracking individual por perfil de colaborador',
+        'Admin vê o programa todo dia, não só na reunião mensal',
       ],
-    },
-    selectors: { universal: true },
-  },
-  {
-    id: 'U6',
-    numero: 'Dica 06',
-    titulo: 'Faça cada peça circular com hooks diferentes pra evitar achatamento',
-    icon: 'Palette',
-    boldfy: {
-      titulo: 'Variação visual + IA de hooks',
-      items: [
-        'Mesma peça-base, 3-5 hooks diferentes por colaborador',
-        'IA varia título, ângulo de abertura e legenda da peça',
-        'Brand Context mantém identidade consistente entre variações',
-        'Dashboard mostra qual variação puxou mais alcance',
-      ],
-      callout: {
-        label: 'Veja o case da Semrush — 3 clusters de variação visual na prática',
-        href: '/case-semrush',
-      },
     },
     selectors: { universal: true },
   },
   {
     id: 'U7',
-    numero: 'Dica 07',
-    titulo: 'Centralize as peças na biblioteca pra time pegar e adaptar sozinho',
+    numero: 'Dica 04',
+    titulo: 'Disponibilize acervo suficiente, biblioteca como hub central',
     icon: 'Library',
     boldfy: {
       titulo: 'Biblioteca de assets da empresa',
       items: [
-        'Painel admin com peças aprovadas, organizadas por tema',
+        '[[Painel admin]] com peças aprovadas, organizadas por tema',
         'Colaborador pega direto pela plataforma, sem fila de design',
-        'Brand Context garante consistência mesmo com auto-serviço',
+        '[[Brand Context]] garante consistência mesmo com auto-serviço',
         'Tracking de qual peça circulou mais e quem usou',
       ],
-      // Callout dinâmico injetado em render.ts quando porteColaboradores ≥ 40
-      // (mostra o pacote Starter/Growth/Scale grátis correspondente).
+      // Callout dinâmico (style: 'gift') injetado em render.ts quando
+      // calcColabAtivos(porte) ≥ 40 (Starter/Growth/Scale grátis).
+    },
+    selectors: { universal: true },
+  },
+  {
+    id: 'U6',
+    numero: 'Dica 05',
+    titulo: 'Crie variação visual no acervo para cada colaborador postar com uma cara diferente',
+    icon: 'Palette',
+    boldfy: {
+      titulo: 'Variação visual + IA de hooks',
+      items: [
+        'Mesma peça-base com 3 a 5 tratamentos visuais distintos',
+        '[[IA]] varia título e ângulo de abertura pra cada pessoa',
+        '[[Brand Context]] mantém identidade entre variações',
+        'Evita que a audiência canse de ver a mesma peça no feed',
+      ],
+      callout: {
+        label: 'Veja o case da Semrush, 3 clusters de variação visual na prática',
+        href: '/case-semrush',
+      },
     },
     selectors: { universal: true },
   },
 
-  // ===================== ÁREA-ESPECÍFICAS (3) =====================
-  {
-    id: 'A_MARKETING',
-    numero: '',
-    titulo: 'Trate Employee-Led como canal de mídia, não como engajamento',
-    tagEspecifica: 'Marketing',
-    icon: 'BarChart3',
-    boldfy: {
-      titulo: 'Métricas pré-configuradas pra board',
-      items: [
-        'Earned media em R$ por colaborador',
-        'CPM equivalente automático ao CPM LinkedIn BR',
-        'Alcance e inbound consolidados',
-        'Slide de board sai pronto, sem planilha',
-      ],
-    },
-    selectors: { area: ['marketing'] },
-  },
-  {
-    id: 'A_VENDAS',
-    numero: '',
-    titulo: 'Audite o perfil de cada vendedor antes da próxima fria',
-    tagEspecifica: 'Vendas',
-    icon: 'UserCheck',
-    boldfy: {
-      titulo: 'Trilha de marca pessoal + social selling',
-      items: [
-        'Setup de perfil guiado por trilha LXP',
-        'IA assistente puxa autoridade técnica do vendedor',
-        'Conteúdo amarra com pipeline aberto',
-        'Métrica de inbound conectada ao vendedor certo',
-      ],
-    },
-    selectors: { area: ['vendas'] },
-  },
-  {
-    id: 'A_RH',
-    numero: '',
-    titulo: 'Pare de postar cultura interna pra atrair talento sênior',
-    tagEspecifica: 'RH',
-    icon: 'Heart',
-    boldfy: {
-      titulo: 'Brand Context alinhado com Marketing',
-      items: [
-        'Pilares de conteúdo puxados de Marketing',
-        'Voz pessoal de cada colaborador respeitada',
-        'IA evita post auto-centrado de cultura interna',
-        'Inbound de talento rastreado no dashboard',
-      ],
-    },
-    selectors: { area: ['rh'] },
-  },
+  // ===================== ÁREA-ESPECÍFICAS — REMOVIDAS (mai/2026 3ª curadoria) ===
+  //
+  // As antigas A_MARKETING / A_VENDAS / A_RH migraram pro Bloco 3.5 (SETOR_APLICACAO
+  // mais abaixo neste arquivo). Conteúdo é o mesmo, formato visual diferente —
+  // vira card horizontal abaixo da Tese com layout 2-colunas (esquerda
+  // personalizada por setor, direita com 3 mini-cards fixos dos motores).
+  //
+  // Resolução pelo render: ver `resolveSetorAplicacao(quiz)` em render.ts.
 
-  // ===================== DOR-ESPECÍFICAS (4) =====================
+  // ===================== DOR-ESPECÍFICAS (4) — formato imperativa =============
+  //
+  // Reformuladas mai/2026 (3ª curadoria): em vez de "como a Boldfy resolve" no
+  // accordion padrão, agora viram dicas IMPERATIVAS de verdade. O ângulo da
+  // dica é o conselho prático, e a Boldfy entra como menção curta no rodapé
+  // com `imperativa.boldfyAjuda`. Features marcadas com [[...]].
   {
     id: 'D_CAC',
     numero: '',
     titulo: 'Use CPM equivalente como argumento de orçamento',
     tagEspecifica: 'CAC subindo',
     icon: 'DollarSign',
-    boldfy: {
-      titulo: 'CPM equivalente automático',
-      items: [
-        'Cada post vira linha no dashboard de earned media',
-        'Sem planilha manual, sem reconciliação mensal',
-        'Argumento pronto pra defender budget orgânico',
-        'Em breve fase 2: lista de leads engajados pra remarketing direto',
-      ],
+    imperativa: {
+      paragrafo:
+        'Em vez de defender mídia paga isolada, calcule o que cada post orgânico teria custado em CPM LinkedIn Brasil (R$ 300/mil impressões) e leve esse número pra revisão de budget. É argumento que finance entende.',
+      boldfyAjuda:
+        '[[Dashboard de earned media]] calcula o CPM equivalente automaticamente, sem planilha. Slide de board sai pronto.',
     },
+    boldfy: { titulo: '', items: [] }, // não renderizado, mantido pra type compat
     selectors: { dor: ['cac_subindo'] },
   },
   {
     id: 'D_COMPANYPAGE',
     numero: '',
-    titulo: 'Distribua voz pra 5-10 perfis e libere a page de carregar tudo',
+    titulo: 'Use a page pra cultura, eventos e história do time, não pra conteúdo técnico',
     tagEspecifica: 'Company Page morta',
     icon: 'Globe',
-    boldfy: {
-      titulo: 'Publicação direta no perfil de cada colaborador',
-      items: [
-        'Integração nativa com LinkedIn pessoal',
-        'Calendário compartilhado de quem posta o quê',
-        'Métricas individuais consolidadas no admin',
-        'Brand Context garante consistência da marca',
-      ],
+    imperativa: {
+      paragrafo:
+        'A página corporativa funciona bem pra coisas humanas e relevantes: bastidor, eventos, benefícios, história dos colaboradores, notícias do mercado. Conteúdo técnico e educativo vai pros perfis de quem tem autoridade no assunto, porque o LinkedIn premia voz de pessoa.',
+      boldfyAjuda:
+        'Distribui a voz técnica em perfis de pessoas com autoridade. [[Brand Context]] garante consistência, [[IA assistente]] traduz a mensagem corporativa em ângulo pessoal.',
     },
+    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['company_page_morta'] },
   },
   {
     id: 'D_CONCORRENTE',
     numero: '',
-    titulo: 'Mapeie 3-5 vozes do concorrente pra calibrar pauta e ritmo',
+    titulo: 'Mapeie 3 a 5 vozes do concorrente pra calibrar pauta e ritmo',
     tagEspecifica: 'Concorrente dominando',
     icon: 'Target',
-    boldfy: {
-      titulo: 'Análise de audiência por colaborador',
-      items: [
-        'Mostra com quem cada colaborador engaja',
-        'Onde tá ganhando audiência real',
-        'Sinal pra ajustar pauta e nicho',
-        'Benchmark constante contra quem domina o feed',
-      ],
+    imperativa: {
+      paragrafo:
+        'Faça uma planilha rápida: quem do concorrente posta, sobre o quê, com que frequência. Use isso de baseline pra entender o ritmo do nicho. Ajuste pauta pros temas onde vocês têm voz única e ângulo melhor.',
+      boldfyAjuda:
+        '[[Análise de audiência por colaborador]] mostra onde cada um tá ganhando tração e como o feed se comporta perto do concorrente.',
     },
+    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['concorrente_dominando'] },
   },
   {
@@ -441,48 +387,34 @@ export const TIPS_LIBRARY: Tip[] = [
     titulo: 'Ative colaboradores como referência viva pro próximo candidato',
     tagEspecifica: 'Talento saindo',
     icon: 'Award',
-    boldfy: {
-      titulo: 'Trilha LXP + brand alignment',
-      items: [
-        'Trilhas guiam colaborador a contar bastidor relevante',
-        'Brand Context evita post auto-centrado',
-        'Inbound de candidato qualificado rastreado',
-        'Dashboard mostra quais colaboradores puxam mais talento',
-      ],
+    imperativa: {
+      paragrafo:
+        'Talento sênior pesquisa quem trabalha na empresa antes de mandar CV. Conteúdo de bastidor técnico e jornada profissional dos seus colaboradores é o que cria essa prova social. Não precisa post de cultura, precisa post de gente real fazendo coisa relevante.',
+      boldfyAjuda:
+        '[[Trilhas LXP]] guiam o colaborador a contar bastidor relevante. Dashboard mostra quais colaboradores puxam mais inbound de talento.',
     },
+    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['talento_saindo'] },
   },
 
-  // ===================== TENTATIVAS-ESPECÍFICAS (1) =====================
-  {
-    id: 'T_MORREU',
-    numero: '',
-    titulo: 'Faça autópsia do programa anterior antes de subir o próximo',
-    tagEspecifica: 'Tentou e morreu',
-    icon: 'RotateCcw',
-    boldfy: {
-      titulo: 'Setup guiado pelos 3 motivos',
-      items: [
-        'Workshop inicial com a estrategista da Boldfy',
-        'Mapeia qual motor falhou no programa anterior',
-        'Calibra o novo pra cobrir esse gap específico',
-        'Evita o efeito "já tentamos, não funcionou" no time',
-      ],
-    },
-    selectors: { tentativas: ['morreu'] },
-  },
+  // ===================== TENTATIVAS REMOVIDA — VAI PRO CHECKLIST ==============
+  //
+  // T_MORREU saiu na 3ª curadoria (mai/2026). Agora é item condicional do
+  // checklistAntes no Bloco 5 quando `tentativasAnteriores !== 'nunca'`.
+  // Resolução: ver `prependTentativasItem()` em render.ts +
+  // `CHECKLIST_TENTOU_MORREU_ITEM` mais abaixo neste arquivo.
 
   // ===================== VOZ-ESPECÍFICAS (1) =====================
   {
     id: 'V_FOUNDER_SOLO',
     numero: '',
-    titulo: 'Distribua a voz do founder pra 3-5 pessoas internas',
+    titulo: 'Distribua a voz do founder pra 3 a 5 pessoas internas',
     tagEspecifica: 'Founder solo',
     icon: 'Network',
     boldfy: {
       titulo: 'Territórios editoriais distribuídos',
       items: [
-        'Brand Context define quem fala de quê',
+        '[[Brand Context]] define quem fala de quê (territórios editoriais)',
         'Founder continua sendo voz principal',
         'C-suite, head de produto, head de operação cobrem outros territórios',
         'Programa não fica refém da agenda de uma pessoa',
@@ -491,122 +423,249 @@ export const TIPS_LIBRARY: Tip[] = [
     selectors: { voz: ['founder_solo'] },
   },
 
-  // ===================== SENIORITY-ESPECÍFICAS (1) =====================
+  // ===================== SENIORITY EM DESTAQUE (1) — reformulada mai/2026 =====
+  //
+  // S_CLEVEL agora renderiza em DESTAQUE (largura total, borda roxa marcada,
+  // pill "essa é a mais importante pra você") com 2 opções pro C-level:
+  // entrar na gamificação OU delegar pra Full Content. O seletor mudou pra
+  // exigir voz solo/sem método além do cargo (se já tem programa rodando,
+  // o C-level provavelmente já posta).
+  //
+  // Resolução: ver lógica em render.ts (selectTipsForPlaybook §6).
   {
     id: 'S_CLEVEL',
     numero: '',
-    titulo: 'Assuma o papel de sponsor: 1 post/semana e aprovação em 24h',
+    titulo: 'Você é C-level, tem 2 opções pra entrar no programa sem virar refém da agenda',
     tagEspecifica: 'C-Level',
     icon: 'Crown',
-    boldfy: {
-      titulo: 'Painel admin + missões pro sponsor',
-      items: [
-        'Painel admin específico pra sponsor',
-        'Missões de exemplo pra C-level postar consistentemente',
-        'SLA de aprovação rastreado no dashboard',
-        'Sponsor visível como motor do programa',
-      ],
-    },
-    selectors: { seniority: ['c_level'] },
+    destaque: true,
+    opcoes: [
+      {
+        titulo: 'Entra no game junto com o time',
+        desc:
+          'Você participa da [[gamificação]] dentro da plataforma, com missões semanais e [[IA assistente]] sugerindo ângulos. Vai no seu ritmo, mas vira parte do programa visivelmente.',
+      },
+      {
+        titulo: 'Boldfy faz por você (Full Content)',
+        desc:
+          'Modalidade [[Full Content (CaaS)]]: estrategista entrevista você, equipe Boldfy produz no seu tom, você só aprova em minutos. Sai conteúdo autoral sem custo de tempo seu.',
+      },
+    ],
+    boldfy: { titulo: '', items: [] }, // não renderizado em modo destaque
+    selectors: {}, // resolvido manualmente em render.ts (lógica composta)
   },
 
-  // ===================== BUDGET-ESPECÍFICAS (2 — curadoria mai/2026) =======
-  {
-    id: 'B_PRECISA_JUSTIFICAR',
-    numero: '',
-    titulo: 'Construa o caso com earned media antes de pedir budget',
-    tagEspecifica: 'Precisa justificar',
-    icon: 'FileText',
-    boldfy: {
-      titulo: 'Slide de defesa de budget pré-pronto',
-      items: [
-        'CPM equivalente medido desde o primeiro post',
-        'Comparativo earned vs paid sai automático',
-        'Slide de board exportável, sem planilha manual',
-        'Linguagem pronta pra finance e CFO',
-      ],
-    },
-    selectors: { budget: ['precisa_justificar'] },
-  },
-  {
-    id: 'B_SEM_BUDGET',
-    numero: '',
-    titulo: 'Comece pequeno e gere dado pra desbloquear budget no Q seguinte',
-    tagEspecifica: 'Sem budget',
-    icon: 'PiggyBank',
-    boldfy: {
-      titulo: 'Trial guiado + plano sem fricção',
-      items: [
-        'Setup mínimo com 5-8 colaboradores',
-        'Resultado em 60 dias vira argumento de board',
-        'Sem contrato anual de cara — destrava no Q seguinte',
-        'Estrategista da Boldfy acompanha desde o trial',
-      ],
-    },
-    selectors: { budget: ['sem_budget'] },
-  },
+  // ===================== BUDGET-ESPECÍFICAS (1 — curadoria mai/2026) =======
+  //
+  // B_PRECISA_JUSTIFICAR saiu na 3ª rodada (mai/2026): virava redundante com
+  // Dica 09 (D_CAC: "Use CPM equivalente como argumento"), que já cobre a
+  // mecânica de defesa de budget via earned media. O ângulo único do
+  // "precisa_justificar" (case pronto pra board) foi promovido pra resultado
+  // esperado universal — apresenta como ganho do programa em vez de dica.
+  // B_SEM_BUDGET REMOVIDA — VAI PRO BANNER DA CALCULADORA (mai/2026 3ª curadoria)
+  //
+  // Conteúdo da antiga dica agora vive em 2 lugares:
+  //   1. `BANNER_SEM_BUDGET` (definida mais abaixo) — banner acima da
+  //      calculadora pra disparar leitura nesse perfil.
+  //   2. Resultado condicional em RESULTADOS_ESPERADOS.porBudget.sem_budget.
+  // Resolução: ver `resolveBannerSemBudget(quiz)` em render.ts.
 
-  // ===================== SPONSORSHIP-ESPECÍFICAS (2 — curadoria mai/2026) ==
+  // ===================== SPONSORSHIP-ESPECÍFICAS (2 — reformuladas mai/2026) ==
   {
     id: 'L_PROPRIO',
     numero: '',
     titulo: 'Acelere os líderes que topam postar com método e ferramenta',
     tagEspecifica: 'Líder topa postar',
     icon: 'Sparkles',
-    boldfy: {
-      titulo: 'IA assistente + território editorial por líder',
-      items: [
-        'Cada líder ganha território editorial no Brand Context',
-        'IA sugere ângulos a partir do dia a dia da pessoa',
-        'Refino e calendário sem trocar de app',
-        'Métrica individual mostra quem está puxando o feed',
-      ],
+    imperativa: {
+      paragrafo:
+        'Quem já tem vontade não precisa de convencimento, precisa de facilitador. Onboarding rápido na primeira semana e a galera já tá postando.',
+      boldfyAjuda:
+        'Onboarding na primeira semana. Cada líder ganha [[território editorial]], [[IA assistente]] sugere ângulos a partir do dia a dia, refino e calendário sem trocar de app.',
     },
+    boldfy: { titulo: '', items: [] },
     selectors: { sponsorship: ['sim_proprio'] },
   },
   {
     id: 'L_FULL_CONTENT',
     numero: '',
-    titulo: 'Terceirize a produção, mas mantenha a autoria do líder',
+    titulo: 'Terceirize a produção, mantenha a autoria do líder',
     tagEspecifica: 'Full Content',
     icon: 'Feather',
-    boldfy: {
-      titulo: 'Modalidade Full Content (CaaS) da Boldfy',
-      items: [
-        'Estrategista entrevista o líder pra captar ponto de vista',
-        'Equipe Boldfy produz posts no tom da pessoa',
-        'Líder revisa e aprova em minutos, sem escrever',
-        'Sai opinião autêntica, sem custo de tempo do líder',
-      ],
+    imperativa: {
+      paragrafo:
+        'Líderes que topam postar mas não têm tempo de produzir podem ter conteúdo autoral rodando mesmo assim. Time da Boldfy entrevista e produz; o líder só aprova.',
+      boldfyAjuda:
+        'Modalidade [[Full Content]] mora dentro da mesma plataforma, com tipo de conta diferente. Colaboradores Full Service só aprovam, não entram na gamificação. Admin tem acesso às mesmas métricas que os colaboradores da plataforma SaaS.',
     },
+    boldfy: { titulo: '', items: [] },
     selectors: { sponsorship: ['sim_full_content'] },
   },
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Bloco 4.5 — RESULTADOS_POR_DOR (novo mai/2026)                             */
+/*  Bloco 4.5 — RESULTADOS_ESPERADOS                                           */
 /* -------------------------------------------------------------------------- */
 /**
- * Mapeia cada dor P8 pra 1 frase curta com o resultado esperado.
- * Render escolhe as frases correspondentes às dores selecionadas e renderiza
- * como micro-bloco entre Dicas (Bloco 4) e Checklist (Bloco 5).
+ * Resultados esperados do programa, renderizados como micro-bloco entre
+ * Dicas (Bloco 4) e Checklist (Bloco 5).
  *
- * 'outra' fica de fora (sem mapeamento) — micro-bloco só renderiza se sobrar
- * pelo menos 1 resultado mapeado.
+ * Curadoria mai/2026 (3ª rodada):
+ *   - Estrutura expandida pra ter UNIVERSAIS (sempre aparecem) + POR DOR
+ *     (condicionais ao P8).
+ *   - Universais cobrem ganhos transversais do programa que não dependem da
+ *     dor principal (cultura, conteúdo, defesa de budget, lista de remarketing).
+ *   - 2 universais novas vieram de dicas removidas pra evitar redundância:
+ *     · "menos institucional, mais conteúdo de conexão" (era U3)
+ *     · "case com earned media pra defender budget" (era B_PRECISA_JUSTIFICAR)
+ *   - Por dor mantém o mesmo mapeamento da 1ª curadoria (6 dores válidas).
+ *
+ * Render junta `universais` + os resultados das `doresPrincipais` (até 2).
+ * 'outra' fica sem mapeamento por dor — só aparecem os universais nesse caso.
  */
-export const RESULTADOS_POR_DOR: Partial<Record<DorPrincipalValue, string>> = {
-  cac_subindo:
-    'CAC menor com earned media substituindo parte da mídia paga',
-  company_page_morta:
-    'Voz da empresa cresce no feed sem depender da Company Page',
-  concorrente_dominando:
-    'Vocês passam a aparecer onde antes só o concorrente aparecia',
-  vendedor_invisivel:
-    'Vendedores com perfil cheio aumentam taxa de resposta de outbound',
-  talento_saindo:
-    'Marca empregadora visível atrai talento sênior sem subir custo de hiring',
-  marca_uma_pessoa:
-    'Voz da marca deixa de depender de uma única pessoa',
+type BudgetStatusValue = 'aprovado' | 'planejando' | 'precisa_justificar' | 'sem_budget';
+
+export const RESULTADOS_ESPERADOS: {
+  universais: string[];
+  porDor: Partial<Record<DorPrincipalValue, string>>;
+  porBudget: Partial<Record<BudgetStatusValue, string>>;
+} = {
+  universais: [
+    'Menos conteúdo institucional, mais conteúdo de conexão vivido pelo time',
+    'Aderência à cultura aumenta, colaboradores sentem que fazem parte de algo',
+    'Lista de pessoas com ponto de contato com a marca, pronta pra remarketing direto sem CAC frio',
+    'Case de earned media na mesa pra defender budget na próxima revisão',
+  ],
+  porDor: {
+    cac_subindo:
+      'CAC menor com earned media substituindo parte da mídia paga',
+    company_page_morta:
+      'Voz da empresa cresce no feed sem depender da Company Page',
+    concorrente_dominando:
+      'Vocês passam a aparecer onde antes só o concorrente aparecia',
+    vendedor_invisivel:
+      'Vendedores com perfil cheio aumentam taxa de resposta de outbound',
+    talento_saindo:
+      'Marca empregadora visível atrai talento sênior sem subir custo de hiring',
+    marca_uma_pessoa:
+      'Voz da marca deixa de depender de uma única pessoa',
+  },
+  porBudget: {
+    sem_budget:
+      'Pacote Beta com 1º mês grátis (com 5 colaboradores) e valor beta nos 6 meses seguintes, pra começar sem comprometer Q atual',
+  },
+};
+
+/**
+ * @deprecated 2026-05-30 — substituído por `RESULTADOS_ESPERADOS.porDor`.
+ * Mantido como alias por retrocompat com playbook_outputs antigos (render
+ * antigo lia direto desta const). Pode ser removido depois que o render
+ * for migrado em produção.
+ */
+export const RESULTADOS_POR_DOR = RESULTADOS_ESPERADOS.porDor;
+
+/* -------------------------------------------------------------------------- */
+/*  Bloco 3.5 — SETOR APLICAÇÃO (novo mai/2026 3ª curadoria)                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Mapa setor → conteúdo do lado esquerdo do card horizontal (Bloco 3.5).
+ *
+ * Substituiu as antigas dicas A_MARKETING / A_VENDAS / A_RH do TIPS_LIBRARY.
+ * Resolução pelo render: `resolveSetorAplicacao(quiz)` usa a área (P3) pra
+ * escolher uma das 3 variações abaixo. Áreas que mapeiam pra base "marketing"
+ * (marketing, growth, comunicação) caem em SETOR_APLICACAO.marketing.
+ */
+export const SETOR_APLICACAO: Record<'marketing' | 'vendas' | 'rh', SetorAplicacao> = {
+  marketing: {
+    setorBadge: 'Marketing/Growth',
+    titulo: 'Trate Employee-Led como canal de mídia, não como engajamento',
+    dicas: [
+      'Marketing como dono do programa, ranqueado igual paid/organic/SEO',
+      'CPM equivalente entra no relatório mensal, lado a lado com paid',
+      'Pauta editorial casa com calendário de produto e campanha',
+      'Inbound vindo do programa atribuído ao colaborador certo',
+    ],
+  },
+  vendas: {
+    setorBadge: 'Vendas',
+    titulo: 'Audite o perfil de cada vendedor antes da próxima fria',
+    dicas: [
+      'Setup de perfil guiado: foto, headline, sobre, recomendações',
+      'Conteúdo amarra com pipeline aberto (não é só "frase do dia")',
+      'Autoridade técnica do vendedor vira post antes de virar reunião',
+      'Inbound qualificado conectado ao vendedor que produziu o conteúdo',
+    ],
+  },
+  rh: {
+    setorBadge: 'RH / Employer Branding',
+    titulo: 'Pare de postar cultura interna pra atrair talento sênior',
+    dicas: [
+      'Pilares de conteúdo puxados de Marketing pra alinhar narrativa de marca',
+      'Voz pessoal de cada colaborador respeitada (não vira porta-voz de cultura)',
+      'Evitar post auto-centrado de "olha que legal nosso happy-hour"',
+      'Inbound de talento qualificado rastreado por quem puxou no perfil',
+    ],
+  },
+};
+
+/**
+ * Os 3 mini-cards do lado direito do Bloco 3.5 — FIXOS pra todos os setores.
+ * Layout no componente: 3 colunas (igual a tese do Bloco 3 logo acima).
+ */
+export const SETOR_RESOLUCAO_MOTORES: SetorResolucaoMotor[] = [
+  {
+    tag: 'Porquê',
+    titulo: 'A empresa entrega motivação',
+    desc: 'Sistema de pontos, ranking, reconhecimento interno',
+  },
+  {
+    tag: 'Como',
+    titulo: 'A empresa entrega conhecimento',
+    desc: 'Trilhas de marca e capacitação contínua de voz pessoal',
+  },
+  {
+    tag: 'Ferramenta',
+    titulo: 'A empresa entrega ferramenta',
+    desc: 'Plataforma simples que junta tudo num só lugar',
+  },
+];
+
+/**
+ * Linha de jaba que ocupa a largura dos 3 mini-cards (embaixo deles).
+ * Jaba sutil ligando os 3 motores à Boldfy.
+ */
+export const SETOR_JABA = 'E a Boldfy te ajuda nos três';
+
+/* -------------------------------------------------------------------------- */
+/*  Banner SEM_BUDGET (Bloco 6 — acima da calculadora, mai/2026 3ª curadoria) */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Banner condicional acima da calculadora quando `budgetStatus === 'sem_budget'`.
+ * Conteúdo migrado da antiga dica B_SEM_BUDGET — fica mais útil próximo da
+ * calculadora, onde a pessoa decide budget, do que perdido entre as dicas.
+ */
+export const BANNER_SEM_BUDGET: BannerOferta = {
+  titulo: 'Sem budget hoje? Tem rota: 1º mês grátis pelo programa beta',
+  desc:
+    'Pacote Beta libera o primeiro mês com 5 colaboradores rodando, sem custo. Do 2º mês em diante, valor beta (preço reduzido) nos 6 meses seguintes. Dá tempo de gerar dado pra defender budget no Q seguinte.',
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Checklist item condicional — "Tentou e morreu" (mai/2026 3ª curadoria)    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Item prependado ao `checklistAntes` quando `tentativasAnteriores !== 'nunca'`.
+ * Substituiu a antiga dica T_MORREU — fica mais útil como ação prática no
+ * checklist do que como dica solta entre as outras.
+ */
+export const CHECKLIST_TENTOU_MORREU_ITEM: ChecklistItem = {
+  titulo: 'Faça autópsia do programa anterior antes de subir o próximo',
+  descricao:
+    'Se vocês tentaram e morreu, mapear qual dos 3 motores falhou (motivação, conhecimento, ferramenta) evita repetir o erro. Workshop inicial com a estrategista da Boldfy ajuda nessa autópsia.',
+  prazo: '1 reunião',
 };
 
 /* -------------------------------------------------------------------------- */

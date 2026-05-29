@@ -1,17 +1,25 @@
 'use client';
 
 /**
- * Bloco 4 — Dicas + Boldfy (com accordion).
- * Spec §2.3 do copy-final + curadoria mai/2026.
+ * Bloco 4 — Dicas + Boldfy.
+ * Spec §2.3 do copy-final + curadorias mai/2026.
  *
- * Grid de cards de dicas. Cada card tem ícone Lucide, número renumerado,
- * título descritivo (verb-led — diz o que fazer) e accordion <details>
- * "Como a Boldfy resolve" que abre embaixo com bullets.
+ * Modos de renderização do DicaCard:
+ *   1. **Default (universais)**: card normal com accordion "Como a Boldfy
+ *      resolve" expandindo embaixo dos bullets.
+ *   2. **Imperativa** (dicas de dor reformuladas na 3ª curadoria): card normal
+ *      com parágrafo descritivo + menção curta "Boldfy ajuda" no rodapé.
+ *      Substitui o accordion. Usado em D_CAC, D_COMPANYPAGE, D_CONCORRENTE,
+ *      D_TALENTO, L_PROPRIO, L_FULL_CONTENT.
+ *   3. **Destaque** (S_CLEVEL): card de largura total (col-span-full), borda
+ *      roxa marcada, pill "essa é a mais importante", layout 2-colunas com
+ *      `opcoes` em vez do accordion. Renderiza como primeira dica.
  *
- * Curadoria mai/2026:
- *   - Removido o parágrafo `tip.texto` — título descritivo + bullets bastam.
- *   - Accordion mais convidativo (label "Veja como a Boldfy resolve",
- *     destaque de cor mais forte e CTA visualmente mais clicável).
+ * Features (palavras-chave da plataforma Boldfy) nos bullets aparecem em
+ * `[[...]]` no JSON e são renderizadas como pills rosa com ✦ pelo parser.
+ *
+ * Callouts no `boldfy.callout` ganharam `style: 'gift'` na 3ª curadoria pra
+ * o pacote de design grátis — renderiza com AnimatedGiftBox em vez de pill.
  */
 
 import {
@@ -43,6 +51,7 @@ import {
 } from 'lucide-react';
 import type { Tip } from '@/lib/playbook/templates/types';
 import { trackEvent } from '@/lib/track';
+import { AnimatedGiftBox } from '@/components/ui/animated-gift-box';
 import { SectionTag } from './playbook-snapshot';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -102,7 +111,52 @@ export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Feature pill — renderiza [[X]] como pill rosa com ✦                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Split de string com markup `[[Feature]]` em partes texto + features.
+ * Cada feature vira <span> rosa com ícone Sparkles, sinalizando que é uma
+ * funcionalidade real da plataforma Boldfy (não dica genérica).
+ */
+function renderWithFeatures(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  const regex = /\[\[([^\]]+)\]\]/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <span
+        key={`f-${key++}`}
+        className="inline-flex items-baseline gap-1 font-semibold text-primary"
+      >
+        <Sparkles className="h-2.5 w-2.5 self-center" />
+        <span>{match[1]}</span>
+      </span>,
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length > 0 ? parts : text;
+}
+
 function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
+  // Modo destaque: card de largura total com layout 2-colunas de opções
+  if (tip.destaque) {
+    return <DicaCardDestaque tip={tip} />;
+  }
+  // Modo imperativa: parágrafo + boldfy ajuda como rodapé curto
+  if (tip.imperativa) {
+    return <DicaCardImperativa tip={tip} />;
+  }
+  // Modo default: accordion "Como a Boldfy resolve"
   const Icon = ICON_MAP[tip.icon] ?? Compass;
   return (
     <div
@@ -154,7 +208,7 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
             {tip.boldfy.items.map((item, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
+                <span>{renderWithFeatures(item)}</span>
               </li>
             ))}
           </ul>
@@ -162,12 +216,92 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
             <DicaCallout
               label={tip.boldfy.callout.label}
               href={tip.boldfy.callout.href}
+              style={tip.boldfy.callout.style}
               tipId={tip.id}
               slug={slug}
             />
           )}
         </div>
       </details>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  DicaCardImperativa — pra dicas de dor reformuladas (3ª curadoria)          */
+/* -------------------------------------------------------------------------- */
+
+function DicaCardImperativa({ tip }: { tip: Tip }) {
+  const Icon = ICON_MAP[tip.icon] ?? Compass;
+  if (!tip.imperativa) return null;
+  return (
+    <div className="relative flex flex-col rounded-2xl border border-border border-l-4 border-l-primary bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition hover:-translate-y-0.5">
+      <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">{tip.numero}</span>
+        {tip.tagEspecifica && (
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-secondary-foreground">
+            {tip.tagEspecifica}
+          </span>
+        )}
+      </div>
+      <h3 className="mb-3 font-headline text-base font-black leading-snug tracking-tight text-foreground">
+        {tip.titulo}
+      </h3>
+      <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
+        {tip.imperativa.paragrafo}
+      </p>
+      <div className="mt-auto rounded-lg bg-primary/[0.06] p-3 text-[12px] leading-relaxed text-muted-foreground">
+        <span className="mr-1 font-bold text-primary">
+          <Sparkles className="mr-0.5 inline h-3 w-3" />
+          Boldfy ajuda:
+        </span>
+        {renderWithFeatures(tip.imperativa.boldfyAjuda)}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  DicaCardDestaque — pra S_CLEVEL (3ª curadoria)                             */
+/* -------------------------------------------------------------------------- */
+
+function DicaCardDestaque({ tip }: { tip: Tip }) {
+  const Icon = ICON_MAP[tip.icon] ?? Compass;
+  if (!tip.opcoes) return null;
+  return (
+    <div className="relative col-span-full rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/[0.04] to-card p-6 shadow-[0_12px_40px_rgba(205,80,241,.15)] sm:p-7">
+      <div className="absolute -top-2.5 left-6 inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-white">
+        <Sparkles className="h-2.5 w-2.5" />
+        Essa dica é a mais importante pra você
+      </div>
+      <div className="mt-2 mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        {tip.tagEspecifica && (
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-secondary-foreground">
+            {tip.tagEspecifica}
+          </span>
+        )}
+      </div>
+      <h3 className="mb-3 font-headline text-xl font-black leading-tight tracking-tight text-foreground sm:text-2xl">
+        {tip.titulo}
+      </h3>
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
+        {tip.opcoes.map((opcao, i) => (
+          <div key={i} className="rounded-xl border border-border bg-card p-4">
+            <div className="mb-2 font-headline text-[15px] font-black leading-tight text-foreground">
+              {opcao.titulo}
+            </div>
+            <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+              {renderWithFeatures(opcao.desc)}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -182,14 +316,29 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
 function DicaCallout({
   label,
   href,
+  style,
   tipId,
   slug,
 }: {
   label: string;
   href?: string;
+  style?: 'default' | 'gift';
   tipId: string;
   slug: string;
 }) {
+  // Style 'gift' usa o AnimatedGiftBox (caixinha animada da home) — usado
+  // pro pacote de design grátis na Dica 04.
+  if (style === 'gift') {
+    return (
+      <div className="mt-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-gradient-to-r from-[#CD50F1]/10 to-[#E875FF]/10 p-3">
+        <div className="flex-shrink-0">
+          <AnimatedGiftBox size="sm" animateOnMount />
+        </div>
+        <div className="text-[12px] leading-relaxed text-foreground">{label}</div>
+      </div>
+    );
+  }
+
   const className =
     'mt-3 inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-gradient-to-r from-[#CD50F1]/10 to-[#E875FF]/10 px-3 py-2 text-[11.5px] font-semibold leading-snug text-primary';
 

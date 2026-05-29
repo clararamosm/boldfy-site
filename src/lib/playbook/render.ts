@@ -20,10 +20,13 @@
  */
 
 import {
+  BANNER_SEM_BUDGET,
   CHECKLIST_BOLDFY,
+  CHECKLIST_TENTOU_MORREU_ITEM,
   CTA_TITULO_POR_DOR,
   HERO_LEGENDA_POR_DOR,
-  RESULTADOS_POR_DOR,
+  RESULTADOS_ESPERADOS,
+  SETOR_APLICACAO,
   SNAPSHOT_FECHAMENTO,
   SOBRE_BOLDFY_SAAS,
   SOBRE_BOLDFY_CAAS,
@@ -33,10 +36,12 @@ import {
   type TemplateKey,
 } from './templates';
 import type {
+  BannerOferta,
   BattleCard,
   ChecklistItem,
   CurvaAtivacao,
   RenderedData,
+  SetorAplicacao,
   Tip,
 } from './templates/types';
 
@@ -186,18 +191,26 @@ const AREA_TO_TIP_ID: Record<TemplateBase, string> = {
 };
 
 /**
- * Seleciona dicas pra um playbook com base no quiz. Ordem:
- *   1. 7 universais (sempre, U1-U7) — incluindo U6 (variação visual,
- *      mai/2026) e U7 (biblioteca de assets, mai/2026 — ganha callout
- *      dinâmico do pacote Modo Design grátis quando porte ≥ 40)
- *   2. Tentativas (T_MORREU se tentativas !== 'nunca')
- *   3. Área (A_MARKETING / A_VENDAS / A_RH conforme base)
- *   4. Dor-específicas (até 2, baseado em doresPrincipais)
- *   5. Voz (V_FOUNDER_SOLO se voz=founder_solo)
- *   6. Seniority (S_CLEVEL se cargoSenioridade=c_level)
+ * Seleciona dicas pra um playbook com base no quiz. Ordem (após 3ª curadoria
+ * mai/2026):
+ *   1. S_CLEVEL EM DESTAQUE (primeiro card, largura total) quando aplicável
+ *   2. 5 universais (sempre, U2/U4/U5/U7/U6)
+ *   3. Dor-específicas reformuladas (até 2, dicas imperativas)
+ *   4. Voz (V_FOUNDER_SOLO se voz=founder_solo)
+ *   5. Sponsorship (L_PROPRIO ou L_FULL_CONTENT)
  *
- * Cap teórico: 7 + 1 + 1 + 2 + 1 + 1 = 13. Em geral fica 8-11 dicas.
- * Numero ("Dica 01", "Dica 02", ...) é renumerado conforme ordem final.
+ * SAÍRAM nessa curadoria:
+ *   - A_MARKETING/A_VENDAS/A_RH → Bloco 3.5 (SETOR_APLICACAO via `resolveSetorAplicacao`)
+ *   - T_MORREU → item condicional no checklistAntes (via `prependTentativasItem`)
+ *   - B_SEM_BUDGET → banner acima da calculadora (via `resolveBannerSemBudget`)
+ *   - B_PRECISA_JUSTIFICAR → resultado universal "case earned media"
+ *
+ * S_CLEVEL nova regra: aparece quando `cargoSenioridade === c_level` E
+ * `vozAtual ∈ { founder_solo, alguns_executivos }` — se já tem programa
+ * rodando ou time esparso, o C-level provavelmente já tá engajado.
+ *
+ * Cap teórico: 1 (CLevel) + 5 (universais) + 2 (dor) + 1 (voz) + 1 (sponsorship)
+ * = 10 dicas. Em geral fica 6-9 dicas.
  */
 export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   const selected: Tip[] = [];
@@ -208,44 +221,34 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   };
   const findById = (id: string) => TIPS_LIBRARY.find((t) => t.id === id);
 
-  // 1. Universais (sempre, na ordem U1-U7)
+  // 1. S_CLEVEL em destaque (primeira posição) — quando o respondente é
+  //    C-level e a voz da empresa indica que ele provavelmente não posta.
+  const isCLevelSemVoz =
+    quiz.cargoSenioridade === 'c_level' &&
+    (quiz.vozAtual === 'founder_solo' || quiz.vozAtual === 'alguns_executivos');
+  if (isCLevelSemVoz) {
+    pushUnique(findById('S_CLEVEL'));
+  }
+
+  // 2. Universais (5 — U2/U4/U5/U7/U6 na ordem do TIPS_LIBRARY)
   for (const tip of TIPS_LIBRARY) {
-    if (tip.selectors.universal) selected.push(tip);
+    if (tip.selectors.universal) pushUnique(tip);
   }
 
-  // 2. Tentativas (qualquer coisa diferente de 'nunca' → T_MORREU)
-  if (quiz.tentativasAnteriores !== 'nunca') {
-    pushUnique(findById('T_MORREU'));
-  }
-
-  // 3. Área-específica (uma das 3)
-  const base = areaToBase(quiz.cargoArea);
-  pushUnique(findById(AREA_TO_TIP_ID[base]));
-
-  // 4. Dor-específicas (até 2 — depende do que vier em doresPrincipais)
+  // 3. Dor-específicas reformuladas (até 2 baseado em doresPrincipais).
+  //    Agora rodam em modo imperativa (paragrafo + boldfyAjuda) em vez do
+  //    accordion padrão. Áreas saíram (vão pro Bloco 3.5).
   for (const dor of quiz.doresPrincipais) {
     const tipId = DOR_TO_TIP_ID[dor];
     if (tipId) pushUnique(findById(tipId));
   }
 
-  // 5. Voz específica (founder_solo)
+  // 4. Voz específica (founder_solo)
   if (quiz.vozAtual === 'founder_solo') {
     pushUnique(findById('V_FOUNDER_SOLO'));
   }
 
-  // 6. Seniority específica (c_level)
-  if (quiz.cargoSenioridade === 'c_level') {
-    pushUnique(findById('S_CLEVEL'));
-  }
-
-  // 7. Budget específica (P10 — adicionado na curadoria mai/2026)
-  if (quiz.budgetStatus === 'precisa_justificar') {
-    pushUnique(findById('B_PRECISA_JUSTIFICAR'));
-  } else if (quiz.budgetStatus === 'sem_budget') {
-    pushUnique(findById('B_SEM_BUDGET'));
-  }
-
-  // 8. Sponsorship/Full Content específica (P11 reformulada mai/2026)
+  // 5. Sponsorship/Full Content específica (P11 reformulada mai/2026)
   if (quiz.sponsorshipLideranca === 'sim_proprio') {
     pushUnique(findById('L_PROPRIO'));
   } else if (quiz.sponsorshipLideranca === 'sim_full_content') {
@@ -266,32 +269,40 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Modo Design grátis — thresholds por porte                                  */
+/*  Modo Design grátis — thresholds por colaboradores ATIVOS estimados         */
 /* -------------------------------------------------------------------------- */
 /**
- * Tabela de pacotes inclusos no Modo Design baseado em porte. Tem que bater
- * com `DESIGN_FREE_THRESHOLDS` e `DESIGN_PACKS` em proposal-builder.tsx —
- * single source of truth do bundle gratuito.
+ * Tabela de pacotes inclusos no Modo Design. Avaliada contra o número de
+ * **colaboradores ativos estimados** (via `calcColabAtivos`), não o porte
+ * total — mesma base que a pessoa vai usar no proposal-builder pra não dar
+ * info conflitante (lá ela mesma coloca a estimativa de ativos).
  *
- * - 40+ colaboradores → Starter (4 peças/mês)
- * - 60+ colaboradores → Growth (7 peças/mês)
- * - 70+ colaboradores → Scale (10 peças/mês)
+ * - 40+ ativos estimados → Starter (4 peças/mês)
+ * - 60+ ativos estimados → Growth (7 peças/mês)
+ * - 70+ ativos estimados → Scale (10 peças/mês)
  *
- * Empresas abaixo de 40 não ganham bundle — a dica da biblioteca renderiza
- * sem callout (sem mencionar Modo Design pra evitar criar expectativa).
+ * Empresas abaixo de 40 ativos estimados não ganham bundle — a dica da
+ * biblioteca renderiza sem callout (sem criar expectativa).
+ *
+ * Exemplos:
+ *   porte 200 (curva 22%) → 44 ativos → Starter
+ *   porte 273 (curva 22%) → 60 ativos → Growth
+ *   porte 318 (curva 22%) → 70 ativos → Scale
+ *   porte 100 (curva 30%) → 30 ativos → nenhum
  */
 type DesignBundle = { pack: string; pieces: number; thresholdSeats: number };
 
-function bundleFromPorte(porte: number): DesignBundle | null {
-  if (porte >= 70) return { pack: 'Scale', pieces: 10, thresholdSeats: 70 };
-  if (porte >= 60) return { pack: 'Growth', pieces: 7, thresholdSeats: 60 };
-  if (porte >= 40) return { pack: 'Starter', pieces: 4, thresholdSeats: 40 };
+function bundleFromAtivos(ativosEstimados: number): DesignBundle | null {
+  if (ativosEstimados >= 70) return { pack: 'Scale', pieces: 10, thresholdSeats: 70 };
+  if (ativosEstimados >= 60) return { pack: 'Growth', pieces: 7, thresholdSeats: 60 };
+  if (ativosEstimados >= 40) return { pack: 'Starter', pieces: 4, thresholdSeats: 40 };
   return null;
 }
 
 function injectBibliotecaCallout(tips: Tip[], porte: number): void {
-  const bundle = bundleFromPorte(porte);
-  if (!bundle) return; // porte <40: nenhum pacote grátis aplicável
+  const ativos = calcColabAtivos(porte);
+  const bundle = bundleFromAtivos(ativos);
+  if (!bundle) return; // ativos < 40: nenhum pacote grátis aplicável
 
   const tip = tips.find((t) => t.id === 'U7');
   if (!tip) return;
@@ -304,7 +315,11 @@ function injectBibliotecaCallout(tips: Tip[], porte: number): void {
     boldfy: {
       ...tip.boldfy,
       callout: {
-        label: `Empresas com ${bundle.thresholdSeats}+ colaboradores na plataforma ganham o pacote ${bundle.pack} de design incluso — ${bundle.pieces} peças por mês prontas pra circular pela biblioteca`,
+        // Style 'gift' faz o componente DicaCard renderizar com o
+        // AnimatedGiftBox (caixinha animada extraída do MiniGift em
+        // product-motion.tsx) em vez do pill default.
+        label: `Sua empresa com mais de ${bundle.thresholdSeats} colaboradores ativos já ganharia o pacote ${bundle.pack} de design, com ${bundle.pieces} peças por mês prontas pra circular pela biblioteca`,
+        style: 'gift',
       },
     },
   };
@@ -505,15 +520,13 @@ export function renderPlaybookData(
   // Variações por área × seniority × tentativas podem entrar em sessão futura,
   // mas a base atual funciona pros 10 templates (a primeira linha "Alinhar com
   // Vendas/RH" se adapta pelo nome da área via interpolação).
-  // Item-zero condicional aparece QUANDO tentou_morreu.
+  //
+  // Item-zero condicional (tentou_morreu) usa CHECKLIST_TENTOU_MORREU_ITEM
+  // do templates/index.ts — conteúdo migrado da antiga dica T_MORREU na 3ª
+  // curadoria mai/2026.
   const checklistAntes: ChecklistItem[] = [];
   if (quiz.tentativasAnteriores !== 'nunca') {
-    checklistAntes.push({
-      titulo: 'Antes de tudo, mapear o que matou o programa anterior',
-      descricao:
-        'Sem entender qual dos 3 motivos (porquê, como, ferramenta) faltou, esse plano também morre. Conversa de 30min com quem participou.',
-      prazo: '30min',
-    });
+    checklistAntes.push(CHECKLIST_TENTOU_MORREU_ITEM);
   }
   // Os 5 itens-base. O primeiro varia o "parceiro interno" por área do respondente.
   const base = areaToBase(quiz.cargoArea);
@@ -581,12 +594,35 @@ export function renderPlaybookData(
   // === CTA ===
   const ctaTitulo = interp(CTA_TITULO_POR_DOR[dor1] ?? CTA_TITULO_POR_DOR.outra, { empresa });
 
-  // === Resultados esperados (derivados das dores P8 — mai/2026) ===
-  // Cada dor mapeia pra 1 string curta com o resultado esperado.
-  // Aparece como micro-bloco entre Bloco 4 (Dicas) e Bloco 5 (Checklist).
-  const resultadosEsperados = quiz.doresPrincipais
-    .map((d) => RESULTADOS_POR_DOR[d])
+  // === Resultados esperados (Bloco 4.5) ===
+  // Estrutura desde mai/2026 (3ª curadoria):
+  //   1. UNIVERSAIS — sempre aparecem (ganhos transversais do programa)
+  //   2. POR DOR — 1 string por dor selecionada em P8 (até 2)
+  //   3. POR BUDGET — 1 string condicional (sem_budget = oferta pacote beta)
+  // Render dedupa caso uma string apareça nos dois lados (não acontece hoje,
+  // mas defesa em profundidade).
+  const resultadosUniversais = RESULTADOS_ESPERADOS.universais;
+  const resultadosPorDor = quiz.doresPrincipais
+    .map((d) => RESULTADOS_ESPERADOS.porDor[d])
     .filter((r): r is string => Boolean(r));
+  const resultadoPorBudget = RESULTADOS_ESPERADOS.porBudget[quiz.budgetStatus];
+  const resultadosEsperados = Array.from(
+    new Set([
+      ...resultadosUniversais,
+      ...resultadosPorDor,
+      ...(resultadoPorBudget ? [resultadoPorBudget] : []),
+    ]),
+  );
+
+  // === Bloco 3.5: Setor aplicação (mai/2026 3ª curadoria) ===
+  // Substitui as antigas dicas A_MARKETING/A_VENDAS/A_RH com layout
+  // horizontal abaixo da tese (3 cards de motores fixos + dicas condicionais
+  // por setor).
+  const setorAplicacao = resolveSetorAplicacao(quiz);
+
+  // === Bloco 6 banner: Sem budget (mai/2026 3ª curadoria) ===
+  // Substitui a antiga dica B_SEM_BUDGET com banner acima da calculadora.
+  const bannerSemBudget = resolveBannerSemBudget(quiz);
 
   // === Sobre a Boldfy (modalidades SaaS e CaaS — mai/2026) ===
   // SaaS sempre visível. CaaS aparece SE sponsorship = sim_full_content
@@ -605,14 +641,39 @@ export function renderPlaybookData(
     snapshot,
     curvaAtivacao,
     tese,
+    setorAplicacao,
     dicas,
     resultadosEsperados,
     checklistAntes,
     checklistBoldfy: CHECKLIST_BOLDFY,
+    bannerSemBudget,
     calculadora,
     battleCard,
     sobreBoldfy,
     ctaTitulo,
     outrasAreas: outras,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Resolvers Bloco 3.5 + Banner (mai/2026 3ª curadoria)                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Resolve o conteúdo do Bloco 3.5 baseado na área P3 do respondente.
+ * `marketing/growth/comunicação` → variante marketing;
+ * `vendas` → variante vendas; `rh/employer_branding` → variante rh.
+ * `outro` cai pro fallback marketing (igual `areaToBase`).
+ */
+function resolveSetorAplicacao(quiz: PlaybookQuizData): SetorAplicacao {
+  const base = areaToBase(quiz.cargoArea);
+  return SETOR_APLICACAO[base];
+}
+
+/**
+ * Retorna o banner SEM_BUDGET quando o respondente marcou `sem_budget`,
+ * ou null caso contrário. Componente do output esconde o bloco quando null.
+ */
+function resolveBannerSemBudget(quiz: PlaybookQuizData): BannerOferta | null {
+  return quiz.budgetStatus === 'sem_budget' ? BANNER_SEM_BUDGET : null;
 }
