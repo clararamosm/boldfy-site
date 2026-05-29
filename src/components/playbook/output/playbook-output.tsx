@@ -86,10 +86,12 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
 
-      {/* Bloco 6 — Banner Programa Beta (universal, narrativa por budgetStatus) +
-          Calculadora interativa (RoiSimulator embed) */}
-      {data.bannerSemBudget && <PlaybookBannerSemBudget banner={data.bannerSemBudget} />}
+      {/* Bloco 6 — Calculadora interativa (RoiSimulator embed) + Banner Beta.
+          Banner foi pra DEPOIS da calculadora (jun/2026 polish 6, Clara) —
+          antes vivia em cima e deixava espaço vazio entre o checklist e o
+          simulador. Agora fica blocado entre a simulação e o battle card. */}
       <PlaybookCalculadora calculadora={data.calculadora} />
+      {data.bannerSemBudget && <PlaybookBannerSemBudget banner={data.bannerSemBudget} />}
 
       {/* Bloco 7 — Battle card (gráfico 2 colunas) */}
       <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
