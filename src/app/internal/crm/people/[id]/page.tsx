@@ -55,6 +55,8 @@ import { FormsSubmittedChipList } from '@/components/crm/forms-submitted-chip-li
 import { EngagementSection } from '@/components/crm/engagement-section';
 import { getGa4TimelineEntriesForPerson } from '@/lib/ga4-person';
 import { isGa4Configured } from '@/lib/ga4';
+import { db, playbookOutputs } from '@/db';
+import { desc, eq } from 'drizzle-orm';
 
 export const metadata: Metadata = {
   title: 'Lead',
@@ -71,7 +73,7 @@ export default async function LeadDetailPage({ params }: Props) {
   const person = await getPersonById(id);
   if (!person) notFound();
 
-  const [realActivities, meetings, ga4Entries] = await Promise.all([
+  const [realActivities, meetings, ga4Entries, playbooks] = await Promise.all([
     getActivitiesForPerson(id, 200),
     getUpcomingMeetingsForPerson(id),
     // Activities virtuais do GA4 (sessões + eventos) — mergidas com as
@@ -81,6 +83,28 @@ export default async function LeadDetailPage({ params }: Props) {
     isGa4Configured()
       ? getGa4TimelineEntriesForPerson(id, 180).catch(() => [])
       : Promise.resolve([]),
+    // Playbooks gerados pela pessoa (jun/2026 — substitui o JSON cru de
+    // metadata.form_data.playbook_employee_led_growth no Contexto da sidebar).
+    // Lista mais recentes primeiro; sidebar mostra link clicável pra
+    // página /playbook/[slug] em vez do dump completo do quiz.
+    db
+      .select({
+        slug: playbookOutputs.slug,
+        templateKey: playbookOutputs.templateKey,
+        createdAt: playbookOutputs.createdAt,
+        viewCount: playbookOutputs.viewCount,
+        lastViewedAt: playbookOutputs.lastViewedAt,
+      })
+      .from(playbookOutputs)
+      .where(eq(playbookOutputs.personId, id))
+      .orderBy(desc(playbookOutputs.createdAt))
+      .catch(() => [] as Array<{
+        slug: string;
+        templateKey: string;
+        createdAt: Date;
+        viewCount: number;
+        lastViewedAt: Date | null;
+      }>),
   ]);
 
   /**
@@ -397,6 +421,11 @@ export default async function LeadDetailPage({ params }: Props) {
                       // Chaves legadas do import AC — info já redundante na sidebar
                       'utm_source_first', 'utm_medium_first', 'utm_campaign_first',
                       'sourceChannel', 'campaign_name',
+                      // Engagement (ga4_client_id + consent_status) — já tem
+                      // seção dedicada de Engajamento mais abaixo no perfil.
+                      // Esconder do chip evita JSON cru poluindo o card do
+                      // form (jun/2026 ajuste da Clara).
+                      'engagement',
                     ]);
                     function humanize(k: string): string {
                       return FIELD_LABELS[k]
@@ -719,7 +748,13 @@ export default async function LeadDetailPage({ params }: Props) {
             // Campos opcionais ordenados (segment vem primeiro). Pula values vazios.
             const orderedKeys = ['intencao_uso', 'tipo_de_lead', 'cargo', 'objetivo_principal', 'como_conheceu', 'observacoes', 'setor', 'empresa'];
             const knownKeys = new Set([...orderedKeys, ...Object.keys(FIELD_LABELS)]);
-            const extraKeys = Object.keys(formData).filter((k) => !knownKeys.has(k));
+            // Chaves que NÃO devem aparecer como dump genérico aqui — têm
+            // renderização própria fora do loop (jun/2026):
+            //   - playbook_employee_led_growth: vira card com link pro slug
+            //     gerado, listado mais abaixo na sidebar.
+            const CONTEXTO_SKIP_KEYS = new Set(['playbook_employee_led_growth']);
+            const extraKeys = Object.keys(formData)
+              .filter((k) => !knownKeys.has(k) && !CONTEXTO_SKIP_KEYS.has(k));
             const allKeys = [...orderedKeys, ...extraKeys];
 
             return (
@@ -792,6 +827,56 @@ export default async function LeadDetailPage({ params }: Props) {
               </div>
             );
           })()}
+
+          {/* Playbooks gerados pela pessoa (jun/2026) — substitui o dump
+              JSON cru que aparecia no Contexto. Cada item é um link clicável
+              pra página do playbook gerado + view count. Card é escondido
+              quando a pessoa nunca preencheu o quiz. */}
+          {playbooks.length > 0 && (
+            <div className="crm-side-card">
+              <div className="crm-side-title">📖 Playbooks gerados</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
+                {playbooks.map((p) => (
+                  <a
+                    key={p.slug}
+                    href={`/playbook/${p.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'block',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      background: 'linear-gradient(135deg, rgba(205,80,241,0.06), rgba(232,117,255,0.02))',
+                      border: '1px solid rgba(205,80,241,0.25)',
+                      color: '#45336B',
+                      textDecoration: 'none',
+                      transition: 'border-color 0.15s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ fontWeight: 700, color: '#CD50F1', fontSize: 12 }}>
+                        /playbook/{p.slug}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#9D85B3' }}>↗</span>
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 10.5, color: '#9D85B3', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <span>{p.templateKey}</span>
+                      <span>·</span>
+                      <span>{formatDateBR(p.createdAt)}</span>
+                      {p.viewCount > 0 ? (
+                        <>
+                          <span>·</span>
+                          <span style={{ color: '#7A5C8C', fontWeight: 600 }}>
+                            {p.viewCount} view{p.viewCount === 1 ? '' : 's'}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* AC custom fields (resto, raw) */}
           {(() => {

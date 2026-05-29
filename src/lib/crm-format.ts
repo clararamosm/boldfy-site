@@ -133,13 +133,21 @@ export function describeActivity(
     case 'form_submit_beta':
     case 'form_submit_algoritmo_linkedin':
     case 'form_submit_case_semrush':
-    case 'form_submit_proposta': {
+    case 'form_submit_proposta':
+    case 'form_submit_playbook_employee_led_growth': {
       const labelMap: Record<string, { icon: string; label: string }> = {
         form_submit_demo: { icon: '🎯', label: 'Demo' },
         form_submit_beta: { icon: '🧪', label: 'Beta' },
         form_submit_algoritmo_linkedin: { icon: '📥', label: 'Report Algoritmo LinkedIn 2026' },
         form_submit_case_semrush: { icon: '📑', label: 'Case Semrush ELG' },
         form_submit_proposta: { icon: '💼', label: 'Simulador de Proposta' },
+        // jun/2026: playbook ELG faltava no map, caia no default e
+        // mostrava o slug bruto ('form_submit_playbook_employee_led_growth')
+        // na timeline. Agora vira 'Solicitou Playbook de Employee-Led Growth'.
+        form_submit_playbook_employee_led_growth: {
+          icon: '📖',
+          label: 'Playbook de Employee-Led Growth',
+        },
       };
       const m = labelMap[type];
       // Contexto opcional vindo do data: utm_source, sourceChannel, campaign
