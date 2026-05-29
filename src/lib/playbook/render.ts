@@ -19,6 +19,7 @@
  * Atualizar templates depois NÃO muda páginas antigas (snapshot fixo).
  */
 
+import { getBetaPricePerSeat } from '@/lib/constants';
 import {
   BANNER_BETA_POR_BUDGET,
   CHECKLIST_BOLDFY,
@@ -88,6 +89,13 @@ export type PlaybookQuizData = {
     | 'talvez'
     | 'nao';
   observacoesLivres?: string;
+  /**
+   * P11.5 — gasto mensal em ads (jun/2026, opcional).
+   * Faixa selecionada no quiz; midpoint é calculado em `midpointGastoAds`.
+   * undefined quando o respondente pulou (gráfico cai em modo conceitual).
+   */
+  gastoMensalAds?:
+    | 'zero' | 'ate_10k' | '11_a_50k' | '51_a_100k' | '101_a_300k' | 'acima_300k';
   /**
    * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
    * Só populado quando o respondente passou pela tela intermediária
@@ -396,6 +404,37 @@ export function calcColabAtivos(porte: number): number {
  */
 export const MINIMO_ATIVOS_PROGRAMA = 5;
 
+/* -------------------------------------------------------------------------- */
+/*  Gráfico Ads vs ELG (Bloco 2 — jun/2026)                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Midpoint em R$/mês das faixas da P11.5. Usado pelo componente do gráfico.
+ * Valores conservadores, pesados pro centro da faixa.
+ */
+const GASTO_ADS_MIDPOINT: Record<NonNullable<PlaybookQuizData['gastoMensalAds']>, number> = {
+  zero: 0,
+  ate_10k: 5000,
+  '11_a_50k': 30_000,
+  '51_a_100k': 75_000,
+  '101_a_300k': 200_000,
+  acima_300k: 400_000,
+};
+
+/**
+ * Label legível da faixa pra exibir no card do gráfico. Casa com wizard-config.
+ * Mantemos a tabela aqui (não no componente) pra retrocompat de playbooks
+ * antigos no banco — quando a string mudar no quiz, snapshot continua válido.
+ */
+const GASTO_ADS_LABEL: Record<NonNullable<PlaybookQuizData['gastoMensalAds']>, string> = {
+  zero: 'Não investe em ads',
+  ate_10k: 'Até R$ 10k / mês',
+  '11_a_50k': 'R$ 11k a R$ 50k / mês',
+  '51_a_100k': 'R$ 51k a R$ 100k / mês',
+  '101_a_300k': 'R$ 101k a R$ 300k / mês',
+  acima_300k: 'Mais de R$ 300k / mês',
+};
+
 function faixaLabelDePorte(porte: number): string {
   if (porte <= 20) return 'até 20 colaboradores';
   if (porte <= 100) return '21 a 100 colaboradores';
@@ -675,6 +714,11 @@ export function renderPlaybookData(
     ]),
   );
 
+  // === Bloco 2 — Gráfico Ads vs ELG (jun/2026) ===
+  // Dados pro componente AdsVsElgChart. Reusa preços do RoiSimulator (paridade
+  // com a calculadora embaixo) + earned media do calcEarnedMediaMensal.
+  const adsVsElgChart = resolveAdsVsElgChart(quiz, colabAtivos);
+
   // === Bloco 3.5: Setor aplicação (mai/2026 3ª curadoria) ===
   // Substitui as antigas dicas A_MARKETING/A_VENDAS/A_RH com layout
   // horizontal abaixo da tese (3 cards de motores fixos + dicas condicionais
@@ -704,6 +748,7 @@ export function renderPlaybookData(
     heroLegenda,
     snapshot,
     curvaAtivacao,
+    adsVsElgChart,
     tese,
     setorAplicacao,
     dicas,
@@ -748,6 +793,41 @@ function opcaoDestacadaParaCLevel(
   // sim_proprio (já topam postar, só precisam de método).
   if (sponsorship === 'sim_alguns_postam' || sponsorship === 'sim_com_ajuda') return 0;
   return undefined;
+}
+
+/**
+ * Resolve os dados pro gráfico Ads vs ELG do Bloco 2 (jun/2026).
+ *
+ * Retorna sempre o objeto — o componente decide entre modo personalizado e
+ * conceitual pela presença de `gastoMensalAdsMidpoint`. Custo Boldfy usa
+ * `getBetaPricePerSeat` (mesma tabela do RoiSimulator embaixo, garante
+ * paridade visual entre os 2 blocos).
+ */
+function resolveAdsVsElgChart(
+  quiz: PlaybookQuizData,
+  colabAtivos: number,
+): RenderedData['adsVsElgChart'] {
+  const earnedMediaMensal = calcEarnedMediaMensal(quiz.porteColaboradores);
+  const custoBoldfyMensal = colabAtivos * getBetaPricePerSeat(colabAtivos);
+
+  if (!quiz.gastoMensalAds) {
+    // Pulou a pergunta — modo conceitual.
+    return {
+      gastoMensalAdsMidpoint: null,
+      faixaLabel: null,
+      custoBoldfyMensal,
+      earnedMediaMensal,
+      colabAtivos,
+    };
+  }
+
+  return {
+    gastoMensalAdsMidpoint: GASTO_ADS_MIDPOINT[quiz.gastoMensalAds],
+    faixaLabel: GASTO_ADS_LABEL[quiz.gastoMensalAds],
+    custoBoldfyMensal,
+    earnedMediaMensal,
+    colabAtivos,
+  };
 }
 
 /**

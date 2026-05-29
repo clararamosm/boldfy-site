@@ -58,6 +58,7 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       <PlaybookSnapshot
         snapshot={data.snapshot}
         curvaAtivacao={data.curvaAtivacao}
+        adsVsElgChart={data.adsVsElgChart}
         empresa={data.hero.headlineEmpresa}
         slug={slug}
       />

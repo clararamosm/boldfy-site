@@ -12,16 +12,24 @@ import { Building2, ChevronDown, Factory, Info, RotateCcw, Wifi } from 'lucide-r
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { MINIMO_ATIVOS_PROGRAMA, ativacaoTypicaPercent } from '@/lib/playbook/render';
 import { trackEvent } from '@/lib/track';
+import { AdsVsElgChart } from '@/components/sections/ads-vs-elg-chart';
 
 
 export function PlaybookSnapshot({
   snapshot,
   curvaAtivacao,
+  adsVsElgChart,
   empresa,
   slug,
 }: {
   snapshot: RenderedData['snapshot'];
   curvaAtivacao: RenderedData['curvaAtivacao'];
+  /**
+   * Dados do gráfico Ads vs ELG (jun/2026). Opcional: playbooks gerados antes
+   * desse bloco existir não têm o campo no snapshot, nesse caso o gráfico
+   * fica oculto.
+   */
+  adsVsElgChart?: RenderedData['adsVsElgChart'];
   empresa: string;
   slug: string;
 }) {
@@ -73,6 +81,19 @@ export function PlaybookSnapshot({
             <CurvaTabela porte={snapshot.porte} faixaLabel={curvaAtivacao.faixaLabel} />
           </div>
         </details>
+
+        {/* Gráfico Ads vs ELG (jun/2026) — fecha o bloco de Diagnóstico
+            mostrando como o budget de mídia se comporta nos 2 cenários.
+            Só renderiza pra playbooks que têm o campo (geração nova). */}
+        {adsVsElgChart && (
+          <AdsVsElgChart
+            gastoMensalAdsMidpoint={adsVsElgChart.gastoMensalAdsMidpoint}
+            faixaLabel={adsVsElgChart.faixaLabel}
+            custoBoldfyMensal={adsVsElgChart.custoBoldfyMensal}
+            earnedMediaMensal={adsVsElgChart.earnedMediaMensal}
+            colabAtivos={adsVsElgChart.colabAtivos}
+          />
+        )}
       </div>
     </section>
   );

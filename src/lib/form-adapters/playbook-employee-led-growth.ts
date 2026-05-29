@@ -99,6 +99,19 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     sponsorship_lideranca: labelSponsorship(input.sponsorshipLideranca),
     tentativas_anteriores: labelTentativas(input.tentativasAnteriores),
     newsletter_opt_in: newsletterOptIn ? 'SIM' : 'NAO',
+    // Compromisso 5 ativos (jun/2026): só vem populado quando a pessoa
+    // passou pela tela intermediária (porte 5-20). Se respondeu NÃO o lead
+    // nem chega aqui (cai em not-eligible), então o valor relevante é 'SIM'
+    // ou ausência. Omitindo quando undefined pra não poluir leads grandes.
+    ...(input.porteCompromisso5Ativos === true
+      ? { porte_compromisso_5_ativos: 'SIM' }
+      : {}),
+    // Gasto em ads (jun/2026): só vem populado quando a pessoa respondeu
+    // (pulou = ausência). Vai como label legível pra ficar fácil de filtrar
+    // no AC ("R$ 11k a R$ 50k / mês" em vez de "11_a_50k").
+    ...(input.gastoMensalAds
+      ? { gasto_mensal_ads: labelGastoMensalAds(input.gastoMensalAds) }
+      : {}),
     // State of ELG — campos de auditoria pra segmentação no AC.
     state_elg_consent: stateElgConsent ? 'SIM' : 'NAO',
     state_elg_report_subscribe: stateElgReportSubscribe ? 'SIM' : 'NAO',
@@ -119,6 +132,11 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     telefone: input.telefone ?? null,
     // Respostas do quiz
     porte_colaboradores: input.porteColaboradores,
+    // Só inclui quando a pergunta foi feita (porte 5-20). Undefined
+    // significa que a empresa tem >20 e o piso de 5 ativos é trivial.
+    ...(input.porteCompromisso5Ativos !== undefined
+      ? { porte_compromisso_5_ativos: input.porteCompromisso5Ativos }
+      : {}),
     cargo_senioridade: input.cargoSenioridade,
     cargo_area: input.cargoArea,
     setor: input.setor,
@@ -127,6 +145,8 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     ...(input.colaboradoresPostando ? { colaboradores_postando: input.colaboradoresPostando } : {}),
     voz_atual: input.vozAtual,
     tentativas_anteriores: input.tentativasAnteriores,
+    // Gasto em ads (jun/2026, opcional). Crú pra timeline; legível foi pro AC.
+    gasto_mensal_ads: input.gastoMensalAds ?? null,
     dores_principais: input.doresPrincipais,
     ...(input.resultadosPrioritarios ? { resultados_prioritarios: input.resultadosPrioritarios } : {}),
     budget_status: input.budgetStatus,
@@ -284,4 +304,20 @@ function labelSponsorship(s: PlaybookInput['sponsorshipLideranca']): string {
     talvez: 'Talvez, depende da proposta',
     nao: 'Não topariam',
   } as const)[s];
+}
+
+/**
+ * Label legível das faixas de gasto em ads pra exibição no AC (jun/2026).
+ * Casa com as opções em wizard-config.ts (P11.5). Argumento NonNullable
+ * pra o caller só chamar quando o respondente preencheu.
+ */
+function labelGastoMensalAds(g: NonNullable<PlaybookInput['gastoMensalAds']>): string {
+  return ({
+    zero: 'Não investe em ads',
+    ate_10k: 'Até R$ 10k / mês',
+    '11_a_50k': 'R$ 11k a R$ 50k / mês',
+    '51_a_100k': 'R$ 51k a R$ 100k / mês',
+    '101_a_300k': 'R$ 101k a R$ 300k / mês',
+    acima_300k: 'Mais de R$ 300k / mês',
+  } as const)[g];
 }

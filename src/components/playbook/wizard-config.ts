@@ -35,6 +35,24 @@ export type DorValue =
 export type BudgetValue = 'aprovado' | 'planejando' | 'precisa_justificar' | 'sem_budget';
 
 /**
+ * P11.5 — gasto mensal em ads (jun/2026).
+ *
+ * Pergunta opcional adicionada pra alimentar o gráfico "Ads vs ELG" no Bloco 2
+ * do output. Faixas conservadoras pro perfil B2B brasileiro (foco em empresas
+ * que já investem em mídia paga). Pessoa pode pular — quando pula, o gráfico
+ * cai no modo conceitual.
+ *
+ * Midpoint usado pelo render pra cálculo do gráfico (lib/playbook/render.ts).
+ */
+export type GastoMensalAdsValue =
+  | 'zero'
+  | 'ate_10k'
+  | '11_a_50k'
+  | '51_a_100k'
+  | '101_a_300k'
+  | 'acima_300k';
+
+/**
  * P11 reformulada (mai/2026 — curadoria pós-teste):
  *   - `sim_proprio` — líder topa postar do próprio perfil. Dispara dica universal
  *     "Lideranças puxando o time multiplicam adesão" + reforço de SaaS.
@@ -189,6 +207,25 @@ export const QUESTIONS = {
     ] satisfies Array<ChoiceOption<SponsorshipValue>>,
   },
 
+  // P11.5 — gasto em ads (jun/2026, opcional)
+  // Aparece após sponsorshipLideranca, antes de observacoesLivres. Pode ser
+  // pulada via botão "Pular" no footer (mesmo padrão de observacoesLivres).
+  // Faixas largas pra reduzir fricção; midpoint é calculado no render.
+  gastoMensalAds: {
+    n: 9, // opcional, não conta como obrigatória — fica no mesmo nº da P9
+    faiSay: 'Bônus opcional — vai me ajudar a desenhar um gráfico exclusivo pra vocês.',
+    title: 'Quanto vocês investem em ads por mês hoje?',
+    sub: 'Vou comparar com o cenário de Employee-Led Growth no seu playbook. Se preferir não dizer, pula pro próximo.',
+    options: [
+      { v: 'zero', label: 'Não investimos em ads' },
+      { v: 'ate_10k', label: 'Até R$ 10k / mês' },
+      { v: '11_a_50k', label: 'R$ 11k a R$ 50k / mês' },
+      { v: '51_a_100k', label: 'R$ 51k a R$ 100k / mês' },
+      { v: '101_a_300k', label: 'R$ 101k a R$ 300k / mês' },
+      { v: 'acima_300k', label: 'Mais de R$ 300k / mês' },
+    ] satisfies Array<ChoiceOption<GastoMensalAdsValue>>,
+  },
+
   // Aberta opcional
   observacoesLivres: {
     n: 9, // pergunta opcional, não conta como obrigatória
@@ -219,6 +256,7 @@ export const STEP_ORDER = [
   'doresPrincipais',
   'budgetStatus',
   'sponsorshipLideranca',
+  'gastoMensalAds',
   'observacoesLivres',
   'identificacao',
 ] as const;

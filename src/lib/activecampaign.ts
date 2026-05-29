@@ -156,6 +156,34 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
   budget_status: { title: 'Budget Status', type: 'text' },
   sponsorship_lideranca: { title: 'Sponsorship Lideranca', type: 'text' },
   tentativas_anteriores: { title: 'Tentativas Anteriores', type: 'text' },
+  /**
+   * Gasto mensal em ads — faixa selecionada na P11.5 (jun/2026, opcional).
+   *
+   * Vai como label legível ("R$ 11k a R$ 50k / mês") em vez do enum cru pra
+   * facilitar filtro/segmentação no AC. Não vem populado quando o respondente
+   * pulou a pergunta (vendas distingue "preencheu zero" de "não respondeu"
+   * pelo valor — "Não investe em ads" vs ausência).
+   *
+   * Perstag derivado do título: "Gasto Mensal Ads" → GASTO_MENSAL_ADS.
+   * Custom field é criado automaticamente no AC na primeira sincronização
+   * (via getOrCreateFieldId).
+   */
+  gasto_mensal_ads: { title: 'Gasto Mensal Ads', type: 'text' },
+  /**
+   * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+   * Só vem populado quando o respondente passou pela tela intermediária
+   * `porte-compromisso` (porte 5–20). Valores possíveis no AC:
+   *   - "SIM" — confirmou e seguiu o quiz
+   *   - "" / undefined — porte > 20 (pergunta não foi feita)
+   *   - "NAO" nunca chega aqui — quem responde NÃO cai em not-eligible
+   *     antes do submit, então o lead nem é gerado.
+   *
+   * Perstag derivado do título: "Porte Compromisso 5 Ativos"
+   * → PORTE_COMPROMISSO_5_ATIVOS.
+   *
+   * Custom field correspondente precisa ser criado no AC (admin → Fields).
+   */
+  porte_compromisso_5_ativos: { title: 'Porte Compromisso 5 Ativos', type: 'text' },
 };
 
 // Cache em memória (survive hot module reloads dentro da mesma lambda execution)

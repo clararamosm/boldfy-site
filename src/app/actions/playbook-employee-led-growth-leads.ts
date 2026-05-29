@@ -159,6 +159,8 @@ export async function submitPlaybookEmployeeLedGrowthLead(
       doresPrincipais: input.doresPrincipais,
       budgetStatus: input.budgetStatus,
       sponsorshipLideranca: input.sponsorshipLideranca,
+      // Gasto em ads (jun/2026, opcional): alimenta o gráfico Ads vs ELG.
+      gastoMensalAds: input.gastoMensalAds,
       observacoesLivres: input.observacoesLivres,
     };
 

@@ -301,6 +301,15 @@ const BudgetStatusSchema = z.enum([
   'aprovado', 'planejando', 'precisa_justificar', 'sem_budget',
 ]);
 /**
+ * P11.5 — gasto mensal em ads (jun/2026, opcional).
+ *
+ * Faixas que alimentam o gráfico "Ads vs ELG" no Bloco 2 do output. Midpoint
+ * é calculado em lib/playbook/render.ts. Pergunta pode ser pulada → undefined.
+ */
+const GastoMensalAdsSchema = z.enum([
+  'zero', 'ate_10k', '11_a_50k', '51_a_100k', '101_a_300k', 'acima_300k',
+]);
+/**
  * Sponsorship reformulado (mai/2026 — curadoria pós-teste).
  * Detecta oportunidade de Full Content (CaaS) sem desviar do foco SaaS.
  * Mantém suporte aos valores antigos pra retrocompat (playbooks no banco).
@@ -358,6 +367,22 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     // em profundidade; gate real é UI). Aceita 1..100000.
     porteColaboradores: z.number().int().min(1).max(100_000),
 
+    /**
+     * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+     *
+     * Pergunta intermediária entre P1 (porte) e P2 (cargo) que só aparece pra
+     * empresas com porte entre 5 e 20 inclusive. Respostas "não" caem em
+     * `not-eligible` e nunca chegam aqui — server só vê `true`/`undefined`.
+     *
+     * Opcional pra retrocompat com playbooks antigos no banco e pra os casos
+     * em que a pergunta nem foi feita (porte > 20).
+     *
+     * No CRM vai como custom field PORTE_COMPROMISSO_5_ATIVOS pra time de
+     * vendas filtrar leads pequenos que toparam o compromisso vs leads
+     * grandes que passaram direto.
+     */
+    porteCompromisso5Ativos: z.boolean().optional(),
+
     // P2 + P3
     cargoSenioridade: JobSenioritySchema,
     cargoArea: JobAreaSchema,
@@ -383,6 +408,15 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     resultadosPrioritarios: z.array(ResultadoPrioritarioSchema).min(1).max(2).optional(),
     budgetStatus: BudgetStatusSchema,
     sponsorshipLideranca: SponsorshipSchema,
+
+    /**
+     * P11.5 — gasto mensal em ads (jun/2026, opcional).
+     *
+     * Alimenta o gráfico "Ads vs ELG" no Bloco 2 do output. Quando undefined,
+     * o gráfico cai no modo conceitual (sem números personalizados). Vai pro
+     * AC como custom field `Gasto Mensal Ads` (label legível pra vendas).
+     */
+    gastoMensalAds: GastoMensalAdsSchema.optional(),
 
     // Aberta opcional
     observacoesLivres: optionalText(500),

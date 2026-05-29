@@ -53,6 +53,14 @@ type Answers = {
    * Full Content. Valores: `sim_proprio | sim_full_content | nao_foco`.
    */
   sponsorshipLideranca?: string;
+  /**
+   * P11.5 — gasto mensal em ads (jun/2026, opcional).
+   *
+   * Alimenta o gráfico "Ads vs ELG" no Bloco 2 do output. Faixas em vez de
+   * número exato pra reduzir fricção. Quando undefined, o componente do
+   * gráfico cai no modo conceitual (sem números personalizados).
+   */
+  gastoMensalAds?: string;
   observacoesLivres?: string;
   nome?: string;
   email?: string;
@@ -367,6 +375,8 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         doresPrincipais: (a.doresPrincipais ?? []) as never,
         budgetStatus: a.budgetStatus as never,
         sponsorshipLideranca: a.sponsorshipLideranca as never,
+        // Gasto em ads (jun/2026) — undefined quando a pessoa pulou.
+        gastoMensalAds: (a.gastoMensalAds as never) || undefined,
         observacoesLivres: a.observacoesLivres || undefined,
         website: honeypotValue, // honeypot — vazio em humanos, preenchido em bots
         origem: '/ferramentas/playbook-employee-led-growth',
@@ -569,6 +579,32 @@ function QuestionView({
 }) {
   if (stepKey === 'identificacao') {
     return <IdentificationView answers={answers} onAnswer={onAnswer} />;
+  }
+  // P11.5 — gasto mensal em ads (opcional, alimenta gráfico do Bloco 2).
+  // Pretitle "Bônus opcional" + footer mostra botão "Pular" (lógica em
+  // isOptional do WizardFooter).
+  if (stepKey === 'gastoMensalAds') {
+    const cfg = QUESTIONS.gastoMensalAds;
+    const currentValue = answers.gastoMensalAds;
+    return (
+      <FaiQuestion
+        pretitle="Bônus opcional"
+        faiSay={cfg.faiSay}
+        title={cfg.title}
+        sub={cfg.sub}
+      >
+        <div className="grid gap-2">
+          {cfg.options.map((opt) => (
+            <OptionCard
+              key={opt.v}
+              option={opt}
+              selected={currentValue === opt.v}
+              onClick={() => onAnswer('gastoMensalAds', opt.v)}
+            />
+          ))}
+        </div>
+      </FaiQuestion>
+    );
   }
   if (stepKey === 'observacoesLivres') {
     return (
@@ -1093,7 +1129,7 @@ function WizardFooter({
 }) {
   const nextDisabled = isNextDisabled(stepKey, answers);
   const isLast = stepKey === 'identificacao';
-  const isOptional = stepKey === 'observacoesLivres';
+  const isOptional = stepKey === 'observacoesLivres' || stepKey === 'gastoMensalAds';
 
   return (
     <footer className="shrink-0 border-t border-border bg-card px-5 py-3 sm:px-7">
@@ -1144,6 +1180,7 @@ function isNextDisabled(stepKey: StepKey, answers: Answers): boolean {
   if (stepKey === 'doresPrincipais') return !answers.doresPrincipais?.length;
   if (stepKey === 'budgetStatus') return !answers.budgetStatus;
   if (stepKey === 'sponsorshipLideranca') return !answers.sponsorshipLideranca;
+  if (stepKey === 'gastoMensalAds') return false; // opcional — botão Pular sempre disponível
   if (stepKey === 'observacoesLivres') return false; // sempre pode pular
   if (stepKey === 'identificacao') {
     return !answers.nome || !answers.email || !answers.empresa || !answers.lgpdConsent;

@@ -332,6 +332,22 @@ export type RenderedData = {
   /** Snapshot da curva de ativação aplicada (Bloco 2 — accordion). */
   curvaAtivacao: CurvaAtivacao;
 
+  /**
+   * Dados do gráfico "Ads vs ELG" (Bloco 2, abaixo do accordion da curva).
+   * Introduzido em jun/2026. Opcional pra retrocompat com playbooks gerados
+   * antes desse bloco existir (componente esconde quando ausente).
+   *
+   * `gastoMensalAdsMidpoint = null` significa que o respondente pulou a P11.5
+   * — gráfico renderiza em modo conceitual (sem números personalizados).
+   */
+  adsVsElgChart?: {
+    gastoMensalAdsMidpoint: number | null;
+    faixaLabel: string | null;
+    custoBoldfyMensal: number;
+    earnedMediaMensal: number;
+    colabAtivos: number;
+  };
+
   /* Bloco 3 — Tese (fixa) */
   tese: {
     motivos: TeseMotivo[];        // sempre 3 cards
