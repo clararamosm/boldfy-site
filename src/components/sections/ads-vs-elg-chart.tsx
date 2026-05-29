@@ -137,46 +137,46 @@ export function AdsVsElgChart({
     <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-7">
       <Header faixaLabel={faixaLabel} conceitual={conceitual} semAds={semAds} />
 
-      <div className="grid gap-7 lg:grid-cols-[1.5fr_1fr] lg:gap-10">
-        {/* Coluna esquerda — gráfico */}
-        <div>
-          <Legend />
-          <ChartWrapper conceitual={conceitual}>
-            <ChartSvg adsData={adsData} elgData={elgData} />
-          </ChartWrapper>
-        </div>
-
-        {/* Coluna direita — 3 mini-cards */}
-        <div className="flex flex-col justify-center gap-3">
-          <MiniCard
-            label="Você investe em ads"
-            valor={semAds ? 'R$ 0' : conceitual ? '—' : formatBRL(gastoAdsParaGrafico)}
-            nota={
-              semAds
-                ? 'Marcou que não investe em ads — gráfico fica conceitual.'
-                : conceitual
-                ? 'Pulou a pergunta. Pra ver o seu, refaz o quiz e responde a faixa.'
-                : `por mês (faixa ${faixaLabel ?? ''})`
-            }
-          />
-          <MiniCard
-            label="Boldfy custaria"
-            valor={formatBRL(custoBoldfyMensal)}
-            nota={
-              conceitual || semAds || gastoAdsParaGrafico === 0
-                ? `por mês para ${colabAtivos} ativos.`
-                : (
-                    <>
-                      por mês ={' '}
-                      <strong className="text-foreground">
-                        {Math.round((custoBoldfyMensal / gastoAdsParaGrafico) * 100)}% do que você já
-                        investe em ads
-                      </strong>
-                    </>
-                  )
-            }
-            highlight
-          />
+      {/* Layout simétrico jun/2026: cards à esquerda, gráfico à direita
+          (mais largo). items-stretch garante que a coluna de cards ocupe
+          a mesma altura do gráfico — primeira linha (2 cards) alinha com
+          o topo, segundo bloco (earned media) cresce e alinha com o
+          bottom. Legenda do gráfico foi pra dentro do wrapper, top-right
+          absolute, liberando espaço vertical. */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.55fr] lg:items-stretch lg:gap-7">
+        {/* Coluna esquerda — cards (2 em linha + 1 cheio embaixo) */}
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <MiniCard
+              label="Você investe em ads"
+              valor={semAds ? 'R$ 0' : conceitual ? '—' : formatBRL(gastoAdsParaGrafico)}
+              nota={
+                semAds
+                  ? 'Marcou que não investe em ads — gráfico fica conceitual.'
+                  : conceitual
+                  ? 'Pulou a pergunta. Refaz o quiz pra ver o seu.'
+                  : `por mês (faixa ${faixaLabel ?? ''})`
+              }
+            />
+            <MiniCard
+              label="Boldfy custaria"
+              valor={formatBRL(custoBoldfyMensal)}
+              nota={
+                conceitual || semAds || gastoAdsParaGrafico === 0
+                  ? `por mês para ${colabAtivos} ativos.`
+                  : (
+                      <>
+                        por mês ={' '}
+                        <strong className="text-foreground">
+                          {Math.round((custoBoldfyMensal / gastoAdsParaGrafico) * 100)}% do que você
+                          já investe em ads
+                        </strong>
+                      </>
+                    )
+              }
+              highlight
+            />
+          </div>
           <MiniCard
             label="Earned media via ELG"
             valor={formatBRL(earnedMediaMensal)}
@@ -186,8 +186,15 @@ export function AdsVsElgChart({
                 Acumula sem custo de mídia.
               </>
             }
+            stretch
           />
         </div>
+
+        {/* Coluna direita — gráfico (maior). Legenda dentro, top-right. */}
+        <ChartWrapper conceitual={conceitual}>
+          <Legend />
+          <ChartSvg adsData={adsData} elgData={elgData} />
+        </ChartWrapper>
       </div>
 
       <Disclaimer
@@ -241,21 +248,33 @@ function Header({
   );
 }
 
+/**
+ * Legenda no canto superior direito do wrapper do gráfico (jun/2026).
+ * Era um bloco em cima do gráfico ocupando espaço vertical; agora absolute
+ * no topo-direita pra liberar área do SVG e permitir simetria com os cards
+ * na coluna esquerda. Background semi-transparente pra não atropelar a curva.
+ */
 function Legend() {
   return (
-    <div className="mb-3 flex flex-wrap gap-4 text-[12px] font-semibold text-muted-foreground">
+    <div className="absolute right-4 top-4 z-10 flex items-center gap-3 rounded-lg bg-card/85 px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground backdrop-blur-sm">
       <span className="inline-flex items-center gap-1.5">
-        <span className="block h-[3px] w-[14px] rounded-sm bg-[#B8A4CC]" />
+        <span className="block h-[3px] w-[12px] rounded-sm bg-[#B8A4CC]" />
         Só ads
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="block h-[3px] w-[14px] rounded-sm bg-primary" />
+        <span className="block h-[3px] w-[12px] rounded-sm bg-primary" />
         ELG com Boldfy
       </span>
     </div>
   );
 }
 
+/**
+ * Wrapper do gráfico — flex container que estica vertical (`h-full`) pra
+ * ocupar a mesma altura da coluna de cards à esquerda quando o grid é
+ * `lg:items-stretch`. Mais padding lateral pro SVG ter espaço pros labels
+ * "ELG com Boldfy" e "Só ads" no fim das linhas.
+ */
 function ChartWrapper({
   conceitual,
   children,
@@ -264,7 +283,7 @@ function ChartWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative rounded-xl border border-border bg-secondary/40 p-4">
+    <div className="relative flex h-full min-h-[300px] flex-col rounded-xl border border-border bg-secondary/40 p-4 sm:p-5">
       {children}
       {conceitual && (
         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#FBF7FD]/93 to-[#F5EDF8]/96 px-6 text-center">
@@ -362,7 +381,11 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
   const labelX = finalAdsX + 10;
 
   return (
-    <svg viewBox={`0 0 ${CHART.vbW} ${CHART.vbH}`} preserveAspectRatio="xMidYMid meet" className="block h-auto w-full">
+    <svg
+      viewBox={`0 0 ${CHART.vbW} ${CHART.vbH}`}
+      preserveAspectRatio="xMidYMid meet"
+      className="block h-full min-h-0 w-full flex-1"
+    >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#CD50F1" stopOpacity="0.18" />
@@ -438,25 +461,30 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
   );
 }
 
+/**
+ * Card minimal. `stretch=true` faz o card crescer pra ocupar o restante
+ * da altura disponível do flex parent (usado no earned media embaixo dos
+ * 2 cards superiores). Conteúdo fica centralizado vertical quando estica.
+ */
 function MiniCard({
   label,
   valor,
   nota,
   highlight = false,
+  stretch = false,
 }: {
   label: string;
   valor: string;
   nota: React.ReactNode;
   highlight?: boolean;
+  stretch?: boolean;
 }) {
+  const base = highlight
+    ? 'rounded-xl border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-card p-4'
+    : 'rounded-xl border border-border bg-secondary/40 p-4';
+  const stretchClasses = stretch ? ' flex-1 flex flex-col justify-center' : '';
   return (
-    <div
-      className={
-        highlight
-          ? 'rounded-xl border border-primary/30 bg-gradient-to-br from-primary/[0.06] to-card p-4'
-          : 'rounded-xl border border-border bg-secondary/40 p-4'
-      }
-    >
+    <div className={base + stretchClasses}>
       <div className="mb-1.5 text-[9.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </div>
