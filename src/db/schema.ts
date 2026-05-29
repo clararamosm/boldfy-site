@@ -156,6 +156,9 @@ export const companies = pgTable(
   },
   (t) => [
     uniqueIndex('idx_companies_name_lower').on(sql`LOWER(${t.name})`),
+    // Dedup por LinkedIn URL (extensão Chrome captura empresa standalone via /company/<slug>).
+    // Criado em migration 0007.
+    uniqueIndex('idx_companies_linkedin_url').on(t.linkedinUrl),
     index('idx_companies_status').on(t.statusId),
     index('idx_companies_next_action').on(t.nextActionAt),
   ],
@@ -170,7 +173,10 @@ export const people = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
-    email: text('email').notNull(),
+    // Email opcional desde migration 0007 — captura LinkedIn entra sem email.
+    // Forms do site continuam exigindo email via Zod hardcoded (não regrediu).
+    // Dedup do CRM: por email quando presente, por linkedinUrl como fallback.
+    email: text('email'),
     phone: text('phone'),
     linkedinUrl: text('linkedin_url'),
     photoUrl: text('photo_url'),

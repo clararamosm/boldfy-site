@@ -73,7 +73,13 @@ export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin'
 
 export type UpsertPersonInput = {
   name: string;
-  email: string;
+  /**
+   * Email opcional desde a extensão Chrome (mai/2026). Forms do site sempre
+   * passam — Zod hardcoded deles exige. Captura LinkedIn pode omitir, nesse
+   * caso dedup acontece por `linkedinUrl` (que vira obrigatório no input).
+   * Validação: caller precisa fornecer pelo menos um (email OU linkedinUrl).
+   */
+  email?: string;
   phone?: string;
   jobTitle?: string;
   linkedinUrl?: string;
@@ -314,13 +320,25 @@ export async function upsertPerson(
   companyId?: string,
 ): Promise<CrmResult<UpsertPersonResult>> {
   try {
-    const email = input.email.trim().toLowerCase();
-    if (email.length === 0) return { ok: false, error: 'Email vazio' };
+    // Normaliza ambas as chaves de dedup. Pelo menos UMA precisa estar presente.
+    const email = input.email?.trim().toLowerCase() || null;
+    const linkedinUrl = input.linkedinUrl?.trim() || null;
 
+    if (!email && !linkedinUrl) {
+      return { ok: false, error: 'É preciso informar email ou linkedinUrl pra identificar a pessoa' };
+    }
+
+    // Lookup: email é a chave primária de dedup (case-insensitive, lower).
+    // Quando ausente (captura LinkedIn sem email), cai pra linkedinUrl —
+    // que tem unique constraint via idx_people_linkedin desde a 0001.
     const existing = await db
       .select()
       .from(people)
-      .where(eq(people.email, email))
+      .where(
+        email
+          ? eq(people.email, email)
+          : eq(people.linkedinUrl, linkedinUrl!),
+      )
       .limit(1);
 
     if (existing[0]) {
@@ -449,7 +467,7 @@ export async function upsertPerson(
         email,
         phone: input.phone,
         jobTitle: input.jobTitle,
-        linkedinUrl: input.linkedinUrl,
+        linkedinUrl,
         photoUrl: input.photoUrl,
         headline: input.headline,
         location: input.location,
@@ -763,7 +781,11 @@ export async function recordLeadFromForm(
   /* ---------- 7. AC sync (try/catch — nunca bloqueia) ---------- */
   // Ordem invertida: CRM gravou primeiro (princípio 1 da spec — source of
   // truth). AC vem depois. Se falhar, emite activity ac_sync_failed e segue.
-  if (lead.syncToAC !== false) {
+  //
+  // Email null (capturas LinkedIn sem email) pula sync — AC é fundamentalmente
+  // email-based e contato sem email não tem o que receber. Decisão registrada
+  // em SPEC-extension-linkedin.md §8.
+  if (lead.syncToAC !== false && person.email) {
     try {
       // Listas do AC pra inscrever automaticamente (mai/2026 — Caminho 2):
       // - Lista de segmento (Líderes B2B / Profissionais Individuais /

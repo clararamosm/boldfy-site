@@ -539,65 +539,11 @@ Tags são configuradas no AC pra triggar as automations apropriadas (já existe 
 
 Chamadas pro AC vão pra fila assíncrona (Vercel KV). Se AC falha, retry em 1, 5, 30 min, depois marca como falha permanente e alerta no dashboard. UI nunca espera AC.
 
-## 13. Extensão Chrome (MVP)
+## 13. Extensão Chrome — movida pra spec dedicada
 
-### 13.1 Comportamento
+A spec completa da extensão LinkedIn está em [`source-of-truth/specs/SPEC-extension-linkedin.md`](../../../source-of-truth/specs/SPEC-extension-linkedin.md) — UX do botão, auth flow (UUID + bcrypt), captura de pessoa e empresa, dedup, distribuição em sideload, riscos, telemetria de seletores e plano de implementação. Decisões fechadas em 2026-05-28 incluem email NULL permitido, captura de empresa enxuta (7 campos) e sem sync com ActiveCampaign.
 
-Usuária abre `linkedin.com/in/qualquer-pessoa`. Extensão injeta um botão flutuante no canto superior direito do perfil: "Salvar no Boldfy CRM" com logo Boldfy.
-
-**One-click flow:**
-
-1. Click → extensão faz scraping do DOM da página:
-   - Nome completo
-   - Headline raw (ex: "CMO at Nuvini")
-   - Job title parseado (ex: "CMO") — tenta extrair antes do "at/na/@"
-   - Foto de perfil (URL da imagem do CDN do LinkedIn — salva no nosso DB como `photo_url`)
-   - URL do perfil canonical (`linkedin.com/in/slug`)
-   - Location
-   - Empresa atual (parsing do headline ou seção Experience)
-2. POST pra `/api/extension/save` com o payload e token de auth.
-3. Backend (ver seção 9.8 pra dedupe completo):
-   - Match por `linkedin_url` → enriquece Person existente (adiciona foto, atualiza job_title se vazio, etc), retorna "já existia, enriqueci".
-   - Match por `email` (se capturável) → mesmo comportamento.
-   - Match aproximado por `name` + `company.name` → cria nova MAS retorna flag `possible_duplicate` com link da Person similar.
-   - Sem match → cria Person nova (status=Lead, score=0, source_method='extension_linkedin'). Detecta Company pelo headline, cria/linka.
-   - Registra activity `extension_save`.
-   - Retorna sucesso + link pra ver no CRM + flag de duplicate se aplicável.
-4. Extensão mostra toast:
-   - Caso normal: "✓ Salvo como Lead [Ver no CRM]"
-   - Já existia: "✓ Enriquecido (já tinha esse lead) [Ver no CRM]"
-   - Possível duplicata: "⚠ Salvo, mas talvez seja duplicata de João Silva [Ver pra mesclar]"
-
-### 13.2 Foto do lead
-
-**Fonte primária:** scraping da foto do perfil do LinkedIn quando salvo via extensão. URL da imagem do CDN do LinkedIn vai pro campo `photo_url`.
-
-**Fallback:** quando lead não tem `photo_url` (chegou só por form, sem extensão), CRM renderiza **iniciais coloridas em background gradient** baseado no nome (primeira letra do nome + primeira do sobrenome). Cor do gradient é determinística por hash do email (mesmo lead sempre vê mesma cor).
-
-**Decisão:** sem Gravatar, Clearbit ou serviços externos pagos. Foto LinkedIn é "free quando temos" + iniciais é zero-custo, zero-dependência, sempre funciona.
-
-
-
-### 13.2 Auth flow
-
-1. Primeira vez que usuária clica no ícone da extensão na toolbar, popup pede "Conectar conta Boldfy".
-2. Click → abre nova aba `/internal/crm/extension-auth`.
-3. Página requer login normal (cookie de sessão). Se já logada, mostra botão "Gerar token pra extensão".
-4. Click → backend cria row em `extension_tokens` (token = `crypto.randomUUID()`, armazena `bcrypt(token)` no DB). Mostra token na tela: "Copia esse token e cola na extensão. Mostrado uma única vez."
-5. Usuária copia, volta pra popup da extensão, cola, clica "Salvar".
-6. Token vai pra `chrome.storage.local` e é usado em todas as requests.
-
-### 13.3 Distribuição
-
-**Sprint 3 — Sideload:** geramos `.crx` (extensão empacotada). Clara baixa e arrasta no `chrome://extensions` com "Developer mode" ligado. Funciona só pra ela, sem review.
-
-**Sprint 4 — Chrome Web Store:** submeter pra publicação. Review do Google leva 1-3 dias. Pré-requisito: pagar US$ 5 one-time fee da Web Store. Após aprovação, qualquer um (futuros membros da Boldfy) instala normal.
-
-### 13.4 Riscos
-
-- **LinkedIn muda DOM** e quebra o scraping. Mitigação: monitor + atualizar selector dentro de 24h. Testar selectors com data attributes resilientes quando possível.
-- **Bot detection do LinkedIn** se uso excessivo. Mitigação: limit ao client side (max 50 saves/dia + rate limiter). Comportamento simula uso humano (uma extensão de produtividade comum).
-- **Token vaza** — usuária aparece com perfis salvos que ela não salvou. Mitigação: tela `/internal/crm/extension-auth` lista tokens ativos com botão "Revogar". Audit log de saves.
+Nota: §9.8 desta spec ainda descreve dedup com match aproximado por nome+empresa. Pra captura LinkedIn especificamente, a SPEC-extension-linkedin.md sobrescreve isso — dedup é só por `linkedin_url`, sem fuzzy match. Mantém §9.8 só pra contexto histórico.
 
 ## 14. Migração do Folk
 

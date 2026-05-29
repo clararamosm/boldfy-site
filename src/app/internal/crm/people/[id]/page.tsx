@@ -162,7 +162,9 @@ export default async function LeadDetailPage({ params }: Props) {
     : statusColor === 'blue'
       ? 'lead'
       : '';
-  const hue = avatarHue(person.email);
+  // avatarHue precisa de uma chave estável. Pessoas sem email (LinkedIn Leads
+  // da extensão Chrome) caem em linkedinUrl → id como fallback determinístico.
+  const hue = avatarHue(person.email ?? person.linkedinUrl ?? person.id);
 
   return (
     <div>
@@ -262,7 +264,11 @@ export default async function LeadDetailPage({ params }: Props) {
                       🔗 LinkedIn
                     </a>
                   ) : null}
-                  <a href={`mailto:${person.email}`} className="crm-detail-link">✉ {person.email}</a>
+                  {person.email ? (
+                    <a href={`mailto:${person.email}`} className="crm-detail-link">✉ {person.email}</a>
+                  ) : (
+                    <span className="crm-detail-link" style={{ opacity: 0.5, cursor: 'default' }}>✉ sem email</span>
+                  )}
                   {/* Pill de bounce ao lado do email se AC marcou como bounce */}
                   {(() => {
                     const m = person.metadata as Record<string, unknown> | null;
@@ -548,7 +554,14 @@ export default async function LeadDetailPage({ params }: Props) {
           <div className="crm-side-card">
             <div className="crm-side-title">📞 Contato</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
-              <div><span style={{ color: '#9D85B3' }}>Email:</span> <a href={`mailto:${person.email}`} style={{ color: '#CD50F1' }}>{person.email}</a></div>
+              <div>
+                <span style={{ color: '#9D85B3' }}>Email:</span>{' '}
+                {person.email ? (
+                  <a href={`mailto:${person.email}`} style={{ color: '#CD50F1' }}>{person.email}</a>
+                ) : (
+                  <span style={{ color: '#9D85B3', fontStyle: 'italic' }}>—</span>
+                )}
+              </div>
               {person.phone ? <div><span style={{ color: '#9D85B3' }}>Telefone:</span> {person.phone}</div> : null}
               {person.linkedinUrl ? (
                 <div>

@@ -20,7 +20,13 @@ import type { FormSlug, LeadSegment } from '../form-definitions';
 export type ClassifiedLead = {
   /* ---------------- Person canônicos ---------------- */
   name: string;
-  email: string;
+  /**
+   * Email opcional desde a extensão Chrome (mai/2026 — SPEC-extension-linkedin.md).
+   * Forms do site SEMPRE passam email (Zod schema deles exige), então `email` na
+   * prática só fica undefined em capturas da extensão LinkedIn. Quando ausente,
+   * `upsertPerson` deduplica por `linkedinUrl` em vez de email.
+   */
+  email?: string;
   phone?: string;
   jobTitle?: string;
   linkedinUrl?: string;

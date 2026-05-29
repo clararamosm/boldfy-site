@@ -195,7 +195,8 @@ export default async function CompanyDetailPage({ params }: Props) {
             ) : (
               <div style={{ display: 'grid', gap: 8 }}>
                 {companyPeople.map(({ person: p, status }) => {
-                  const hue = avatarHue(p.email);
+                  // Fallback determinístico pra LinkedIn Leads sem email.
+                  const hue = avatarHue(p.email ?? p.linkedinUrl ?? p.id);
                   const statusColor = status?.color ?? 'neutral';
                   const scoreClass = statusColor === 'amber' || statusColor === 'orange'
                     ? 'quente'
@@ -228,7 +229,7 @@ export default async function CompanyDetailPage({ params }: Props) {
                           ) : null}
                         </div>
                         <div style={{ fontSize: 11, color: '#9D85B3', marginTop: 2 }}>
-                          {p.jobTitle ?? p.email}
+                          {p.jobTitle ?? p.email ?? 'LinkedIn Lead'}
                           {p.lastTouchAt ? ` · último toque ${timeAgo(p.lastTouchAt)}` : ''}
                         </div>
                       </div>

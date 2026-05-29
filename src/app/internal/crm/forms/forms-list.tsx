@@ -207,9 +207,13 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                   ) : null}
                   {visibleCols.has('email') ? (
                     <td style={{ padding: '10px 12px', color: '#45336B', verticalAlign: 'middle' }}>
-                      <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email}>
-                        {row.person.email}
-                      </span>
+                      {row.person.email ? (
+                        <span style={{ display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.person.email}>
+                          {row.person.email}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#9D85B3', fontStyle: 'italic', fontSize: 12 }}>— sem email</span>
+                      )}
                     </td>
                   ) : null}
                   {visibleCols.has('phone') ? (

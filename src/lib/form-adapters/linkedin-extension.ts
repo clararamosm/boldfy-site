@@ -1,9 +1,16 @@
 /**
- * Adapter pra extensão LinkedIn — STUB pra Task 5.
+ * Adapter pra captura de PESSOA via extensão Chrome no LinkedIn.
  *
- * Estrutura está pronta pra ser preenchida quando a extensão estiver
- * implementada (§9 da spec). Por ora não é importada pelo fluxo de
- * server actions — só serve pra documentar a interface esperada.
+ * Spec: /source-of-truth/specs/SPEC-extension-linkedin.md §5.
+ *
+ * Decisões chave (registradas em 2026-05-28):
+ *  - Email é NULL — LinkedIn não expõe, e Clara não quer placeholder fake.
+ *    Dedup acontece por `linkedinUrl` (unique constraint em people).
+ *  - `syncToAC: false` — captura LinkedIn nunca dispara cadência no AC.
+ *    Sem email + sem form do site = sem cadência (spec §8).
+ *  - Segment SEMPRE 'lider_b2b' (extensão presume prospecção B2B intencional).
+ *  - Sem fuzzy match por nome+empresa — duplicatas resolvidas por merge manual
+ *    no CRM (decisão 2026-05-28).
  */
 
 import { buildLegibleACTags } from '../ac-tags';
@@ -14,32 +21,42 @@ const FORM_SLUG = 'linkedin_extension' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
 /**
- * Shape esperado do payload vindo da extensão Chrome (content script extrai
- * do DOM do LinkedIn, background envia pra /api/extension/capture-person).
+ * Shape do payload vindo da extensão (content script extrai do DOM,
+ * background envia em POST /api/extension/capture-person).
  *
- * Task 5 vai refinar conforme a extensão for ficando pronta.
+ * Os campos opcionais refletem o que pode faltar dependendo do estado da
+ * página (perfil privado, seção colapsada, mudança de DOM do LinkedIn).
+ * Campos ausentes geram telemetry `extension_field_missing` mas não bloqueiam
+ * captura.
  */
 export type LinkedInExtensionInput = {
+  /** Nome completo do perfil. Required — sem nome a captura falha. */
   name: string;
-  email?: string;
+  /** URL canonical (linkedin.com/in/<slug>). Required — chave de dedup. */
   linkedinUrl: string;
+
+  /* Campos enriquecedores — todos opcionais */
   headline?: string;
   jobTitle?: string;
   companyName?: string;
   photoUrl?: string;
   location?: string;
-  // Metadata rica
   about?: string;
   experience?: Array<{ title: string; company: string; period?: string }>;
   education?: { school: string; degree?: string; year?: string };
   connectionsCount?: string;
-  recentPosts?: Array<{ title: string; date: string }>;
+
+  /** Timestamp ISO da captura. */
   capturedAt: string;
+  /** URL exata da página capturada (preserva query string se houver). */
   sourceUrl: string;
 };
 
 export function adaptLinkedInExtension(input: LinkedInExtensionInput): ClassifiedLead {
-  // Extensão SEMPRE marca lider_b2b (presunção de prospecção B2B intencional)
+  // Tags AC ficam só registradas em people.acTags (espelho local) — não vão
+  // pro AC porque syncToAC=false. Mantemos o rebuild pra consistência: se
+  // futuramente um botão "Promover pro AC" for adicionado, as tags estão
+  // prontas pra envio.
   const acTags = buildLegibleACTags({
     segment: 'lider_b2b',
     formAcTag: def.acTag,
@@ -52,12 +69,19 @@ export function adaptLinkedInExtension(input: LinkedInExtensionInput): Classifie
     tipo_de_lead: 'Líder B2B',
   };
 
+  const activityData: Record<string, unknown> = {
+    form_type: 'linkedin_extension',
+    source_url: input.sourceUrl,
+    captured_at: input.capturedAt,
+    ...(input.headline ? { headline: input.headline } : {}),
+    ...(input.location ? { location: input.location } : {}),
+    ...(input.connectionsCount ? { connections_count: input.connectionsCount } : {}),
+  };
+
   return {
     name: input.name,
-    // Email pode vir vazio (LinkedIn não expõe direto) — recordLeadFromForm
-    // exige email; quando vazio a extensão tem que gerar placeholder ou
-    // a UI tem que pedir antes do submit. Task 5 trata.
-    email: input.email ?? `linkedin-${Date.now()}@placeholder.boldfy.local`,
+    // email omitido propositalmente — captura LinkedIn entra sem email
+    // (decisão Clara 2026-05-28). Dedup por linkedinUrl.
     jobTitle: input.jobTitle,
     linkedinUrl: input.linkedinUrl,
     headline: input.headline,
@@ -73,26 +97,19 @@ export function adaptLinkedInExtension(input: LinkedInExtensionInput): Classifie
     sourcePage: input.sourceUrl,
     sourceMethod: 'extension_linkedin',
     firstTouchSource: 'linkedin',
-    activityData: {
-      form_type: 'linkedin_extension',
-      source_url: input.sourceUrl,
-      captured_at: input.capturedAt,
-    },
-    source: 'system',
+    activityData,
+    source: 'linkedin',
     personMetadataPatch: {
       linkedin_profile: {
         about: input.about,
         experience: input.experience,
         education: input.education,
         connections_count: input.connectionsCount,
-        recent_posts: input.recentPosts,
         captured_at: input.capturedAt,
         source_url: input.sourceUrl,
       },
     },
-    // Extensão NÃO sincroniza pro AC automaticamente — captura é intencional,
-    // mas decisão de mandar pro AC fica pra um botão "promover" no CRM.
-    // Task 5 confirma se vai ligar sync automático.
+    // Extensão NÃO sincroniza pro AC (spec §8).
     syncToAC: false,
   };
 }

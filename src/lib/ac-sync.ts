@@ -73,11 +73,15 @@ async function resolveContactId(personId: string): Promise<{ contactId: string; 
   if (!p) return null;
 
   // Preferência: contactId cacheado em people.acContactId
-  if (p.acContactId) return { contactId: p.acContactId, email: p.email };
+  if (p.acContactId) return { contactId: p.acContactId, email: p.email ?? '' };
 
-  // Tenta email primário
-  let cid = await retry(() => findContactByEmail(p.email), 'findContactByEmail(primary)');
-  if (cid) return { contactId: cid, email: p.email };
+  // Sem email primário não dá pra resolver contato no AC (LinkedIn Lead).
+  // Tenta os alternates abaixo; se nenhum existir, retorna null.
+  let cid: string | null = null;
+  if (p.email) {
+    cid = await retry(() => findContactByEmail(p.email!), 'findContactByEmail(primary)');
+    if (cid) return { contactId: cid, email: p.email };
+  }
 
   // Fallback: alternate_emails em metadata (populado por Cal webhook e Folk import)
   const m = p.metadata as { alternate_emails?: string[] } | null;

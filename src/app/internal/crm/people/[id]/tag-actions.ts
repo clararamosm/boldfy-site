@@ -30,6 +30,8 @@ async function getAcContactId(personId: string): Promise<string | null> {
     .limit(1);
   if (!p) return null;
   if (p.acContactId) return p.acContactId;
+  // LinkedIn Leads podem não ter email — sem email, sem contato no AC.
+  if (!p.email) return null;
   return findContactByEmail(p.email);
 }
 
