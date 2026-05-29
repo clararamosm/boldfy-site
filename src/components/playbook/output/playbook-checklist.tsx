@@ -177,33 +177,51 @@ function TimelineProximoMovimento() {
         </span>
       </div>
 
-      {/* Desktop: timeline horizontal */}
-      <div className="relative hidden md:block">
-        {/* Linha cronológica de fundo (gradient cinza → rosa marca a entrada
-            da Boldfy entre Semana 0 e Semana 1). Posicionada na altura do
-            centro dos dots. */}
+      {/* Desktop: timeline horizontal.
+
+          Estrutura em 3 camadas verticais:
+            1. Marca "↓ Boldfy entra" (em cima de tudo, no espaço vazio
+               entre as colunas Semana 0 e Semana 1)
+            2. Labels de período (Semana 0, Semana 1, etc)
+            3. Linha cronológica + dots (na mesma altura)
+            4. Título do marco + sub-descrição
+
+          O label "Boldfy entra" foi separado da grade — vive numa
+          camada própria com mais clearance vertical (top-0) e fica
+          ENTRE as colunas (left: ~16.5%), com seta ↓ apontando pro
+          gap entre Semana 0 e Semana 1, sem sobrepor nenhum período. */}
+      <div className="relative hidden md:block pt-12">
+        {/* Marca "Boldfy entrou" — fica acima de tudo, no GAP entre
+            Semana 0 e Semana 1. left calculado pra ficar exatamente
+            no meio das 2 primeiras colunas (centro do grid: ~16.67%). */}
         <div
           aria-hidden
-          className="absolute left-[8.33%] right-[8.33%] top-[26px] h-0.5 rounded-full"
+          className="absolute top-0 -translate-x-1/2 whitespace-nowrap"
+          style={{ left: '16.67%' }}
+        >
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/8 px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-[0.12em] text-primary">
+            Boldfy entra
+            <span aria-hidden>↓</span>
+          </span>
+        </div>
+
+        {/* Linha cronológica de fundo (gradient cinza → rosa marca a
+            entrada da Boldfy entre Semana 0 e Semana 1). Top alinhado
+            com o centro dos dots (período mb-2 + dot ~7px de raio). */}
+        <div
+          aria-hidden
+          className="absolute left-[8.33%] right-[8.33%] top-[63px] h-0.5 rounded-full"
           style={{
             background:
               'linear-gradient(to right, rgba(184,164,204,0.6) 0%, rgba(184,164,204,0.6) 9%, rgba(205,80,241,0.5) 18%, rgba(205,80,241,0.75) 100%)',
           }}
         />
-        {/* Marca "Boldfy entrou" entre Semana 0 e Semana 1 */}
-        <div
-          aria-hidden
-          className="absolute top-0 text-[9.5px] font-bold uppercase tracking-[0.12em] text-primary"
-          style={{ left: '17%' }}
-        >
-          ↓ Boldfy entra
-        </div>
 
         {/* Grid de 6 marcos */}
-        <div className="relative grid grid-cols-6 gap-3 pt-5">
+        <div className="relative grid grid-cols-6 gap-3">
           {TIMELINE_FASES.map((f, i) => (
             <div key={i} className="flex flex-col items-center text-center">
-              <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
+              <div className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
                 {f.periodo}
               </div>
               <div

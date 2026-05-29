@@ -18,6 +18,12 @@
  * - Container fino, sem padding excessivo.
  * - Gift à esquerda, conteúdo (título + descrição) à direita.
  * - No hover do banner: gift escala um pouco e abre (via prop `open`).
+ *
+ * Margem (jun/2026 polish 6.1): o banner agora aparece DEPOIS da
+ * calculadora, e o `py-16 sm:py-24` do RoiSimulator gerava espaço
+ * vertical gigante entre os dois. Margem negativa `-mt-*` puxa o
+ * banner pra cima recuperando parte daquele padding (Clara: "margem
+ * bem pequenininha"). pb pequeno antes do BattleCard.
  */
 
 import { useState } from 'react';
@@ -27,7 +33,7 @@ import { AnimatedGiftBox } from '@/components/ui/animated-gift-box';
 export function PlaybookBannerSemBudget({ banner }: { banner: BannerOferta }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <section className="mx-auto max-w-[1080px] px-6 pt-10 sm:pt-14">
+    <section className="mx-auto -mt-10 max-w-[1080px] px-6 pb-4 sm:-mt-16 sm:pb-6">
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
