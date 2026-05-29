@@ -18,9 +18,10 @@
  * Substituiu as antigas dicas A_MARKETING / A_VENDAS / A_RH do TIPS_LIBRARY.
  */
 
-import { BookOpen, CheckSquare, MonitorSmartphone, Sparkles } from 'lucide-react';
+import { BookOpen, CheckSquare, MonitorSmartphone } from 'lucide-react';
 import type { SetorAplicacao, TeseMotivo } from '@/lib/playbook/templates/types';
 import { SETOR_JABA, SETOR_RESOLUCAO_MOTORES } from '@/lib/playbook/templates';
+import { FaiAvatar } from '@/components/ui/fai-avatar';
 import { SectionTag } from './playbook-snapshot';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -39,7 +40,7 @@ export function PlaybookTese({
   return (
     <section className="bg-secondary/30 py-16 sm:py-24">
       <div className="mx-auto max-w-[1080px] px-6">
-        <SectionTag>Bloco 3 · Tese</SectionTag>
+        <SectionTag>Tese</SectionTag>
         <h2 className="mb-3 font-headline text-3xl font-black tracking-tight text-foreground sm:text-4xl">
           Por que{' '}
           <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
@@ -89,8 +90,10 @@ export function PlaybookTese({
 function SetorAplicacaoCard({ data }: { data: SetorAplicacao }) {
   return (
     <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8">
-      {/* Layout: 2 colunas no desktop (1.1fr / 1fr), empilhado no mobile */}
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
+      {/* Layout: 2 colunas no desktop (1.1fr / 1fr), empilhado no mobile.
+          Coluna direita alinhada ao bottom da esquerda — os 3 mini-cards +
+          jaba ficam na altura dos últimos bullets do "Como aplicar". */}
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-end lg:gap-10">
         {/* Esquerda — título do setor + bullets condicionais */}
         <div>
           <div className="mb-3 inline-flex items-center rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white">
@@ -112,16 +115,16 @@ function SetorAplicacaoCard({ data }: { data: SetorAplicacao }) {
           </ul>
         </div>
 
-        {/* Direita — 3 mini-cards fixos (porquê/como/ferramenta) + jaba */}
+        {/* Direita — 3 mini-cards fixos (Motivo 1/2/3 alinhando com Bloco 3) + jaba */}
         <div>
           <div className="grid grid-cols-3 gap-2.5">
-            {SETOR_RESOLUCAO_MOTORES.map((m) => (
+            {SETOR_RESOLUCAO_MOTORES.map((m, i) => (
               <div
                 key={m.tag}
                 className="rounded-xl border border-border bg-background p-3"
               >
                 <div className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">
-                  {m.tag}
+                  Motivo {String(i + 1).padStart(2, '0')}
                 </div>
                 <div className="mb-1 font-headline text-[12.5px] font-black leading-tight text-foreground">
                   {m.titulo}
@@ -130,9 +133,10 @@ function SetorAplicacaoCard({ data }: { data: SetorAplicacao }) {
               </div>
             ))}
           </div>
-          {/* Jaba ocupando a largura dos 3 mini-cards */}
+          {/* Jaba ocupando a largura dos 3 mini-cards. Avatar da Fai dá voz à
+              mensagem (mantém continuidade narrativa com o wizard). */}
           <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.08] px-3 py-2.5">
-            <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+            <FaiAvatar size={20} />
             <span className="text-[12px] font-semibold text-primary">{SETOR_JABA}</span>
           </div>
         </div>

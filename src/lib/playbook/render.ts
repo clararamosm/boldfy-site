@@ -195,7 +195,7 @@ const AREA_TO_TIP_ID: Record<TemplateBase, string> = {
  * mai/2026):
  *   1. S_CLEVEL EM DESTAQUE (primeiro card, largura total) quando aplicável
  *   2. 5 universais (sempre, U2/U4/U5/U7/U6)
- *   3. Dor-específicas reformuladas (até 2, dicas imperativas)
+ *   3. Dor-específicas reformuladas (até 2, com descricao + accordion fechado)
  *   4. Voz (V_FOUNDER_SOLO se voz=founder_solo)
  *   5. Sponsorship (L_PROPRIO ou L_FULL_CONTENT)
  *
@@ -236,8 +236,8 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   }
 
   // 3. Dor-específicas reformuladas (até 2 baseado em doresPrincipais).
-  //    Agora rodam em modo imperativa (paragrafo + boldfyAjuda) em vez do
-  //    accordion padrão. Áreas saíram (vão pro Bloco 3.5).
+  //    Agora rodam com descrição curta + accordion fechado padrão (3ª curadoria
+  //    refinamento). Áreas saíram (vão pro Bloco 3.5).
   for (const dor of quiz.doresPrincipais) {
     const tipId = DOR_TO_TIP_ID[dor];
     if (tipId) pushUnique(findById(tipId));

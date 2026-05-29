@@ -10,7 +10,7 @@
  * editorial na saída.
  */
 
-import { Sparkles } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { SectionTag } from './playbook-snapshot';
 
 export function PlaybookResultadosEsperados({ resultados }: { resultados: string[] }) {
@@ -19,7 +19,7 @@ export function PlaybookResultadosEsperados({ resultados }: { resultados: string
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-[1080px] px-6">
-        <SectionTag>Bloco 4.5 · Resultados esperados</SectionTag>
+        <SectionTag>Resultados esperados</SectionTag>
         <h2 className="mb-2 font-headline text-2xl font-black tracking-tight text-foreground sm:text-3xl">
           O que vocês{' '}
           <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
@@ -38,7 +38,7 @@ export function PlaybookResultadosEsperados({ resultados }: { resultados: string
               className="flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-[0_4px_16px_rgba(93,42,103,.04)]"
             >
               <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Trophy className="h-3.5 w-3.5" />
               </span>
               <span className="text-[14px] leading-snug text-foreground">{r}</span>
             </li>

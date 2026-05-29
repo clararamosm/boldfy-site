@@ -238,6 +238,8 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'U2',
     numero: 'Dica 01',
     titulo: 'Alinhe a marca internamente antes de cobrar assertividade do time',
+    descricao:
+      'Sem alinhamento interno, cada colaborador inventa um pitch diferente e o conteúdo sai desconexo.',
     icon: 'Compass',
     boldfy: {
       titulo: 'Brand Context + trilha de marca da empresa',
@@ -254,7 +256,9 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'U4',
     numero: 'Dica 02',
     titulo: 'Ofereça ganho real e tire fricção do caminho',
-    icon: 'Trophy',
+    descricao:
+      'Tarefa não-remunerada não dura. Sistema de recompensas e ferramenta certa removem fricção e mantêm ritmo.',
+    icon: 'Coins',
     boldfy: {
       titulo: 'Gamificação + recompensas + IA assistente',
       items: [
@@ -270,6 +274,8 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'U5',
     numero: 'Dica 03',
     titulo: 'Tenha visão das métricas e da performance da estratégia, não siga cego',
+    descricao:
+      'Sem dado, ninguém sabe se tá rodando. Adoção e qualidade do programa precisam ficar visíveis dia a dia.',
     icon: 'TrendingUp',
     boldfy: {
       titulo: 'Dashboard de adoção + qualidade do programa',
@@ -286,6 +292,8 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'U7',
     numero: 'Dica 04',
     titulo: 'Disponibilize acervo suficiente, biblioteca como hub central',
+    descricao:
+      'Colaborador sem peça pronta não posta. Biblioteca centralizada elimina a fila do design e destrava o ritmo.',
     icon: 'Library',
     boldfy: {
       titulo: 'Biblioteca de assets da empresa',
@@ -304,6 +312,8 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'U6',
     numero: 'Dica 05',
     titulo: 'Crie variação visual no acervo para cada colaborador postar com uma cara diferente',
+    descricao:
+      'Mesma peça idêntica cansa o feed. Variar identidade visual mantém o conteúdo fresco e o alcance subindo.',
     icon: 'Palette',
     boldfy: {
       titulo: 'Variação visual + IA de hooks',
@@ -330,40 +340,48 @@ export const TIPS_LIBRARY: Tip[] = [
   //
   // Resolução pelo render: ver `resolveSetorAplicacao(quiz)` em render.ts.
 
-  // ===================== DOR-ESPECÍFICAS (4) — formato imperativa =============
+  // ===================== DOR-ESPECÍFICAS (4) ==================================
   //
-  // Reformuladas mai/2026 (3ª curadoria): em vez de "como a Boldfy resolve" no
-  // accordion padrão, agora viram dicas IMPERATIVAS de verdade. O ângulo da
-  // dica é o conselho prático, e a Boldfy entra como menção curta no rodapé
-  // com `imperativa.boldfyAjuda`. Features marcadas com [[...]].
+  // Reformuladas mai/2026 (3ª curadoria — refinamento): conselhos práticos
+  // primeiro (o título é o conselho), com mini-descrição contextualizando e
+  // accordion "Veja como a Boldfy resolve" fechado por padrão — mesmo padrão
+  // visual das universais. Features marcadas com [[...]] nos bullets.
   {
     id: 'D_CAC',
     numero: '',
     titulo: 'Use CPM equivalente como argumento de orçamento',
     tagEspecifica: 'CAC subindo',
+    descricao:
+      'Earned media é argumento que finance entende. Calcule o que cada post teria custado em CPM LinkedIn Brasil e leve pra revisão de budget.',
     icon: 'DollarSign',
-    imperativa: {
-      paragrafo:
-        'Em vez de defender mídia paga isolada, calcule o que cada post orgânico teria custado em CPM LinkedIn Brasil (R$ 300/mil impressões) e leve esse número pra revisão de budget. É argumento que finance entende.',
-      boldfyAjuda:
-        '[[Dashboard de earned media]] calcula o CPM equivalente automaticamente, sem planilha. Slide de board sai pronto.',
+    boldfy: {
+      titulo: 'Dashboard de earned media + slide de defesa',
+      items: [
+        '[[Dashboard de earned media]] calcula CPM equivalente automaticamente',
+        'Comparativo earned vs paid sai pronto no relatório mensal',
+        'Slide pra board exportável sem planilha',
+        'Linguagem pronta pra finance e CFO',
+      ],
     },
-    boldfy: { titulo: '', items: [] }, // não renderizado, mantido pra type compat
     selectors: { dor: ['cac_subindo'] },
   },
   {
     id: 'D_COMPANYPAGE',
     numero: '',
-    titulo: 'Use a page pra cultura, eventos e história do time, não pra conteúdo técnico',
+    titulo: 'Use a page pra cultura e história do time, não pra conteúdo técnico',
     tagEspecifica: 'Company Page morta',
+    descricao:
+      'Page funciona pra coisas humanas: bastidor, eventos, história dos colaboradores. Voz técnica vai pros perfis de quem tem autoridade no assunto.',
     icon: 'Globe',
-    imperativa: {
-      paragrafo:
-        'A página corporativa funciona bem pra coisas humanas e relevantes: bastidor, eventos, benefícios, história dos colaboradores, notícias do mercado. Conteúdo técnico e educativo vai pros perfis de quem tem autoridade no assunto, porque o LinkedIn premia voz de pessoa.',
-      boldfyAjuda:
-        'Distribui a voz técnica em perfis de pessoas com autoridade. [[Brand Context]] garante consistência, [[IA assistente]] traduz a mensagem corporativa em ângulo pessoal.',
+    boldfy: {
+      titulo: 'Vozes técnicas distribuídas + Brand Context',
+      items: [
+        '[[Brand Context]] separa o que vai pra page vs perfis pessoais',
+        '[[IA assistente]] traduz mensagem corporativa em ângulo pessoal',
+        'Pilares editoriais distribuídos entre vozes técnicas',
+        'Métrica individual mostra quem puxa mais inbound',
+      ],
     },
-    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['company_page_morta'] },
   },
   {
@@ -371,14 +389,18 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Mapeie 3 a 5 vozes do concorrente pra calibrar pauta e ritmo',
     tagEspecifica: 'Concorrente dominando',
+    descricao:
+      'Quem do concorrente posta, sobre o quê, com que frequência. Esse baseline orienta sua pauta e calibra o ritmo do nicho.',
     icon: 'Target',
-    imperativa: {
-      paragrafo:
-        'Faça uma planilha rápida: quem do concorrente posta, sobre o quê, com que frequência. Use isso de baseline pra entender o ritmo do nicho. Ajuste pauta pros temas onde vocês têm voz única e ângulo melhor.',
-      boldfyAjuda:
-        '[[Análise de audiência por colaborador]] mostra onde cada um tá ganhando tração e como o feed se comporta perto do concorrente.',
+    boldfy: {
+      titulo: 'Análise de audiência por colaborador',
+      items: [
+        '[[Análise de audiência por colaborador]] mostra onde cada um ganha tração',
+        'Benchmark contínuo da pauta vs concorrente',
+        'Sinal pra ajustar nicho e ritmo de publicação',
+        'Mapeamento de vozes do mercado integrado',
+      ],
     },
-    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['concorrente_dominando'] },
   },
   {
@@ -386,14 +408,18 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Ative colaboradores como referência viva pro próximo candidato',
     tagEspecifica: 'Talento saindo',
+    descricao:
+      'Candidato sênior pesquisa pessoas, não cultura. Bastidor técnico e jornada profissional dos colaboradores são o que criam prova social real.',
     icon: 'Award',
-    imperativa: {
-      paragrafo:
-        'Talento sênior pesquisa quem trabalha na empresa antes de mandar CV. Conteúdo de bastidor técnico e jornada profissional dos seus colaboradores é o que cria essa prova social. Não precisa post de cultura, precisa post de gente real fazendo coisa relevante.',
-      boldfyAjuda:
-        '[[Trilhas LXP]] guiam o colaborador a contar bastidor relevante. Dashboard mostra quais colaboradores puxam mais inbound de talento.',
+    boldfy: {
+      titulo: 'Trilhas LXP + brand alignment',
+      items: [
+        '[[Trilhas LXP]] guiam colaborador a contar bastidor relevante',
+        '[[Brand Context]] evita post auto-centrado de cultura interna',
+        'Inbound de candidato qualificado rastreado',
+        'Dashboard mostra quais colaboradores puxam mais talento',
+      ],
     },
-    boldfy: { titulo: '', items: [] },
     selectors: { dor: ['talento_saindo'] },
   },
 
@@ -410,6 +436,8 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Distribua a voz do founder pra 3 a 5 pessoas internas',
     tagEspecifica: 'Founder solo',
+    descricao:
+      'Programa que mora num CPF morre quando o CPF afasta. Distribuir voz cria sustentação.',
     icon: 'Network',
     boldfy: {
       titulo: 'Territórios editoriais distribuídos',
@@ -476,14 +504,18 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Acelere os líderes que topam postar com método e ferramenta',
     tagEspecifica: 'Líder topa postar',
+    descricao:
+      'Quem já tem vontade só precisa de facilitador. Onboarding rápido na primeira semana e a galera já tá postando.',
     icon: 'Sparkles',
-    imperativa: {
-      paragrafo:
-        'Quem já tem vontade não precisa de convencimento, precisa de facilitador. Onboarding rápido na primeira semana e a galera já tá postando.',
-      boldfyAjuda:
-        'Onboarding na primeira semana. Cada líder ganha [[território editorial]], [[IA assistente]] sugere ângulos a partir do dia a dia, refino e calendário sem trocar de app.',
+    boldfy: {
+      titulo: 'IA assistente + território editorial por líder',
+      items: [
+        'Onboarding na primeira semana',
+        'Cada líder ganha [[território editorial]] no Brand Context',
+        '[[IA assistente]] sugere ângulos a partir do dia a dia da pessoa',
+        'Refino e calendário sem trocar de app',
+      ],
     },
-    boldfy: { titulo: '', items: [] },
     selectors: { sponsorship: ['sim_proprio'] },
   },
   {
@@ -491,14 +523,18 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Terceirize a produção, mantenha a autoria do líder',
     tagEspecifica: 'Full Content',
+    descricao:
+      'Líder topa postar mas não tem tempo de produzir? A Boldfy entrevista, escreve no tom da pessoa, líder só aprova.',
     icon: 'Feather',
-    imperativa: {
-      paragrafo:
-        'Líderes que topam postar mas não têm tempo de produzir podem ter conteúdo autoral rodando mesmo assim. Time da Boldfy entrevista e produz; o líder só aprova.',
-      boldfyAjuda:
-        'Modalidade [[Full Content]] mora dentro da mesma plataforma, com tipo de conta diferente. Colaboradores Full Service só aprovam, não entram na gamificação. Admin tem acesso às mesmas métricas que os colaboradores da plataforma SaaS.',
+    boldfy: {
+      titulo: 'Modalidade Full Content dentro da plataforma',
+      items: [
+        '[[Full Content]] mora dentro da mesma plataforma, com tipo de conta diferente',
+        'Estrategista entrevista o líder e produz no tom da pessoa',
+        'Líder aprova em minutos, sem escrever',
+        'Admin vê métricas iguais às dos colaboradores SaaS',
+      ],
     },
-    boldfy: { titulo: '', items: [] },
     selectors: { sponsorship: ['sim_full_content'] },
   },
 ];

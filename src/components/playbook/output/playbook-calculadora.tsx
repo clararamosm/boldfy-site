@@ -25,7 +25,7 @@ export function PlaybookCalculadora({
   return (
     <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-[1080px] px-6">
-        <SectionTag>Bloco 6 · Simulação</SectionTag>
+        <SectionTag>Simulação</SectionTag>
         <h2 className="mb-3 font-headline text-3xl font-black tracking-tight text-foreground sm:text-4xl">
           Quanto sua empresa pode{' '}
           <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">

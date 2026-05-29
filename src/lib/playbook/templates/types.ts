@@ -125,21 +125,17 @@ export type Tip = {
    */
   opcoes?: Array<{ titulo: string; desc: string }>;
   /**
-   * Dica imperativa (mai/2026 3ª curadoria): renderiza só com `texto`
-   * principal + menção curta "Boldfy ajuda" no rodapé, sem accordion.
-   * Usado pras dicas de dor reformuladas (D_CAC, D_COMPANYPAGE, D_CONCORRENTE,
-   * D_TALENTO) — foco no conselho prático, Boldfy entra como coadjuvante.
+   * Mini-descrição (mai/2026 3ª curadoria — refinamento): 1 a 2 linhas curtas
+   * dando contexto do que essa dica significa antes de abrir o accordion da
+   * Boldfy. Aparece em TODAS as dicas (universais e condicionais) entre o
+   * título e o botão "Veja como a Boldfy resolve". O objetivo é a pessoa
+   * entender a dica mesmo sem abrir o accordion.
    */
-  imperativa?: {
-    /** Parágrafo descritivo da dica (substitui accordion completo). */
-    paragrafo: string;
-    /** Menção curta de como a Boldfy ajuda. Aceita markup [[Feature]]. */
-    boldfyAjuda: string;
-  };
+  descricao?: string;
   /**
-   * Accordion "Como a Boldfy resolve" — abre embaixo da dica. Usado pras
-   * dicas universais (modo padrão). Dicas imperativas usam `imperativa` em
-   * vez disso, e destaque usa `opcoes`.
+   * Accordion "Como a Boldfy resolve" — abre embaixo da dica.
+   * Aceita markup `[[Feature]]` nos items pra marcar funcionalidades
+   * da plataforma. Modo destaque (S_CLEVEL) usa `opcoes` no lugar.
    *
    * **Markup de features:** strings em `items` aceitam `[[Nome da Feature]]`
    * pra marcar funcionalidade da Boldfy. O renderer substitui por uma pill

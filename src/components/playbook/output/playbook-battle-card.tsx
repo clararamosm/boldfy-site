@@ -29,7 +29,7 @@ export function PlaybookBattleCard({
   return (
     <section className="bg-secondary/30 py-16 sm:py-24">
       <div className="mx-auto max-w-[1080px] px-6">
-        <SectionTag>Bloco 7 · Comparativo</SectionTag>
+        <SectionTag>Comparativo</SectionTag>
         <h2 className="mb-3 font-headline text-3xl font-black tracking-tight text-foreground sm:text-4xl">
           Sem Boldfy{' '}
           <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
