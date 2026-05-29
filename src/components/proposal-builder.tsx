@@ -38,11 +38,26 @@ const PLATFORM_TIERS = [
 
 const DESIGN_PACKS = {
   starter: { label: 'Starter', pieces: 4, price: 1600 },
-  growth: { label: 'Growth', pieces: 8, price: 2800 },
-  scale: { label: 'Scale', pieces: 12, price: 3600 },
+  growth: { label: 'Growth', pieces: 7, price: 2800 },
+  scale: { label: 'Scale', pieces: 10, price: 3600 },
 } as const;
 
 type DesignPackKey = keyof typeof DESIGN_PACKS;
+
+// Thresholds que liberam o DoD gratuito por seats da plataforma.
+// Cada threshold também dispara auto-marcação do plano no toggle.
+const DESIGN_FREE_THRESHOLDS: { seats: number; pack: DesignPackKey }[] = [
+  { seats: 70, pack: 'scale' },
+  { seats: 60, pack: 'growth' },
+  { seats: 40, pack: 'starter' },
+];
+
+function getDesignAutoPack(seats: number): DesignPackKey | null {
+  for (const t of DESIGN_FREE_THRESHOLDS) {
+    if (seats >= t.seats) return t.pack;
+  }
+  return null;
+}
 
 // Full-service pricing matrix: [TLs][freq per week]
 const FULLSERVICE_MATRIX: Record<number, Record<number, number>> = {
@@ -150,7 +165,21 @@ function ProposalBuilderModal({
   // Tier 2: Design on Demand
   const [designEnabled, setDesignEnabled] = useState(false);
   const [designPack, setDesignPack] = useState<DesignPackKey>('starter');
-  const designPrice = designEnabled ? DESIGN_PACKS[designPack].price : 0;
+
+  // Auto-bundle quando seats da plataforma cruzam os thresholds (40/60/70).
+  // Liga o toggle e troca o pack pra refletir o threshold. Se a pessoa quiser
+  // upgrade pra um plano pago acima do gratuito, ainda pode clicar manualmente.
+  const designAutoPack = platformEnabled ? getDesignAutoPack(seats) : null;
+  React.useEffect(() => {
+    if (designAutoPack) {
+      setDesignEnabled(true);
+      setDesignPack(designAutoPack);
+    }
+  }, [designAutoPack]);
+
+  const designListPrice = designEnabled ? DESIGN_PACKS[designPack].price : 0;
+  const designIsFree = designEnabled && designAutoPack === designPack;
+  const designPrice = designIsFree ? 0 : designListPrice;
 
   // Tier 3: Content Full-Service
   const [fsEnabled, setFsEnabled] = useState(false);
@@ -370,11 +399,21 @@ function ProposalBuilderModal({
                           value={[seats]}
                           onValueChange={(v) => setSeats(v[0])}
                         />
-                        <div className="flex justify-between -mt-1 mb-1">
-                          <span className="text-[10px] text-muted-foreground">5</span>
-                          <span className="text-[10px] text-muted-foreground">20</span>
-                          <span className="text-[10px] text-muted-foreground">40</span>
-                          <span className="text-[10px] text-muted-foreground">70</span>
+                        {/* Ticks posicionados no % real do range (5–70) — não com justify-between */}
+                        <div className="relative h-4 mb-1">
+                          {[5, 20, 40, 70].map((tick) => {
+                            const pct = ((tick - 5) / (70 - 5)) * 100;
+                            const translate = tick === 5 ? '0%' : tick === 70 ? '-100%' : '-50%';
+                            return (
+                              <span
+                                key={tick}
+                                className="absolute top-0 text-[10px] text-muted-foreground tabular-nums"
+                                style={{ left: `${pct}%`, transform: `translateX(${translate})` }}
+                              >
+                                {tick}
+                              </span>
+                            );
+                          })}
                         </div>
 
                         {/* Team badges */}
@@ -452,26 +491,40 @@ function ProposalBuilderModal({
                       <div className="border-t border-border/50 px-4 pb-4 pt-4 space-y-4">
                         <div className="grid grid-cols-3 gap-2 rounded-[10px] bg-secondary p-1">
                           {(Object.entries(DESIGN_PACKS) as [DesignPackKey, (typeof DESIGN_PACKS)[DesignPackKey]][]).map(
-                            ([key, pack]) => (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => setDesignPack(key)}
-                                className={cn(
-                                  'rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
-                                  designPack === key
-                                    ? 'bg-white text-violet-600 shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground',
-                                )}
-                              >
-                                <span className="block font-bold text-xs">{pack.label}</span>
-                                <span className="block text-[10px] font-medium opacity-80 mt-0.5">
-                                  {pack.pieces} peças/mês
-                                </span>
-                              </button>
-                            ),
+                            ([key, pack]) => {
+                              const isAuto = designAutoPack === key;
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  onClick={() => setDesignPack(key)}
+                                  className={cn(
+                                    'relative rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
+                                    designPack === key
+                                      ? 'bg-white text-violet-600 shadow-sm'
+                                      : 'text-muted-foreground hover:text-foreground',
+                                  )}
+                                >
+                                  {isAuto && (
+                                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
+                                      Grátis
+                                    </span>
+                                  )}
+                                  <span className="block font-bold text-xs">{pack.label}</span>
+                                  <span className="block text-[10px] font-medium opacity-80 mt-0.5">
+                                    {pack.pieces} peças/mês
+                                  </span>
+                                </button>
+                              );
+                            },
                           )}
                         </div>
+
+                        {/* Aviso de variações por peça — alinha com discurso comercial */}
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Cada peça entregue com <strong className="text-foreground">2–3 variações de identidade visual</strong>,
+                          pra não cansar o feed do executivo.
+                        </p>
 
                         {/* Team badges */}
                         <div className="flex flex-wrap gap-1.5">
@@ -489,10 +542,23 @@ function ProposalBuilderModal({
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                             Total Biblioteca
                           </span>
-                          <span className="text-lg font-extrabold text-foreground">
-                            {formatBRL(designPrice)}/mês
-                          </span>
+                          <div className="text-right">
+                            {designIsFree && (
+                              <span className="block text-xs text-muted-foreground line-through">
+                                {formatBRL(designListPrice)}/mês
+                              </span>
+                            )}
+                            <span className={cn('text-lg font-extrabold', designIsFree ? 'text-emerald-600' : 'text-foreground')}>
+                              {designIsFree ? 'Gratuito' : `${formatBRL(designPrice)}/mês`}
+                            </span>
+                          </div>
                         </div>
+                        {designIsFree && (
+                          <p className="text-[10px] text-emerald-700 leading-relaxed -mt-2">
+                            Plano <strong>{DESIGN_PACKS[designPack].label}</strong> incluso
+                            pra empresas com {DESIGN_FREE_THRESHOLDS.find((t) => t.pack === designPack)?.seats}+ colaboradores na plataforma.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -669,10 +735,15 @@ function ProposalBuilderModal({
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
                             Biblioteca ({DESIGN_PACKS[designPack].label})
+                            {designIsFree && (
+                              <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                                Grátis
+                              </span>
+                            )}
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
-                              {formatBRL(designPrice)}
+                              {designIsFree ? 'Gratuito' : formatBRL(designPrice)}
                             </span>
                             <Lock className="h-3 w-3 text-muted-foreground" />
                           </div>
@@ -819,6 +890,8 @@ function ProposalBuilderModal({
                 designEnabled={designEnabled}
                 designPack={designPack}
                 designPrice={designPrice}
+                designListPrice={designListPrice}
+                designIsFree={designIsFree}
                 fsEnabled={fsEnabled}
                 fsTls={fsTls}
                 fsFreq={fsFreq}
@@ -828,6 +901,8 @@ function ProposalBuilderModal({
                 savings={savings}
                 teamItems={teamItems}
                 proposalUrl={proposalUrl}
+                leadNome={nome}
+                leadEmail={email}
                 onClose={() => handleOpenChange(false)}
               />
             )}
@@ -853,6 +928,8 @@ function ResultStep({
   designEnabled,
   designPack,
   designPrice,
+  designListPrice,
+  designIsFree,
   fsEnabled,
   fsTls,
   fsFreq,
@@ -862,6 +939,8 @@ function ResultStep({
   savings,
   teamItems,
   proposalUrl,
+  leadNome,
+  leadEmail,
   onClose,
 }: {
   betaActive: boolean;
@@ -874,6 +953,8 @@ function ResultStep({
   designEnabled: boolean;
   designPack: DesignPackKey;
   designPrice: number;
+  designListPrice: number;
+  designIsFree: boolean;
   fsEnabled: boolean;
   fsTls: number;
   fsFreq: number;
@@ -883,8 +964,19 @@ function ResultStep({
   savings: number;
   teamItems: { text: string; dedicated: boolean }[];
   proposalUrl?: string;
+  leadNome: string;
+  leadEmail: string;
   onClose: () => void;
 }) {
+  // Pre-fill do Cal.com — evita a pessoa reescrever nome/email no agendador.
+  // Trim defensivo porque o form aceita espaços que somem na hora de submeter.
+  const calBookingUrl = (() => {
+    const params = new URLSearchParams();
+    if (leadNome.trim()) params.set('name', leadNome.trim());
+    if (leadEmail.trim()) params.set('email', leadEmail.trim());
+    const qs = params.toString();
+    return `https://cal.com/clara-boldfy/demo${qs ? `?${qs}` : ''}`;
+  })();
   const proposalRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -988,13 +1080,30 @@ function ResultStep({
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-violet-500" />
               <span className="text-sm font-semibold text-foreground">Biblioteca de Peças</span>
+              {designIsFree && (
+                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                  Incluso
+                </span>
+              )}
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {DESIGN_PACKS[designPack].label} · {DESIGN_PACKS[designPack].pieces} peças/mês
+                  <span className="block text-[10px] text-muted-foreground/80">
+                    Cada peça com 2–3 variações de identidade visual
+                  </span>
                 </span>
-                <span className="font-medium">{formatBRL(designPrice)}/mês</span>
+                <div className="text-right">
+                  {designIsFree && (
+                    <span className="block text-[10px] text-muted-foreground/60 line-through">
+                      {formatBRL(designListPrice)}
+                    </span>
+                  )}
+                  <span className={cn('font-medium', designIsFree ? 'text-emerald-600' : '')}>
+                    {designIsFree ? 'Gratuito' : `${formatBRL(designPrice)}/mês`}
+                  </span>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
                 {['Carrosséis', 'Infográficos', 'Templates de marca', 'Alinhado com Brand Context'].map((f) => (
@@ -1003,6 +1112,16 @@ function ResultStep({
                   </span>
                 ))}
               </div>
+              {/* Link pro case Semrush — explica o "por que peças importam pra ELG" */}
+              <a
+                href="/case-semrush"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:text-violet-700 hover:underline underline-offset-2"
+              >
+                Por que designs importam pra Employee-Led Growth? Veja o case da Semrush
+                <ArrowRight className="h-3 w-3" />
+              </a>
             </div>
           </div>
         )}
@@ -1069,6 +1188,27 @@ function ResultStep({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Próximos passos — comercial + atalho pra demo já prefilled */}
+      <div className="mt-4 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.06] to-primary/[0.02] p-4">
+        <p className="text-sm font-bold text-accent-foreground mb-1">
+          Próximos passos
+        </p>
+        <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+          Nossa equipe comercial entra em contato em até <strong className="text-foreground">1 dia útil</strong> pra alinhar a proposta.
+          Se preferir adiantar, marca sua demo agora — já preenchemos seus dados pra você.
+        </p>
+        <Button
+          asChild
+          className="w-full gap-2"
+          onClick={() => trackEvent('cta_click', { cta_type: 'schedule_meeting', source: 'proposal_result' })}
+        >
+          <a href={calBookingUrl} target="_blank" rel="noopener noreferrer">
+            Marcar demo agora
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </Button>
       </div>
 
       {/* Shareable link */}
