@@ -22,8 +22,14 @@ type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_do
 /** Tipos dos botões do CTA do playbook (Bloco 8). */
 type PlaybookCtaType = 'demo' | 'pacote' | 'compartilhar';
 
-/** Razão do gate de não-elegibilidade no quiz do playbook. */
-type PlaybookGateReason = 'porte_baixo';
+/**
+ * Razão do gate de não-elegibilidade no quiz do playbook.
+ *
+ * - `porte_baixo`: P1 < 5 colaboradores (hard block na própria P1).
+ * - `compromisso_negado`: P1 entre 5 e 20, mas respondeu "não" na tela
+ *   intermediária de compromisso com 5 ativos (jun/2026).
+ */
+type PlaybookGateReason = 'porte_baixo' | 'compromisso_negado';
 
 /**
  * Uni\u00e3o discriminada dos eventos que tem nome + params bem definidos.
