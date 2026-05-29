@@ -52,8 +52,8 @@ export function PlaybookSnapshot({
           <Mini
             icon={<Building2 className="h-5 w-5" />}
             label="Porte"
-            value={`${curvaAtivacao.colabAtivos} ativos`}
-            sub={`de ${snapshot.portePretty}`}
+            value={snapshot.portePretty}
+            sub={`${curvaAtivacao.colabAtivos} ativos na plataforma`}
           />
           <Mini icon={<Factory className="h-5 w-5" />} label="Setor" value={snapshot.setorPretty ?? snapshot.areaPretty} />
           <Mini icon={<Wifi className="h-5 w-5" />} label="Voz hoje" value={snapshot.vozAtualPretty} />

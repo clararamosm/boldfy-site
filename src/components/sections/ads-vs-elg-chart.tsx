@@ -51,11 +51,16 @@ export type AdsVsElgChartProps = {
 /*  SVG chart constants                                                        */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Polish 3 (jun/2026): padR reduzido de 105 → 30 porque os labels finais
+ * "ELG com Boldfy" / "Só ads" saíram do SVG (informação fica só na legenda
+ * fixa no topo). Sobra mais largura útil pra curva e pra animação da bolinha.
+ */
 const CHART = {
   vbW: 660,
   vbH: 290,
   padL: 50,
-  padR: 105, // espaço pros labels "ELG com Boldfy" / "Só ads"
+  padR: 30,
   padT: 32,
   padB: 38,
   /** Inflexão no Mês 3 (index 2 de 0..5). */
@@ -135,17 +140,16 @@ export function AdsVsElgChart({
 
   return (
     <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-7">
-      <Header faixaLabel={faixaLabel} conceitual={conceitual} semAds={semAds} />
-
-      {/* Layout simétrico jun/2026: cards à esquerda, gráfico à direita
-          (mais largo). items-stretch garante que a coluna de cards ocupe
-          a mesma altura do gráfico — primeira linha (2 cards) alinha com
-          o topo, segundo bloco (earned media) cresce e alinha com o
-          bottom. Legenda do gráfico foi pra dentro do wrapper, top-right
-          absolute, liberando espaço vertical. */}
+      {/* Layout jun/2026 (polish 3): header (h3 + subtítulo) MIGROU pra dentro
+          da coluna esquerda, em cima dos cards. Coluna direita fica só com o
+          gráfico — esticando vertical (do topo ao bottom do bloco) e absorvendo
+          o espaço lateral que antes era do header. Labels finais "ELG com
+          Boldfy" / "Só ads" foram removidos do SVG; informação fica só na
+          legenda fixa no canto superior direito do wrapper. */}
       <div className="grid gap-6 lg:grid-cols-[1fr_1.55fr] lg:items-stretch lg:gap-7">
-        {/* Coluna esquerda — cards (2 em linha + 1 cheio embaixo) */}
-        <div className="flex flex-col gap-3">
+        {/* Coluna esquerda — header + cards */}
+        <div className="flex flex-col gap-4">
+          <Header faixaLabel={faixaLabel} conceitual={conceitual} semAds={semAds} />
           <div className="grid grid-cols-2 gap-3">
             <MiniCard
               label="Você investe em ads"
@@ -190,7 +194,7 @@ export function AdsVsElgChart({
           />
         </div>
 
-        {/* Coluna direita — gráfico (maior). Legenda dentro, top-right. */}
+        {/* Coluna direita — gráfico maior. Legenda dentro, top-right. */}
         <ChartWrapper conceitual={conceitual}>
           <Legend />
           <ChartSvg adsData={adsData} elgData={elgData} />
@@ -210,6 +214,11 @@ export function AdsVsElgChart({
 /*  Sub-componentes                                                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Header da coluna esquerda (jun/2026 — antes era em cima do bloco inteiro,
+ * agora vive na esquerda em cima dos cards). Mais compacto, sem o gradient
+ * de hero — esse vibe fica reservado pro h2 do Bloco 2 ("Você está aqui hoje").
+ */
 function Header({
   faixaLabel,
   conceitual,
@@ -220,15 +229,15 @@ function Header({
   semAds: boolean;
 }) {
   return (
-    <div className="mb-5">
-      <h3 className="mb-2 font-headline text-xl font-black tracking-tight text-foreground sm:text-2xl">
+    <div>
+      <h3 className="mb-1.5 font-headline text-lg font-black leading-tight tracking-tight text-foreground sm:text-xl">
         Quando você{' '}
         <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
           diversifica o budget
         </span>{' '}
         em ELG
       </h3>
-      <p className="max-w-[720px] text-[13.5px] leading-relaxed text-muted-foreground">
+      <p className="text-[13px] leading-relaxed text-muted-foreground">
         {conceitual ? (
           <>Você pulou a pergunta sobre ads. Olha o cenário típico pra empresas do seu porte.</>
         ) : semAds ? (
@@ -238,9 +247,8 @@ function Header({
           </>
         ) : (
           <>
-            Você marcou que <strong>investe {faixaLabel?.toLowerCase()}</strong> em ads. Olha o que
-            muda no alcance acumulado a partir do momento em que parte do orçamento começa a virar
-            programa de ELG via Boldfy.
+            Você marcou que <strong>investe {faixaLabel}</strong> em ads. Olha o que muda no alcance
+            acumulado quando parte do orçamento vira programa de ELG.
           </>
         )}
       </p>
@@ -378,7 +386,27 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
   const finalAdsY = adsPoints[5][1];
   const finalElgX = elgPoints[5][0];
   const finalElgY = elgPoints[5][1];
-  const labelX = finalAdsX + 10;
+
+  /* ---------- Animação (jun/2026 polish 3) ----------
+     Bolinha que percorre a curva combinada (compartilhada M1-M3 + ELG M3-M6),
+     em loop. Implementação via SMIL <animateMotion> seguindo o path do
+     `combinedPath` (sharedPoints + elgPoints[inflex..5]).
+
+     Sequência (dur=5.5s):
+       0–2s    bolinha percorre o trecho compartilhado (M1 → M3) — fica
+               cinza-escura (cor do trecho), sem brilho ainda.
+       2–4s    bolinha sobe pela curva ELG (M3 → M6) — fica rosa primary,
+               com glow sutil acompanhando.
+       4–5.5s  pausa rápida no ponto final + reset.
+     Usa repeatCount="indefinite" pra loopar enquanto a página estiver aberta.
+
+     A mudança de cor M3→M6 é feita interpolando `fill` do círculo via
+     <animate> em paralelo. */
+  const combinedPoints = [...adsPoints.slice(0, inflex + 1), ...elgPoints.slice(inflex + 1)];
+  const combinedPath = buildPathFromPoints(combinedPoints);
+  const animationDurationS = 5.5;
+  const animationKeyTimes = '0;0.36;0.73;1';
+  // 36% = chegou no M3 (inflexão); 73% = chegou no M6 (final ELG); 100% = pausa
 
   return (
     <svg
@@ -436,27 +464,54 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
       <circle cx={finalAdsX} cy={finalAdsY} r={3.5} fill="#B8A4CC" stroke="#FBF7FD" strokeWidth={1.5} />
       <circle cx={finalElgX} cy={finalElgY} r={4.5} fill="#CD50F1" stroke="#FBF7FD" strokeWidth={1.5} />
 
-      {/* Labels finais à direita das linhas (dentro do padR=105) */}
-      <text
-        x={labelX}
-        y={finalElgY + 4}
-        fontFamily="Inter, sans-serif"
-        fontSize={11.5}
-        fontWeight={800}
-        fill="#CD50F1"
-      >
-        ELG com Boldfy
-      </text>
-      <text
-        x={labelX}
-        y={finalAdsY + 4}
-        fontFamily="Inter, sans-serif"
-        fontSize={11.5}
-        fontWeight={700}
-        fill="#7A5C8C"
-      >
-        Só ads
-      </text>
+      {/* Bolinha animada (jun/2026 polish 3) — percorre a curva combinada
+          em loop. Glow rosa puxa o olhar. Path animado vai do M1 ao M6
+          atravessando a inflexão; a cor da bolinha interpola pra dar o
+          efeito "cinza no shared → rosa na curva ELG" sem precisar de 2
+          círculos separados. */}
+      <circle r={6} fill="#CD50F1" opacity={0.95}>
+        <animateMotion
+          dur={`${animationDurationS}s`}
+          repeatCount="indefinite"
+          path={combinedPath}
+          rotate="auto"
+          keyTimes={animationKeyTimes}
+          keyPoints="0;0.5;1;1"
+          calcMode="linear"
+        />
+        <animate
+          attributeName="fill"
+          values="#5E2A67;#5E2A67;#CD50F1;#CD50F1"
+          keyTimes={animationKeyTimes}
+          dur={`${animationDurationS}s`}
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="r"
+          values="4;4;6;5"
+          keyTimes={animationKeyTimes}
+          dur={`${animationDurationS}s`}
+          repeatCount="indefinite"
+        />
+      </circle>
+      {/* Glow externo (segue a bolinha — 2º circle com mesmo animateMotion). */}
+      <circle r={12} fill="#CD50F1" opacity={0}>
+        <animateMotion
+          dur={`${animationDurationS}s`}
+          repeatCount="indefinite"
+          path={combinedPath}
+          keyTimes={animationKeyTimes}
+          keyPoints="0;0.5;1;1"
+          calcMode="linear"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;0;0.3;0.15"
+          keyTimes={animationKeyTimes}
+          dur={`${animationDurationS}s`}
+          repeatCount="indefinite"
+        />
+      </circle>
     </svg>
   );
 }
