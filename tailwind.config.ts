@@ -91,6 +91,10 @@ const config: Config = {
           '0%, 50%': { opacity: '1' },
           '51%, 100%': { opacity: '0' },
         },
+        shimmer: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -100,6 +104,7 @@ const config: Config = {
         'hero-float-slow': 'hero-float-slow 5s ease-in-out infinite',
         'hero-float-reverse': 'hero-float-reverse 4.5s ease-in-out infinite',
         'hero-blink': 'hero-blink 1s infinite',
+        shimmer: 'shimmer 2.5s linear infinite',
       },
     },
   },
