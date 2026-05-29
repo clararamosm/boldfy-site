@@ -129,6 +129,105 @@ html {
   100% { --glow-angle: 360deg; }
 }
 
+/* ============================================================ */
+/*  State of ELG opt-in box (Playbook wizard, identificacao step) */
+/*  ------------------------------------------------------------ */
+/*  Borda roxa fixa visível + ponto de brilho viajando ao redor.  */
+/*  Técnica: padding=2px no wrapper cria espaço pra borda; bg     */
+/*  com 2 camadas (conic com peak + linear base) preenche esse    */
+/*  espaço; inner box com bg branco e border-radius menor "corta" */
+/*  o miolo e deixa só o anel visível.                            */
+/*  Ver SPEC-playbook-state-of-elg-consent.md §6.2.               */
+/* ============================================================ */
+
+@property --shimmer-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.state-elg-box-wrapper {
+  position: relative;
+  border-radius: 14px;
+  padding: 2px;
+  background:
+    conic-gradient(
+      from var(--shimmer-angle),
+      transparent 0deg,
+      transparent 45deg,
+      rgba(232, 117, 255, 0.55) 65deg,
+      #CD50F1 78deg,
+      #E875FF 90deg,
+      #CD50F1 102deg,
+      rgba(232, 117, 255, 0.55) 115deg,
+      transparent 135deg,
+      transparent 360deg
+    ),
+    linear-gradient(rgba(205, 80, 241, 0.45), rgba(205, 80, 241, 0.45));
+  animation: state-elg-shimmer 3s linear infinite;
+  isolation: isolate;
+}
+
+.state-elg-box-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 22px;
+  background: radial-gradient(circle, rgba(205, 80, 241, 0.18), transparent 60%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes state-elg-shimmer {
+  to { --shimmer-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-elg-box-wrapper {
+    animation: none;
+  }
+}
+
+/* Inner box (bg branco, conteúdo cabe aqui). border-radius MENOR
+   que o wrapper (14 - 2 = 12px) pra alinhar com o offset do padding. */
+.state-elg-box-inner {
+  position: relative;
+  background: hsl(var(--background));
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+/* Toggle iOS-like (custom — accent-color não dá pra estilizar bg) */
+.state-elg-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: hsl(var(--muted));
+  border-radius: 999px;
+  transition: background 200ms;
+  flex-shrink: 0;
+}
+
+.state-elg-toggle-input:checked + .state-elg-toggle-track {
+  background: linear-gradient(135deg, #CD50F1, #E875FF);
+}
+
+.state-elg-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 200ms;
+}
+
+.state-elg-toggle-input:checked + .state-elg-toggle-track .state-elg-toggle-thumb {
+  transform: translateX(16px);
+}
+
 /* ============ Problem section animations ============ */
 
 /* Timeline steps — hidden by default, animate in */

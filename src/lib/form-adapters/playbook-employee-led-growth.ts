@@ -41,6 +41,29 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
   // garantia do Beta/Demo/Proposta.
   const segment = 'lider_b2b' as const;
   const newsletterOptIn = input.newsletterOptIn === true;
+
+  /**
+   * State of ELG — opt-OUT por default (Zod default true). A pessoa precisa
+   * desmarcar o toggle pra negar. Rastreado em acFields, activityData e
+   * personMetadataPatch pra auditoria + futuras queries em state_elg_aggregates.
+   *
+   * Ver SPEC-playbook-state-of-elg-consent.md §4.
+   */
+  const stateElgConsent = input.stateElgConsent !== false;
+
+  /**
+   * State of ELG — opt-IN pra receber relatório. Só dispara inscrição na
+   * lista AC `[Lista] Report: Panorama ELG no Brasil` se a pessoa marcou
+   * explicitamente. UI bloqueia esse checkbox quando consent off.
+   */
+  const stateElgReportSubscribe = input.stateElgReportSubscribe === true;
+
+  // Listas extras condicionais (resolvidas em buildAcListNames de crm.ts).
+  const extraAcListNames: string[] = [];
+  if (stateElgReportSubscribe) {
+    extraAcListNames.push('[Lista] Report: Panorama ELG no Brasil');
+  }
+
   // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
   const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
@@ -73,6 +96,9 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     sponsorship_lideranca: input.sponsorshipLideranca,
     tentativas_anteriores: input.tentativasAnteriores,
     newsletter_opt_in: newsletterOptIn ? 'SIM' : 'NAO',
+    // State of ELG — campos de auditoria pra segmentação no AC.
+    state_elg_consent: stateElgConsent ? 'SIM' : 'NAO',
+    state_elg_report_subscribe: stateElgReportSubscribe ? 'SIM' : 'NAO',
     ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
     ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
@@ -106,6 +132,10 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     // Consent + tracking
     lgpd_consent: input.lgpdConsent,
     newsletter_opt_in: newsletterOptIn,
+    // State of ELG — fica em metadata.form_data pra histórico (Opção A
+    // da SPEC §3.3 — sem colunas dedicadas em people por enquanto).
+    state_elg_consent: stateElgConsent,
+    state_elg_report_subscribe: stateElgReportSubscribe,
     origem: input.origem ?? null,
     utm_source: input.utm_source ?? null,
     utm_medium: input.utm_medium ?? null,
@@ -141,6 +171,12 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     segment,
     newsletterOptIn,
     formSlug: FORM_SLUG,
+
+    // State of ELG — consent + opt-in pra report (rastreável no CRM,
+    // resolvido em listas no buildAcListNames via extraAcListNames).
+    stateElgConsent,
+    stateElgReportSubscribe,
+    extraAcListNames,
 
     // Cargo — colunas dedicadas em people (enums novos da migration 0004)
     jobSeniority: input.cargoSenioridade,

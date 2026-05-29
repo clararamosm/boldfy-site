@@ -32,6 +32,7 @@ import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 import { QUESTIONS, STEP_ORDER } from './wizard-config';
 import type { StepKey, ChoiceOption } from './wizard-config';
+import { StateElgOptinBox } from './state-elg-optin-box';
 
 /* -------------------------------------------------------------------------- */
 /*  Tipos do estado                                                            */
@@ -59,6 +60,18 @@ type Answers = {
   telefone?: string;
   newsletterOptIn?: boolean;
   lgpdConsent?: boolean;
+  /**
+   * State of ELG — consent pra uso anonimizado das respostas no relatório
+   * "Panorama Employee-Led Growth no Brasil". Default `true` (opt-out).
+   * Ver SPEC-playbook-state-of-elg-consent.md.
+   */
+  stateElgConsent?: boolean;
+  /**
+   * State of ELG — opt-in pra receber o relatório em primeira mão.
+   * Default `false` (opt-in). Subordinado ao consent (UI bloqueia se
+   * consent off; adapter trata como false nesse caso).
+   */
+  stateElgReportSubscribe?: boolean;
 };
 
 type WizardState = {
@@ -126,7 +139,13 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
     }
     return {
       currentStep: 'porte',
-      answers: { porte: QUESTIONS.porte.initial },
+      // State of ELG default ON (opt-out) e report subscribe default OFF.
+      // Ver SPEC-playbook-state-of-elg-consent.md §3.1.
+      answers: {
+        porte: QUESTIONS.porte.initial,
+        stateElgConsent: true,
+        stateElgReportSubscribe: false,
+      },
       history: [],
     };
   });
@@ -244,6 +263,9 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         telefone: a.telefone || undefined,
         newsletterOptIn: a.newsletterOptIn ?? false,
         lgpdConsent: a.lgpdConsent,
+        // State of ELG — defaults coerentes com Zod (consent ON, subscribe OFF).
+        stateElgConsent: a.stateElgConsent ?? true,
+        stateElgReportSubscribe: a.stateElgReportSubscribe ?? false,
         porteColaboradores: a.porte ?? 0,
         cargoSenioridade: a.cargoSenioridade as never,
         cargoArea: a.cargoArea as never,
@@ -754,7 +776,7 @@ function IdentificationView({
             onChange={(e) => onAnswer('newsletterOptIn', e.target.checked)}
             className="mt-0.5 h-4 w-4 accent-primary"
           />
-          <span>Quero receber a newsletter da Boldfy sobre Employee-Led Growth</span>
+          <span>Quero receber a newsletter da Boldfy</span>
         </label>
         <label className="flex items-start gap-2 text-xs text-muted-foreground">
           <input
@@ -765,8 +787,7 @@ function IdentificationView({
             required
           />
           <span>
-            Aceito que minhas respostas sejam usadas anonimamente em pesquisas agregadas da Boldfy
-            (saiba mais na nossa{' '}
+            Concordo com o tratamento dos meus dados conforme a{' '}
             <a
               href="/legal#privacidade"
               target="_blank"
@@ -774,10 +795,27 @@ function IdentificationView({
               className="font-semibold text-primary underline underline-offset-2"
             >
               Política de Privacidade
-            </a>
-            ). <span className="text-primary">*</span>
+            </a>{' '}
+            da Boldfy. <span className="text-primary">*</span>
           </span>
         </label>
+
+        {/* Box State of ELG (opt-out consent + opt-in report subscription).
+            Ver docs/SPEC-playbook-state-of-elg-consent.md. */}
+        <div className="pt-1">
+          <StateElgOptinBox
+            consent={answers.stateElgConsent ?? true}
+            onConsentChange={(v) => {
+              onAnswer('stateElgConsent', v);
+              // Se desliga consent, força subscribe off (defensivo).
+              if (!v && answers.stateElgReportSubscribe) {
+                onAnswer('stateElgReportSubscribe', false);
+              }
+            }}
+            subscribe={answers.stateElgReportSubscribe ?? false}
+            onSubscribeChange={(v) => onAnswer('stateElgReportSubscribe', v)}
+          />
+        </div>
       </div>
     </FaiQuestion>
   );

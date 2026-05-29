@@ -333,6 +333,27 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
       message: 'Consentimento LGPD obrigatório',
     }),
 
+    /**
+     * State of ELG — consent pra uso anonimizado das respostas no relatório
+     * "Panorama Employee-Led Growth no Brasil". Default `true` (opt-out style):
+     * a pessoa precisa DESmarcar pra não consentir. Diferente do `lgpdConsent`,
+     * não é obrigatório — false é válido, só registra a escolha.
+     *
+     * Ver docs/SPEC-playbook-state-of-elg-consent.md §3.1.
+     */
+    stateElgConsent: z.boolean().default(true),
+
+    /**
+     * State of ELG — opt-in pra receber o relatório em primeira mão quando
+     * ele for publicado. Default `false`: só entra na lista AC
+     * `[Lista] Report: Panorama ELG no Brasil` se a pessoa marcar. Só faz
+     * sentido se `stateElgConsent === true`; a UI bloqueia o checkbox quando
+     * o toggle de consent tá off.
+     *
+     * Ver docs/SPEC-playbook-state-of-elg-consent.md §3.1.
+     */
+    stateElgReportSubscribe: z.boolean().default(false),
+
     // P1 — porte (gate validado client-side; server aceita ≥1 só pra defesa
     // em profundidade; gate real é UI). Aceita 1..100000.
     porteColaboradores: z.number().int().min(1).max(100_000),

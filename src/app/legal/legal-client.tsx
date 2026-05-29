@@ -284,13 +284,16 @@ export default function LegalClient() {
                   voltou. O IP do visualizador é armazenado de forma anonimizada (hash criptográfico
                   com sal secreto), sem possibilidade de reverter pra IP original.
                 </li>
-                <li>
-                  <strong>Uso anônimo em pesquisas agregadas</strong> — ao aceitar a LGPD no fim do
-                  quiz, você consente que suas respostas sejam usadas de forma{' '}
-                  <strong>anônima e agregada</strong> para construir benchmarks de mercado (relatório{' '}
-                  &quot;State of Employee-Led Growth&quot;). Nesses agregados não há nome, e-mail nem
-                  empresa identificáveis: só contagens (ex.: &quot;42% das empresas marketing relatam CAC
-                  subindo&quot;).
+                <li id="state-of-elg">
+                  <strong>Uso anônimo no Panorama ELG no Brasil</strong> — você pode optar (no fim
+                  do quiz, via toggle opt-out já ativado por default) por permitir que suas
+                  respostas sejam usadas de forma <strong>anônima e agregada</strong> pra construir
+                  o primeiro panorama de Employee-Led Growth do Brasil.{' '}
+                  <strong>Nesses agregados não há nome, e-mail nem empresa identificáveis</strong>:
+                  só contagens (ex.: &quot;42% das empresas de marketing relatam CAC subindo&quot;).
+                  Você pode optar separadamente, no mesmo box do form, por receber o relatório em
+                  primeira mão quando ele for publicado — esse opt-in é independente do consent de
+                  uso anônimo.
                 </li>
                 <li>
                   <strong>Active Campaign</strong> — seu contato é registrado no nosso provedor de

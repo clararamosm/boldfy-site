@@ -680,6 +680,15 @@ function buildAcListNames(lead: ClassifiedLead): string[] {
     names.push('Newsletter Boldfy');
   }
 
+  // 4. Listas extras decididas pelo adapter (opt-ins editoriais decididos
+  // dentro do form, fora das 3 famílias acima). Exemplo: o Playbook ELG
+  // adiciona `[Lista] Report: Panorama ELG no Brasil` quando a pessoa marca
+  // o checkbox de "receber em primeira mão" no box de State of ELG.
+  // Ver docs/SPEC-playbook-state-of-elg-consent.md §5.
+  if (lead.extraAcListNames && lead.extraAcListNames.length > 0) {
+    names.push(...lead.extraAcListNames);
+  }
+
   return names;
 }
 

@@ -130,7 +130,9 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     name: 'Playbook de Employee-Led Growth',
     kind: 'lider_b2b_only',
     acTag: 'Form: Playbook Employee-Led Growth',
-    acListName: null, // futura lista — Clara cria quando estruturar a cadência
+    // Lista criada manualmente no AC em 2026-05-29. Cadência de 4 emails
+    // documentada em docs/cadencia-playbook-elg.md.
+    acListName: '[Cadência] Playbook ELG',
   },
 };
 

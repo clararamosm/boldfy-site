@@ -46,6 +46,31 @@ export type ClassifiedLead = {
   newsletterOptIn: boolean;
   formSlug: FormSlug;
 
+  /**
+   * Listas extras do AC que o adapter quer inscrever o contato, ALÉM da
+   * lista de segmento + `formDef.acListName` + Newsletter. Resolvido em
+   * `buildAcListNames` (crm.ts §4). Use pra opt-ins editoriais decididos
+   * dentro do form, ex: `[Lista] Report: Panorama ELG no Brasil` quando
+   * a pessoa marca opt-in no form do Playbook.
+   *
+   * Forms que não precisam podem omitir.
+   */
+  extraAcListNames?: string[];
+
+  /**
+   * Consent pra uso anonimizado das respostas no relatório State of ELG.
+   * Default `true` no form do Playbook (opt-out). Forms sem esse campo
+   * podem omitir. Rastreável no CRM via metadata.form_data.
+   */
+  stateElgConsent?: boolean;
+
+  /**
+   * Opt-in pra receber o relatório State of ELG em primeira mão.
+   * Quando `true`, o adapter inclui `[Lista] Report: Panorama ELG no Brasil`
+   * em `extraAcListNames`. Forms que não pedem esse opt-in podem omitir.
+   */
+  stateElgReportSubscribe?: boolean;
+
   /* ---------------- Cargo (forms que coletam — mai/2026) ---------------- */
   /** Senioridade — enum job_seniority. Undefined em forms que não pedem cargo. */
   jobSeniority?: 'analista' | 'coordenador' | 'gerente' | 'diretor' | 'c_level' | null;

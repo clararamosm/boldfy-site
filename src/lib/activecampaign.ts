@@ -121,6 +121,25 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
   intencao_uso: { title: 'Intenção de uso', type: 'text' },
   newsletter_opt_in: { title: 'Newsletter opt-in', type: 'text' },
   observacoes: { title: 'Observações', type: 'textarea' },
+  /**
+   * State of ELG — consent pra uso anonimizado das respostas no relatório
+   * "Panorama Employee-Led Growth no Brasil" (default ON, opt-out).
+   * Valores: "SIM" | "NAO". Populado pelo adapter do Playbook.
+   *
+   * Perstag derivado do título: "State ELG Consent" → STATE_ELG_CONSENT
+   * (precisa bater com `state_elg_consent` que o adapter envia).
+   */
+  state_elg_consent: { title: 'State ELG Consent', type: 'text' },
+  /**
+   * State of ELG — opt-in pra receber o relatório em primeira mão (default
+   * OFF). Quando SIM, o adapter também adiciona o contato em
+   * `[Lista] Report: Panorama ELG no Brasil` via `extraAcListNames`.
+   * Valores: "SIM" | "NAO".
+   *
+   * Perstag derivado do título: "State ELG Report Subscribe"
+   * → STATE_ELG_REPORT_SUBSCRIBE.
+   */
+  state_elg_report_subscribe: { title: 'State ELG Report Subscribe', type: 'text' },
 };
 
 // Cache em memória (survive hot module reloads dentro da mesma lambda execution)
