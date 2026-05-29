@@ -77,47 +77,69 @@ export function PlaybookResultadosEsperados({
  * Posições das tags em coordenadas (x, y) em pixels do centro do canvas
  * 800×520 (viewBox -400 -260 800 520). Posições CURADAS — não geradas em
  * runtime — pra garantir que não sobrepõem o centro (raio 100px) nem
- * entre si (distância mínima ~130px entre tags), mas semi-aleatórias o
- * suficiente pra NÃO formar padrão radial. Mistura de distâncias (perto
- * e longe) reforça a aleatoriedade.
+ * entre si (distância mínima ~130px), mas semi-aleatórias o suficiente
+ * pra NÃO formar padrão radial.
  *
- * driftIdx (0-3): seleciona qual keyframe @resultados-radar-drift-* a tag
- * usa pra flutuação. 4 keyframes diferentes garantem que tags vizinhas não
- * floatam em sincronia (importante: animações em sync parecem grid).
+ * ORDEM dos slots = ORDEM de preenchimento conforme N resultados:
+ *
+ *   Slots 0-3 (4 cantos extremos): preenchem se o playbook tiver só 4
+ *     resultados (cenário retrocompat de playbooks gerados antes da
+ *     expansão jun/2026 que tinham apenas universais).
+ *   Slots 4-7 (4 meio-cantos): completam pra N=8 — cobertura completa
+ *     do canvas. Cenário-padrão jun/2026 (8 universais).
+ *   Slots 8-11 (4 internos): só quando dor + budget completam
+ *     (N=9, 10, 11). Mais densidade visual.
+ *
+ * Isso garante que o canvas nunca fica com buraco grande em um
+ * quadrante — mesmo cenários extremos (N=4 e N=11) ficam balanceados.
+ *
+ * driftIdx (0-3): seleciona qual keyframe @resultados-rede-drift-* a tag
+ * usa pra flutuação. Vizinhas usam keyframes diferentes pra evitar sync.
  */
 const TAG_POSITIONS: Array<{ x: number; y: number; driftIdx: number }> = [
-  { x: -280, y: -160, driftIdx: 0 },
-  { x:  -40, y: -210, driftIdx: 1 },
-  { x:  180, y: -180, driftIdx: 2 },
-  { x:  320, y:  -40, driftIdx: 3 },
-  { x:  290, y:  130, driftIdx: 0 },
-  { x:   40, y:  215, driftIdx: 1 },
-  { x: -200, y:  210, driftIdx: 2 },
-  { x: -310, y:   60, driftIdx: 3 },
-  { x: -160, y:  -60, driftIdx: 1 },
-  { x:  170, y:  -50, driftIdx: 2 },
-  { x: -100, y:  140, driftIdx: 3 },
-  { x:  200, y:   80, driftIdx: 0 },
+  // Slots 0-3: 4 cantos extremos (cobertura mínima)
+  { x: -300, y: -180, driftIdx: 0 }, // top-left
+  { x:  300, y: -180, driftIdx: 2 }, // top-right
+  { x:  280, y:  170, driftIdx: 1 }, // bottom-right
+  { x: -280, y:  180, driftIdx: 3 }, // bottom-left
+
+  // Slots 4-7: 4 meio-cantos (completa pra cobertura padrão N=8)
+  { x:  -40, y: -220, driftIdx: 1 }, // top-center
+  { x:  340, y:  -10, driftIdx: 3 }, // right-center
+  { x:   60, y:  225, driftIdx: 0 }, // bottom-center
+  { x: -340, y:    0, driftIdx: 2 }, // left-center
+
+  // Slots 8-11: 4 internos (alta densidade — só quando N=9-11)
+  { x: -170, y:  -50, driftIdx: 2 }, // inner top-left
+  { x:  180, y:  -60, driftIdx: 0 }, // inner top-right
+  { x: -120, y:  120, driftIdx: 3 }, // inner bottom-left
+  { x:  170, y:   90, driftIdx: 1 }, // inner bottom-right
 ];
 
 /**
  * Pares de conexão (linhas tracejadas no SVG de fundo). Mistura:
- *   - Algumas conexões centro (0,0) → tag (sugere "emana da marca")
- *   - Algumas conexões tag → tag (sugere "resultados se reforçam entre si")
- * Não é exaustivo (só algumas conexões pra ficar teia visual sem virar
- * spaghetti). Índices se referem ao TAG_POSITIONS acima.
+ *   - Centro → tag: sugere "emana da marca".
+ *   - Tag → tag: sugere "resultados se reforçam entre si".
+ *
+ * Índices se referem ao TAG_POSITIONS reordenado. Conexões que
+ * referenciam slots além de N (quando há menos resultados) são
+ * filtradas no render — evita linha indo pra slot sem tag.
  */
-const TAG_CONNECTIONS: Array<[number, number] | [null, number]> = [
-  // Centro → algumas tags (não todas — só as "linhas mestras")
-  [null, 0], [null, 2], [null, 5], [null, 7], [null, 9], [null, 10],
-  // Tag → tag (forma triângulos/teia entre vizinhas)
-  [0, 8],  // -280,-160 ↔ -160,-60
-  [1, 9],  // -40,-210 ↔ 170,-50
-  [2, 3],  // 180,-180 ↔ 320,-40
-  [4, 11], // 290,130 ↔ 200,80
-  [5, 10], // 40,215 ↔ -100,140
-  [6, 7],  // -200,210 ↔ -310,60
-  [8, 1],  // -160,-60 ↔ -40,-210
+const TAG_CONNECTIONS: Array<[number | null, number]> = [
+  // Centro → 4 cantos extremos (sempre visíveis, mesmo no cenário mínimo)
+  [null, 0], [null, 1], [null, 2], [null, 3],
+  // Centro → alguns meio-cantos
+  [null, 4], [null, 6],
+  // Cantos extremos ↔ internos (formam diagonais)
+  [0, 8],  // top-left ↔ inner-tl
+  [1, 9],  // top-right ↔ inner-tr
+  [2, 11], // bottom-right ↔ inner-br
+  [3, 10], // bottom-left ↔ inner-bl
+  // Meio-cantos ↔ internos
+  [4, 8],  // top-center ↔ inner-tl
+  [4, 9],  // top-center ↔ inner-tr
+  [6, 10], // bottom-center ↔ inner-bl
+  [6, 11], // bottom-center ↔ inner-br
 ];
 
 function RedeOrganica({ resultados, empresa }: { resultados: string[]; empresa: string }) {
@@ -151,23 +173,28 @@ function RedeOrganica({ resultados, empresa }: { resultados: string[]; empresa: 
         width="100%"
         style={{ maxWidth: 920 }}
       >
-        {TAG_CONNECTIONS.map(([from, to], i) => {
-          const fromPos = from === null ? { x: 0, y: 0 } : TAG_POSITIONS[from];
-          const toPos = TAG_POSITIONS[to];
-          if (!toPos) return null;
-          return (
-            <line
-              key={i}
-              x1={fromPos.x}
-              y1={fromPos.y}
-              x2={toPos.x}
-              y2={toPos.y}
-              stroke="rgba(205,80,241,0.20)"
-              strokeWidth="1"
-              strokeDasharray="2 6"
-            />
-          );
-        })}
+        {TAG_CONNECTIONS
+          // Filtra conexões que referenciam slots não-renderizados (N < 12).
+          // Se a tag de origem (from) OU destino (to) está além de N, skipa.
+          .filter(([from, to]) =>
+            (from === null || from < tags.length) && to < tags.length,
+          )
+          .map(([from, to], i) => {
+            const fromPos = from === null ? { x: 0, y: 0 } : TAG_POSITIONS[from];
+            const toPos = TAG_POSITIONS[to];
+            return (
+              <line
+                key={i}
+                x1={fromPos.x}
+                y1={fromPos.y}
+                x2={toPos.x}
+                y2={toPos.y}
+                stroke="rgba(205,80,241,0.20)"
+                strokeWidth="1"
+                strokeDasharray="2 6"
+              />
+            );
+          })}
       </svg>
 
       {/* Centro: marca com pulse (efeito sonar — vem da Opção C) */}

@@ -572,6 +572,15 @@ export const RESULTADOS_ESPERADOS: {
     'Aderência à cultura aumenta, colaboradores sentem que fazem parte de algo',
     'Lista de pessoas com ponto de contato com a marca, pronta pra remarketing direto sem CAC frio',
     'Case de earned media na mesa pra defender budget na próxima revisão',
+    // 4 universais novos jun/2026 — pra garantir mínimo de 8 resultados
+    // mesmo no cenário sem dor + sem budget (rede da bloco 4.5 fica
+    // visualmente cheia em todas as combinações). Cobrem ângulos
+    // diferentes dos 4 originais: talento, vendas, prospect orgânico,
+    // métrica de marketing.
+    'Pessoas no time crescem profissionalmente e viram referência no setor',
+    'Pipeline morno aquecido pelo conteúdo orgânico, outbound responde mais',
+    'Engajamento orgânico nos posts vira fonte de prospect e referral',
+    'Earned media mensurável aparece em todo review mensal de marketing',
   ],
   porDor: {
     cac_subindo:
@@ -623,6 +632,15 @@ export const RESULTADOS_SHORT_LABELS: Record<string, string> = {
     'Lista pra remarketing',
   'Case de earned media na mesa pra defender budget na próxima revisão':
     'Case pro board',
+  // Universais novos jun/2026
+  'Pessoas no time crescem profissionalmente e viram referência no setor':
+    'Pessoas crescem',
+  'Pipeline morno aquecido pelo conteúdo orgânico, outbound responde mais':
+    'Pipeline morno',
+  'Engajamento orgânico nos posts vira fonte de prospect e referral':
+    'Prospects orgânicos',
+  'Earned media mensurável aparece em todo review mensal de marketing':
+    'Métrica visível',
   // Por dor
   'CAC menor com earned media substituindo parte da mídia paga':
     'CAC menor',
