@@ -408,16 +408,24 @@ export const TIPS_LIBRARY: Tip[] = [
     numero: '',
     titulo: 'Ative colaboradores como referência viva pro próximo candidato',
     tagEspecifica: 'Talento saindo',
+    // Correção jun/2026 (Clara, sessão polish RH):
+    // - Descrição reescrita: cultura vivida NOS PERFIS é prova social (não
+    //   só bastidor técnico). Antes negava cultura, agora abraça.
+    // - Items reescritos: Brand Context AJUDA a inserir pilares culturais
+    //   (não "evita post de cultura"). Removidas 2 features inexistentes:
+    //   "Inbound de candidato rastreado" e "Dashboard mostra quem puxa
+    //   talento" — não temos isso na plataforma. Métricas são saúde do
+    //   programa + engajamento; cruzar com origem de candidato é trabalho
+    //   do RH com seus próprios dados.
     descricao:
-      'Candidato sênior pesquisa pessoas, não cultura. Bastidor técnico e jornada profissional dos colaboradores são o que criam prova social real.',
+      'Candidato sênior pesquisa pessoas E empresa antes de aplicar. Bastidor técnico + cultura vivida nos perfis dos colaboradores criam prova social, complementando a narrativa institucional da Company Page.',
     icon: 'Award',
     boldfy: {
       titulo: 'Trilhas LXP + brand alignment',
       items: [
-        '[[Trilhas LXP]] guiam colaborador a contar bastidor relevante',
-        '[[Brand Context]] evita post auto-centrado de cultura interna',
-        'Inbound de candidato qualificado rastreado',
-        'Dashboard mostra quais colaboradores puxam mais talento',
+        '[[Trilhas LXP]] guiam colaborador a misturar bastidor técnico com cultura vivida',
+        '[[Brand Context]] dá os pilares culturais da empresa pra cada perfil traduzir do jeito autêntico',
+        'Dashboard mostra saúde do programa (alcance, engajamento, consistência) pra RH cruzar com origem de candidato',
       ],
     },
     selectors: { dor: ['talento_saindo'] },
@@ -711,12 +719,18 @@ export const SETOR_APLICACAO: Record<'marketing' | 'vendas' | 'rh', SetorAplicac
   },
   rh: {
     setorBadge: 'RH / Employer Branding',
-    titulo: 'Pare de postar cultura interna pra atrair talento sênior',
+    // Correção jun/2026 (Clara, sessão polish RH): o posicionamento anterior
+    // era invertido — dizia "pare de postar cultura". LinkedIn na verdade
+    // PREMIA empresas que falam de cultura. A direção certa é dividir o
+    // conteúdo cultural em CAMADAS: Company Page conta o institucional,
+    // perfis dos colaboradores misturam autoridade técnica com cultura
+    // vivida. Talento sênior pesquisa AMBOS antes de aplicar.
+    titulo: 'Distribua a cultura entre Company Page e perfis pra atrair talento sênior',
     dicas: [
-      'Pilares de conteúdo puxados de Marketing pra alinhar narrativa de marca',
-      'Voz pessoal de cada colaborador respeitada (não vira porta-voz de cultura)',
-      'Evitar post auto-centrado de "olha que legal nosso happy-hour"',
-      'Inbound de talento qualificado rastreado por quem puxou no perfil',
+      'Cultura é conteúdo premium no LinkedIn — divida em camadas: Company Page fala "como somos", perfis dos colaboradores mostram "como vivo isso"',
+      'Conteúdo dos colaboradores mistura autoridade técnica + bastidor + cultura vivida (não só uma das três)',
+      'Pilares culturais saem do mesmo Brand Context que Marketing usa — narrativa de empresa e perfis batem',
+      'Talento sênior pesquisa pessoas E empresa antes de aplicar — precisa achar os dois falando',
     ],
   },
 };
