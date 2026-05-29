@@ -140,16 +140,18 @@ export function AdsVsElgChart({
 
   return (
     <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-7">
-      {/* Layout jun/2026 (polish 3): header (h3 + subtítulo) MIGROU pra dentro
-          da coluna esquerda, em cima dos cards. Coluna direita fica só com o
-          gráfico — esticando vertical (do topo ao bottom do bloco) e absorvendo
-          o espaço lateral que antes era do header. Labels finais "ELG com
-          Boldfy" / "Só ads" foram removidos do SVG; informação fica só na
-          legenda fixa no canto superior direito do wrapper. */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.55fr] lg:items-stretch lg:gap-7">
-        {/* Coluna esquerda — header + cards */}
+      {/* Layout jun/2026 (polish 4): h3 (título) virou linha 1 full-width
+          do bloco. As 2 colunas começam ABAIXO do título — coluna esquerda
+          inicia no subtítulo + cards; coluna direita só com o gráfico,
+          esticando vertical pra ocupar a mesma altura. Resultado: título
+          tem peso visual de seção, gráfico fica maior e a grade visual é
+          mais clara. */}
+      <HeaderTitulo />
+
+      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_1.55fr] lg:items-stretch lg:gap-7">
+        {/* Coluna esquerda — subtítulo + cards */}
         <div className="flex flex-col gap-4">
-          <Header faixaLabel={faixaLabel} conceitual={conceitual} semAds={semAds} />
+          <HeaderSubtitulo faixaLabel={faixaLabel} conceitual={conceitual} semAds={semAds} />
           <div className="grid grid-cols-2 gap-3">
             <MiniCard
               label="Você investe em ads"
@@ -215,11 +217,29 @@ export function AdsVsElgChart({
 /* -------------------------------------------------------------------------- */
 
 /**
- * Header da coluna esquerda (jun/2026 — antes era em cima do bloco inteiro,
- * agora vive na esquerda em cima dos cards). Mais compacto, sem o gradient
- * de hero — esse vibe fica reservado pro h2 do Bloco 2 ("Você está aqui hoje").
+ * Título do bloco (jun/2026 polish 4) — vira linha 1 full-width do bloco,
+ * acima do grid de 2 colunas. Antes vivia na coluna esquerda em cima dos
+ * cards; agora tem peso de "título de seção" e marca o início do bloco.
  */
-function Header({
+function HeaderTitulo() {
+  return (
+    <h3 className="font-headline text-xl font-black leading-tight tracking-tight text-foreground sm:text-2xl">
+      Quando você{' '}
+      <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
+        diversifica o budget
+      </span>{' '}
+      em ELG
+    </h3>
+  );
+}
+
+/**
+ * Subtítulo personalizado pelo respondente (faixa de ads ou estado conceitual).
+ * Vive na coluna esquerda em cima dos cards. Bloca verticalmente com o início
+ * do gráfico — Clara pediu pra "alinhar gráfico com o subtítulo, não com o
+ * título" (polish 4).
+ */
+function HeaderSubtitulo({
   faixaLabel,
   conceitual,
   semAds,
@@ -229,30 +249,21 @@ function Header({
   semAds: boolean;
 }) {
   return (
-    <div>
-      <h3 className="mb-1.5 font-headline text-lg font-black leading-tight tracking-tight text-foreground sm:text-xl">
-        Quando você{' '}
-        <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
-          diversifica o budget
-        </span>{' '}
-        em ELG
-      </h3>
-      <p className="text-[13px] leading-relaxed text-muted-foreground">
-        {conceitual ? (
-          <>Você pulou a pergunta sobre ads. Olha o cenário típico pra empresas do seu porte.</>
-        ) : semAds ? (
-          <>
-            Você marcou que <strong>não investe em ads</strong>. ELG vira o canal pra começar a gerar
-            earned media sem precisar abrir budget de mídia paga.
-          </>
-        ) : (
-          <>
-            Você marcou que <strong>investe {faixaLabel}</strong> em ads. Olha o que muda no alcance
-            acumulado quando parte do orçamento vira programa de ELG.
-          </>
-        )}
-      </p>
-    </div>
+    <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+      {conceitual ? (
+        <>Você pulou a pergunta sobre ads. Olha o cenário típico pra empresas do seu porte.</>
+      ) : semAds ? (
+        <>
+          Você marcou que <strong>não investe em ads</strong>. ELG vira o canal pra começar a gerar
+          earned media sem precisar abrir budget de mídia paga.
+        </>
+      ) : (
+        <>
+          Você marcou que <strong>investe {faixaLabel}</strong> em ads. Olha o que muda no alcance
+          acumulado quando parte do orçamento vira programa de ELG.
+        </>
+      )}
+    </p>
   );
 }
 
@@ -291,7 +302,7 @@ function ChartWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex h-full min-h-[300px] flex-col rounded-xl border border-border bg-secondary/40 p-4 sm:p-5">
+    <div className="relative flex h-full min-h-[380px] flex-col rounded-xl border border-border bg-secondary/40 p-4 sm:p-5">
       {children}
       {conceitual && (
         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#FBF7FD]/93 to-[#F5EDF8]/96 px-6 text-center">
