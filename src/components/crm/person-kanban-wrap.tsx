@@ -17,7 +17,7 @@ import { useState, useTransition, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PeopleByStatus } from '@/lib/crm-queries';
 import { PersonKanban } from './person-kanban';
-import { mergePeople } from '@/app/internal/crm/actions';
+import { mergePeople, deletePeople } from '@/app/internal/crm/actions';
 
 type SelectionContext = {
   selected: Set<string>;
@@ -39,6 +39,7 @@ export function PersonKanbanWrap({ data }: { data: PeopleByStatus }) {
   const [, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [merging, setMerging] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -55,6 +56,28 @@ export function PersonKanbanWrap({ data }: { data: PeopleByStatus }) {
 
   function clearSelection() {
     setSelected(new Set());
+  }
+
+  function handleDelete() {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const confirmation = confirm(
+      `Excluir ${ids.length} lead${ids.length === 1 ? '' : 's'}? Activities e meetings linkados cascateiam. Empresas ficam intactas. Sem volta.`,
+    );
+    if (!confirmation) return;
+
+    setDeleting(true);
+    startTransition(async () => {
+      const res = await deletePeople(ids);
+      setDeleting(false);
+      if (!res.ok) {
+        alert(`Erro: ${res.error}`);
+        return;
+      }
+      alert(`${res.deleted ?? 0} lead${res.deleted === 1 ? '' : 's'} excluído${res.deleted === 1 ? '' : 's'}.`);
+      clearSelection();
+      router.refresh();
+    });
   }
 
   function handleMerge() {
@@ -99,12 +122,18 @@ export function PersonKanbanWrap({ data }: { data: PeopleByStatus }) {
           </div>
           <div className="select-actions">
             {selected.size >= 2 ? (
-              <button onClick={handleMerge} disabled={merging} className="crm-btn crm-btn-primary">
+              <button onClick={handleMerge} disabled={merging || deleting} className="crm-btn crm-btn-primary">
                 {merging ? 'Mesclando…' : `🔀 Mesclar ${selected.size} leads`}
               </button>
-            ) : (
-              <span style={{ fontSize: 11, color: '#9D85B3' }}>selecione mais 1 pra mesclar</span>
-            )}
+            ) : null}
+            <button
+              onClick={handleDelete}
+              disabled={merging || deleting}
+              className="crm-btn"
+              style={{ background: 'rgba(192, 57, 43, 0.1)', color: '#C0392B' }}
+            >
+              {deleting ? 'Excluindo…' : `🗑 Excluir ${selected.size}`}
+            </button>
             <button onClick={clearSelection} className="crm-btn">Cancelar</button>
           </div>
         </div>

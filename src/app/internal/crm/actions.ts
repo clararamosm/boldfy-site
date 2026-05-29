@@ -701,6 +701,41 @@ export async function deleteCompanies(companyIds: string[]): Promise<ActionResul
 /*  Re-exports pra Settings (limpar cache ao mudar)                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Deleta pessoas em bulk. Pra limpeza de leads de teste, ruído de import,
+ * duplicatas que não justificam merge, etc.
+ *
+ * Activities e meetings vinculados cascateiam (FK onDelete:cascade no schema).
+ * Empresa fica intocada (pessoa pode ter sido "última empresa" dela — empresa
+ * vira órfã, Clara decide depois se deleta ou capta).
+ *
+ * Diferente de `archivePerson` (soft-delete que preserva pra histórico). Esse
+ * é hard delete pra casos onde a pessoa não deveria existir no CRM.
+ */
+export async function deletePeople(personIds: string[]): Promise<ActionResult & { deleted?: number }> {
+  const ids = personIds.filter((id) => UuidSchema.safeParse(id).success);
+  if (ids.length === 0) return { ok: false, error: 'Nenhum ID válido' };
+
+  try {
+    const { db: database, people: peopleTable } = await import('@/db');
+    const { inArray } = await import('drizzle-orm');
+
+    const result = await database
+      .delete(peopleTable)
+      .where(inArray(peopleTable.id, ids))
+      .returning({ id: peopleTable.id });
+
+    revalidatePath('/internal/crm');
+    revalidatePath('/internal/crm/people');
+
+    return { ok: true, deleted: result.length };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[deletePeople] failed:', msg);
+    return { ok: false, error: msg };
+  }
+}
+
 export async function refreshStatusCache(): Promise<ActionResult> {
   invalidateStatusCache();
   revalidatePath('/internal/crm');
