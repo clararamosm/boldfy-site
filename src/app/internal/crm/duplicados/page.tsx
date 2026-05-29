@@ -19,7 +19,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { db, people, companies } from '@/db';
-import { sql, and, eq, isNull } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { DuplicatesList } from './duplicates-list';
 
 export const metadata: Metadata = {
@@ -44,7 +44,7 @@ export type DuplicatePersonPair = {
 async function findDuplicateCompanies(): Promise<DuplicateCompanyPair[]> {
   // Self-join: pares onde um nome contém o outro (substring case-insensitive).
   // Limit 100 pares pra evitar query custosa quando tiver muitas empresas.
-  const rows = await db.execute<{
+  const result = await db.execute<{
     a_id: string; a_name: string; a_linkedin: string | null; a_industry: string | null; a_size: string | null; a_count: number;
     b_id: string; b_name: string; b_linkedin: string | null; b_industry: string | null; b_size: string | null; b_count: number;
   }>(sql`
@@ -76,7 +76,7 @@ async function findDuplicateCompanies(): Promise<DuplicateCompanyPair[]> {
     LIMIT 100
   `);
 
-  return rows.map((r) => ({
+  return result.rows.map((r) => ({
     a: { id: r.a_id, name: r.a_name, linkedinUrl: r.a_linkedin, industry: r.a_industry, size: r.a_size, peopleCount: r.a_count },
     b: { id: r.b_id, name: r.b_name, linkedinUrl: r.b_linkedin, industry: r.b_industry, size: r.b_size, peopleCount: r.b_count },
     reason: r.a_name.toLowerCase().length < r.b_name.toLowerCase().length
@@ -87,7 +87,7 @@ async function findDuplicateCompanies(): Promise<DuplicateCompanyPair[]> {
 
 async function findDuplicatePeople(): Promise<DuplicatePersonPair[]> {
   // Pares com mesmo name (case-insensitive trim).
-  const rows = await db.execute<{
+  const result = await db.execute<{
     a_id: string; a_name: string; a_email: string | null; a_job: string | null; a_company: string | null;
     b_id: string; b_name: string; b_email: string | null; b_job: string | null; b_company: string | null;
   }>(sql`
@@ -108,7 +108,7 @@ async function findDuplicatePeople(): Promise<DuplicatePersonPair[]> {
     LIMIT 100
   `);
 
-  return rows.map((r) => ({
+  return result.rows.map((r) => ({
     a: { id: r.a_id, name: r.a_name, email: r.a_email, jobTitle: r.a_job, companyName: r.a_company },
     b: { id: r.b_id, name: r.b_name, email: r.b_email, jobTitle: r.b_job, companyName: r.b_company },
     reason: 'Mesmo nome',
