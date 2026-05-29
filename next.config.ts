@@ -149,6 +149,20 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
+      // CORS pros endpoints da extensão Chrome.
+      // A extensão MV3 roda em origin chrome-extension://<id> e bate em
+      // /api/extension/*. Sem CORS aberto aqui, browser bloqueia POST após
+      // preflight OPTIONS. Restringir ao origin específico da extensão não
+      // dá pq o id muda toda vez que recarrega unpacked.
+      {
+        source: '/api/extension/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: 'Access-Control-Max-Age', value: '86400' },
+        ],
+      },
     ];
   },
 
