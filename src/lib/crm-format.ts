@@ -258,6 +258,13 @@ export function describeActivity(
       const name = (data?.automation_name as string) ?? (data?.tag_that_triggered as string) ?? 'cadência';
       return { icon: '🔄', text: `Entrou na cadência: ${name}`, category: 'email' };
     }
+    case 'cadence_completed': {
+      // Disparado pelo endpoint /api/webhooks/ac/cadence-completed
+      // (acionado pelo "Send a webhook" do AC no penúltimo passo da
+      // automation). Marca o fim do nurture pra essa cadência específica.
+      const name = (data?.cadence_name as string) ?? (data?.cadence_slug as string) ?? 'cadência';
+      return { icon: '✓', text: `Concluiu cadência: ${name}`, category: 'email' };
+    }
 
     case 'cal_scheduled':
       return { icon: '📅', text: 'Agendou no Cal.com', category: 'cal' };

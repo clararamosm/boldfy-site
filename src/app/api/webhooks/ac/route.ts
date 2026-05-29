@@ -25,7 +25,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, people, activities } from '@/db';
 import { eq, sql } from 'drizzle-orm';
-import { automationForTag } from '@/lib/ac-tag-mapping';
+import { automationForTag, cadenceFromCompletedTag } from '@/lib/ac-tag-mapping';
 
 const AC_WEBHOOK_SECRET = process.env.AC_WEBHOOK_SECRET;
 
@@ -165,15 +165,40 @@ function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; da
     case 'contact_tag_added':
     case 'contact_tag':
     case 'tag': {
-      // Task 1 (spec §6): tag adicionada → consulta mapa ac-tag-mapping.
-      // Se a tag dispara automation conhecida, emit 'automation_started' com
-      // o nome legível pra timeline ("🔄 Entrou na cadência X"). Se não tem
-      // mapping, emit 'tag_added' genérico (legível mas sem nome de cadência).
+      // Tag adicionada — consulta mapas em ac-tag-mapping.ts.
+      //
+      // Duas famílias de tags são interpretadas:
+      //
+      //   1. Tag de form (entrada) — mapeada em AC_TAG_TO_AUTOMATION
+      //      → activity 'automation_started' ("🔄 Entrou na cadência X")
+      //
+      //   2. Tag com prefixo "Concluiu: " (saída) — detecção via prefixo
+      //      → activity 'cadence_completed' ("✓ Concluiu cadência: X")
+      //      Aplicada no penúltimo passo da automation, antes do unsubscribe.
+      //
+      // Tag não mapeada em nenhum dos dois é ignorada (não polui timeline).
       const tagName = payload.contact_tag?.tag
         ?? payload.tag?.tag
         ?? payload.tag?.name
         ?? '';
-      const automationName = tagName ? automationForTag(tagName) : null;
+      if (!tagName) return null;
+
+      // Tenta detectar cadência concluída primeiro (mais específico).
+      const completedCadence = cadenceFromCompletedTag(tagName);
+      if (completedCadence) {
+        return {
+          type: 'cadence_completed',
+          weight: 0,
+          data: {
+            ...baseData,
+            cadence_name: completedCadence,
+            tag_that_triggered: tagName,
+          },
+        };
+      }
+
+      // Tenta entrada na cadência (mapa de Form: X).
+      const automationName = automationForTag(tagName);
       if (automationName) {
         return {
           type: 'automation_started',
@@ -181,8 +206,8 @@ function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; da
           data: { ...baseData, automation_name: automationName, tag_that_triggered: tagName },
         };
       }
-      // Tag não mapeada — ignora (não polui timeline). Habilitar log de
-      // 'tag_added' aqui se virar útil pra debug futuro.
+
+      // Tag não reconhecida em nenhuma das famílias — ignora.
       return null;
     }
     default:
