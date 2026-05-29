@@ -5,23 +5,21 @@
  * Spec §1 e §3 do copy-final. Reusa o componente compartilhado <RoiSimulator />
  * com defaults pré-preenchidos pela curva de ativação.
  *
- * Embaixo da calculadora, bridge curto pras outras 2 áreas com link.
+ * Jun/2026 (refinamento pós-preview): o bridge "E ainda resolve pra X e Y"
+ * que ficava aqui embaixo migrou pro Bloco 3.5 (Setor Aplicação) — faz mais
+ * sentido lá, onde o respondente acabou de ver a versão personalizada do
+ * setor dele.
  */
 
-import Link from 'next/link';
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { RoiSimulator } from '@/components/sections/roi-simulator';
 import { SectionTag } from './playbook-snapshot';
 
 export function PlaybookCalculadora({
   calculadora,
-  outrasAreas,
 }: {
   calculadora: RenderedData['calculadora'];
-  outrasAreas: RenderedData['outrasAreas'];
 }) {
-  const linkPorSlug = (slug: 'marketing' | 'vendas' | 'rh') => `/para/${slug}`;
-
   return (
     <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-[1080px] px-6">
@@ -45,22 +43,6 @@ export function PlaybookCalculadora({
           // custo Boldfy, não earned vs custo Ads).
           hideAdsComparison
         />
-
-        {/* Bridge curto pras outras áreas */}
-        {outrasAreas.length > 0 && (
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            E ainda resolve pra{' '}
-            {outrasAreas.map((a, i) => (
-              <span key={a.slug}>
-                <Link href={linkPorSlug(a.slug)} className="font-bold text-primary hover:underline">
-                  {a.pretty}
-                </Link>
-                {i < outrasAreas.length - 1 ? ' e ' : ''}
-              </span>
-            ))}
-            , com playbooks específicos pra cada área.
-          </p>
-        )}
       </div>
     </section>
   );

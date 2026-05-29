@@ -63,7 +63,11 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       />
 
       {/* Bloco 3 — Tese + Bloco 3.5 Setor aplicação (mai/2026 3ª curadoria) */}
-      <PlaybookTese motivos={data.tese.motivos} setorAplicacao={data.setorAplicacao} />
+      <PlaybookTese
+        motivos={data.tese.motivos}
+        setorAplicacao={data.setorAplicacao}
+        outrasAreas={data.outrasAreas}
+      />
 
       {/* Bloco 4 — Dicas + Boldfy (accordion) */}
       <PlaybookDicas dicas={data.dicas} slug={slug} />
@@ -76,10 +80,10 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
 
-      {/* Bloco 6 — Banner Sem Budget (condicional, mai/2026 3ª curadoria) +
+      {/* Bloco 6 — Banner Programa Beta (universal, narrativa por budgetStatus) +
           Calculadora interativa (RoiSimulator embed) */}
       {data.bannerSemBudget && <PlaybookBannerSemBudget banner={data.bannerSemBudget} />}
-      <PlaybookCalculadora calculadora={data.calculadora} outrasAreas={data.outrasAreas} />
+      <PlaybookCalculadora calculadora={data.calculadora} />
 
       {/* Bloco 7 — Battle card (gráfico 2 colunas) */}
       <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />

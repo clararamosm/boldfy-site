@@ -15,11 +15,21 @@
  *   - Embaixo dos 3 mini-cards: linha jaba "E a Boldfy te ajuda nos três"
  *     ocupando a largura dos 3 mini-cards.
  *
+ * Jun/2026 (refinamento pós-preview): o bridge "E ainda resolve pra X e Y,
+ * com playbooks específicos pra cada área" veio da calculadora pra cá —
+ * fica visualmente embaixo do card de setor (onde a pessoa acabou de ler a
+ * versão personalizada do dela). Renderiza só se houver outras áreas.
+ *
  * Substituiu as antigas dicas A_MARKETING / A_VENDAS / A_RH do TIPS_LIBRARY.
  */
 
+import Link from 'next/link';
 import { BookOpen, CheckSquare, MonitorSmartphone } from 'lucide-react';
-import type { SetorAplicacao, TeseMotivo } from '@/lib/playbook/templates/types';
+import type {
+  RenderedData,
+  SetorAplicacao,
+  TeseMotivo,
+} from '@/lib/playbook/templates/types';
 import { SETOR_JABA, SETOR_RESOLUCAO_MOTORES } from '@/lib/playbook/templates';
 import { FaiAvatar } from '@/components/ui/fai-avatar';
 import { SectionTag } from './playbook-snapshot';
@@ -33,9 +43,11 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function PlaybookTese({
   motivos,
   setorAplicacao,
+  outrasAreas,
 }: {
   motivos: TeseMotivo[];
   setorAplicacao?: SetorAplicacao;
+  outrasAreas?: RenderedData['outrasAreas'];
 }) {
   return (
     <section className="bg-secondary/30 py-16 sm:py-24">
@@ -78,6 +90,10 @@ export function PlaybookTese({
         {/* Bloco 3.5 — Setor aplicação (logo abaixo dos cards da tese,
             sem título separado, faz parte do mesmo bloco visual) */}
         {setorAplicacao && <SetorAplicacaoCard data={setorAplicacao} />}
+
+        {/* Bridge curto pras outras áreas — embaixo do card de setor.
+            Veio da calculadora no refinamento de jun/2026 (Clara). */}
+        {outrasAreas && outrasAreas.length > 0 && <OutrasAreasBridge outrasAreas={outrasAreas} />}
       </div>
     </section>
   );
@@ -142,5 +158,36 @@ function SetorAplicacaoCard({ data }: { data: SetorAplicacao }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Bridge "outras áreas"                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Linha discreta abaixo do card de Setor Aplicação mostrando os links das
+ * outras duas áreas. Foco editorial: depois de ler "como Marketing aplica",
+ * a pessoa percebe que existe a mesma profundidade pra Vendas e RH.
+ */
+function OutrasAreasBridge({
+  outrasAreas,
+}: {
+  outrasAreas: NonNullable<RenderedData['outrasAreas']>;
+}) {
+  const linkPorSlug = (slug: 'marketing' | 'vendas' | 'rh') => `/para/${slug}`;
+  return (
+    <p className="mt-6 text-center text-sm text-muted-foreground">
+      E ainda resolve pra{' '}
+      {outrasAreas.map((a, i) => (
+        <span key={a.slug}>
+          <Link href={linkPorSlug(a.slug)} className="font-bold text-primary hover:underline">
+            {a.pretty}
+          </Link>
+          {i < outrasAreas.length - 1 ? ' e ' : ''}
+        </span>
+      ))}
+      , com playbooks específicos pra cada área.
+    </p>
   );
 }

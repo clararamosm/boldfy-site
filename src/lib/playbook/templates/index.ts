@@ -493,10 +493,11 @@ export const TIPS_LIBRARY: Tip[] = [
   // B_SEM_BUDGET REMOVIDA — VAI PRO BANNER DA CALCULADORA (mai/2026 3ª curadoria)
   //
   // Conteúdo da antiga dica agora vive em 2 lugares:
-  //   1. `BANNER_SEM_BUDGET` (definida mais abaixo) — banner acima da
-  //      calculadora pra disparar leitura nesse perfil.
+  //   1. `BANNER_BETA_POR_BUDGET` (definida mais abaixo) — banner UNIVERSAL
+  //      acima da calculadora, com narrativa adaptada ao budgetStatus
+  //      (sem_budget é uma das 4 variantes; jun/2026 ampliou pra todos).
   //   2. Resultado condicional em RESULTADOS_ESPERADOS.porBudget.sem_budget.
-  // Resolução: ver `resolveBannerSemBudget(quiz)` em render.ts.
+  // Resolução: ver `resolveBannerBeta(quiz)` em render.ts.
 
   // ===================== SPONSORSHIP-ESPECÍFICAS (2 — reformuladas mai/2026) ==
   {
@@ -674,18 +675,51 @@ export const SETOR_RESOLUCAO_MOTORES: SetorResolucaoMotor[] = [
 export const SETOR_JABA = 'E a Boldfy te ajuda nos três';
 
 /* -------------------------------------------------------------------------- */
-/*  Banner SEM_BUDGET (Bloco 6 — acima da calculadora, mai/2026 3ª curadoria) */
+/*  Banner Beta (Bloco 6 — acima da calculadora)                              */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Banner condicional acima da calculadora quando `budgetStatus === 'sem_budget'`.
- * Conteúdo migrado da antiga dica B_SEM_BUDGET — fica mais útil próximo da
- * calculadora, onde a pessoa decide budget, do que perdido entre as dicas.
+ * Banner UNIVERSAL acima da calculadora (mai/2026 — refinamento pós-preview).
+ *
+ * O programa beta é oferta válida pra qualquer perfil, então o banner aparece
+ * pra todo mundo. O que muda é a NARRATIVA, ajustada ao budgetStatus do
+ * respondente — mesma oferta, framing diferente.
+ *
+ * Originalmente esse banner só aparecia quando `budgetStatus === 'sem_budget'`
+ * (sucessor da antiga dica B_SEM_BUDGET). Na revisão de jun/2026 a Clara
+ * pediu pra ampliar: a oferta beta é relevante até pra quem tem budget
+ * aprovado (vira "antes de fechar contrato cheio, roda 1 mês grátis pra ver
+ * se serve"). A oferta operacional é a mesma; o copy adapta o gatilho.
+ *
+ * Compat retroativa: a constante antiga `BANNER_SEM_BUDGET` foi removida.
+ * Playbooks no banco ainda têm `rendered_data.bannerSemBudget` preenchido
+ * com o objeto da época — render do output só lê esse campo, então
+ * funcionam normalmente.
  */
-export const BANNER_SEM_BUDGET: BannerOferta = {
-  titulo: 'Sem budget hoje? Tem rota: 1º mês grátis pelo programa beta',
-  desc:
-    'Pacote Beta libera o primeiro mês com 5 colaboradores rodando, sem custo. Do 2º mês em diante, valor beta (preço reduzido) nos 6 meses seguintes. Dá tempo de gerar dado pra defender budget no Q seguinte.',
+export const BANNER_BETA_POR_BUDGET: Record<
+  'aprovado' | 'planejando' | 'precisa_justificar' | 'sem_budget',
+  BannerOferta
+> = {
+  aprovado: {
+    titulo: 'Antes de fechar contrato cheio: rode 1 mês grátis pelo programa beta',
+    desc:
+      'Mesmo com budget aprovado, faz sentido começar pelo Pacote Beta. 1º mês grátis com 5 colaboradores rodando, e os 6 meses seguintes com preço beta (reduzido). Você só fecha o cheio depois de ver o dado real da sua operação.',
+  },
+  planejando: {
+    titulo: 'Já tá planejando? Use o programa beta pra entrar com risco zero',
+    desc:
+      'Pacote Beta libera o 1º mês grátis com 5 colaboradores rodando, e mais 6 meses com preço beta. Você sai do "tô planejando" pra "tô rodando e medindo" sem precisar gastar o budget cheio antes de testar.',
+  },
+  precisa_justificar: {
+    titulo: 'Precisa justificar? Pega 1 mês grátis pra ter dado na próxima revisão',
+    desc:
+      'O Pacote Beta libera o 1º mês com 5 colaboradores rodando, sem custo, e mais 6 meses com preço beta. Você chega na próxima revisão de budget com case real (earned media gerado, alcance dos colaboradores, custo evitado de mídia paga) em vez de slide teórico.',
+  },
+  sem_budget: {
+    titulo: 'Sem budget hoje? Tem rota: 1º mês grátis pelo programa beta',
+    desc:
+      'Pacote Beta libera o primeiro mês com 5 colaboradores rodando, sem custo. Do 2º mês em diante, valor beta (preço reduzido) nos 6 meses seguintes. Dá tempo de gerar dado pra defender budget no Q seguinte.',
+  },
 };
 
 /* -------------------------------------------------------------------------- */
