@@ -253,11 +253,28 @@ export async function upsertCompany(input: UpsertCompanyInput): Promise<CrmResul
       return { ok: false, error: `Nome "${name}" está na blacklist (não é empresa real)` };
     }
 
-    const existing = await db
-      .select()
-      .from(companies)
-      .where(sql`LOWER(${companies.name}) = LOWER(${name})`)
-      .limit(1);
+    // Ordem de dedup (mai/2026 — captura LinkedIn revelou problema de duplicação):
+    //   1. linkedin_url (chave forte, vem da captura de /company/<slug>)
+    //   2. LOWER(name) exato (fallback p/ casos sem linkedinUrl)
+    //
+    // Match em duas etapas evita que captura de empresa via /company/ crie
+    // duplicata de empresa "órfã" criada antes pela captura de pessoa
+    // (nome parseado do headline diverge do nome oficial no LinkedIn).
+    let existing: Company[] = [];
+    if (input.linkedinUrl) {
+      existing = await db
+        .select()
+        .from(companies)
+        .where(eq(companies.linkedinUrl, input.linkedinUrl))
+        .limit(1);
+    }
+    if (existing.length === 0) {
+      existing = await db
+        .select()
+        .from(companies)
+        .where(sql`LOWER(${companies.name}) = LOWER(${name})`)
+        .limit(1);
+    }
 
     if (existing[0]) {
       const updates: Partial<Company> = {};

@@ -21,7 +21,22 @@ const KEYS = {
   tokenLabel: 'boldfy_token_label',
   dailyCount: 'boldfy_daily_count',
   lastCapture: 'boldfy_last_capture',
+  /**
+   * Pessoa capturada recente que ainda precisa ser linkada a uma empresa.
+   * Set após captura de pessoa, consumido (e limpo) na próxima captura de
+   * empresa. TTL 30 min — depois disso assume que Clara não vai mais linkar.
+   */
+  pendingPersonLink: 'boldfy_pending_person_link',
 } as const;
+
+/** TTL pra link automático pessoa→empresa em sequência (30 min). */
+const PENDING_LINK_TTL_MS = 30 * 60 * 1000;
+
+type PendingPersonLink = {
+  personId: string;
+  personName: string;
+  setAt: number; // epoch ms
+};
 
 export async function getToken(): Promise<string | null> {
   const r = await chrome.storage.local.get(KEYS.token);
@@ -72,4 +87,44 @@ export async function setLastCapture(c: LastCapture): Promise<void> {
 export async function getLastCapture(): Promise<LastCapture | null> {
   const r = await chrome.storage.local.get(KEYS.lastCapture);
   return (r[KEYS.lastCapture] as LastCapture | undefined) ?? null;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Pending person link — fluxo pessoa → empresa em sequência                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Marca uma pessoa como pendente de link com empresa. Chamado pelo content
+ * script de pessoa após captura bem-sucedida. Próxima captura de empresa lê
+ * isso e envia pro backend como `link_person_id`, daí o backend faz o UPDATE.
+ */
+export async function setPendingPersonLink(personId: string, personName: string): Promise<void> {
+  const payload: PendingPersonLink = { personId, personName, setAt: Date.now() };
+  await chrome.storage.local.set({ [KEYS.pendingPersonLink]: payload });
+}
+
+/**
+ * Lê e LIMPA o pending link. Retorna null se não há ou se expirou (TTL 30min).
+ * Chamado pelo content script de empresa antes de enviar request.
+ */
+export async function consumePendingPersonLink(): Promise<PendingPersonLink | null> {
+  const r = await chrome.storage.local.get(KEYS.pendingPersonLink);
+  const pending = r[KEYS.pendingPersonLink] as PendingPersonLink | undefined;
+  if (!pending) return null;
+  // Limpa sempre (consumo único). Mesmo se expirou, evita reuso.
+  await chrome.storage.local.remove(KEYS.pendingPersonLink);
+  if (Date.now() - pending.setAt > PENDING_LINK_TTL_MS) return null;
+  return pending;
+}
+
+/** Versão NÃO-consumidora pra UI/popup ler status sem limpar. */
+export async function peekPendingPersonLink(): Promise<PendingPersonLink | null> {
+  const r = await chrome.storage.local.get(KEYS.pendingPersonLink);
+  const pending = r[KEYS.pendingPersonLink] as PendingPersonLink | undefined;
+  if (!pending) return null;
+  if (Date.now() - pending.setAt > PENDING_LINK_TTL_MS) {
+    await chrome.storage.local.remove(KEYS.pendingPersonLink);
+    return null;
+  }
+  return pending;
 }

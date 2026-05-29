@@ -10,7 +10,7 @@
 
 import { mountCaptureButton, API_BASE } from '../ui/button';
 import { showToast } from '../ui/toast';
-import { getToken, incrementDailyCount, setLastCapture, getDailyCount } from '../storage';
+import { getToken, incrementDailyCount, setLastCapture, getDailyCount, setPendingPersonLink } from '../storage';
 import { capturePerson, lookupUrl, BoldfyApiError } from '../api/client';
 import { extractPersonPayload } from '../selectors/person';
 import { canonicalizeLinkedinUrl } from '../selectors/utils';
@@ -87,11 +87,16 @@ async function onCapture(setState: (s: 'idle' | 'loading' | 'exists' | 'error', 
     const result = await capturePerson(payload);
     await incrementDailyCount();
     await setLastCapture({ url: payload.linkedinUrl, at: payload.capturedAt, kind: 'person' });
+
+    // Marca essa pessoa como pendente de link com empresa. Próxima captura de
+    // empresa (dentro de 30 min) vai linkar automaticamente.
+    await setPendingPersonLink(result.personId, payload.name);
+
     setState('exists');
     showToast({
       message: result.was_existing
-        ? '✓ Enriquecido (já estava no CRM)'
-        : '✓ Salvo como LinkedIn Lead',
+        ? `✓ Enriquecido. Próximo: abre o LinkedIn da empresa e clica em capturar — vou linkar.`
+        : `✓ Salvo como LinkedIn Lead. Próximo: abre o LinkedIn da empresa e clica em capturar — vou linkar.`,
       href: `${API_BASE}${result.url_to_view}`,
       cta: 'Ver no CRM',
       kind: 'success',

@@ -30,6 +30,8 @@ export async function extractCompanyPayload(): Promise<{
   description?: string;
   website?: string;
   specialties?: string[];
+  /** Logo da empresa no LinkedIn CDN. Renderizado no card de empresa do CRM. */
+  logoUrl?: string;
   capturedAt: string;
   sourceUrl: string;
 } | null> {
@@ -114,6 +116,19 @@ export async function extractCompanyPayload(): Promise<{
     }
   }
 
+  // ---- LOGO ----
+  // Mesma estratégia da foto de pessoa: filtra por tamanho pra não pegar
+  // mini-logos de empresas relacionadas na sidebar.
+  let logoUrl: string | undefined;
+  const logoCandidates = Array.from(document.querySelectorAll('img'))
+    .filter((img) => /company-logo/i.test(img.src) && /licdn\.com/i.test(img.src))
+    .filter((img) => img.width >= 80);
+  if (logoCandidates.length > 0) {
+    let src = logoCandidates[0].src;
+    src = src.replace('_100_100', '_200_200');
+    logoUrl = src;
+  }
+
   return {
     name,
     linkedinUrl,
@@ -122,6 +137,7 @@ export async function extractCompanyPayload(): Promise<{
     description,
     website,
     specialties,
+    logoUrl,
     capturedAt: new Date().toISOString(),
     sourceUrl: window.location.href,
   };

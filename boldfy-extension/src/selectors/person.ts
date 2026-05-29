@@ -96,18 +96,21 @@ export async function extractPersonPayload(): Promise<{
   }
 
   // ---- FOTO ----
-  // LinkedIn CDN tem URL estável que contém 'profile-displayphoto'
+  // LinkedIn CDN tem URL estável que contém 'profile-displayphoto'.
+  // CRÍTICO: filtrar por tamanho >= 100px pra não pegar thumbnails de outros
+  // perfis na sidebar ("Mais perfis pra você", conexões em comum, etc) — essas
+  // são todas 24-48px. A foto real do top card é 100-200px.
   let photoUrl: string | undefined;
   const photoCandidates = Array.from(document.querySelectorAll('img'))
-    .map((img) => img.src)
-    .filter((src) => /profile-displayphoto/i.test(src) && /licdn\.com/i.test(src));
+    .filter((img) => /profile-displayphoto/i.test(img.src) && /licdn\.com/i.test(img.src))
+    .filter((img) => img.width >= 100);
   if (photoCandidates.length > 0) {
-    // Pega a maior resolução disponível (geralmente a primeira ou a com _200_200 em vez de _100_100)
-    photoUrl = photoCandidates.find((s) => /_200_200/.test(s))
-      ?? photoCandidates.find((s) => /_400_400/.test(s))
-      ?? photoCandidates[0];
+    let src = photoCandidates[0].src;
+    // Upgrade pra maior resolução se LinkedIn servir (_100_100 → _200_200).
+    src = src.replace('_100_100', '_200_200');
+    photoUrl = src;
   } else {
-    reportMissing('photo_url', ['img[src*="profile-displayphoto"]']);
+    reportMissing('photo_url', ['img[src*="profile-displayphoto"][width>=100]']);
   }
 
   // ---- ABOUT ----

@@ -33,6 +33,8 @@ export type LinkedInCompanyExtensionInput = {
   website?: string;
   /** Tags de "especialidades" do LinkedIn. */
   specialties?: string[];
+  /** Logo da empresa no CDN do LinkedIn. */
+  logoUrl?: string;
 
   /** Timestamp ISO da captura. */
   capturedAt: string;
@@ -61,6 +63,7 @@ export type AdaptedLinkedInCompany = {
     company_intelligence: {
       description?: string;
       specialties?: string[];
+      logo_url?: string;
       captured_at: string;
       source_url: string;
       captured_via: 'extension_linkedin';
@@ -81,6 +84,7 @@ export function adaptLinkedInCompanyExtension(
       company_intelligence: {
         description: input.description,
         specialties: input.specialties,
+        logo_url: input.logoUrl,
         captured_at: input.capturedAt,
         source_url: input.sourceUrl,
         captured_via: 'extension_linkedin',

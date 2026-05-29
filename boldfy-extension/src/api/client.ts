@@ -70,6 +70,7 @@ export async function captureCompany(payload: Record<string, unknown>): Promise<
   companyId: string;
   promoted: boolean;
   created: boolean;
+  linked_person_id?: string;
   url_to_view: string;
 }> {
   return request('/api/extension/capture-company', {

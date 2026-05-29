@@ -78,14 +78,25 @@ export function extractJobTitleFromHeadline(headline: string | null | undefined)
   return trimmed;
 }
 
-/** Parseia companyName do headline. ("CMO at Nuvini" → "Nuvini"). */
+/** Parseia companyName do headline. ("CMO at Nuvini" → "Nuvini").
+ *
+ * Crítico: parar no PRIMEIRO `|` ou `·` pra não pegar sufixos descritivos
+ * que viraram parte do headline ("Head na @ Filum | Estrategista de Conteúdo"
+ * deve virar só "Filum"). Também remove prefixo "@" comum em headlines BR.
+ */
 export function extractCompanyNameFromHeadline(headline: string | null | undefined): string | undefined {
   if (!headline) return undefined;
   const trimmed = headline.trim();
   const splitters = [' at ', ' na ', ' @ '];
   for (const sep of splitters) {
     const idx = trimmed.indexOf(sep);
-    if (idx > 0) return trimmed.slice(idx + sep.length).split(' · ')[0].trim();
+    if (idx > 0) {
+      return trimmed
+        .slice(idx + sep.length)
+        .split(/[|·]/)[0]
+        .replace(/^@\s*/, '')
+        .trim();
+    }
   }
   return undefined;
 }

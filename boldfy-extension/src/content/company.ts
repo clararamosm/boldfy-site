@@ -6,7 +6,7 @@
 
 import { mountCaptureButton, API_BASE } from '../ui/button';
 import { showToast } from '../ui/toast';
-import { getToken, incrementDailyCount, setLastCapture, getDailyCount } from '../storage';
+import { getToken, incrementDailyCount, setLastCapture, getDailyCount, consumePendingPersonLink } from '../storage';
 import { captureCompany, lookupUrl, BoldfyApiError } from '../api/client';
 import { extractCompanyPayload } from '../selectors/company';
 import { canonicalizeLinkedinUrl } from '../selectors/utils';
@@ -75,17 +75,33 @@ async function onCapture(setState: (s: 'idle' | 'loading' | 'exists' | 'error', 
     return;
   }
 
+  // Lê (e consome) link pendente com pessoa capturada nos últimos 30min.
+  const pendingLink = await consumePendingPersonLink();
+
   try {
-    const result = await captureCompany(payload);
+    const result = await captureCompany({
+      ...payload,
+      ...(pendingLink ? { link_person_id: pendingLink.personId } : {}),
+    });
     await incrementDailyCount();
     await setLastCapture({ url: payload.linkedinUrl, at: payload.capturedAt, kind: 'company' });
     setState('exists');
-    showToast({
-      message: result.created
+
+    let message: string;
+    if (pendingLink) {
+      message = result.created
+        ? `✓ Empresa salva e linkada com ${pendingLink.personName}`
+        : `✓ Empresa enriquecida e linkada com ${pendingLink.personName}`;
+    } else {
+      message = result.created
         ? '✓ Empresa salva em Quero prospectar'
         : result.promoted
           ? '✓ Empresa promovida pra Quero prospectar'
-          : '✓ Empresa enriquecida',
+          : '✓ Empresa enriquecida';
+    }
+
+    showToast({
+      message,
       href: `${API_BASE}${result.url_to_view}`,
       cta: 'Ver no CRM',
       kind: 'success',

@@ -31,8 +31,11 @@ const PayloadSchema = z.object({
   description: z.string().trim().max(5000).optional(),
   website: z.string().trim().url().optional(),
   specialties: z.array(z.string().trim().max(100)).max(50).optional(),
+  logoUrl: z.string().trim().url().optional(),
   capturedAt: z.string().datetime(),
   sourceUrl: z.string().trim().url(),
+  /** Quando presente, backend linka esse personId à empresa após upsert. */
+  link_person_id: z.string().uuid().optional(),
 });
 
 export async function POST(req: Request) {
@@ -61,11 +64,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'capture_failed', message: result.error }, { status: 500 });
   }
 
+  // Linka pessoa pendente (fluxo pessoa → empresa em sequência).
+  // Best-effort: erro aqui não bloqueia o sucesso da captura.
+  let linkedPersonId: string | undefined;
+  if (parsed.data.link_person_id) {
+    try {
+      const { db, people } = await import('@/db');
+      const { eq } = await import('drizzle-orm');
+      await db
+        .update(people)
+        .set({ companyId: result.data.companyId, updatedAt: new Date() })
+        .where(eq(people.id, parsed.data.link_person_id));
+      linkedPersonId = parsed.data.link_person_id;
+    } catch (err) {
+      console.error('[capture-company] failed to link pending person:', err);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     companyId: result.data.companyId,
     promoted: result.data.promoted,
     created: result.data.created,
+    linked_person_id: linkedPersonId,
     url_to_view: `/internal/crm/companies/${result.data.companyId}`,
   });
 }
