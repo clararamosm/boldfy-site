@@ -15,6 +15,7 @@
  */
 
 import {
+  ArrowRight,
   Award,
   BarChart3,
   BookOpen,
@@ -26,8 +27,10 @@ import {
   FileText,
   Globe,
   Heart,
+  Library,
   MessageSquare,
   Network,
+  Palette,
   PiggyBank,
   RotateCcw,
   Sparkles,
@@ -63,9 +66,13 @@ const ICON_MAP: Record<string, LucideIcon> = {
   PiggyBank,
   Sparkles,
   Feather,
+  // Adicionados em mai/2026 pras dicas U6 (variação visual) e U7 (biblioteca).
+  Palette,
+  Library,
 };
 
 export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
+  const universaisCount = dicas.filter((d) => d.selectors.universal).length;
   const especificas = dicas.filter((d) => !d.selectors.universal);
   const tagsList = especificas.map((d) => d.tagEspecifica).filter(Boolean).join(', ');
 
@@ -80,7 +87,8 @@ export function PlaybookDicas({ dicas, slug }: { dicas: Tip[]; slug: string }) {
           </span>
         </h2>
         <p className="mb-10 max-w-[720px] text-base leading-relaxed text-muted-foreground">
-          5 universais que aparecem pra todo mundo, mais {dicas.length - 5} selecionadas pelo perfil de vocês
+          {universaisCount} universais que aparecem pra todo mundo, mais{' '}
+          {dicas.length - universaisCount} selecionadas pelo perfil de vocês
           {tagsList ? ` (${tagsList})` : ''}. Cada dica abre como a Boldfy resolve embaixo.
         </p>
 
@@ -150,8 +158,53 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
               </li>
             ))}
           </ul>
+          {tip.boldfy.callout && (
+            <DicaCallout
+              label={tip.boldfy.callout.label}
+              href={tip.boldfy.callout.href}
+              tipId={tip.id}
+              slug={slug}
+            />
+          )}
         </div>
       </details>
     </div>
   );
+}
+
+/**
+ * Callout do accordion da dica — destaque embaixo dos bullets.
+ *
+ * Quando tem `href` (ex: dica U6 → /case-semrush), renderiza como link clicável
+ * com gradient bg e seta. Quando não tem (ex: dica U7 com pacote grátis
+ * injetado em runtime), renderiza como pill destacada (sem link).
+ */
+function DicaCallout({
+  label,
+  href,
+  tipId,
+  slug,
+}: {
+  label: string;
+  href?: string;
+  tipId: string;
+  slug: string;
+}) {
+  const className =
+    'mt-3 inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-gradient-to-r from-[#CD50F1]/10 to-[#E875FF]/10 px-3 py-2 text-[11.5px] font-semibold leading-snug text-primary';
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        className={`${className} transition-all hover:border-primary/60 hover:from-[#CD50F1]/20 hover:to-[#E875FF]/20`}
+        onClick={() => trackEvent('playbook_tip_callout_click', { tip_id: tipId, slug, href })}
+      >
+        <span>{label}</span>
+        <ArrowRight className="h-3 w-3 shrink-0" />
+      </a>
+    );
+  }
+
+  return <div className={className}>{label}</div>;
 }

@@ -113,6 +113,14 @@ type TrackedEvent =
       params: { tip_id: string; slug: string };
     }
   | {
+      /**
+       * Clique no callout destacado embaixo do accordion da dica
+       * (ex: U6 → /case-semrush). Só dispara quando o callout tem href.
+       */
+      name: 'playbook_tip_callout_click';
+      params: { tip_id: string; slug: string; href: string };
+    }
+  | {
       /** Accordion da curva de ativação aberto (Bloco 2). */
       name: 'playbook_curva_expanded';
       params: { slug: string };

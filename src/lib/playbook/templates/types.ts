@@ -113,6 +113,20 @@ export type Tip = {
   boldfy: {
     titulo: string;
     items: string[];
+    /**
+     * Callout opcional renderizado abaixo dos items, em destaque. Usado pra:
+     * 1. Link pra material externo relacionado (ex: case Semrush na dica de
+     *    variação visual).
+     * 2. Conteúdo dinâmico injetado em runtime (ex: dica da biblioteca ganha
+     *    callout do pacote de design grátis baseado no porte ≥40/60/70).
+     *
+     * Quando `href` está presente, renderiza como link clicável com seta.
+     * Quando ausente, renderiza como texto destacado (pill).
+     */
+    callout?: {
+      label: string;
+      href?: string;
+    };
   };
   selectors: TipSelectors;
 };

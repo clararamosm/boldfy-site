@@ -187,14 +187,16 @@ const AREA_TO_TIP_ID: Record<TemplateBase, string> = {
 
 /**
  * Seleciona dicas pra um playbook com base no quiz. Ordem:
- *   1. 5 universais (sempre, U1-U5)
+ *   1. 7 universais (sempre, U1-U7) — incluindo U6 (variação visual,
+ *      mai/2026) e U7 (biblioteca de assets, mai/2026 — ganha callout
+ *      dinâmico do pacote Modo Design grátis quando porte ≥ 40)
  *   2. Tentativas (T_MORREU se tentativas !== 'nunca')
  *   3. Área (A_MARKETING / A_VENDAS / A_RH conforme base)
  *   4. Dor-específicas (até 2, baseado em doresPrincipais)
  *   5. Voz (V_FOUNDER_SOLO se voz=founder_solo)
  *   6. Seniority (S_CLEVEL se cargoSenioridade=c_level)
  *
- * Cap teórico: 5 + 1 + 1 + 2 + 1 + 1 = 11. Em geral fica 6-9 dicas.
+ * Cap teórico: 7 + 1 + 1 + 2 + 1 + 1 = 13. Em geral fica 8-11 dicas.
  * Numero ("Dica 01", "Dica 02", ...) é renumerado conforme ordem final.
  */
 export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
@@ -206,7 +208,7 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   };
   const findById = (id: string) => TIPS_LIBRARY.find((t) => t.id === id);
 
-  // 1. Universais (sempre, na ordem U1-U5)
+  // 1. Universais (sempre, na ordem U1-U7)
   for (const tip of TIPS_LIBRARY) {
     if (tip.selectors.universal) selected.push(tip);
   }
@@ -250,11 +252,62 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
     pushUnique(findById('L_FULL_CONTENT'));
   }
 
+  // Post-process: injeta callout dinâmico na dica U7 (biblioteca de assets)
+  // quando o porte cruza os thresholds de Modo Design grátis (40/60/70).
+  // Mantém paridade com `DESIGN_FREE_THRESHOLDS` em components/proposal-builder.tsx
+  // (single source of truth do bundle de design grátis pra plataforma).
+  injectBibliotecaCallout(selected, quiz.porteColaboradores);
+
   // Renumera "Dica 01" ... "Dica N" conforme ordem final
   return selected.map((tip, i) => ({
     ...tip,
     numero: `Dica ${String(i + 1).padStart(2, '0')}`,
   }));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Modo Design grátis — thresholds por porte                                  */
+/* -------------------------------------------------------------------------- */
+/**
+ * Tabela de pacotes inclusos no Modo Design baseado em porte. Tem que bater
+ * com `DESIGN_FREE_THRESHOLDS` e `DESIGN_PACKS` em proposal-builder.tsx —
+ * single source of truth do bundle gratuito.
+ *
+ * - 40+ colaboradores → Starter (4 peças/mês)
+ * - 60+ colaboradores → Growth (7 peças/mês)
+ * - 70+ colaboradores → Scale (10 peças/mês)
+ *
+ * Empresas abaixo de 40 não ganham bundle — a dica da biblioteca renderiza
+ * sem callout (sem mencionar Modo Design pra evitar criar expectativa).
+ */
+type DesignBundle = { pack: string; pieces: number; thresholdSeats: number };
+
+function bundleFromPorte(porte: number): DesignBundle | null {
+  if (porte >= 70) return { pack: 'Scale', pieces: 10, thresholdSeats: 70 };
+  if (porte >= 60) return { pack: 'Growth', pieces: 7, thresholdSeats: 60 };
+  if (porte >= 40) return { pack: 'Starter', pieces: 4, thresholdSeats: 40 };
+  return null;
+}
+
+function injectBibliotecaCallout(tips: Tip[], porte: number): void {
+  const bundle = bundleFromPorte(porte);
+  if (!bundle) return; // porte <40: nenhum pacote grátis aplicável
+
+  const tip = tips.find((t) => t.id === 'U7');
+  if (!tip) return;
+
+  // Imutabilidade: clona o tip antes de injetar callout. Caller ainda enxerga
+  // o callout no array `tips` porque sobrescreve a referência in-place.
+  const index = tips.indexOf(tip);
+  tips[index] = {
+    ...tip,
+    boldfy: {
+      ...tip.boldfy,
+      callout: {
+        label: `Empresas com ${bundle.thresholdSeats}+ colaboradores na plataforma ganham o pacote ${bundle.pack} de design incluso — ${bundle.pieces} peças por mês prontas pra circular pela biblioteca`,
+      },
+    },
+  };
 }
 
 /* -------------------------------------------------------------------------- */

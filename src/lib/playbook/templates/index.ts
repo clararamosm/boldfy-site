@@ -5,9 +5,10 @@
  *
  * Estrutura (pós curadoria mai/2026):
  *   - SNAPSHOT_FECHAMENTO: 10 strings, 1 por template-key (Bloco 2)
- *   - TIPS_LIBRARY: 19 dicas com metadados de seleção (Bloco 4)
- *     · 15 da copy-final original + 4 da curadoria (B_PRECISA_JUSTIFICAR,
- *       B_SEM_BUDGET, L_PROPRIO, L_FULL_CONTENT)
+ *   - TIPS_LIBRARY: 21 dicas com metadados de seleção (Bloco 4)
+ *     · 15 da copy-final original + 4 da curadoria mai/2026 (B_PRECISA_JUSTIFICAR,
+ *       B_SEM_BUDGET, L_PROPRIO, L_FULL_CONTENT) + 2 da curadoria visual/biblioteca
+ *       (U6 variação visual, U7 biblioteca de assets)
  *   - HERO_LEGENDA_POR_DOR: legenda do soco numérico (Bloco 1, varia por dor 1)
  *   - CTA_TITULO_POR_DOR: título do CTA final (Bloco 8, varia por dor 1)
  *   - CHECKLIST_BOLDFY: 4 itens fixos do "Na Boldfy" (Bloco 5)
@@ -195,7 +196,7 @@ export const CHECKLIST_BOLDFY: ChecklistItem[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Bloco 4 — TIPS_LIBRARY (19 dicas com metadados de seleção)                 */
+/*  Bloco 4 — TIPS_LIBRARY (21 dicas com metadados de seleção)                 */
 /* -------------------------------------------------------------------------- */
 /**
  * Pool completo. Seleção runtime via `selectTipsForPlaybook` em render.ts
@@ -287,6 +288,44 @@ export const TIPS_LIBRARY: Tip[] = [
         'Inbound qualificado conectado ao dashboard',
         'Métrica que defende em board, não like',
       ],
+    },
+    selectors: { universal: true },
+  },
+  {
+    id: 'U6',
+    numero: 'Dica 06',
+    titulo: 'Faça cada peça circular com hooks diferentes pra evitar achatamento',
+    icon: 'Palette',
+    boldfy: {
+      titulo: 'Variação visual + IA de hooks',
+      items: [
+        'Mesma peça-base, 3-5 hooks diferentes por colaborador',
+        'IA varia título, ângulo de abertura e legenda da peça',
+        'Brand Context mantém identidade consistente entre variações',
+        'Dashboard mostra qual variação puxou mais alcance',
+      ],
+      callout: {
+        label: 'Veja o case da Semrush — 3 clusters de variação visual na prática',
+        href: '/case-semrush',
+      },
+    },
+    selectors: { universal: true },
+  },
+  {
+    id: 'U7',
+    numero: 'Dica 07',
+    titulo: 'Centralize as peças na biblioteca pra time pegar e adaptar sozinho',
+    icon: 'Library',
+    boldfy: {
+      titulo: 'Biblioteca de assets da empresa',
+      items: [
+        'Painel admin com peças aprovadas, organizadas por tema',
+        'Colaborador pega direto pela plataforma, sem fila de design',
+        'Brand Context garante consistência mesmo com auto-serviço',
+        'Tracking de qual peça circulou mais e quem usou',
+      ],
+      // Callout dinâmico injetado em render.ts quando porteColaboradores ≥ 40
+      // (mostra o pacote Starter/Growth/Scale grátis correspondente).
     },
     selectors: { universal: true },
   },
