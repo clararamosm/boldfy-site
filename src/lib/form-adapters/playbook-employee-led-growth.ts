@@ -87,14 +87,17 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     empresa: input.empresa,
     porte: String(input.porteColaboradores),
     setor: input.setor,
-    cargo_senioridade: input.cargoSenioridade,
-    cargo_area: input.cargoArea,
-    dores_principais: input.doresPrincipais.join(', '),
-    budget_status: input.budgetStatus,
+    // Custom fields enviados como LABELS LEGÍVEIS em português (não enum cru)
+    // pra ficar bom de filtrar/segmentar no painel do AC. Conversão via
+    // helpers label*() na parte de baixo deste arquivo.
+    cargo_senioridade: labelSeniority(input.cargoSenioridade),
+    cargo_area: labelArea(input.cargoArea),
+    dores_principais: input.doresPrincipais.map(labelDorPrincipal).join(', '),
+    budget_status: labelBudget(input.budgetStatus),
     // P11 reformulada: 'sim_proprio' | 'sim_full_content' | 'nao_foco' (mai/2026)
     // Detecta oportunidade de Full Content (CaaS) — segmentação no AC.
-    sponsorship_lideranca: input.sponsorshipLideranca,
-    tentativas_anteriores: input.tentativasAnteriores,
+    sponsorship_lideranca: labelSponsorship(input.sponsorshipLideranca),
+    tentativas_anteriores: labelTentativas(input.tentativasAnteriores),
     newsletter_opt_in: newsletterOptIn ? 'SIM' : 'NAO',
     // State of ELG — campos de auditoria pra segmentação no AC.
     state_elg_consent: stateElgConsent ? 'SIM' : 'NAO',
@@ -234,4 +237,51 @@ function labelArea(a: PlaybookInput['cargoArea']): string {
     comunicacao: 'Comunicação',
     outro: 'Outro',
   } as const)[a];
+}
+
+function labelTentativas(t: PlaybookInput['tentativasAnteriores']): string {
+  return ({
+    nunca: 'Nunca tentou',
+    morreu: 'Tentou e morreu',
+    baixa_adesao: 'Tem mas com baixa adesão',
+    maduro: 'Programa maduro',
+  } as const)[t];
+}
+
+function labelDorPrincipal(d: NonNullable<PlaybookInput['doresPrincipais']>[number]): string {
+  return ({
+    company_page_morta: 'Company Page sem engajamento',
+    cac_subindo: 'CAC subindo',
+    concorrente_dominando: 'Concorrente domina o feed',
+    vendedor_invisivel: 'Vendedores invisíveis',
+    talento_saindo: 'Talentos saindo',
+    marca_uma_pessoa: 'Marca depende de uma pessoa',
+    outra: 'Outra',
+  } as const)[d];
+}
+
+function labelBudget(b: PlaybookInput['budgetStatus']): string {
+  return ({
+    aprovado: 'Verba aprovada',
+    planejando: 'Planejando incluir',
+    precisa_justificar: 'Precisa justificar',
+    sem_budget: 'Sem budget',
+  } as const)[b];
+}
+
+/**
+ * P11 reformulada (mai/2026) tem 3 valores novos (sim_proprio, sim_full_content,
+ * nao_foco) + 4 valores antigos preservados pra retrocompat de payloads
+ * pre-curadoria. Label cobre os 7 casos.
+ */
+function labelSponsorship(s: PlaybookInput['sponsorshipLideranca']): string {
+  return ({
+    sim_proprio: 'Sim, alguns executivos postam',
+    sim_full_content: 'Sim, com Full Content',
+    nao_foco: 'Não é prioridade',
+    sim_alguns_postam: 'Sim, alguns executivos postam',
+    sim_com_ajuda: 'Sim, precisariam de ajuda',
+    talvez: 'Talvez, depende da proposta',
+    nao: 'Não topariam',
+  } as const)[s];
 }

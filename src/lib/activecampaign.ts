@@ -140,6 +140,22 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
    * → STATE_ELG_REPORT_SUBSCRIBE.
    */
   state_elg_report_subscribe: { title: 'State ELG Report Subscribe', type: 'text' },
+  /**
+   * Campos do quiz Playbook ELG (mai/2026). Valores enviados como LABELS
+   * LEGÍVEIS em português (não enum cru) pra Clara filtrar fácil no AC.
+   * Conversão de enum → label vive no adapter (form-adapters/playbook-employee-led-growth.ts).
+   *
+   * Naming dos custom fields no AC casa com snake_case do perstag:
+   *   - Title "Cargo Senioridade" → perstag CARGO_SENIORIDADE → key cargo_senioridade
+   *   - Title "Cargo Area" → perstag CARGO_AREA → key cargo_area
+   *   (etc)
+   */
+  cargo_senioridade: { title: 'Cargo Senioridade', type: 'text' },
+  cargo_area: { title: 'Cargo Area', type: 'text' },
+  dores_principais: { title: 'Dores Principais', type: 'text' },
+  budget_status: { title: 'Budget Status', type: 'text' },
+  sponsorship_lideranca: { title: 'Sponsorship Lideranca', type: 'text' },
+  tentativas_anteriores: { title: 'Tentativas Anteriores', type: 'text' },
 };
 
 // Cache em memória (survive hot module reloads dentro da mesma lambda execution)
