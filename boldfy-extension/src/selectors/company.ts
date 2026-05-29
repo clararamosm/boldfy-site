@@ -1,12 +1,26 @@
 /**
- * Seletores resilientes pra páginas de empresa (/company/<slug>).
+ * Extrator da página de empresa LinkedIn (/company/<slug>).
  *
- * Lista enxuta de 7 campos (Spec §6).
+ * Mesma estratégia do person.ts: classes são hashed, então parseia por
+ * texto + heurística semântica.
  */
 
-import { trySelectors, trySelectorsSync, canonicalizeLinkedinUrl } from './utils';
+import { EXTENSION_VERSION } from '../config';
+import { reportFieldMissing } from '../api/client';
+import { canonicalizeLinkedinUrl } from './utils';
 
 const URL_PATTERN = '/company/<slug>';
+
+function reportMissing(field: string, selectors_tried: string[]) {
+  void reportFieldMissing({
+    field,
+    page_type: 'company',
+    selectors_tried,
+    url_pattern: URL_PATTERN,
+    extension_version: EXTENSION_VERSION,
+    captured_at: new Date().toISOString(),
+  }).catch(() => { /* silencioso */ });
+}
 
 export async function extractCompanyPayload(): Promise<{
   name: string;
@@ -21,50 +35,84 @@ export async function extractCompanyPayload(): Promise<{
 } | null> {
   const linkedinUrl = canonicalizeLinkedinUrl(window.location.href);
 
-  const name = await trySelectors({
-    field: 'name',
-    page_type: 'company',
-    url_pattern: URL_PATTERN,
-    selectors: [
-      'main h1.org-top-card-summary__title',
-      'main section h1',
-      'main h1',
-    ],
-  });
-  if (!name) return null;
+  // ---- NOME via title ("Nome da Empresa | LinkedIn") ----
+  const name = extractNameFromTitle();
+  if (!name) {
+    reportMissing('name', ['document.title']);
+    return null;
+  }
 
-  const industry =
-    (await trySelectors({
-      field: 'industry',
-      page_type: 'company',
-      url_pattern: URL_PATTERN,
-      selectors: [
-        'main .org-top-card-summary-info-list__info-item',
-        'main dd:has(+ dt:contains("Industry"))',
-      ],
-    })) ?? undefined;
+  // ---- TEXTO DO MAIN ----
+  const main = document.querySelector('main');
+  const mainText = main?.innerText ?? '';
+  const mainLines = mainText.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
 
-  const size =
-    trySelectorsSync([
-      'main dd:has(+ dt:contains("size"))',
-      'main .org-page-details__definition-text:contains("employees")',
-    ]) ?? undefined;
+  // ---- WEBSITE ----
+  // Link externo (com data-tracking ou simplesmente href fora do linkedin.com)
+  let website: string | undefined;
+  const links = Array.from(document.querySelectorAll('main a[href]'));
+  for (const a of links) {
+    const href = a.getAttribute('href') ?? '';
+    if (/^https?:\/\//i.test(href) && !/linkedin\.com|licdn\.com/i.test(href)) {
+      // Heurística: ignora links genéricos como Twitter, Instagram da empresa? Por enquanto pega o primeiro
+      website = href;
+      break;
+    }
+  }
 
-  const description =
-    trySelectorsSync([
-      'main section.org-about-us-organization-description p',
-      'section.artdeco-card p.break-words',
-    ]) ?? undefined;
+  // ---- INDÚSTRIA / TAMANHO / DESCRIÇÃO ----
+  // LinkedIn novo mostra essas infos na "Visão geral" / "About" da empresa.
+  // Heurística: procurar linhas que casem com padrões conhecidos.
+  let industry: string | undefined;
+  let size: string | undefined;
+  let description: string | undefined;
+  let specialties: string[] | undefined;
 
-  const website =
-    trySelectorsSync(
-      ['main a[data-tracking-control-name="about_website"]', 'main a.org-about-us-company-module__website'],
-      document,
-      'href',
-    ) ?? undefined;
+  // Range de funcionários: "11-50 funcionários", "501-1000 employees", etc.
+  for (const l of mainLines) {
+    if (!size && /(\d+[-–]\d+|\d+\+|mais de \d+)\s*(funcion|employee|colaborador)/i.test(l)) {
+      size = l.match(/(\d+[-–]\d+|\d+\+|mais de \d+)/i)?.[0];
+    }
+  }
 
-  // Specialties — lista de tags. Heurística: dt com texto "Specialties" → dd com lista
-  const specialties = extractSpecialties();
+  // Description: primeiro parágrafo grande na seção Sobre.
+  const aboutIdx = mainLines.findIndex((l) => /^(Sobre|About|Visão geral)$/i.test(l));
+  if (aboutIdx >= 0) {
+    for (let i = aboutIdx + 1; i < Math.min(aboutIdx + 5, mainLines.length); i++) {
+      const l = mainLines[i];
+      if (l.length > 60) { description = l.slice(0, 3000); break; }
+    }
+  }
+
+  // Indústria: aparece como label seguido de valor, ou inline. Heurística rudimentar.
+  for (let i = 0; i < mainLines.length; i++) {
+    if (/^(Setor|Indústria|Industry)$/i.test(mainLines[i]) && mainLines[i + 1]) {
+      industry = mainLines[i + 1];
+      break;
+    }
+  }
+  // Fallback: tem casos onde o setor vem inline em texto curto antes do "Site"
+  if (!industry) {
+    for (const l of mainLines) {
+      // Heurística: linha curta, sem dígitos, antes de "Site" ou "Tamanho"
+      if (l.length < 60 && /^[A-Za-zÀ-ú\s,&-]+$/.test(l) && /software|consultoria|marketing|tecnologia|saúde|educação|finanças/i.test(l)) {
+        industry = l;
+        break;
+      }
+    }
+  }
+
+  // Specialties: linha "Especialidades" → linha seguinte vírgula-separada
+  for (let i = 0; i < mainLines.length - 1; i++) {
+    if (/^(Especialidades|Specialties)$/i.test(mainLines[i])) {
+      specialties = mainLines[i + 1]
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+        .slice(0, 50);
+      break;
+    }
+  }
 
   return {
     name,
@@ -79,17 +127,11 @@ export async function extractCompanyPayload(): Promise<{
   };
 }
 
-function extractSpecialties(): string[] | undefined {
-  // LinkedIn renderiza specialties como texto separado por vírgulas dentro de dd
-  const dt = Array.from(document.querySelectorAll('main dt')).find((el) =>
-    el.textContent?.toLowerCase().includes('specialties'),
-  );
-  const dd = dt?.nextElementSibling;
-  const text = dd?.textContent?.trim();
-  if (!text) return undefined;
-  const list = text
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  return list.length > 0 ? list.slice(0, 50) : undefined;
+function extractNameFromTitle(): string | null {
+  const title = document.title?.trim();
+  if (!title) return null;
+  const cleaned = title.replace(/^\(\d+\)\s*/, '');
+  const idx = cleaned.lastIndexOf(' | LinkedIn');
+  const name = idx > 0 ? cleaned.slice(0, idx).trim() : cleaned.replace(/\s*\|\s*LinkedIn\s*$/i, '').trim();
+  return name.length > 0 && name.length < 200 ? name : null;
 }

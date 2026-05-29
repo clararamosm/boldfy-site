@@ -1,13 +1,35 @@
 /**
- * Seletores resilientes pra páginas de pessoa (/in/<slug>).
+ * Extrator do perfil LinkedIn (/in/<slug>).
  *
- * Múltiplos fallbacks por campo. Reportam telemetria quando todos falham.
- * Atualizar quando LinkedIn mudar DOM (dashboard de telemetria avisa).
+ * Estratégia (mai/2026 — LinkedIn redesenhou tudo com classes hashed):
+ *  - Nome: `document.title` ("Nome | LinkedIn")
+ *  - Headline + Location: parsing por linhas do `main.innerText`
+ *  - Foto: `img[src*="profile-displayphoto"]` (CDN estável)
+ *  - URL canonical: window.location
+ *
+ * Classes do LinkedIn novo são hashes (`_0d046cac`, `a550bd36`) que mudam
+ * a cada deploy. Resistência depende de parsing semântico, não DOM lookup.
+ *
+ * Quando algo falhar, telemetria via reportFieldMissing — dashboard
+ * `/internal/crm/settings/extension-telemetry` sinaliza.
  */
 
-import { trySelectors, trySelectorsSync, canonicalizeLinkedinUrl, extractJobTitleFromHeadline, extractCompanyNameFromHeadline } from './utils';
+import { EXTENSION_VERSION } from '../config';
+import { reportFieldMissing } from '../api/client';
+import { canonicalizeLinkedinUrl, extractJobTitleFromHeadline, extractCompanyNameFromHeadline } from './utils';
 
 const URL_PATTERN = '/in/<slug>';
+
+function reportMissing(field: string, selectors_tried: string[]) {
+  void reportFieldMissing({
+    field,
+    page_type: 'person',
+    selectors_tried,
+    url_pattern: URL_PATTERN,
+    extension_version: EXTENSION_VERSION,
+    captured_at: new Date().toISOString(),
+  }).catch(() => { /* silencioso */ });
+}
 
 export async function extractPersonPayload(): Promise<{
   name: string;
@@ -26,122 +48,118 @@ export async function extractPersonPayload(): Promise<{
 } | null> {
   const linkedinUrl = canonicalizeLinkedinUrl(window.location.href);
 
-  const name = await trySelectors({
-    field: 'name',
-    page_type: 'person',
-    url_pattern: URL_PATTERN,
-    selectors: [
-      'main h1.text-heading-xlarge',
-      'main h1.inline.t-24',
-      'main section h1',
-      'main h1',
-    ],
-  });
-  if (!name) return null;
+  // ---- NOME via document.title (formato "Nome | LinkedIn") ----
+  const name = extractNameFromTitle();
+  if (!name) {
+    reportMissing('name', ['document.title.split(" | ")[0]']);
+    return null;
+  }
 
-  const headline = await trySelectors({
-    field: 'headline',
-    page_type: 'person',
-    url_pattern: URL_PATTERN,
-    selectors: [
-      'main .text-body-medium.break-words',
-      'main .pv-text-details__title',
-      'main section .text-body-medium',
-    ],
-  });
+  // ---- TEXTO DO MAIN ----
+  const main = document.querySelector('main');
+  const mainLines = (main?.innerText ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
 
-  const photoUrl =
-    (await trySelectors({
-      field: 'photo_url',
-      page_type: 'person',
-      url_pattern: URL_PATTERN,
-      attr: 'src',
-      selectors: [
-        'main button[aria-label*="foto"] img',
-        'main img.pv-top-card-profile-picture__image',
-        'main img[alt*="foto"]',
-      ],
-    })) ?? undefined;
+  // Acha índice do nome dentro do main pra ancorar parsing
+  const nameIdx = mainLines.findIndex((l) => l === name);
 
-  const location =
-    (await trySelectors({
-      field: 'location',
-      page_type: 'person',
-      url_pattern: URL_PATTERN,
-      selectors: [
-        'main .text-body-small.inline.t-black--light.break-words',
-        'main .pv-text-details__left-panel .text-body-small',
-      ],
-    })) ?? undefined;
+  // ---- HEADLINE ----
+  // Costuma vir 2-3 linhas depois do nome. Pula linhas que são só "· 1º", etc.
+  let headline: string | undefined;
+  if (nameIdx >= 0) {
+    for (let i = nameIdx + 1; i < Math.min(nameIdx + 5, mainLines.length); i++) {
+      const l = mainLines[i];
+      if (l.length < 4 || /^[·•]/.test(l) || /^\d+[ºo°]/.test(l)) continue;
+      headline = l;
+      break;
+    }
+  }
+  if (!headline) reportMissing('headline', ['mainText parse after name']);
 
-  const about =
-    trySelectorsSync([
-      'section[data-section="about"] div.display-flex.full-width span[aria-hidden="true"]',
-      'section.pv-about-section div.inline-show-more-text span[aria-hidden="true"]',
-    ]) ?? undefined;
+  // ---- LOCATION ----
+  // Formato comum: "City, State, Country" (PT-BR ou similar)
+  // Aparece logo depois da headline.
+  let location: string | undefined;
+  if (nameIdx >= 0 && headline) {
+    const headlineIdx = mainLines.indexOf(headline);
+    for (let i = headlineIdx + 1; i < Math.min(headlineIdx + 4, mainLines.length); i++) {
+      const l = mainLines[i];
+      // Heurística: 1-3 vírgulas, sem palavras tipo "seguidores", "conexões", etc.
+      const commas = (l.match(/,/g) ?? []).length;
+      if (commas >= 1 && commas <= 3 && !/seguidor|conex|message|mensagem|dados de contato/i.test(l)) {
+        location = l;
+        break;
+      }
+    }
+  }
 
-  const connectionsCount =
-    trySelectorsSync([
-      'main a[href*="/connections/"] span',
-      'main span:has(> .t-black--light):contains("conex")',
-    ]) ?? undefined;
+  // ---- FOTO ----
+  // LinkedIn CDN tem URL estável que contém 'profile-displayphoto'
+  let photoUrl: string | undefined;
+  const photoCandidates = Array.from(document.querySelectorAll('img'))
+    .map((img) => img.src)
+    .filter((src) => /profile-displayphoto/i.test(src) && /licdn\.com/i.test(src));
+  if (photoCandidates.length > 0) {
+    // Pega a maior resolução disponível (geralmente a primeira ou a com _200_200 em vez de _100_100)
+    photoUrl = photoCandidates.find((s) => /_200_200/.test(s))
+      ?? photoCandidates.find((s) => /_400_400/.test(s))
+      ?? photoCandidates[0];
+  } else {
+    reportMissing('photo_url', ['img[src*="profile-displayphoto"]']);
+  }
 
-  // Experience top 3 — heurística: cards dentro da seção "Experience"
-  const experience = extractExperienceTop3();
+  // ---- ABOUT ----
+  // Seção "Sobre" — heurística: primeiras linhas substanciais depois do marker "Sobre"
+  let about: string | undefined;
+  const aboutIdx = mainLines.findIndex((l) => l === 'Sobre' || l === 'About');
+  if (aboutIdx >= 0) {
+    const aboutLines: string[] = [];
+    for (let i = aboutIdx + 1; i < Math.min(aboutIdx + 8, mainLines.length); i++) {
+      const l = mainLines[i];
+      // Para quando bater em headers/CTAs de próxima section
+      if (/^(Experiência|Experience|Formação|Education|Habilidades|Skills|Atividade|Activity|Destaques)$/i.test(l)) break;
+      if (/^(\.\.\. mais|mais|See more|… more)$/i.test(l)) continue;
+      aboutLines.push(l);
+    }
+    if (aboutLines.length > 0) {
+      about = aboutLines.join('\n').slice(0, 3000);
+    }
+  }
 
-  // Education top 1 — primeiro card dentro da seção "Education"
-  const education = extractEducationTop1();
+  // ---- CONNECTIONS COUNT ----
+  // Heurística por texto: linha tipo "Mais de 500 conexões" / "500+ connections"
+  const connectionsCount = mainLines
+    .find((l) => /^(mais de|over|≈)?\s*\d+\+?\s*(conex|connection)/i.test(l));
 
+  // ---- HEADLINE PARSING → jobTitle / companyName ----
   const jobTitle = extractJobTitleFromHeadline(headline);
   const companyName = extractCompanyNameFromHeadline(headline);
 
   return {
     name,
     linkedinUrl,
-    headline: headline ?? undefined,
+    headline,
     jobTitle,
     companyName,
     photoUrl,
     location,
     about,
-    experience,
-    education,
     connectionsCount,
     capturedAt: new Date().toISOString(),
     sourceUrl: window.location.href,
   };
 }
 
-function extractExperienceTop3(): Array<{ title: string; company: string; period?: string }> | undefined {
-  // LinkedIn não tem data attribute estável; heurística por id de section
-  const section =
-    document.querySelector('#experience')?.parentElement ??
-    document.querySelector('section[data-section="experience"]');
-  if (!section) return undefined;
-  const items = section.querySelectorAll('li.artdeco-list__item');
-  const out: Array<{ title: string; company: string; period?: string }> = [];
-  items.forEach((li, i) => {
-    if (i >= 3) return;
-    const title = li.querySelector('span[aria-hidden="true"]')?.textContent?.trim();
-    const subspans = li.querySelectorAll('span.t-14.t-normal span[aria-hidden="true"]');
-    const company = subspans[0]?.textContent?.trim();
-    const period = subspans[1]?.textContent?.trim();
-    if (title && company) out.push({ title, company, period });
-  });
-  return out.length > 0 ? out : undefined;
-}
-
-function extractEducationTop1(): { school: string; degree?: string; year?: string } | undefined {
-  const section =
-    document.querySelector('#education')?.parentElement ??
-    document.querySelector('section[data-section="education"]');
-  if (!section) return undefined;
-  const li = section.querySelector('li.artdeco-list__item');
-  if (!li) return undefined;
-  const school = li.querySelector('span[aria-hidden="true"]')?.textContent?.trim();
-  const subspans = li.querySelectorAll('span.t-14.t-normal span[aria-hidden="true"]');
-  const degree = subspans[0]?.textContent?.trim();
-  const year = subspans[1]?.textContent?.trim();
-  if (!school) return undefined;
-  return { school, degree, year };
+function extractNameFromTitle(): string | null {
+  const title = document.title?.trim();
+  if (!title) return null;
+  // Formatos comuns: "Nome | LinkedIn", "(N) Nome | LinkedIn", "Nome – Sobrenome | LinkedIn"
+  // Remove badges de notificação "(3)" no início
+  const cleaned = title.replace(/^\(\d+\)\s*/, '');
+  // Divide por " | LinkedIn"
+  const idx = cleaned.lastIndexOf(' | LinkedIn');
+  const name = idx > 0 ? cleaned.slice(0, idx).trim() : cleaned.replace(/\s*\|\s*LinkedIn\s*$/i, '').trim();
+  return name.length > 0 && name.length < 200 ? name : null;
 }
