@@ -57,10 +57,34 @@ export function CompanyCard({ company, selected, anySelected, onToggleSelect }: 
       ) : null}
 
       <Link href={`/internal/crm/companies/${company.id}`} className="crm-company-card" draggable={false}>
-        <div className="crm-company-name">{company.name}</div>
-        <div className="crm-company-industry">
-          {company.industry ?? '—'}
-          {company.size ? ` · ${company.size}` : ''}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          {(() => {
+            const meta = company.metadata as { company_intelligence?: { logo_url?: string } } | null;
+            const logoUrl = meta?.company_intelligence?.logo_url;
+            return logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                  background: '#FAF7FF',
+                  border: '1px solid #E4D8ED',
+                }}
+              />
+            ) : null;
+          })()}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="crm-company-name">{company.name}</div>
+            <div className="crm-company-industry">
+              {company.industry ?? '—'}
+              {company.size ? ` · ${company.size}` : ''}
+            </div>
+          </div>
         </div>
 
         <div className="crm-company-stats">
