@@ -1,21 +1,38 @@
 /**
  * Dashboard · Forms — silo simples.
- * Leads recentes, contagem por form, heatmap dia × hora.
+ *
+ * Conteúdo (mai/2026 ciclo 4):
+ *   - KPI top com totais por form
+ *   - Tabela de CVR por form (CRM submits ÷ GA4 page views)
+ *   - Heatmap dia × hora
+ *   - **Respondentes do Playbook ELG** (substituiu "Leads recentes" — sinal
+ *     comercial enriquecido com sessões/usuários únicos vindos do GA4 +
+ *     gráfico expandable de acessos por dia)
+ *
+ * Removida nesta página: tabela "Leads recentes" — já temos a visão na aba
+ * geral de CRM e em outros lugares; aqui ela perdia espaço útil pro sinal
+ * mais valioso que é a engajamento por slug de playbook.
  */
 
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { db, people, companies, statuses } from '@/db';
-import { eq, and, isNull, desc, count, gte } from 'drizzle-orm';
+import { db, people, companies } from '@/db';
+import { eq, and, isNull, count, gte } from 'drizzle-orm';
 import { getConversionHeatmap, getFormConversionRate } from '@/lib/dashboard-queries';
 import { HeatmapChart } from '@/components/dashboard/charts';
-import { channelLabel, timeAgo, methodVia } from '@/lib/crm-format';
 import { daysAgo } from '@/lib/now';
+import { getLastPlaybookOutputs } from '@/lib/playbook/state-elg-queries';
 import {
-  ClipboardList,
+  analyticsForPlaybook,
+  getPlaybookAnalyticsBatch,
+} from '@/lib/playbook/playbook-analytics';
+import {
+  PlaybookResponderRow,
+  type PlaybookResponderData,
+} from '@/components/dashboard/playbook-responder-row';
+import {
   Flame,
   Lightbulb,
-  Users,
+  Sparkles,
   Target as TargetIcon,
   FlaskConical,
   Download,
@@ -38,30 +55,53 @@ const FORM_META: Record<string, { label: string; Icon: React.ComponentType<{ siz
   form_algoritmo_linkedin: { label: 'Algoritmo LinkedIn', Icon: Download },
   form_case_semrush: { label: 'Case Semrush', Icon: Download },
   form_proposta: { label: 'Proposta', Icon: BriefcaseIcon },
+  form_playbook_employee_led_growth: { label: 'Playbook ELG', Icon: Sparkles },
 };
 
 export default async function FormsPage() {
   const since = daysAgo(DAYS);
 
-  const [byForm, recentLeads, heatmap, formCvr] = await Promise.all([
-    db.select({ method: people.sourceMethod, n: count() })
-      .from(people)
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since)))
-      .groupBy(people.sourceMethod)
-      .catch(() => []),
-    db.select({ person: people, company: companies, status: statuses })
-      .from(people)
-      .leftJoin(companies, eq(people.companyId, companies.id))
-      .leftJoin(statuses, eq(people.statusId, statuses.id))
-      .where(and(eq(people.archived, false), isNull(people.mergedIntoId), gte(people.createdAt, since)))
-      .orderBy(desc(people.createdAt))
-      .limit(20)
-      .catch(() => []),
-    getConversionHeatmap(90).catch(() => Array.from({ length: 7 }, () => Array(24).fill(0))),
-    getFormConversionRate(DAYS).catch(() => []),
-  ]);
+  // Quanto puxar de playbooks: 20 últimos é suficiente pra dar visibilidade
+  // sem alongar a query do GA4 (que vê todos os slugs no batch independente
+  // do recorte, o limit aqui é só da tabela exibida).
+  const PLAYBOOK_LIMIT = 20;
 
-  const totalLeads = recentLeads.length;
+  // sinceDate do batch GA4 = 90d ou desde o primeiro dos 20 últimos slugs,
+  // o que for mais antigo (pega contexto histórico de re-visitas).
+  const analyticsSince = daysAgo(90);
+
+  const [byForm, totalLeadsRow, heatmap, formCvr, playbookResponders, analyticsBatch] =
+    await Promise.all([
+      db
+        .select({ method: people.sourceMethod, n: count() })
+        .from(people)
+        .where(
+          and(
+            eq(people.archived, false),
+            isNull(people.mergedIntoId),
+            gte(people.createdAt, since),
+          ),
+        )
+        .groupBy(people.sourceMethod)
+        .catch(() => []),
+      db
+        .select({ n: count() })
+        .from(people)
+        .where(
+          and(
+            eq(people.archived, false),
+            isNull(people.mergedIntoId),
+            gte(people.createdAt, since),
+          ),
+        )
+        .catch(() => [{ n: 0 } as { n: number }]),
+      getConversionHeatmap(90).catch(() => Array.from({ length: 7 }, () => Array(24).fill(0))),
+      getFormConversionRate(DAYS).catch(() => []),
+      getLastPlaybookOutputs(PLAYBOOK_LIMIT).catch(() => []),
+      getPlaybookAnalyticsBatch(analyticsSince).catch(() => new Map()),
+    ]);
+
+  const totalLeads = totalLeadsRow[0]?.n ?? 0;
 
   return (
     <div>
@@ -127,28 +167,58 @@ export default async function FormsPage() {
         <HeatmapChart matrix={heatmap} />
       </div>
 
+      {/*
+        Respondentes do Playbook ELG.
+        Substituiu "Leads recentes" — sinal comercial enriquecido com:
+        - Sessões + usuários únicos do GA4 por slug (intenção e compartilhamento)
+        - Gráfico expandable de acessos por dia (saber se houve revisita)
+        Histórico de "todos os leads" continua acessível em /internal/crm.
+      */}
       <div className="dash-card">
-        <div className="dash-card-title"><Users /> Leads recentes</div>
-        {recentLeads.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}>Sem leads no período.</div>
+        <div className="dash-card-title">
+          <Sparkles /> Respondentes do Playbook ELG
+        </div>
+        <div className="dash-card-subtitle">
+          Últimos {PLAYBOOK_LIMIT} playbooks gerados com sessões e usuários únicos
+          rastreados pelo GA4. Múltiplos usuários únicos no mesmo slug = lead
+          compartilhou o playbook com o time.
+        </div>
+        {playbookResponders.length === 0 ? (
+          <div
+            style={{ padding: 24, textAlign: 'center', color: '#9D85B3', fontSize: 13 }}
+          >
+            Nenhum playbook gerado ainda. Quando o primeiro lead completar o quiz, aparece aqui.
+          </div>
         ) : (
           <table className="dash-table">
-            <thead><tr><th>Lead</th><th>Empresa</th><th>Via</th><th>Canal</th><th>Status</th><th className="right">Quando</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Pessoa</th>
+                <th>Empresa</th>
+                <th>Setor</th>
+                <th>Template</th>
+                <th className="right">Sessões</th>
+                <th className="right">Únicos</th>
+                <th className="right">Acessos/dia</th>
+                <th className="right">Playbook</th>
+              </tr>
+            </thead>
             <tbody>
-              {recentLeads.map(({ person, company, status }) => {
-                const via = methodVia(person.sourceMethod);
+              {playbookResponders.map((row) => {
+                const data: PlaybookResponderData = {
+                  personId: row.personId,
+                  personName: row.personName,
+                  personEmail: row.personEmail,
+                  companyName: row.companyName,
+                  industry: row.industry,
+                  templateKey: row.templateKey,
+                  slug: row.slug,
+                  createdAt: row.createdAt,
+                };
+                const analytics = analyticsForPlaybook(analyticsBatch, row.slug, row.createdAt);
                 return (
-                  <tr key={person.id}>
-                    <td>
-                      <Link href={`/internal/crm/people/${person.id}`} className="strong" style={{ textDecoration: 'none', color: '#5E2A67' }}>{person.name}</Link>
-                      <div className="muted">{person.jobTitle ?? person.email}</div>
-                    </td>
-                    <td>{company?.name ?? <span className="muted">—</span>}</td>
-                    <td>{via ? <span className="dash-pill">{via.label}</span> : <span className="muted">—</span>}</td>
-                    <td><span className="dash-pill blue">{channelLabel(person.sourceChannel)}</span></td>
-                    <td><span className="dash-pill">{status?.label ?? '—'}</span></td>
-                    <td className="right muted">{timeAgo(person.createdAt)}</td>
-                  </tr>
+                  <PlaybookResponderRow key={row.slug} row={data} analytics={analytics} />
                 );
               })}
             </tbody>

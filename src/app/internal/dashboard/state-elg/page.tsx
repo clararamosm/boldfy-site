@@ -1,32 +1,33 @@
 /**
  * Dashboard · State of Employee-Led Growth.
  *
- * Painel interno (mai/2026) que consome a view `state_elg_aggregates` +
- * joins com playbook_outputs/people/companies. Mostra:
+ * Painel interno que consome a view `state_elg_aggregates` + joins com
+ * playbook_outputs. Foco em dados AGREGADOS NÃO-SENSÍVEIS (mai/2026 ciclo 4):
  *   - KPI top: total + threshold meter (X de 100 respostas pra publicar)
  *   - 8 cards de agregados (área, senioridade, setor, porte, dor, tentativas,
  *     budget, sponsorship)
  *   - Tendência semanal (sparkline 12 sem)
- *   - Tabela últimos 20 respondentes com link pro lead detail
+ *
+ * Removido nessa página (mai/2026): a tabela "Últimos 20 respondentes" foi
+ * migrada pra aba Forms (`/internal/dashboard/forms`) — ela mostra dados
+ * identificáveis (nome, email, empresa) que são sinal comercial e não cabem
+ * no dashboard agregado que vai virar relatório público.
  *
  * Quando passar de 100 respostas, planejamos publicar /state-of-employee-led-growth
- * (rota pública) reaproveitando os mesmos componentes — spec §10.3.
+ * (rota pública) reaproveitando os mesmos componentes. O agregado já é
+ * publishable hoje.
  */
 
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { ArrowUpRight, BarChart3, Briefcase, Compass, FileText, Heart, Map, Sparkles, Users } from 'lucide-react';
+import { BarChart3, Briefcase, Compass, FileText, Heart, Map, Sparkles, Users } from 'lucide-react';
 import {
   STATE_ELG_PUBLISH_THRESHOLD,
   getAggregateByDimension,
-  getLastPlaybookOutputs,
   getPlaybooksPorSemana,
   getStateElgSnapshot,
   type AggregateBucket,
-  type LastResponder,
 } from '@/lib/playbook/state-elg-queries';
 import { Sparkline } from '@/components/dashboard/charts';
-import { timeAgo } from '@/lib/crm-format';
 
 export const metadata: Metadata = {
   title: 'State of ELG · Dashboard',
@@ -47,7 +48,6 @@ export default async function StateElgPage() {
     porBudget,
     porSponsorship,
     porSemana,
-    ultimos,
   ] = await Promise.all([
     getStateElgSnapshot().catch(() => ({ total: 0, thresholdRemaining: STATE_ELG_PUBLISH_THRESHOLD, progressPercent: 0 })),
     getAggregateByDimension('area').catch(() => []),
@@ -59,7 +59,6 @@ export default async function StateElgPage() {
     getAggregateByDimension('budget_status').catch(() => []),
     getAggregateByDimension('sponsorship_lideranca').catch(() => []),
     getPlaybooksPorSemana(12).catch(() => []),
-    getLastPlaybookOutputs(20).catch(() => []),
   ]);
 
   return (
@@ -120,33 +119,12 @@ export default async function StateElgPage() {
         <AggregateCard icon={<Heart className="h-4 w-4" />} title="Sponsorship da liderança" buckets={porSponsorship} />
       </div>
 
-      {/* Tabela — últimos respondentes */}
-      <section className="state-elg-table-section">
-        <h2 className="state-elg-table-title">Últimos 20 respondentes</h2>
-        {ultimos.length === 0 ? (
-          <p className="state-elg-empty">Nenhum playbook gerado ainda. Quando o primeiro lead completar o quiz, ele aparece aqui.</p>
-        ) : (
-          <div className="state-elg-table-wrap">
-            <table className="state-elg-table">
-              <thead>
-                <tr>
-                  <th>Quando</th>
-                  <th>Pessoa</th>
-                  <th>Empresa</th>
-                  <th>Setor</th>
-                  <th>Template</th>
-                  <th>Playbook</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ultimos.map((row) => (
-                  <ResponderRow key={row.slug} row={row} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      {/*
+        A tabela de respondentes recentes (com nome/email/empresa) saiu daqui
+        em mai/2026. Agora vive em /internal/dashboard/forms — sinal comercial
+        fica junto dos outros leads, e este painel agregado pode virar
+        relatório público sem expor dados identificáveis.
+      */}
     </div>
   );
 }
@@ -194,26 +172,3 @@ function AggregateCard({
   );
 }
 
-function ResponderRow({ row }: { row: LastResponder }) {
-  return (
-    <tr>
-      <td className="state-elg-table-when">{timeAgo(row.createdAt)}</td>
-      <td>
-        <Link href={`/internal/crm/people/${row.personId}`} className="state-elg-table-link">
-          {row.personName}
-          <ArrowUpRight className="h-3 w-3" />
-        </Link>
-        <div className="state-elg-table-sub">{row.personEmail}</div>
-      </td>
-      <td>{row.companyName ?? <span className="state-elg-empty-inline">—</span>}</td>
-      <td>{row.industry ?? <span className="state-elg-empty-inline">—</span>}</td>
-      <td><code className="state-elg-template-key">{row.templateKey}</code></td>
-      <td>
-        <Link href={`/playbook/${row.slug}`} target="_blank" className="state-elg-table-link">
-          Ver
-          <ArrowUpRight className="h-3 w-3" />
-        </Link>
-      </td>
-    </tr>
-  );
-}
