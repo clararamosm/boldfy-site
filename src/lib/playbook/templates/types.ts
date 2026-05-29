@@ -125,6 +125,20 @@ export type Tip = {
    */
   opcoes?: Array<{ titulo: string; desc: string }>;
   /**
+   * Índice da opção a destacar visualmente (mai/2026 — refinamento).
+   *
+   * Quando setado (ex: `opcaoDestacada: 1`), o renderer marca a segunda opção
+   * com badge "Recomendado pra você" e borda mais forte. Usado pra sinalizar
+   * qual caminho casa melhor com o perfil do respondente no S_CLEVEL:
+   *
+   *   - sponsorshipLideranca = sim_proprio       → opcaoDestacada = 0 (postar próprio)
+   *   - sponsorshipLideranca = sim_full_content  → opcaoDestacada = 1 (Full Content)
+   *   - demais valores                            → undefined (sem destaque)
+   *
+   * Não impede a leitura da outra opção; só sinaliza qual é o match esperado.
+   */
+  opcaoDestacada?: number;
+  /**
    * Mini-descrição (mai/2026 3ª curadoria — refinamento): 1 a 2 linhas curtas
    * dando contexto do que essa dica significa antes de abrir o accordion da
    * Boldfy. Aparece em TODAS as dicas (universais e condicionais) entre o
@@ -335,9 +349,19 @@ export type RenderedData = {
   checklistBoldfy: ChecklistItem[];  // sempre os 4 itens fixos reformulados
 
   /**
-   * Banner condicional acima da calculadora (mai/2026 3ª curadoria).
-   * Aparece só quando o respondente marcou `budgetStatus === 'sem_budget'`.
-   * Disposto perto da calculadora pra disparar leitura nesse perfil.
+   * Banner do programa beta acima da calculadora.
+   *
+   * Mai/2026 (3ª curadoria): introduzido como banner condicional pra
+   * `budgetStatus === 'sem_budget'` (sucessor da antiga dica B_SEM_BUDGET).
+   *
+   * Jun/2026 (refinamento pós-preview): virou UNIVERSAL — aparece pra todos,
+   * com narrativa personalizada por budgetStatus em `BANNER_BETA_POR_BUDGET`.
+   * Permanece opcional na type pra retrocompat com playbooks antigos no banco
+   * que podem ter o campo ausente (gerados antes do banner existir) ou null
+   * (gerados na janela mai-jun quando era condicional).
+   *
+   * Nome do campo (`bannerSemBudget`) preservado intencionalmente pra não
+   * quebrar snapshots já em `playbook_outputs.rendered_data`.
    */
   bannerSemBudget?: BannerOferta | null;
 

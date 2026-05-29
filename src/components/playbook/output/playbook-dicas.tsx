@@ -260,16 +260,32 @@ function DicaCardDestaque({ tip }: { tip: Tip }) {
         {tip.titulo}
       </h3>
       <div className="mb-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
-        {tip.opcoes.map((opcao, i) => (
-          <div key={i} className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-2 font-headline text-[15px] font-black leading-tight text-foreground">
-              {opcao.titulo}
+        {tip.opcoes.map((opcao, i) => {
+          const destacada = tip.opcaoDestacada === i;
+          return (
+            <div
+              key={i}
+              className={
+                destacada
+                  ? 'relative rounded-xl border-2 border-primary bg-primary/[0.04] p-4 shadow-[0_4px_16px_rgba(205,80,241,.10)]'
+                  : 'rounded-xl border border-border bg-card p-4'
+              }
+            >
+              {destacada && (
+                <div className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-white">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  Recomendado pra você
+                </div>
+              )}
+              <div className="mb-2 font-headline text-[15px] font-black leading-tight text-foreground">
+                {opcao.titulo}
+              </div>
+              <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                {renderWithFeatures(opcao.desc)}
+              </p>
             </div>
-            <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-              {renderWithFeatures(opcao.desc)}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

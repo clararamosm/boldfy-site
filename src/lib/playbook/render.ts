@@ -20,7 +20,7 @@
  */
 
 import {
-  BANNER_SEM_BUDGET,
+  BANNER_BETA_POR_BUDGET,
   CHECKLIST_BOLDFY,
   CHECKLIST_TENTOU_MORREU_ITEM,
   CTA_TITULO_POR_DOR,
@@ -205,9 +205,14 @@ const AREA_TO_TIP_ID: Record<TemplateBase, string> = {
  *   - B_SEM_BUDGET → banner acima da calculadora (via `resolveBannerSemBudget`)
  *   - B_PRECISA_JUSTIFICAR → resultado universal "case earned media"
  *
- * S_CLEVEL nova regra: aparece quando `cargoSenioridade === c_level` E
- * `vozAtual ∈ { founder_solo, alguns_executivos }` — se já tem programa
- * rodando ou time esparso, o C-level provavelmente já tá engajado.
+ * S_CLEVEL regra (jun/2026 refinamento): aparece quando o respondente é
+ * C-level, com UM único blocker — `vozAtual === 'founder_solo'`. A intuição:
+ * se "só o founder/CEO posta regularmente" foi a resposta, o C-level que
+ * preencheu provavelmente já é o próprio founder/CEO postando, então a dica
+ * "entre como pivô do programa" vira ruído. Em qualquer outra resposta da
+ * P6 a dica aparece. Quando aparece, a opção destacada visualmente varia
+ * por sponsorshipLideranca (sim_proprio destaca "entra no game junto com
+ * o time", sim_full_content destaca "Boldfy faz por você").
  *
  * Cap teórico: 1 (CLevel) + 5 (universais) + 2 (dor) + 1 (voz) + 1 (sponsorship)
  * = 10 dicas. Em geral fica 6-9 dicas.
@@ -222,12 +227,30 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
   const findById = (id: string) => TIPS_LIBRARY.find((t) => t.id === id);
 
   // 1. S_CLEVEL em destaque (primeira posição) — quando o respondente é
-  //    C-level e a voz da empresa indica que ele provavelmente não posta.
-  const isCLevelSemVoz =
-    quiz.cargoSenioridade === 'c_level' &&
-    (quiz.vozAtual === 'founder_solo' || quiz.vozAtual === 'alguns_executivos');
-  if (isCLevelSemVoz) {
-    pushUnique(findById('S_CLEVEL'));
+  //    C-level e a P6 não indica que o programa já está rodando pelo
+  //    próprio C-level.
+  //
+  //    Regra (jun/2026 refinamento pós-preview): único blocker é
+  //    `vozAtual === 'founder_solo'`. Em qualquer outra resposta da P6
+  //    (alguns_executivos, time_esparso, ninguem, programa_rodando) a dica
+  //    aparece. O caso founder_solo é o único onde o próprio respondente
+  //    C-level provavelmente já é o founder/CEO postando — a dica vira
+  //    ruído. Em programa_rodando ela ainda faz sentido pra reforçar o
+  //    formato (com ou sem time produzindo).
+  //
+  //    Após selecionar, injeta `opcaoDestacada` baseada em
+  //    sponsorshipLideranca pra o componente DicaCardDestaque marcar
+  //    qual das 2 opções é o match recomendado pra esse perfil.
+  const isCLevelComEspaco =
+    quiz.cargoSenioridade === 'c_level' && quiz.vozAtual !== 'founder_solo';
+  if (isCLevelComEspaco) {
+    const baseCLevel = findById('S_CLEVEL');
+    if (baseCLevel) {
+      pushUnique({
+        ...baseCLevel,
+        opcaoDestacada: opcaoDestacadaParaCLevel(quiz.sponsorshipLideranca),
+      });
+    }
   }
 
   // 2. Universais (5 — U2/U4/U5/U7/U6 na ordem do TIPS_LIBRARY)
@@ -620,9 +643,12 @@ export function renderPlaybookData(
   // por setor).
   const setorAplicacao = resolveSetorAplicacao(quiz);
 
-  // === Bloco 6 banner: Sem budget (mai/2026 3ª curadoria) ===
-  // Substitui a antiga dica B_SEM_BUDGET com banner acima da calculadora.
-  const bannerSemBudget = resolveBannerSemBudget(quiz);
+  // === Bloco 6 banner: Programa beta (jun/2026 refinamento) ===
+  // Antes era condicional só pra `sem_budget`. Agora aparece pra TODOS,
+  // com narrativa personalizada por budgetStatus (ver `resolveBannerBeta`).
+  // Nome do campo `bannerSemBudget` mantido pra compat retroativa com
+  // snapshots já gravados em `playbook_outputs.rendered_data`.
+  const bannerSemBudget = resolveBannerBeta(quiz);
 
   // === Sobre a Boldfy (modalidades SaaS e CaaS — mai/2026) ===
   // SaaS sempre visível. CaaS aparece SE sponsorship = sim_full_content
@@ -660,6 +686,33 @@ export function renderPlaybookData(
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Decide qual das 2 opções do S_CLEVEL recebe o badge "Recomendado pra você".
+ *
+ * Opção 0 = "Entra no game junto com o time" (postar próprio com a galera).
+ * Opção 1 = "Boldfy faz por você (Full Content)".
+ *
+ * Regra:
+ *   - sim_proprio       → 0 (já topa postar, plataforma facilita)
+ *   - sim_full_content  → 1 (precisa de quem produza, CaaS é o match)
+ *   - nao_foco | demais → undefined (mostra as 2 sem marcar nenhuma — a pessoa
+ *     decide depois de ler; aplicar destaque "errado" aqui seria pior que
+ *     não destacar)
+ *
+ * Cobre tanto os valores novos da P11 (mai/2026) quanto os legados pra que
+ * playbooks de perfis antigos no banco continuem rendering corretos.
+ */
+function opcaoDestacadaParaCLevel(
+  sponsorship: PlaybookQuizData['sponsorshipLideranca'],
+): number | undefined {
+  if (sponsorship === 'sim_proprio') return 0;
+  if (sponsorship === 'sim_full_content') return 1;
+  // Compat retroativa: 'sim_alguns_postam' e 'sim_com_ajuda' caem como
+  // sim_proprio (já topam postar, só precisam de método).
+  if (sponsorship === 'sim_alguns_postam' || sponsorship === 'sim_com_ajuda') return 0;
+  return undefined;
+}
+
+/**
  * Resolve o conteúdo do Bloco 3.5 baseado na área P3 do respondente.
  * `marketing/growth/comunicação` → variante marketing;
  * `vendas` → variante vendas; `rh/employer_branding` → variante rh.
@@ -671,9 +724,13 @@ function resolveSetorAplicacao(quiz: PlaybookQuizData): SetorAplicacao {
 }
 
 /**
- * Retorna o banner SEM_BUDGET quando o respondente marcou `sem_budget`,
- * ou null caso contrário. Componente do output esconde o bloco quando null.
+ * Retorna o banner do programa beta personalizado por budgetStatus.
+ *
+ * O programa beta é oferta universal — todo respondente vê o banner. O que
+ * muda é o gatilho do copy: budget aprovado ganha "antes de fechar contrato
+ * cheio", sem budget ganha "1º mês grátis pelo programa beta", etc. Mapa
+ * completo em `BANNER_BETA_POR_BUDGET` (templates/index.ts).
  */
-function resolveBannerSemBudget(quiz: PlaybookQuizData): BannerOferta | null {
-  return quiz.budgetStatus === 'sem_budget' ? BANNER_SEM_BUDGET : null;
+function resolveBannerBeta(quiz: PlaybookQuizData): BannerOferta {
+  return BANNER_BETA_POR_BUDGET[quiz.budgetStatus];
 }
