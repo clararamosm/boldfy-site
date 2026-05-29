@@ -72,12 +72,28 @@ type Answers = {
    * consent off; adapter trata como false nesse caso).
    */
   stateElgReportSubscribe?: boolean;
+  /**
+   * Confirmação que o respondente consegue comprometer 5 colaboradores ativos.
+   *
+   * Quando aparece (jun/2026): empresa com porte entre 6 e 20 inclusive.
+   * Decisões da Clara:
+   *   - porte = 5: empresa já tem exatamente o mínimo, compromisso é trivial,
+   *     a pergunta nem aparece (goNext direto).
+   *   - 6-20: 5 ativos representa parte relevante do time, vale confirmar.
+   *   - porte > 20: 5 é trivial, pergunta nem aparece.
+   *
+   * Vai pro AC como custom field pra time de vendas saber se o lead se
+   * comprometeu. Não muda o resto do quiz. No playbook, controla se o
+   * texto explicativo sobre o "piso de 5 ativos" aparece no accordion de
+   * diagnóstico (só pra quem passou por essa tela).
+   */
+  porteCompromisso5Ativos?: boolean;
 };
 
 type WizardState = {
-  currentStep: StepKey | 'not-eligible' | 'loading' | 'success';
+  currentStep: StepKey | 'not-eligible' | 'loading' | 'success' | 'porte-compromisso';
   answers: Answers;
-  history: StepKey[];
+  history: Array<StepKey | 'porte-compromisso'>;
 };
 
 const STORAGE_KEY = 'playbook-elg-quiz-state-v1';
@@ -85,6 +101,18 @@ const TOTAL_QUESTIONS = 9;
 
 /** Limites coerentes com Zod no server. */
 const PORTE_MIN_VIAVEL = 5;
+/**
+ * Faixa em que pedimos confirmação de compromisso com 5 colaboradores ativos.
+ *
+ * Aplicado entre PORTE_COMPROMISSO_INICIO (6) e PORTE_LIMITE_DUVIDA (20)
+ * inclusive. Decisões:
+ *   - porte = 5 não recebe a pergunta (a empresa TEM exatamente o mínimo;
+ *     o compromisso é trivial: a equipe toda precisaria estar ativa).
+ *   - porte > 20: 5 ativos é número pequeno em relação ao time; trivial.
+ *   - 6-20: 5 ativos representa 25-83% do time, vale confirmar.
+ */
+const PORTE_COMPROMISSO_INICIO = 6;
+const PORTE_LIMITE_DUVIDA = 20;
 
 /* -------------------------------------------------------------------------- */
 /*  Util — persistência                                                        */
@@ -178,6 +206,10 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
   const progressN = useMemo(() => {
     if (state.currentStep === 'not-eligible' || state.currentStep === 'loading') return 0;
     if (state.currentStep === 'success') return TOTAL_QUESTIONS;
+    // porte-compromisso ainda tá conceitualmente "dentro" do step 1 (porte) —
+    // mantém o ponteiro no número da P1 pra não dar a sensação de que a barra
+    // pulou pra uma pergunta nova.
+    if (state.currentStep === 'porte-compromisso') return QUESTIONS.porte.n;
     const q = QUESTIONS[state.currentStep as StepKey];
     return q?.n ?? 0;
   }, [state.currentStep]);
@@ -218,7 +250,14 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
     });
   }, []);
 
-  /** Gate: porte < 5 dispara tela de não-elegível. */
+  /**
+   * Gates após P1 (porte):
+   *   - porte < 5  → 'not-eligible' direto (hard block, sem programa viável)
+   *   - porte = 5  → goNext() direto (já tem o mínimo, compromisso é trivial)
+   *   - 6 ≤ porte ≤ 20 → 'porte-compromisso' (5 ativos representa parte
+   *     relevante do time, vale confirmar antes de continuar)
+   *   - porte > 20 → goNext() (5 ativos é trivial nesse porte)
+   */
   const submitPorte = useCallback(() => {
     const porte = state.answers.porte ?? 0;
     if (porte < PORTE_MIN_VIAVEL) {
@@ -233,8 +272,58 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
       }));
       return;
     }
+    if (porte >= PORTE_COMPROMISSO_INICIO && porte <= PORTE_LIMITE_DUVIDA) {
+      trackEvent('playbook_quiz_step_completed', {
+        step: 'porte',
+        step_number: 1,
+      });
+      setState((prev) => ({
+        ...prev,
+        currentStep: 'porte-compromisso',
+        history: [...prev.history, 'porte'],
+      }));
+      return;
+    }
     goNext();
   }, [state.answers.porte, goNext]);
+
+  /**
+   * Resposta da tela intermediária `porte-compromisso`. Sim → continua o quiz
+   * a partir do step seguinte ao `porte`. Não → bloqueia em `not-eligible`.
+   * A resposta é registrada em `porteCompromisso5Ativos` pra vir como custom
+   * field no AC (sinal pra vendas).
+   */
+  const submitPorteCompromisso = useCallback(
+    (confirmou: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        answers: { ...prev.answers, porteCompromisso5Ativos: confirmou },
+      }));
+      if (!confirmou) {
+        trackEvent('playbook_quiz_gate_triggered', {
+          reason: 'compromisso_negado',
+          porte: state.answers.porte ?? 0,
+        });
+        setState((prev) => ({
+          ...prev,
+          currentStep: 'not-eligible',
+          history: [...prev.history, 'porte-compromisso'],
+        }));
+        return;
+      }
+      trackEvent('playbook_quiz_step_completed', {
+        step: 'porte-compromisso',
+        step_number: 1,
+      });
+      // Avanço manual: STEP_ORDER[0] é 'porte', então o próximo é STEP_ORDER[1].
+      setState((prev) => ({
+        ...prev,
+        currentStep: STEP_ORDER[1],
+        history: [...prev.history, 'porte-compromisso'],
+      }));
+    },
+    [state.answers.porte],
+  );
 
   /** Submit final — chama server action. */
   const handleFinalSubmit = useCallback(async () => {
@@ -267,6 +356,9 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         stateElgConsent: a.stateElgConsent ?? true,
         stateElgReportSubscribe: a.stateElgReportSubscribe ?? false,
         porteColaboradores: a.porte ?? 0,
+        // Só presente quando porte ≤ 20 (pergunta foi feita). Quando
+        // ausente, server entende como "pergunta não aplicável".
+        porteCompromisso5Ativos: a.porteCompromisso5Ativos,
         cargoSenioridade: a.cargoSenioridade as never,
         cargoArea: a.cargoArea as never,
         setor: a.setor ?? '',
@@ -323,7 +415,12 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
 
       <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7">
         {state.currentStep === 'not-eligible' ? (
-          <NotEligibleView />
+          <NotEligibleView porte={state.answers.porte ?? 0} />
+        ) : state.currentStep === 'porte-compromisso' ? (
+          <PorteCompromissoView
+            porte={state.answers.porte ?? 0}
+            onAnswer={submitPorteCompromisso}
+          />
         ) : state.currentStep === 'loading' ? (
           <LoadingView />
         ) : (
@@ -335,17 +432,22 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         )}
       </div>
 
-      {state.currentStep !== 'not-eligible' && state.currentStep !== 'loading' && (
-        <WizardFooter
-          stepKey={state.currentStep as StepKey}
-          answers={state.answers}
-          canGoBack={state.history.length > 0}
-          onBack={goBack}
-          onNext={state.currentStep === 'porte' ? submitPorte : goNext}
-          onFinalSubmit={handleFinalSubmit}
-          error={submitError}
-        />
-      )}
+      {/* Footer aparece em todos os steps exceto telas terminais (not-eligible,
+          loading) e exceto porte-compromisso, que tem botões próprios (sim/não)
+          renderizados dentro da view e não usa o footer padrão Continuar/Voltar. */}
+      {state.currentStep !== 'not-eligible' &&
+        state.currentStep !== 'loading' &&
+        state.currentStep !== 'porte-compromisso' && (
+          <WizardFooter
+            stepKey={state.currentStep as StepKey}
+            answers={state.answers}
+            canGoBack={state.history.length > 0}
+            onBack={goBack}
+            onNext={state.currentStep === 'porte' ? submitPorte : goNext}
+            onFinalSubmit={handleFinalSubmit}
+            error={submitError}
+          />
+        )}
     </div>
   );
 }
@@ -832,26 +934,113 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /* -------------------- NotEligibleView -------------------- */
 
-function NotEligibleView() {
+/**
+ * Recebe o porte preenchido pra decidir entre dois copies:
+ *   - porte < 5: empresa abaixo do piso operacional do programa.
+ *   - porte ≥ 5: chegou via 'porte-compromisso' respondendo "não consigo
+ *     comprometer 5". Mesmo destino, mas a explicação muda.
+ */
+function NotEligibleView({ porte }: { porte: number }) {
+  const fromCompromisso = porte >= PORTE_MIN_VIAVEL;
   return (
     <div className="space-y-6 py-4 text-center">
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10">
         <ChevronLeft className="h-6 w-6 -scale-x-100 text-primary" />
       </div>
       <h3 className="font-headline text-xl font-black leading-tight tracking-tight text-foreground">
-        Ainda não é hora <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">de Employee-Led Growth</span>
+        Ainda não é hora{' '}
+        <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
+          de Employee-Led Growth
+        </span>
       </h3>
-      <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-        Employee-Led Growth ganha tração a partir de 5 colaboradores comprometidos. Pra empresas menores, recomendamos focar em founder-led growth primeiro.
-        <br /><br />
-        Se você é consultor pesquisando pra um cliente, vamos conversar.
-      </p>
+      {fromCompromisso ? (
+        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+          Sem 5 colaboradores comprometidos em postar com regularidade, a estratégia não
+          gera o earned media e a consistência necessária pra valer o esforço. Com porte
+          enxuto como o seu, faz mais sentido começar por founder-led growth (founder/CEO
+          puxando o conteúdo solo) e só montar o programa quando esse compromisso
+          existir do lado do time.
+          <br />
+          <br />
+          Se você é consultor pesquisando pra um cliente, vamos conversar.
+        </p>
+      ) : (
+        <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
+          O programa precisa de pelo menos 5 colaboradores ativos pra rodar de forma
+          sustentável. Com menos que isso, founder-led growth (founder/CEO postando
+          solo) tende a render mais que tentar montar um programa.
+          <br />
+          <br />
+          Se você é consultor pesquisando pra um cliente, vamos conversar.
+        </p>
+      )}
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Button asChild>
           <a href="/agendar-demo">Falar com a Boldfy</a>
         </Button>
         <Button asChild variant="outline">
           <a href="/materiais">Ver outros materiais</a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- PorteCompromissoView -------------------- */
+
+/**
+ * Tela intermediária pra empresas com porte 5–20: confirma que a pessoa
+ * consegue comprometer 5 colaboradores ativos antes de seguir o quiz.
+ *
+ * "Sim" → próximo step (cargoSenioridade), grava `porteCompromisso5Ativos=true`.
+ * "Não" → 'not-eligible' (copy condicional), grava `porteCompromisso5Ativos=false`.
+ *
+ * Visual reaproveita o padrão FaiQuestion (avatar + balão) pra manter
+ * continuidade narrativa com o resto do quiz — a Fai é quem está pedindo
+ * o compromisso, não um popup do site.
+ */
+function PorteCompromissoView({
+  porte,
+  onAnswer,
+}: {
+  porte: number;
+  onAnswer: (confirmou: boolean) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+        Confirmação rápida
+      </span>
+
+      <div className="flex items-start gap-3">
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#CD50F1] to-[#E875FF]">
+          <Image src="/images/fai-avatar.jpeg" alt="Fai" fill sizes="32px" className="object-cover" />
+        </div>
+        <div className="flex-1 rounded-2xl rounded-tl-md border border-primary/10 bg-secondary px-4 py-3">
+          <p className="mb-2 text-[13px] font-medium text-foreground/85">
+            Antes de eu montar seu playbook, preciso confirmar um ponto.
+          </p>
+          <h2 className="font-headline text-xl font-black leading-tight tracking-tight text-foreground">
+            Vocês conseguem comprometer{' '}
+            <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
+              ao menos 5 colaboradores
+            </span>{' '}
+            ativos no programa?
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Com {porte} colaboradores no time, 5 ativos já representa parte relevante da
+            empresa. O programa precisa desse piso pra gerar earned media consistente.
+            Sem isso, founder-led growth costuma render mais que tentar montar o programa.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+        <Button size="lg" className="flex-1" onClick={() => onAnswer(true)}>
+          Sim, consigo comprometer 5
+        </Button>
+        <Button size="lg" variant="outline" className="flex-1" onClick={() => onAnswer(false)}>
+          Não, é muito pro nosso porte
         </Button>
       </div>
     </div>

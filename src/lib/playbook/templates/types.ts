@@ -314,6 +314,19 @@ export type RenderedData = {
     vozAtualPretty: string;       // "Founder solo"
     tentativasPretty: string;     // "Já tentou e o programa morreu"
     paragrafoConector: string;    // SNAPSHOT_FECHAMENTO[templateKey]
+    /**
+     * Sinaliza se o accordion "Por que estimamos N colaboradores ativos?"
+     * deve mostrar a explicação extra sobre o piso operacional de 5 ativos.
+     *
+     * `true` quando o respondente passou pela tela de compromisso (porte
+     * 6-20 + confirmou). Justifica pra ele por que mesmo com 6 colab a
+     * estimativa exibida é 5 (não 2 pela curva teórica).
+     *
+     * `false`/`undefined` em outros casos (porte=5, porte>20, playbooks
+     * antigos): mostra só o texto histórico da curva. Opcional pra
+     * retrocompat com snapshots sem esse campo.
+     */
+    mostrarPisoOperacional?: boolean;
   };
 
   /** Snapshot da curva de ativação aplicada (Bloco 2 — accordion). */

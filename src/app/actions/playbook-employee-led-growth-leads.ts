@@ -148,6 +148,9 @@ export async function submitPlaybookEmployeeLedGrowthLead(
     /* ---------- 6. playbook_outputs (página personalizada) ---------- */
     const quizData: PlaybookQuizData = {
       porteColaboradores: input.porteColaboradores,
+      // Compromisso 5 ativos (jun/2026): só vem populado pra porte 6-20.
+      // Snapshot do output usa pra decidir se mostra explicação do piso.
+      porteCompromisso5Ativos: input.porteCompromisso5Ativos,
       cargoSenioridade: input.cargoSenioridade,
       cargoArea: input.cargoArea,
       setor: input.setor,

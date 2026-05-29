@@ -88,6 +88,14 @@ export type PlaybookQuizData = {
     | 'talvez'
     | 'nao';
   observacoesLivres?: string;
+  /**
+   * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+   * Só populado quando o respondente passou pela tela intermediária
+   * (porte 6-20). Usado pra decidir se o texto explicativo sobre o
+   * piso de 5 ativos aparece no accordion de diagnóstico — mantém a
+   * explicação relevante só pra quem viu a pergunta.
+   */
+  porteCompromisso5Ativos?: boolean;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -363,10 +371,30 @@ export function ativacaoTypicaPercent(porte: number): number {
   return 0.17;
 }
 
-/** Pelo menos 1 colaborador (não retorna 0 mesmo pra porte=1, defesa em profundidade). */
+/**
+ * Estimativa de colaboradores ativos com PISO DE 5 (jun/2026).
+ *
+ * 5 é o número mínimo operacional pra o programa funcionar (sponsor + 4
+ * colaboradores postando com regularidade). Empresas com porte abaixo de
+ * 14-15 ficariam abaixo desse piso pela curva teórica (porte * percentual),
+ * então o piso vence: a estimativa exibida é 5, não 1-4.
+ *
+ * Quem chega aqui com porte < 5 foi bloqueado pelo gate do wizard antes,
+ * mas a função aceita defensivamente — se algum playbook antigo no banco
+ * tinha porte<5 (gate adicionado depois), o número exibido continua 5
+ * (consistente com o piso).
+ */
 export function calcColabAtivos(porte: number): number {
-  return Math.max(1, Math.round(porte * ativacaoTypicaPercent(porte)));
+  const teorico = Math.round(porte * ativacaoTypicaPercent(porte));
+  return Math.max(MINIMO_ATIVOS_PROGRAMA, teorico);
 }
+
+/**
+ * Piso operacional do programa. Usado em `calcColabAtivos` e exposto pro
+ * componente PlaybookSnapshot mostrar a explicação correta quando o piso
+ * vence a curva.
+ */
+export const MINIMO_ATIVOS_PROGRAMA = 5;
 
 function faixaLabelDePorte(porte: number): string {
   if (porte <= 20) return 'até 20 colaboradores';
@@ -522,6 +550,15 @@ export function renderPlaybookData(
   // mostra o setor da empresa (Tech/SaaS, Fintech…). A área pessoal é
   // capturada implicitamente pelo template-key (e fica no `areaPretty`
   // pra compat retroativa de playbooks antigos).
+  // mostrarPisoOperacional: só quando a pessoa viu a tela de compromisso
+  // (porte entre 6 e 20 + respondeu sim). Mantém a explicação sobre o piso
+  // restrita ao público pra quem ela faz diferença — empresas maiores não
+  // precisam ler que existe um mínimo de 5 (pra elas é trivial).
+  const mostrarPisoOperacional =
+    quiz.porteCompromisso5Ativos === true &&
+    quiz.porteColaboradores >= 6 &&
+    quiz.porteColaboradores <= 20;
+
   const snapshot: RenderedData['snapshot'] = {
     porte: quiz.porteColaboradores,
     portePretty: `${quiz.porteColaboradores} colaboradores`,
@@ -530,6 +567,7 @@ export function renderPlaybookData(
     vozAtualPretty: vozAtualPretty(quiz.vozAtual),
     tentativasPretty: tentativasPretty(quiz.tentativasAnteriores),
     paragrafoConector: SNAPSHOT_FECHAMENTO[templateKey],
+    mostrarPisoOperacional,
   };
 
   // === Tese (fixo) ===
