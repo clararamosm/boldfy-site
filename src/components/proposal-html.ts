@@ -11,27 +11,34 @@
 import type { ProposalData } from '@/lib/proposals';
 
 /* -------------------------------------------------------------------------- */
-/*  Brand tokens (hardcoded for inline CSS — HSL 279 71% 63% ≈ #8B6CDB)       */
+/*  Brand tokens (fonte: boldfy-visual-identity)                               */
+/*                                                                              */
+/*  Mantidos hardcoded em hex porque o HTML gerado pode rodar em qualquer       */
+/*  client de email — não dá pra depender de CSS variables.                     */
 /* -------------------------------------------------------------------------- */
 
 const C = {
-  primary: '#8B6CDB',
-  primaryLight: '#A78BEA',
-  primaryBg: '#F3F0FF',
-  violet: '#7C3AED',
-  violetBg: '#F5F3FF',
+  primary: '#CD50F1',        // Primary roxo vibrante (marca)
+  primaryLight: '#E875FF',   // Gradient secondary
+  primaryDark: '#5E2A67',    // Primary Dark (headers)
+  primaryBg: '#F7EEFC',      // Secondary surface (tags, badges)
+  violet: '#9840AD',         // Primary Mid — usado no bloco DoD pra diferenciar do Primary
+  violetBg: '#F3E6F8',
   amber: '#D97706',
   amberBg: '#FFFBEB',
   emerald: '#059669',
   emeraldBg: '#ECFDF5',
-  bg: '#FFFFFF',
-  card: '#FAFAFA',
-  border: '#E5E5E5',
-  borderLight: '#F0F0F0',
-  text: '#171717',
-  textMuted: '#737373',
-  textLight: '#A3A3A3',
+  bg: '#FAF7FF',             // Background da página
+  card: '#FFFFFF',           // Card surface
+  border: '#E4D8ED',         // Border padrão da marca
+  borderLight: '#F0E8F5',
+  text: '#45336B',           // Foreground (texto principal)
+  textMuted: '#9D85B3',      // Muted
+  textLight: '#B5A0CD',
 } as const;
+
+// URL absoluta porque o HTML pode ser aberto fora do domínio (email, share).
+const LOGO_URL = 'https://boldfy.com.br/images/boldfy-logo.svg';
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
@@ -45,10 +52,10 @@ function fmtBRL(n: number): string {
   return `R$ ${fmt(n)}`;
 }
 
-const DESIGN_LABELS: Record<string, { label: string; pieces: number }> = {
-  starter: { label: 'Starter', pieces: 4 },
-  growth: { label: 'Growth', pieces: 8 },
-  scale: { label: 'Scale', pieces: 12 },
+const DESIGN_LABELS: Record<string, { label: string; pieces: number; listPrice: number }> = {
+  starter: { label: 'Starter', pieces: 4, listPrice: 1600 },
+  growth: { label: 'Growth', pieces: 7, listPrice: 2800 },
+  scale: { label: 'Scale', pieces: 10, listPrice: 3600 },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -73,16 +80,17 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
   const perSeat = data.betaActive ? data.platform.perSeatBeta : data.platform.perSeatFull;
   const platformTotal = data.platform.seats * perSeat;
   const platformTotalFull = data.platform.seats * data.platform.perSeatFull;
-  const designMeta = DESIGN_LABELS[data.design.pack] ?? { label: data.design.pack, pieces: 0 };
+  const designMeta = DESIGN_LABELS[data.design.pack] ?? { label: data.design.pack, pieces: 0, listPrice: 0 };
 
-  // Team section
+  // Team section — só itens dedicados ganham marcação visual. Compartilhado
+  // é o default (não precisa rotular o que é padrão).
   const teamHTML = data.team.length > 0
     ? data.team.map(t => `
       <tr>
         <td style="padding:4px 0;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.dedicated ? C.amber : C.primary};vertical-align:middle;margin-right:8px;"></span>
           <span style="font-size:13px;color:${C.text};">${t.text}</span>
-          <span style="font-size:11px;color:${t.dedicated ? C.amber : C.textMuted};margin-left:6px;">${t.dedicated ? '● dedicado' : '○ compartilhado'}</span>
+          ${t.dedicated ? `<span class="badge" style="background:${C.amberBg};color:${C.amber};margin-left:8px;">dedicado</span>` : ''}
         </td>
       </tr>
     `).join('')
@@ -114,9 +122,9 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td>
-          <div style="display:inline-block;background:${C.primaryBg};padding:6px 14px;border-radius:8px;">
-            <span style="font-size:16px;font-weight:800;color:${C.primary};letter-spacing:-0.5px;">BOLDFY</span>
-          </div>
+          <a href="https://boldfy.com.br" style="display:inline-block;line-height:0;">
+            <img src="${LOGO_URL}" alt="Boldfy" height="28" style="display:block;height:28px;width:auto;border:0;outline:none;">
+          </a>
         </td>
         <td align="right">
           <span style="font-size:12px;color:${C.textMuted};">${dateStr}</span>
@@ -153,12 +161,6 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       </div>
       `}
 
-      ${data.betaActive ? `
-      <div style="background:${C.emeraldBg};border:1px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
-        <span style="font-size:12px;font-weight:700;color:${C.emerald};">✦ Beta Tester — 30% off na Plataforma</span>
-      </div>
-      ` : ''}
-
       <!-- Platform -->
       ${data.platform.enabled ? `
       <div>
@@ -167,6 +169,7 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
             <td style="vertical-align:middle;">
               <span style="font-size:14px;font-weight:700;color:${C.text};">🖥 Plataforma</span>
               <span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Software as a Service</span>
+              ${data.betaActive ? `<span class="badge" style="background:${C.emeraldBg};color:${C.emerald};margin-left:8px;">✦ Beta · 30% off</span>` : ''}
             </td>
             <td align="right" style="vertical-align:middle;">
               ${data.betaActive ? `<span style="font-size:12px;color:${C.textLight};text-decoration:line-through;">${fmtBRL(platformTotalFull)}</span><br>` : ''}
@@ -187,30 +190,40 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       ` : ''}
 
       <!-- Design -->
-      ${data.design.enabled ? `
+      ${data.design.enabled ? (() => {
+        const isFree = data.design.price === 0 && designMeta.listPrice > 0;
+        return `
       <div class="section">
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td style="vertical-align:middle;">
               <span style="font-size:14px;font-weight:700;color:${C.text};">🎨 Biblioteca de Peças</span>
-              <span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Design on Demand</span>
+              ${isFree
+                ? `<span class="badge" style="background:${C.emeraldBg};color:${C.emerald};margin-left:6px;">Incluso</span>`
+                : `<span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Design on Demand</span>`}
             </td>
             <td align="right" style="vertical-align:middle;">
-              <span style="font-size:16px;font-weight:800;color:${C.text};">${fmtBRL(data.design.price)}</span>
-              <span style="font-size:11px;color:${C.textMuted};">/mês</span>
+              ${isFree
+                ? `<span style="font-size:12px;color:${C.textLight};text-decoration:line-through;">${fmtBRL(designMeta.listPrice)}</span><br><span style="font-size:16px;font-weight:800;color:${C.emerald};">Gratuito</span>`
+                : `<span style="font-size:16px;font-weight:800;color:${C.text};">${fmtBRL(data.design.price)}</span><span style="font-size:11px;color:${C.textMuted};">/mês</span>`}
             </td>
           </tr>
         </table>
         <p style="margin:8px 0 0;font-size:12px;color:${C.textMuted};">
-          ${designMeta.label} · ${designMeta.pieces} peças/mês
+          ${designMeta.label} · ${designMeta.pieces} peças/mês · <strong style="color:${C.text};">2–3 variações</strong> por peça
         </p>
         <div style="margin-top:10px;">
           ${['Carrosséis', 'Infográficos', 'Templates de marca', 'Brand Context']
             .map(f => `<span class="badge" style="background:${C.violetBg};color:${C.violet};margin:2px 4px 2px 0;">✓ ${f}</span>`)
             .join('')}
         </div>
+        <p style="margin:12px 0 0;font-size:12px;color:${C.textMuted};line-height:1.5;">
+          Por que designs importam pra Employee-Led Growth?
+          <a href="https://boldfy.com.br/case-semrush" style="color:${C.primary};font-weight:600;">Veja o case da Semrush →</a>
+        </p>
       </div>
-      ` : ''}
+      `;
+      })() : ''}
 
       <!-- Full-Service -->
       ${data.fullService.enabled ? `
