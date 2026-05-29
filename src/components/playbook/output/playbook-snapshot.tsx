@@ -44,16 +44,26 @@ export function PlaybookSnapshot({
           </span>
         </h2>
 
+        {/* Mini-cards do diagnóstico. Card de Porte mostra ativos como
+            destaque + porte total como sub (jun/2026) — o número que
+            importa pra o programa é o de ativos; total fica como contexto
+            secundário. Accordion abaixo explica o porquê. */}
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <Mini icon={<Building2 className="h-5 w-5" />} label="Porte" value={snapshot.portePretty} />
+          <Mini
+            icon={<Building2 className="h-5 w-5" />}
+            label="Porte"
+            value={`${curvaAtivacao.colabAtivos} ativos`}
+            sub={`de ${snapshot.portePretty}`}
+          />
           <Mini icon={<Factory className="h-5 w-5" />} label="Setor" value={snapshot.setorPretty ?? snapshot.areaPretty} />
           <Mini icon={<Wifi className="h-5 w-5" />} label="Voz hoje" value={snapshot.vozAtualPretty} />
           <Mini icon={<RotateCcw className="h-5 w-5" />} label="Tentativas" value={snapshot.tentativasPretty} />
         </div>
 
-        <p className="mb-6 rounded-2xl border border-border bg-secondary px-6 py-5 text-[15px] leading-relaxed text-foreground">
-          {snapshot.paragrafoConector}
-        </p>
+        {/* Parágrafo conector removido em jun/2026 — era redundante com o
+            card TENTATIVAS, que já entrega o status do programa atual.
+            `snapshot.paragrafoConector` continua no JSON pra retrocompat
+            de playbooks antigos, mas não é renderizado mais. */}
 
         <details
           className="group rounded-xl border border-border bg-card open:shadow-[0_8px_32px_rgba(93,42,103,.06)]"
@@ -103,10 +113,13 @@ function Mini({
   icon,
   label,
   value,
+  sub,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
+  /** Subvalor opcional (ex: "de 300 colaboradores" no card de Porte). */
+  sub?: string;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)]">
@@ -115,6 +128,7 @@ function Mini({
       </div>
       <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-sm font-bold text-foreground">{value}</div>
+      {sub && <div className="mt-0.5 text-[11.5px] text-muted-foreground">{sub}</div>}
     </div>
   );
 }

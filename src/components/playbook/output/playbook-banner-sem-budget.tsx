@@ -1,32 +1,50 @@
 'use client';
 
 /**
- * Banner SEM_BUDGET — Bloco 6 (acima da calculadora).
+ * Banner do programa Beta — Bloco 6 (acima da calculadora).
  *
- * Mai/2026 (3ª curadoria): substituiu a antiga dica B_SEM_BUDGET. Aparece
- * só quando `budgetStatus === 'sem_budget'`. Fica perto da calculadora pra
- * disparar leitura nesse perfil: a pessoa que tá calculando ROI vê a oferta
- * beta antes de começar a brincar com os sliders.
+ * Histórico:
+ * - Mai/2026 (3ª curadoria): substituiu a antiga dica B_SEM_BUDGET.
+ *   Aparecia só quando `budgetStatus === 'sem_budget'`.
+ * - Jun/2026 (refinamento pós-preview): virou universal — 4 variantes
+ *   de copy por budgetStatus, mesma oferta operacional.
+ * - Jun/2026 (polish 2): box mais compacto e o gift virou pequeno por
+ *   padrão. A caixinha agora ABRE no hover do BANNER inteiro (não só
+ *   do próprio gift), em vez de animar uma vez no mount. Resultado é
+ *   uma seção mais discreta no scroll, com a animação reservada pra
+ *   quem se interessou e parou em cima.
  *
- * Visual: container destacado com gradient + caixinha animada de presente
- * (AnimatedGiftBox), título + descrição em 2 colunas.
+ * Visual:
+ * - Container fino, sem padding excessivo.
+ * - Gift à esquerda, conteúdo (título + descrição) à direita.
+ * - No hover do banner: gift escala um pouco e abre (via prop `open`).
  */
 
+import { useState } from 'react';
 import type { BannerOferta } from '@/lib/playbook/templates/types';
 import { AnimatedGiftBox } from '@/components/ui/animated-gift-box';
 
 export function PlaybookBannerSemBudget({ banner }: { banner: BannerOferta }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <section className="mx-auto max-w-[1080px] px-6 pt-12 sm:pt-16">
-      <div className="flex flex-col items-stretch gap-4 rounded-2xl border-2 border-dashed border-primary/60 bg-gradient-to-br from-primary/[0.08] to-card p-6 shadow-[0_8px_32px_rgba(205,80,241,.12)] sm:flex-row sm:items-center sm:gap-6 sm:p-7">
-        <div className="flex-shrink-0">
-          <AnimatedGiftBox size="md" animateOnMount />
+    <section className="mx-auto max-w-[1080px] px-6 pt-10 sm:pt-14">
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="group/banner relative flex items-center gap-4 overflow-visible rounded-2xl border border-dashed border-primary/40 bg-gradient-to-br from-primary/[0.05] to-card px-5 py-4 transition-all duration-300 hover:border-primary/70 hover:shadow-[0_8px_32px_rgba(205,80,241,.14)] sm:gap-5 sm:px-6 sm:py-4"
+      >
+        {/* Gift container compacto. Cresce no hover via transform.
+            overflow-visible no parent permite que a caixinha escape
+            (efeito de "expandir do box" pedido pela Clara). */}
+        <div className="relative -my-2 flex-shrink-0 transition-transform duration-300 group-hover/banner:scale-110">
+          <AnimatedGiftBox size="sm" open={hovered} />
         </div>
+
         <div className="flex-1">
-          <h3 className="mb-2 font-headline text-lg font-black tracking-tight text-foreground sm:text-xl">
+          <h3 className="font-headline text-[15px] font-black leading-tight tracking-tight text-foreground sm:text-base">
             {banner.titulo}
           </h3>
-          <p className="text-[13.5px] leading-relaxed text-muted-foreground">{banner.desc}</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{banner.desc}</p>
         </div>
       </div>
     </section>

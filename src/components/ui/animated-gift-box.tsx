@@ -21,12 +21,22 @@ export function AnimatedGiftBox({
   /**
    * Quando true, dispara a animação de abertura uma vez no mount em vez de
    * esperar hover. Útil pra callouts onde a pessoa não vai necessariamente
-   * passar o mouse (ex: banner sem_budget).
+   * passar o mouse (ex: callout do pacote de design grátis na Dica 04).
    */
   animateOnMount = false,
+  /**
+   * Quando definido, controla o estado da caixinha externamente (jun/2026).
+   * - `true` → caixinha aberta + confetti (mesma animação do hover).
+   * - `false` → caixinha fechada.
+   * Útil quando o trigger de animação é o hover do CONTAINER pai (ex: banner
+   * beta inteiro), não do próprio gift. Sobrepõe `animateOnMount` quando
+   * presente; sem ele, comportamento padrão é animar no hover do próprio gift.
+   */
+  open,
 }: {
   size?: 'sm' | 'md';
   animateOnMount?: boolean;
+  open?: boolean;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [forceAnimate, setForceAnimate] = useState(false);
@@ -39,6 +49,12 @@ export function AnimatedGiftBox({
     return () => clearTimeout(t);
   }, [animateOnMount]);
 
+  // Estado final de "abrir caixinha":
+  // - `open` (controlled) tem prioridade quando definido.
+  // - Senão usa forceAnimate (que vem de animateOnMount).
+  // - Senão depende de :hover puro do próprio wrapper via CSS.
+  const isOpen = open ?? forceAnimate;
+
   // Sizes: md = original (100x110 box, 200 wrapper); sm = compacto pra usar
   // dentro de callouts inline (64x70 box, 96 wrapper).
   const dims =
@@ -49,7 +65,7 @@ export function AnimatedGiftBox({
   return (
     <div
       ref={wrapperRef}
-      className={`mini-gift-wrap group/gift relative flex cursor-default items-center justify-center ${forceAnimate ? 'gift-force-animate' : ''}`}
+      className={`mini-gift-wrap group/gift relative flex cursor-default items-center justify-center ${isOpen ? 'gift-force-animate' : ''}`}
       style={{ width: dims.wrap, height: dims.wrap }}
       aria-hidden="true"
     >
