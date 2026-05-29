@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Extensão Chrome — tem package.json + tsconfig próprios, não passa pelo
+    // build do Next.js. Inclui @crxjs/vite-plugin e tipos chrome que não
+    // existem no contexto do site.
+    "boldfy-extension/**",
   ]),
   {
     rules: {
