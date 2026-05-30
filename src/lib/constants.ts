@@ -47,7 +47,15 @@ export const BETA_PRICING_ENABLED = true;
 /** Desconto aplicado durante o programa beta (30%) */
 export const BETA_DISCOUNT = 0.30;
 
-/** Tiers de preço cheio Boldfy por faixa de seats (R$/seat/mês) */
+/**
+ * Tiers de preço cheio Boldfy por faixa de seats (R$/seat/mês).
+ *
+ * ⚠️ Esse array alimenta DIRETAMENTE os tiles públicos da /beta-test
+ * (page.tsx mapeia PRICING_TIERS → 4 tiles + "70+ enterprise"). NÃO
+ * adicionar faixas grandes aqui, senão elas vazam pro site público. As
+ * faixas 71-100 e 101-200 vivem nas constantes/funções abaixo e só são
+ * alcançadas no simulador do playbook (slider vai até 200).
+ */
 export const PRICING_TIERS = [
   { maxSeats: 10, fullPrice: 499 },
   { maxSeats: 20, fullPrice: 449 },
@@ -56,15 +64,47 @@ export const PRICING_TIERS = [
 ] as const;
 
 /**
- * Retorna o preço cheio por seat baseado no número de colaboradores.
- * Faixas acima de 70 caem em enterprise (preço sob consulta).
+ * Faixas grandes — usadas só onde o slider passa de 70 (simulador do
+ * playbook + gráfico Ads vs ELG). Não aparecem nos tiles públicos.
+ *
+ * - 71-100 seats  → R$ 300/seat cheio (valor fechado).
+ * - 101-200 seats → faixa enterprise R$ 150-200/seat cheio (range; preço
+ *   final cai conforme o volume de pessoas no programa, sob consulta).
+ *
+ * Teto duro de 200 seats no slider: acima disso a lógica de feed não
+ * comporta (mais gente no programa = cada um posta/engaja menos).
+ */
+export const PRICING_TIER_71_100_FULL = 300;
+export const ENTERPRISE_SEATS_MIN = 101;
+export const ENTERPRISE_FULL_RANGE = { min: 150, max: 200 } as const;
+export const MAX_SEATS_PLAYBOOK = 200;
+
+/**
+ * Retorna o preço cheio por seat (valor único) baseado no número de
+ * colaboradores. Para a faixa enterprise (101+), retorna o TETO do range
+ * (R$ 200) como valor conservador para consumidores que precisam de número
+ * único (ex: gráfico Ads vs ELG). O display em range fica em getFullPriceRange.
  */
 export function getFullPricePerSeat(seats: number): number {
   for (const tier of PRICING_TIERS) {
     if (seats <= tier.maxSeats) return tier.fullPrice;
   }
-  // 70+ → mantém o último tier como base; UI deve tratar como enterprise
-  return PRICING_TIERS[PRICING_TIERS.length - 1].fullPrice;
+  if (seats <= 100) return PRICING_TIER_71_100_FULL;
+  // 101-200 → enterprise: teto do range como valor único conservador.
+  return ENTERPRISE_FULL_RANGE.max;
+}
+
+/**
+ * Retorna o preço cheio por seat como FAIXA {min, max}. Para ≤100 seats
+ * min === max (valor único do tier). Para 101+ retorna o range enterprise
+ * (R$ 150-200). Usado pelo simulador do playbook pra exibir "R$ X a R$ Y".
+ */
+export function getFullPriceRange(seats: number): { min: number; max: number } {
+  if (seats < ENTERPRISE_SEATS_MIN) {
+    const p = getFullPricePerSeat(seats);
+    return { min: p, max: p };
+  }
+  return { min: ENTERPRISE_FULL_RANGE.min, max: ENTERPRISE_FULL_RANGE.max };
 }
 
 /**
@@ -75,6 +115,24 @@ export function getBetaPricePerSeat(seats: number): number {
   const full = getFullPricePerSeat(seats);
   if (!BETA_PRICING_ENABLED) return full;
   return Math.round(full * (1 - BETA_DISCOUNT));
+}
+
+/**
+ * Versão em faixa do preço beta. Aplica o desconto beta nas duas pontas do
+ * range cheio. Com BETA_PRICING_ENABLED = false retorna o range cheio.
+ */
+export function getBetaPriceRange(seats: number): { min: number; max: number } {
+  const full = getFullPriceRange(seats);
+  if (!BETA_PRICING_ENABLED) return full;
+  return {
+    min: Math.round(full.min * (1 - BETA_DISCOUNT)),
+    max: Math.round(full.max * (1 - BETA_DISCOUNT)),
+  };
+}
+
+/** True quando o nº de seats cai na faixa enterprise (range de preço). */
+export function isEnterpriseSeats(seats: number): boolean {
+  return seats >= ENTERPRISE_SEATS_MIN;
 }
 
 // ─── Beta program ─────────────────────────────────────────────

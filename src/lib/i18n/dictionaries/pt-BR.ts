@@ -620,6 +620,8 @@ const ptBR = {
     boldfyCostMonth: 'Custo Boldfy/mês',
     perSeat: '/seat',
     betaPriceLabel: 'Preço Beta',
+    enterpriseBandLabel: 'Faixa Enterprise',
+    enterpriseHint: 'Valor final por seat cai conforme o volume de pessoas no programa. Fechamos sob consulta.',
     roiTitle: 'Retorno sobre investimento',
     roiSubtitle: 'Valor de mídia gerado vs. custo da plataforma',
     simulatorNote: 'Referência: no LinkedIn Ads, o CPM (custo por mil impressões) varia de R$ 20 a R$ 50, ou seja, R$ 0,02 a R$ 0,05 por impressão. Com Employee-Led Growth, essas impressões vêm de perfis pessoais (alcance orgânico), sem custo de mídia. O valor de R$ 0,30/impressão é uma estimativa conservadora de mercado.',

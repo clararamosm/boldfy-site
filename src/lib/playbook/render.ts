@@ -679,11 +679,13 @@ export function renderPlaybookData(
   // colaboradores ativos"). Antes abria com o porte total e dava incoerência:
   // header dizia 18 ativos, slider abria em 60.
   //
-  // Clamp 5-70 é defesa em profundidade pros bounds do slider; o gate de
-  // elegibilidade do quiz já filtra porte<5, e empresas gigantes (porte>411,
-  // onde ativos>70) ficam clampadas — caso raro e aceitável.
+  // Clamp 5-200: o slider do playbook agora vai até 200 (mai/2026), então a
+  // estimativa de ativos (ex: 170 numa empresa de 1000) abre sem ser cortada
+  // em 70 — antes o header dizia "170 ativos" e o slider abria em 70. Empresas
+  // gigantes (ativos>200) ficam clampadas no teto de 200 — limite duro: acima
+  // disso a lógica de feed não comporta (mais gente = cada um posta/engaja menos).
   const calculadora = {
-    initialCollaborators: Math.max(5, Math.min(70, colabAtivos)),
+    initialCollaborators: Math.max(5, Math.min(200, colabAtivos)),
     initialImpressions: IMPRESSIONS_PER_COLAB_DEFAULT,
     colabAtivosEstimados: colabAtivos,
   };

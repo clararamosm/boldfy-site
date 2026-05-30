@@ -30,14 +30,23 @@ import {
   BETA_PRICING_ENABLED,
   LINKEDIN_CPM_PER_IMPRESSION,
   getBetaPricePerSeat,
+  getBetaPriceRange,
   getFullPricePerSeat,
+  getFullPriceRange,
+  isEnterpriseSeats,
 } from '@/lib/constants';
 
 // Defaults idênticos aos da página /beta-test atual
 const DEFAULT_COLLABORATORS = 5;
 const DEFAULT_IMPRESSIONS = 10_000;
 const MIN_COLLABORATORS = 5;
-const MAX_COLLABORATORS = 70;
+/**
+ * Teto padrão do slider de colaboradores (70). É o limite usado em TODO o
+ * site (home, beta-test, case-semrush). Só o Playbook ELG passa
+ * `maxCollaborators={200}` pra alcançar as faixas grandes 71-100 e enterprise
+ * 101-200 — decisão de mai/2026: mudar a lógica do simulador SÓ no playbook.
+ */
+const DEFAULT_MAX_COLLABORATORS = 70;
 const MIN_IMPRESSIONS = 1_000;
 const MAX_IMPRESSIONS = 50_000;
 const IMPRESSIONS_STEP = 1_000;
@@ -52,7 +61,7 @@ function formatBRL(value: number): string {
 export type RoiSimulatorProps = {
   /**
    * Pré-popula o slider de colaboradores. Será clampado pra [MIN_COLLABORATORS,
-   * MAX_COLLABORATORS] (5..70) caso esteja fora. Default: 5.
+   * maxCollaborators] caso esteja fora. Default: 5.
    */
   initialCollaborators?: number;
   /**
@@ -60,6 +69,12 @@ export type RoiSimulatorProps = {
    * MAX_IMPRESSIONS] (1k..50k). Default: 10k.
    */
   initialImpressions?: number;
+  /**
+   * Teto do slider de colaboradores. Default 70 (limite do site inteiro). O
+   * Playbook ELG passa 200 pra refletir empresas grandes e exibir as faixas
+   * 71-100 (R$ 300/seat) e enterprise 101-200 (R$ 150-200/seat em range).
+   */
+  maxCollaborators?: number;
   /**
    * Esconde o card "Mesmo alcance via Ads" e ajusta o grid de 4 → 3 cards
    * (mai/2026 — usado no Playbook ELG, onde a comparação com Ads não casa
@@ -71,15 +86,19 @@ export type RoiSimulatorProps = {
 export function RoiSimulator({
   initialCollaborators = DEFAULT_COLLABORATORS,
   initialImpressions = DEFAULT_IMPRESSIONS,
+  maxCollaborators = DEFAULT_MAX_COLLABORATORS,
   hideAdsComparison = false,
 }: RoiSimulatorProps = {}) {
   const t = useT();
 
+  // Teto efetivo do slider (nunca abaixo do mínimo, defesa em profundidade).
+  const maxCollab = Math.max(MIN_COLLABORATORS, maxCollaborators);
+
   // Clamp pros bounds do slider — protege contra props inválidas vindas de
   // outras pages (Playbook gera baseado em quiz.porteColaboradores, que pode
-  // ser >70 ou <5 em casos raros — gate de elegibilidade já filtra <5 mas
+  // ser fora de faixa em casos raros — gate de elegibilidade já filtra <5 mas
   // o clamp aqui é defesa em profundidade).
-  const clampedCollab = Math.max(MIN_COLLABORATORS, Math.min(MAX_COLLABORATORS, initialCollaborators));
+  const clampedCollab = Math.max(MIN_COLLABORATORS, Math.min(maxCollab, initialCollaborators));
   const clampedImp = Math.max(MIN_IMPRESSIONS, Math.min(MAX_IMPRESSIONS, initialImpressions));
 
   const [collaborators, setCollaborators] = useState(clampedCollab);
@@ -91,29 +110,52 @@ export function RoiSimulator({
     const custoAdsLow = totalImpressions * ADS_CPM_LOW;
     const custoAdsHigh = totalImpressions * ADS_CPM_HIGH;
 
+    // Faixa enterprise (101+): preço por seat vira range R$ 150-200 cheio
+    // (R$ 105-140 beta). Abaixo disso, min === max (valor único do tier).
+    const enterprise = isEnterpriseSeats(collaborators);
+    const fullRange = getFullPriceRange(collaborators);
+    const betaRange = getBetaPriceRange(collaborators);
+
+    // Valores únicos (compat. com o display não-enterprise) = ponta cara.
     const fullSeat = getFullPricePerSeat(collaborators);
     const betaSeat = getBetaPricePerSeat(collaborators);
 
-    const custoMensalFull = collaborators * fullSeat;
-    const custoMensalBeta = collaborators * betaSeat;
+    // Custo mensal como range (seats × preço/seat nas duas pontas).
+    const custoFullMin = collaborators * fullRange.min;
+    const custoFullMax = collaborators * fullRange.max;
+    const custoBetaMin = collaborators * betaRange.min;
+    const custoBetaMax = collaborators * betaRange.max;
 
     // ROI compara valor de mídia gerado vs. o que o cliente vai pagar
-    // (preço beta enquanto a oferta estiver ativa; preço cheio depois)
-    const custoMensalAtual = BETA_PRICING_ENABLED ? custoMensalBeta : custoMensalFull;
-    const roi = custoMensalAtual > 0
-      ? ((valorBoldfy - custoMensalAtual) / custoMensalAtual) * 100
-      : 0;
+    // (preço beta enquanto a oferta estiver ativa; preço cheio depois).
+    // No range, custo MENOR → ROI MAIOR, então roiMax usa a ponta barata.
+    const custoMin = BETA_PRICING_ENABLED ? custoBetaMin : custoFullMin;
+    const custoMax = BETA_PRICING_ENABLED ? custoBetaMax : custoFullMax;
+    const roiAt = (custo: number) =>
+      custo > 0 ? ((valorBoldfy - custo) / custo) * 100 : 0;
+    const roiMin = roiAt(custoMax);
+    const roiMax = roiAt(custoMin);
 
     return {
       totalImpressions,
       valorBoldfy,
       custoAdsLow,
       custoAdsHigh,
+      enterprise,
       fullSeat,
       betaSeat,
-      custoMensalFull,
-      custoMensalBeta,
-      roi,
+      fullRange,
+      betaRange,
+      // Custo mensal: valor único (ponta cara) p/ não-enterprise + range p/ enterprise.
+      custoMensalFull: custoFullMax,
+      custoMensalBeta: custoBetaMax,
+      custoFullMin,
+      custoFullMax,
+      custoBetaMin,
+      custoBetaMax,
+      roi: roiMin,
+      roiMin,
+      roiMax,
     };
   }, [collaborators, impressionsPerCollab]);
 
@@ -153,13 +195,13 @@ export function RoiSimulator({
               value={[collaborators]}
               onValueChange={(v) => setCollaborators(v[0])}
               min={MIN_COLLABORATORS}
-              max={MAX_COLLABORATORS}
+              max={maxCollab}
               step={1}
               className="w-full"
             />
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-muted-foreground">{MIN_COLLABORATORS}</span>
-              <span className="text-[9px] text-muted-foreground">{MAX_COLLABORATORS}</span>
+              <span className="text-[9px] text-muted-foreground">{maxCollab}</span>
             </div>
           </div>
 
@@ -239,7 +281,7 @@ export function RoiSimulator({
             </div>
           )}
 
-          {/* Custo Boldfy */}
+          {/* Custo Boldfy — vira range na faixa enterprise (101+ seats). */}
           <div className="bg-secondary rounded-xl p-4 text-center border-2 border-primary/30">
             <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               {t.betaTest.boldfyCostMonth}
@@ -247,28 +289,46 @@ export function RoiSimulator({
             {BETA_PRICING_ENABLED ? (
               <>
                 <p className="text-[10px] text-muted-foreground line-through">
-                  R$ {results.custoMensalFull.toLocaleString('pt-BR')}
+                  {results.enterprise
+                    ? `R$ ${formatBRL(results.custoFullMin)} a R$ ${formatBRL(results.custoFullMax)}`
+                    : `R$ ${results.custoMensalFull.toLocaleString('pt-BR')}`}
                 </p>
                 <p className="font-headline text-lg font-black text-primary">
-                  R$ {results.custoMensalBeta.toLocaleString('pt-BR')}
+                  {results.enterprise
+                    ? `R$ ${formatBRL(results.custoBetaMin)} a R$ ${formatBRL(results.custoBetaMax)}`
+                    : `R$ ${results.custoMensalBeta.toLocaleString('pt-BR')}`}
                 </p>
                 <p className="text-[8px] text-muted-foreground">
-                  R$ {results.betaSeat}
-                  {t.betaTest.perSeat}
+                  {results.enterprise
+                    ? `R$ ${results.betaRange.min}–${results.betaRange.max}${t.betaTest.perSeat}`
+                    : `R$ ${results.betaSeat}${t.betaTest.perSeat}`}
                 </p>
                 <span className="inline-flex text-[7px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-2 py-0.5 rounded-full mt-1">
-                  {t.betaTest.betaPriceLabel}
+                  {results.enterprise ? t.betaTest.enterpriseBandLabel : t.betaTest.betaPriceLabel}
                 </span>
+                {results.enterprise && (
+                  <p className="text-[8px] text-muted-foreground mt-1 leading-tight">
+                    {t.betaTest.enterpriseHint}
+                  </p>
+                )}
               </>
             ) : (
               <>
                 <p className="font-headline text-lg font-black text-primary">
-                  R$ {results.custoMensalFull.toLocaleString('pt-BR')}
+                  {results.enterprise
+                    ? `R$ ${formatBRL(results.custoFullMin)} a R$ ${formatBRL(results.custoFullMax)}`
+                    : `R$ ${results.custoMensalFull.toLocaleString('pt-BR')}`}
                 </p>
                 <p className="text-[8px] text-muted-foreground">
-                  R$ {results.fullSeat}
-                  {t.betaTest.perSeat}
+                  {results.enterprise
+                    ? `R$ ${results.fullRange.min}–${results.fullRange.max}${t.betaTest.perSeat}`
+                    : `R$ ${results.fullSeat}${t.betaTest.perSeat}`}
                 </p>
+                {results.enterprise && (
+                  <p className="text-[8px] text-muted-foreground mt-1 leading-tight">
+                    {t.betaTest.enterpriseHint}
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -289,8 +349,16 @@ export function RoiSimulator({
               </div>
             </div>
             <span className="font-headline text-2xl font-black text-primary">
-              {results.roi > 0 ? '+' : ''}
-              {results.roi.toFixed(0)}%
+              {results.enterprise && results.roiMin !== results.roiMax ? (
+                <>
+                  +{results.roiMin.toFixed(0)}% a +{results.roiMax.toFixed(0)}%
+                </>
+              ) : (
+                <>
+                  {results.roi > 0 ? '+' : ''}
+                  {results.roi.toFixed(0)}%
+                </>
+              )}
             </span>
           </div>
         )}
