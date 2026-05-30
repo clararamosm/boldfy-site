@@ -872,15 +872,15 @@ export function CaasClient() {
             <div>
               <div className="mb-5 flex flex-wrap items-center gap-2.5">
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                  className="boldfy-service-glow inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
                   style={{ backgroundColor: CAAS_ACCENT }}
                 >
                   <Mic className="h-3 w-3" />
                   {c.mode2Tag}
                 </span>
                 <span
-                  className="inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
-                  style={{ borderColor: CAAS_ACCENT, color: CAAS_ACCENT }}
+                  className="boldfy-service-glow inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
+                  style={{ color: CAAS_ACCENT }}
                 >
                   {c.mode2Title}
                 </span>
