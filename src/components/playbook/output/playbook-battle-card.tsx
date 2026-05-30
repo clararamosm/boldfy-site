@@ -12,7 +12,6 @@
 
 import { Clock, Pencil } from 'lucide-react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
-import { SectionTag } from './playbook-snapshot';
 
 const COR_SEM = '#9D85B3';
 const COR_COM = '#CD50F1';
@@ -29,17 +28,8 @@ export function PlaybookBattleCard({
   return (
     <section className="bg-secondary/30 py-16 sm:py-24">
       <div className="mx-auto max-w-[1080px] px-6">
-        <SectionTag>Comparativo</SectionTag>
-        <h2 className="mb-3 font-headline text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-          Sem Boldfy{' '}
-          <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
-            vs. com Boldfy
-          </span>
-        </h2>
-        <p className="mb-10 max-w-[720px] text-base leading-relaxed text-muted-foreground">
-          A diferença no dia a dia, em números aproximados de programas comparáveis.
-        </p>
-
+        {/* Sem título próprio (jun/2026, Clara): vem logo depois da Ação
+            ("Na Boldfy · primeiro mês"), o contexto já explica a comparação. */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-9">
           {/* Legenda */}
           <div className="mb-8 flex flex-wrap justify-center gap-6 text-xs font-semibold text-foreground">

@@ -86,15 +86,17 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
       {/* Bloco 5 — Checklist */}
       <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
 
-      {/* Bloco 6 — Calculadora interativa (RoiSimulator embed) + Banner Beta.
-          Banner foi pra DEPOIS da calculadora (jun/2026 polish 6, Clara) —
-          antes vivia em cima e deixava espaço vazio entre o checklist e o
-          simulador. Agora fica blocado entre a simulação e o battle card. */}
+      {/* Narrativa (jun/2026, Clara): Ação (checklist "Na Boldfy · primeiro
+          mês") → Comparativo → Simulação → presentinho "Sobre a Boldfy".
+          O comparativo (battle card) sobe pra logo depois da Ação e roda sem
+          título — o contexto já explica a comparação. */}
+
+      {/* Comparativo — battle card (gráfico 2 colunas, sem título próprio) */}
+      <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
+
+      {/* Simulação — calculadora interativa (RoiSimulator embed) + Banner Beta */}
       <PlaybookCalculadora calculadora={data.calculadora} />
       {data.bannerSemBudget && <PlaybookBannerSemBudget banner={data.bannerSemBudget} />}
-
-      {/* Bloco 7 — Battle card (gráfico 2 colunas) */}
-      <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
 
       {/* Bloco 7.5 — Sobre a Boldfy (SaaS sempre + CaaS condicional — mai/2026) */}
       {data.sobreBoldfy && (
