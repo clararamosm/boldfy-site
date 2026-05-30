@@ -69,7 +69,7 @@ export function PlaybookSobreBoldfy({
             <Card
               card={sobreBoldfy.caas}
               icon={<Sparkles className="h-5 w-5" />}
-              accent="amber"
+              accent="service"
               onClick={() => handleClick('caas')}
             />
           )}
@@ -87,27 +87,31 @@ function Card({
 }: {
   card: SobreBoldfy['saas'];
   icon: React.ReactNode;
-  accent: 'primary' | 'amber';
+  accent: 'primary' | 'service';
   onClick: () => void;
 }) {
-  const isAmber = accent === 'amber';
-  // Acento âmbar/laranja só pro CaaS — diferenciar visualmente das modalidades.
-  // Mantém paleta da identidade Boldfy (laranja já aparece no CTA "Montar pacote").
-  const badgeClass = isAmber
-    ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+  const isService = accent === 'service';
+  // Serviço (CaaS) = roxo escuro premium com borda animada. Nunca amarelo
+  // (amarelo é do Vendas). Plataforma (SaaS) = roxo vivo (primary).
+  const badgeClass = isService
+    ? 'border-[#8E4FB0]/30 bg-[#5E2A67]/10 text-[#5E2A67]'
     : 'border-primary/25 bg-primary/10 text-primary';
-  const iconClass = isAmber
-    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+  const iconClass = isService
+    ? 'bg-[#5E2A67]/10 text-[#5E2A67]'
     : 'bg-primary/10 text-primary';
-  const btnClass = isAmber
-    ? 'text-white shadow-[0_8px_24px_rgba(249,115,22,.28)] hover:shadow-[0_12px_32px_rgba(249,115,22,.38)]'
+  const btnClass = isService
+    ? 'text-white shadow-[0_8px_24px_rgba(94,42,103,.3)] hover:shadow-[0_12px_32px_rgba(94,42,103,.4)]'
     : 'bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(205,80,241,.28)] hover:shadow-[0_12px_32px_rgba(205,80,241,.38)]';
-  const btnStyle = isAmber
-    ? { backgroundImage: 'linear-gradient(135deg, #F97316, #FBBF24)' }
+  const btnStyle = isService
+    ? { backgroundImage: 'linear-gradient(135deg, #5E2A67, #9840AD)' }
     : undefined;
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8">
+    <div
+      className={`flex flex-col rounded-2xl bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8 ${
+        isService ? 'boldfy-service-glow' : 'border border-border'
+      }`}
+    >
       <div className="mb-4 flex items-center justify-between gap-3">
         <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconClass}`}>
           {icon}

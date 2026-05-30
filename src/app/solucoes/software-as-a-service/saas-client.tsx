@@ -1112,9 +1112,8 @@ export default function SaasPageClient() {
 
             {/* CaaS column */}
             <div
-              className="flex flex-col rounded-[20px] border p-5 shadow-[0_12px_32px_rgba(94,42,103,0.1)] lg:p-6"
+              className="boldfy-service-glow flex flex-col rounded-[20px] p-5 shadow-[0_12px_32px_rgba(94,42,103,0.1)] lg:p-6"
               style={{
-                borderColor: 'rgba(94,42,103,0.3)',
                 backgroundImage:
                   'linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)',
               }}
