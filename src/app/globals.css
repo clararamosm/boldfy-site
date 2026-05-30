@@ -157,42 +157,36 @@ html {
   inherits: false;
 }
 
-.boldfy-service-border {
+/* Classe única: adiciona um anel de borda animado (brilho viajando) ao card,
+   sem reestruturar. O card precisa ter position relative + border-radius. */
+.boldfy-service-glow {
   position: relative;
-  border-radius: 22px;
-  padding: 1.5px;
-  background:
-    conic-gradient(
-      from var(--svc-angle),
-      transparent 0deg,
-      transparent 48deg,
-      rgba(201, 162, 232, 0.45) 68deg,
-      #8E4FB0 82deg,
-      #C9A2E8 94deg,
-      #8E4FB0 106deg,
-      rgba(201, 162, 232, 0.45) 120deg,
-      transparent 140deg,
-      transparent 360deg
-    ),
-    linear-gradient(rgba(94, 42, 103, 0.35), rgba(94, 42, 103, 0.35));
-  animation: boldfy-service-shimmer 3.5s linear infinite;
-  isolation: isolate;
 }
 
-.boldfy-service-border::after {
+.boldfy-service-glow::before {
   content: '';
   position: absolute;
-  inset: -12px;
-  border-radius: 30px;
-  background: radial-gradient(circle, rgba(94, 42, 103, 0.16), transparent 62%);
-  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--svc-angle),
+    rgba(94, 42, 103, 0.35) 0deg,
+    rgba(94, 42, 103, 0.35) 52deg,
+    rgba(201, 162, 232, 0.55) 70deg,
+    #C9A2E8 84deg,
+    #8E4FB0 96deg,
+    rgba(201, 162, 232, 0.55) 112deg,
+    rgba(94, 42, 103, 0.35) 130deg,
+    rgba(94, 42, 103, 0.35) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: boldfy-service-shimmer 3.5s linear infinite;
   pointer-events: none;
-}
-
-.boldfy-service-inner {
-  position: relative;
-  background: hsl(var(--card));
-  border-radius: 20.5px;
 }
 
 @keyframes boldfy-service-shimmer {

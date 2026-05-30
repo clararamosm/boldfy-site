@@ -215,12 +215,7 @@ export function CaasClient() {
             <PreTag>{c.heroTag}</PreTag>
             <h1 className="font-headline text-[clamp(36px,4.6vw,58px)] font-black leading-[1.05] tracking-[-0.035em] text-accent-foreground">
               {c.heroTitle}{' '}
-              <span
-                className="bg-clip-text text-transparent"
-                style={{
-                  backgroundImage: `linear-gradient(135deg, ${CAAS_ACCENT} 0%, ${CAAS_ACCENT_LIGHT} 100%)`,
-                }}
-              >
+              <span className="boldfy-shimmer-text">
                 {c.heroTitleHighlight}
               </span>
             </h1>
@@ -524,7 +519,7 @@ export function CaasClient() {
             {/*  Mode 2 — Ativação executiva (mini-interface)   */}
             {/* =============================================== */}
             <div
-              className="group relative flex flex-col overflow-hidden rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
+              className="group boldfy-service-glow relative flex flex-col rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
               style={{
                 borderColor: CAAS_ACCENT,
                 backgroundImage: `linear-gradient(135deg, rgba(94,42,103,0.06) 0%, rgba(152,64,173,0.03) 100%)`,
