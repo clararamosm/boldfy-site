@@ -444,13 +444,24 @@ function ProposalBuilderModal({
                   </div>
                 </div>
 
-                {/* ── Tier 2: Design on Demand ── */}
+                {/* ── Content as a Service (CaaS) — dois modos ── */}
+                <div className="flex items-center gap-2 px-1 pt-1">
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-[0.14em]"
+                    style={{ color: '#5E2A67' }}
+                  >
+                    Content as a Service
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">· ative um ou os dois modos</span>
+                </div>
+
+                {/* ── CaaS · Modo 1: Design sob demanda ── */}
                 <div
                   className={cn(
                     'rounded-xl border transition-all duration-200',
                     designEnabled
-                      ? 'border-violet-400/40 bg-violet-500/[0.04]'
-                      : 'border-border bg-card hover:border-violet-400/20',
+                      ? 'border-[#9840AD]/40 bg-[#9840AD]/[0.05]'
+                      : 'border-border bg-card hover:border-[#9840AD]/25',
                   )}
                 >
                   <button
@@ -458,17 +469,25 @@ function ProposalBuilderModal({
                     onClick={() => setDesignEnabled(!designEnabled)}
                     className="flex w-full items-center gap-3 p-4 text-left"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                      <Palette className="h-4 w-4 text-violet-500" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#9840AD]/10">
+                      <Palette className="h-4 w-4" style={{ color: '#9840AD' }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-accent-foreground">Design on Demand</p>
-                      <p className="text-[11px] text-muted-foreground">Peças gráficas para a biblioteca do time</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
+                          style={{ backgroundColor: '#9840AD' }}
+                        >
+                          Modo 1
+                        </span>
+                        <p className="text-sm font-bold text-accent-foreground">Design sob demanda</p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Peças gráficas pra biblioteca do time</p>
                     </div>
                     <div
                       className={cn(
                         'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
-                        designEnabled ? 'bg-violet-500' : 'bg-border',
+                        designEnabled ? 'bg-[#9840AD]' : 'bg-border',
                       )}
                     >
                       <div
@@ -501,7 +520,7 @@ function ProposalBuilderModal({
                                   className={cn(
                                     'relative rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
                                     designPack === key
-                                      ? 'bg-white text-violet-600 shadow-sm'
+                                      ? 'bg-white text-[#5E2A67] shadow-sm'
                                       : 'text-muted-foreground hover:text-foreground',
                                   )}
                                 >
@@ -555,8 +574,9 @@ function ProposalBuilderModal({
                         </div>
                         {designIsFree && (
                           <p className="text-[10px] text-emerald-700 leading-relaxed -mt-2">
-                            Plano <strong>{DESIGN_PACKS[designPack].label}</strong> incluso
-                            pra empresas com {DESIGN_FREE_THRESHOLDS.find((t) => t.pack === designPack)?.seats}+ colaboradores na plataforma.
+                            <strong>Só o Modo 1 · Design</strong> (plano {DESIGN_PACKS[designPack].label}) entra
+                            grátis pra empresas com {DESIGN_FREE_THRESHOLDS.find((t) => t.pack === designPack)?.seats}+ colaboradores na plataforma.
+                            O Modo Executivo é contratado à parte.
                           </p>
                         )}
                       </div>
@@ -564,13 +584,13 @@ function ProposalBuilderModal({
                   </div>
                 </div>
 
-                {/* ── Tier 3: Content Full-Service ── */}
+                {/* ── CaaS · Modo 2: Ativação executiva completa ── */}
                 <div
                   className={cn(
                     'rounded-xl border transition-all duration-200',
                     fsEnabled
-                      ? 'border-amber-400/40 bg-amber-500/[0.04]'
-                      : 'border-border bg-card hover:border-amber-400/20',
+                      ? 'border-[#5E2A67]/40 bg-[#5E2A67]/[0.05]'
+                      : 'border-border bg-card hover:border-[#5E2A67]/25',
                   )}
                 >
                   <button
@@ -578,17 +598,25 @@ function ProposalBuilderModal({
                     onClick={() => setFsEnabled(!fsEnabled)}
                     className="flex w-full items-center gap-3 p-4 text-left"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                      <Mic className="h-4 w-4 text-amber-500" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#5E2A67]/10">
+                      <Mic className="h-4 w-4" style={{ color: '#5E2A67' }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-accent-foreground">Content Full-Service</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
+                          style={{ backgroundColor: '#5E2A67' }}
+                        >
+                          Modo 2
+                        </span>
+                        <p className="text-sm font-bold text-accent-foreground">Ativação executiva completa</p>
+                      </div>
                       <p className="text-[11px] text-muted-foreground">Gestão ponta a ponta do LinkedIn de executivos</p>
                     </div>
                     <div
                       className={cn(
                         'relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
-                        fsEnabled ? 'bg-amber-500' : 'bg-border',
+                        fsEnabled ? 'bg-[#5E2A67]' : 'bg-border',
                       )}
                     >
                       <div
@@ -615,7 +643,7 @@ function ProposalBuilderModal({
                             <label className="text-sm font-medium text-foreground">
                               Quantos executivos serão gerenciados?
                             </label>
-                            <span className="text-lg font-bold text-amber-600">{fsTls} {fsTls === 1 ? 'executivo' : 'executivos'}</span>
+                            <span className="text-lg font-bold" style={{ color: '#5E2A67' }}>{fsTls} {fsTls === 1 ? 'executivo' : 'executivos'}</span>
                           </div>
                           <Slider
                             min={1}
@@ -651,7 +679,7 @@ function ProposalBuilderModal({
                                 className={cn(
                                   'rounded-[7px] py-2.5 px-2 text-center transition-all text-xs font-semibold',
                                   fsFreq === opt.freq
-                                    ? 'bg-white text-amber-600 shadow-sm'
+                                    ? 'bg-white text-[#5E2A67] shadow-sm'
                                     : 'text-muted-foreground hover:text-foreground',
                                 )}
                               >
@@ -666,11 +694,11 @@ function ProposalBuilderModal({
 
                         {/* Team badges — dedicated */}
                         <div className="flex flex-wrap gap-1.5">
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-2.5 py-1 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1.5 rounded-full text-white px-2.5 py-1 text-[10px] font-semibold" style={{ backgroundColor: '#5E2A67' }}>
                             <span className="h-1.5 w-1.5 rounded-full bg-white" />
                             1 Estrategista dedicado
                           </span>
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 text-white px-2.5 py-1 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1.5 rounded-full text-white px-2.5 py-1 text-[10px] font-semibold" style={{ backgroundColor: '#5E2A67' }}>
                             <span className="h-1.5 w-1.5 rounded-full bg-white" />
                             1 Designer dedicado
                           </span>
@@ -734,7 +762,7 @@ function ProposalBuilderModal({
                       {designEnabled && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Biblioteca ({DESIGN_PACKS[designPack].label})
+                            Modo 1 · Design ({DESIGN_PACKS[designPack].label})
                             {designIsFree && (
                               <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
                                 Grátis
@@ -752,7 +780,7 @@ function ProposalBuilderModal({
                       {fsEnabled && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Full-Service ({fsTls} exec × {fsFreq}x/sem)
+                            Modo 2 · Executivo ({fsTls} exec × {fsFreq}x/sem)
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
@@ -1078,8 +1106,8 @@ function ResultStep({
         {designEnabled && (
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-violet-500" />
-              <span className="text-sm font-semibold text-foreground">Biblioteca de Peças</span>
+              <Palette className="h-4 w-4" style={{ color: '#9840AD' }} />
+              <span className="text-sm font-semibold text-foreground">Modo 1 · Design</span>
               {designIsFree && (
                 <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
                   Incluso
@@ -1107,7 +1135,7 @@ function ResultStep({
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
                 {['Carrosséis', 'Infográficos', 'Templates de marca', 'Alinhado com Brand Context'].map((f) => (
-                  <span key={f} className="inline-flex items-center gap-1 rounded-full bg-violet-500/5 px-2 py-0.5 text-[10px] text-violet-600 font-medium">
+                  <span key={f} className="inline-flex items-center gap-1 rounded-full bg-[#9840AD]/[0.06] px-2 py-0.5 text-[10px] font-medium" style={{ color: '#5E2A67' }}>
                     <Check className="h-2.5 w-2.5" />{f}
                   </span>
                 ))}
@@ -1117,7 +1145,7 @@ function ResultStep({
                 href="/case-semrush"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:text-violet-700 hover:underline underline-offset-2"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#9840AD] hover:text-[#5E2A67] hover:underline underline-offset-2"
               >
                 Por que designs importam pra Employee-Led Growth? Veja o case da Semrush
                 <ArrowRight className="h-3 w-3" />
@@ -1130,8 +1158,8 @@ function ResultStep({
         {fsEnabled && (
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
-              <Mic className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-semibold text-foreground">Content Full-Service</span>
+              <Mic className="h-4 w-4" style={{ color: '#5E2A67' }} />
+              <span className="text-sm font-semibold text-foreground">Modo 2 · Ativação executiva completa</span>
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
@@ -1142,7 +1170,7 @@ function ResultStep({
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
                 {['Estratégia de posicionamento', 'Produção autoral', 'Design dedicado', 'Report mensal', 'Lead Magnet mensal'].map((f) => (
-                  <span key={f} className="inline-flex items-center gap-1 rounded-full bg-amber-500/5 px-2 py-0.5 text-[10px] text-amber-600 font-medium">
+                  <span key={f} className="inline-flex items-center gap-1 rounded-full bg-[#5E2A67]/[0.06] px-2 py-0.5 text-[10px] font-medium" style={{ color: '#5E2A67' }}>
                     <Check className="h-2.5 w-2.5" />{f}
                   </span>
                 ))}
@@ -1160,7 +1188,7 @@ function ResultStep({
             <div className="space-y-1.5">
               {teamItems.map((item) => (
                 <div key={item.text} className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span className={cn('h-1.5 w-1.5 rounded-full', item.dedicated ? 'bg-orange-500' : 'bg-primary')} />
+                  <span className={cn('h-1.5 w-1.5 rounded-full', item.dedicated ? 'bg-[#5E2A67]' : 'bg-primary')} />
                   <span>
                     <strong className="text-foreground">{item.text.split(' ').slice(0, 2).join(' ')}</strong>{' '}
                     {item.text.split(' ').slice(2).join(' ')}
@@ -1261,7 +1289,7 @@ function ResultStep({
 
       <p className="text-[10px] text-muted-foreground text-center mt-3">
         Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente à Plataforma.
-        Contrato mínimo de 6 meses. Executivos do Content Full-Service não consomem seats da Plataforma.
+        Contrato mínimo de 6 meses. Executivos do Modo 2 (Ativação executiva completa) não consomem seats da Plataforma.
       </p>
     </div>
   );
