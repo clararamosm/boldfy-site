@@ -327,6 +327,14 @@ export type RenderedData = {
      * retrocompat com snapshots sem esse campo.
      */
     mostrarPisoOperacional?: boolean;
+
+    /**
+     * Sinaliza que o teto operacional do programa (100 ativos) capou a
+     * estimativa: a curva teórica daria mais (ex: 170 numa empresa de 1000),
+     * mas exibimos 100. Quando `true`, o accordion explica o teto pra conta
+     * fechar. `false`/`undefined` quando a curva ficou dentro de 100.
+     */
+    mostrarTetoOperacional?: boolean;
   };
 
   /** Snapshot da curva de ativação aplicada (Bloco 2 — accordion). */

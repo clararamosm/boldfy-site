@@ -10,7 +10,7 @@
 
 import { Building2, ChevronDown, Factory, Info, RotateCcw, Wifi } from 'lucide-react';
 import type { RenderedData } from '@/lib/playbook/templates/types';
-import { MINIMO_ATIVOS_PROGRAMA, ativacaoTypicaPercent } from '@/lib/playbook/render';
+import { MAXIMO_ATIVOS_PROGRAMA, MINIMO_ATIVOS_PROGRAMA, ativacaoTypicaPercent } from '@/lib/playbook/render';
 import { trackEvent } from '@/lib/track';
 import { AdsVsElgChart } from '@/components/sections/ads-vs-elg-chart';
 
@@ -87,6 +87,7 @@ export function PlaybookSnapshot({
               faixaLabel={curvaAtivacao.faixaLabel}
               empresa={empresa}
               mostrarPisoOperacional={snapshot.mostrarPisoOperacional === true}
+              mostrarTetoOperacional={snapshot.mostrarTetoOperacional === true}
             />
             <CurvaTabela porte={snapshot.porte} faixaLabel={curvaAtivacao.faixaLabel} />
           </div>
@@ -155,12 +156,14 @@ function PorQueEstimamosTexto({
   faixaLabel,
   empresa,
   mostrarPisoOperacional,
+  mostrarTetoOperacional,
 }: {
   porte: number;
   ativos: number;
   faixaLabel: string;
   empresa: string;
   mostrarPisoOperacional: boolean;
+  mostrarTetoOperacional: boolean;
 }) {
   if (mostrarPisoOperacional) {
     const teoricoPelaCurva = Math.round(porte * ativacaoTypicaPercent(porte));
@@ -173,6 +176,19 @@ function PorQueEstimamosTexto({
         referência aqui. Empresas com menos de {MINIMO_ATIVOS_PROGRAMA} colaboradores não
         conseguem rodar Employee-Led Growth sustentável; nesses casos, founder-led
         growth (founder/CEO solo) costuma render mais.
+      </p>
+    );
+  }
+  if (mostrarTetoOperacional) {
+    const teoricoPelaCurva = Math.round(porte * ativacaoTypicaPercent(porte));
+    return (
+      <p className="mb-5 text-sm leading-relaxed text-foreground">
+        Pela curva de adesão típica em empresas {faixaLabel}, a {empresa} chegaria a{' '}
+        {teoricoPelaCurva} ativos. Mas {MAXIMO_ATIVOS_PROGRAMA} é o teto que a gente roda num
+        programa: acima disso o feed do LinkedIn começa a saturar de gente da mesma
+        empresa e cada pessoa posta e engaja menos, então o ganho marginal cai. Por
+        isso usamos {MAXIMO_ATIVOS_PROGRAMA} como referência aqui. Quer rodar com mais gente?
+        Aí é um plano enterprise, montado caso a caso.
       </p>
     );
   }

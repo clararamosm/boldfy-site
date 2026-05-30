@@ -38,10 +38,10 @@ export function PlaybookCalculadora({
         <RoiSimulator
           initialCollaborators={calculadora.initialCollaborators}
           initialImpressions={calculadora.initialImpressions}
-          // Slider vai até 200 SÓ aqui no playbook (resto do site fica em 70).
-          // Reflete empresas grandes e abre as faixas 71-100 (R$ 300/seat) e
-          // enterprise 101-200 (R$ 150-200/seat em range). mai/2026.
-          maxCollaborators={200}
+          // Slider vai até 100 SÓ aqui no playbook (resto do site fica em 70).
+          // Abre a faixa 71-100 (R$ 300/seat). 100 é o teto do programa: acima
+          // disso vira enterprise sob consulta, fora do cálculo. mai/2026.
+          maxCollaborators={100}
           // Esconde o card "Mesmo alcance via Ads" — não casa com o framing
           // editorial do playbook (a comparação relevante aqui é earned vs
           // custo Boldfy, não earned vs custo Ads).

@@ -30,10 +30,7 @@ import {
   BETA_PRICING_ENABLED,
   LINKEDIN_CPM_PER_IMPRESSION,
   getBetaPricePerSeat,
-  getBetaPriceRange,
   getFullPricePerSeat,
-  getFullPriceRange,
-  isEnterpriseSeats,
 } from '@/lib/constants';
 
 // Defaults idênticos aos da página /beta-test atual
@@ -110,52 +107,29 @@ export function RoiSimulator({
     const custoAdsLow = totalImpressions * ADS_CPM_LOW;
     const custoAdsHigh = totalImpressions * ADS_CPM_HIGH;
 
-    // Faixa enterprise (101+): preço por seat vira range R$ 150-200 cheio
-    // (R$ 105-140 beta). Abaixo disso, min === max (valor único do tier).
-    const enterprise = isEnterpriseSeats(collaborators);
-    const fullRange = getFullPriceRange(collaborators);
-    const betaRange = getBetaPriceRange(collaborators);
-
-    // Valores únicos (compat. com o display não-enterprise) = ponta cara.
     const fullSeat = getFullPricePerSeat(collaborators);
     const betaSeat = getBetaPricePerSeat(collaborators);
 
-    // Custo mensal como range (seats × preço/seat nas duas pontas).
-    const custoFullMin = collaborators * fullRange.min;
-    const custoFullMax = collaborators * fullRange.max;
-    const custoBetaMin = collaborators * betaRange.min;
-    const custoBetaMax = collaborators * betaRange.max;
+    const custoMensalFull = collaborators * fullSeat;
+    const custoMensalBeta = collaborators * betaSeat;
 
     // ROI compara valor de mídia gerado vs. o que o cliente vai pagar
-    // (preço beta enquanto a oferta estiver ativa; preço cheio depois).
-    // No range, custo MENOR → ROI MAIOR, então roiMax usa a ponta barata.
-    const custoMin = BETA_PRICING_ENABLED ? custoBetaMin : custoFullMin;
-    const custoMax = BETA_PRICING_ENABLED ? custoBetaMax : custoFullMax;
-    const roiAt = (custo: number) =>
-      custo > 0 ? ((valorBoldfy - custo) / custo) * 100 : 0;
-    const roiMin = roiAt(custoMax);
-    const roiMax = roiAt(custoMin);
+    // (preço beta enquanto a oferta estiver ativa; preço cheio depois)
+    const custoMensalAtual = BETA_PRICING_ENABLED ? custoMensalBeta : custoMensalFull;
+    const roi = custoMensalAtual > 0
+      ? ((valorBoldfy - custoMensalAtual) / custoMensalAtual) * 100
+      : 0;
 
     return {
       totalImpressions,
       valorBoldfy,
       custoAdsLow,
       custoAdsHigh,
-      enterprise,
       fullSeat,
       betaSeat,
-      fullRange,
-      betaRange,
-      // Custo mensal: valor único (ponta cara) p/ não-enterprise + range p/ enterprise.
-      custoMensalFull: custoFullMax,
-      custoMensalBeta: custoBetaMax,
-      custoFullMin,
-      custoFullMax,
-      custoBetaMin,
-      custoBetaMax,
-      roi: roiMin,
-      roiMin,
-      roiMax,
+      custoMensalFull,
+      custoMensalBeta,
+      roi,
     };
   }, [collaborators, impressionsPerCollab]);
 
@@ -281,7 +255,7 @@ export function RoiSimulator({
             </div>
           )}
 
-          {/* Custo Boldfy — vira range na faixa enterprise (101+ seats). */}
+          {/* Custo Boldfy */}
           <div className="bg-secondary rounded-xl p-4 text-center border-2 border-primary/30">
             <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               {t.betaTest.boldfyCostMonth}
@@ -289,46 +263,28 @@ export function RoiSimulator({
             {BETA_PRICING_ENABLED ? (
               <>
                 <p className="text-[10px] text-muted-foreground line-through">
-                  {results.enterprise
-                    ? `R$ ${formatBRL(results.custoFullMin)} a R$ ${formatBRL(results.custoFullMax)}`
-                    : `R$ ${results.custoMensalFull.toLocaleString('pt-BR')}`}
+                  R$ {results.custoMensalFull.toLocaleString('pt-BR')}
                 </p>
                 <p className="font-headline text-lg font-black text-primary">
-                  {results.enterprise
-                    ? `R$ ${formatBRL(results.custoBetaMin)} a R$ ${formatBRL(results.custoBetaMax)}`
-                    : `R$ ${results.custoMensalBeta.toLocaleString('pt-BR')}`}
+                  R$ {results.custoMensalBeta.toLocaleString('pt-BR')}
                 </p>
                 <p className="text-[8px] text-muted-foreground">
-                  {results.enterprise
-                    ? `R$ ${results.betaRange.min}–${results.betaRange.max}${t.betaTest.perSeat}`
-                    : `R$ ${results.betaSeat}${t.betaTest.perSeat}`}
+                  R$ {results.betaSeat}
+                  {t.betaTest.perSeat}
                 </p>
                 <span className="inline-flex text-[7px] font-bold uppercase tracking-wide bg-primary/15 text-primary px-2 py-0.5 rounded-full mt-1">
-                  {results.enterprise ? t.betaTest.enterpriseBandLabel : t.betaTest.betaPriceLabel}
+                  {t.betaTest.betaPriceLabel}
                 </span>
-                {results.enterprise && (
-                  <p className="text-[8px] text-muted-foreground mt-1 leading-tight">
-                    {t.betaTest.enterpriseHint}
-                  </p>
-                )}
               </>
             ) : (
               <>
                 <p className="font-headline text-lg font-black text-primary">
-                  {results.enterprise
-                    ? `R$ ${formatBRL(results.custoFullMin)} a R$ ${formatBRL(results.custoFullMax)}`
-                    : `R$ ${results.custoMensalFull.toLocaleString('pt-BR')}`}
+                  R$ {results.custoMensalFull.toLocaleString('pt-BR')}
                 </p>
                 <p className="text-[8px] text-muted-foreground">
-                  {results.enterprise
-                    ? `R$ ${results.fullRange.min}–${results.fullRange.max}${t.betaTest.perSeat}`
-                    : `R$ ${results.fullSeat}${t.betaTest.perSeat}`}
+                  R$ {results.fullSeat}
+                  {t.betaTest.perSeat}
                 </p>
-                {results.enterprise && (
-                  <p className="text-[8px] text-muted-foreground mt-1 leading-tight">
-                    {t.betaTest.enterpriseHint}
-                  </p>
-                )}
               </>
             )}
           </div>
@@ -349,16 +305,8 @@ export function RoiSimulator({
               </div>
             </div>
             <span className="font-headline text-2xl font-black text-primary">
-              {results.enterprise && results.roiMin !== results.roiMax ? (
-                <>
-                  +{results.roiMin.toFixed(0)}% a +{results.roiMax.toFixed(0)}%
-                </>
-              ) : (
-                <>
-                  {results.roi > 0 ? '+' : ''}
-                  {results.roi.toFixed(0)}%
-                </>
-              )}
+              {results.roi > 0 ? '+' : ''}
+              {results.roi.toFixed(0)}%
             </span>
           </div>
         )}

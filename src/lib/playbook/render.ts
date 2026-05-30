@@ -394,7 +394,11 @@ export function ativacaoTypicaPercent(porte: number): number {
  */
 export function calcColabAtivos(porte: number): number {
   const teorico = Math.round(porte * ativacaoTypicaPercent(porte));
-  return Math.max(MINIMO_ATIVOS_PROGRAMA, teorico);
+  // Clamp [5, 100]: piso operacional (5) vence empresas minúsculas; teto do
+  // programa (100) vence empresas gigantes — a curva daria mais (ex: 170 numa
+  // empresa de 1000), mas 100 é o máximo que rodamos. Acima de 100 vira
+  // enterprise sob consulta, fora do cálculo (mai/2026).
+  return Math.min(MAXIMO_ATIVOS_PROGRAMA, Math.max(MINIMO_ATIVOS_PROGRAMA, teorico));
 }
 
 /**
@@ -403,6 +407,15 @@ export function calcColabAtivos(porte: number): number {
  * vence a curva.
  */
 export const MINIMO_ATIVOS_PROGRAMA = 5;
+
+/**
+ * Teto operacional do programa (mai/2026). Acima de 100 ativos a Boldfy não
+ * roda no auto-serviço: vira enterprise sob consulta. Dois motivos — pricing
+ * (degrau grande de preço/seat acima de 100) e feed (programa com >100 pessoas
+ * da mesma empresa floda o LinkedIn, cada um posta/engaja menos). Usado em
+ * `calcColabAtivos` e exposto pro snapshot explicar quando o teto vence a curva.
+ */
+export const MAXIMO_ATIVOS_PROGRAMA = 100;
 
 /* -------------------------------------------------------------------------- */
 /*  Gráfico Ads vs ELG (Bloco 2 — jun/2026)                                    */
@@ -598,6 +611,15 @@ export function renderPlaybookData(
     quiz.porteColaboradores >= 6 &&
     quiz.porteColaboradores <= 20;
 
+  // mostrarTetoOperacional: quando a curva teórica passaria de 100 ativos mas
+  // o teto do programa (MAXIMO_ATIVOS_PROGRAMA) capou em 100. Aí o accordion
+  // explica que "a curva daria N, mas 100 é o teto" — senão o leitor faz a
+  // conta (ex: 17% de 1000 = 170) e estranha o número 100 exibido.
+  const teoricoPelaCurva = Math.round(
+    quiz.porteColaboradores * ativacaoTypicaPercent(quiz.porteColaboradores),
+  );
+  const mostrarTetoOperacional = teoricoPelaCurva > MAXIMO_ATIVOS_PROGRAMA;
+
   const snapshot: RenderedData['snapshot'] = {
     porte: quiz.porteColaboradores,
     portePretty: `${quiz.porteColaboradores} colaboradores`,
@@ -607,6 +629,7 @@ export function renderPlaybookData(
     tentativasPretty: tentativasPretty(quiz.tentativasAnteriores),
     paragrafoConector: SNAPSHOT_FECHAMENTO[templateKey],
     mostrarPisoOperacional,
+    mostrarTetoOperacional,
   };
 
   // === Tese (fixo) ===
@@ -679,13 +702,12 @@ export function renderPlaybookData(
   // colaboradores ativos"). Antes abria com o porte total e dava incoerência:
   // header dizia 18 ativos, slider abria em 60.
   //
-  // Clamp 5-200: o slider do playbook agora vai até 200 (mai/2026), então a
-  // estimativa de ativos (ex: 170 numa empresa de 1000) abre sem ser cortada
-  // em 70 — antes o header dizia "170 ativos" e o slider abria em 70. Empresas
-  // gigantes (ativos>200) ficam clampadas no teto de 200 — limite duro: acima
-  // disso a lógica de feed não comporta (mais gente = cada um posta/engaja menos).
+  // colabAtivos já vem clampado em [5, 100] por calcColabAtivos (teto do
+  // programa = 100, mai/2026), então o slider do playbook (max=100) abre no
+  // mesmo número que o header mostra. O Math.min(100,...) aqui é só defesa em
+  // profundidade pros bounds do slider.
   const calculadora = {
-    initialCollaborators: Math.max(5, Math.min(200, colabAtivos)),
+    initialCollaborators: Math.max(5, Math.min(100, colabAtivos)),
     initialImpressions: IMPRESSIONS_PER_COLAB_DEFAULT,
     colabAtivosEstimados: colabAtivos,
   };
