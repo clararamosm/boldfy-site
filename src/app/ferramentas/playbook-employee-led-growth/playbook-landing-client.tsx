@@ -74,8 +74,8 @@ export function PlaybookLandingClient() {
 
           <p className="mb-8 max-w-[540px] text-lg leading-relaxed text-foreground">
             Conta pra Fai o cenário da sua empresa e ela monta um playbook acionável
-            com diagnóstico, plano em 3 fases, checklist pra começar e cálculo de
-            earned media,{' '}
+            com diagnóstico, dicas selecionadas pro seu caso, plano de ação e cálculo
+            de earned media,{' '}
             <span className="cursor-default bg-gradient-to-r from-[#CD50F1] via-[#E875FF] to-[#CD50F1] bg-[length:200%_100%] bg-clip-text font-bold text-foreground transition-colors duration-500 ease-out hover:animate-shimmer hover:text-transparent hover:drop-shadow-[0_0_14px_rgba(205,80,241,0.55)]">
               tudo personalizado
             </span>
@@ -83,10 +83,10 @@ export function PlaybookLandingClient() {
           </p>
 
           <ul className="space-y-3.5">
-            <Bullet>Plano em 3 fases pra empresa começar essa semana</Bullet>
-            <Bullet>Calculadora de earned media com seus números</Bullet>
-            <Bullet>Link compartilhável pra você mandar pro decisor</Bullet>
-            <Bullet>100% gratuito, sem cadastro até o fim</Bullet>
+            <Bullet>Diagnóstico do seu cenário com a curva de adesão real pra sua empresa</Bullet>
+            <Bullet>Dicas selecionadas pelo seu setor, cargo, dor e tentativas anteriores</Bullet>
+            <Bullet>Calculadora de earned media com seus números e comparativo com Ads</Bullet>
+            <Bullet>Link único pra você compartilhar com o time e o decisor</Bullet>
           </ul>
 
           <div className="mt-9 flex flex-wrap items-center gap-6 border-t border-dashed border-border pt-7 text-xs text-muted-foreground">

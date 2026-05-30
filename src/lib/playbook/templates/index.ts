@@ -84,10 +84,10 @@ export const SNAPSHOT_FECHAMENTO: Record<TemplateKey, string> = {
     'Marketing pressionado pelo CAC e Employee-Led Growth ainda no radar: sem trauma de tentativa anterior, é o cenário mais limpo pra começar cobrindo os 3 motores desde o primeiro mês.',
 
   'marketing-companypage-morreu':
-    'Company Page com pouco engajamento e uma tentativa de virar isso que não foi adiante. Acontece com 9 em cada 10 marcas B2B: a página corporativa quase nunca puxa demanda sozinha, e o primeiro grupo provavelmente morreu por falta de motivo claro pros participantes.',
+    'Company Page com pouco engajamento técnico e uma tentativa de mudar isso que não foi adiante. Acontece com 9 em cada 10 marcas B2B: o LinkedIn redistribuiu os papéis (page pra cultura e marca empregadora, perfis pra autoridade técnica e demanda), e o primeiro grupo provavelmente morreu por falta de motivo claro pros participantes ocuparem esse espaço técnico.',
 
   'marketing-companypage-nunca':
-    'Company Page com pouco engajamento e o time ainda dependendo dela como canal principal. Boa hora pra montar Employee-Led desde o início, sem precisar desfazer o hábito de "só a página posta".',
+    'Company Page funcionando bem o lado institucional, mas time ainda dependendo só dela pra puxar demanda técnica. Boa hora pra distribuir os papéis: page segue com a cultura e os perfis ocupam o espaço de autoridade técnica que o algoritmo passou a recompensar.',
 
   'marketing-concorrente-nunca':
     'Concorrente menor aparecendo mais no feed que vocês quase sempre significa uma coisa: ele tem 3 ou 4 pessoas postando consistentemente, e vocês têm a página corporativa. Não é orçamento: é distribuição de voz.',
@@ -116,7 +116,7 @@ export const HERO_LEGENDA_POR_DOR: Record<DorPrincipalValue, string> = {
   cac_subindo:
     'em earned media equivalente por mês, que poderia estar substituindo parte do CAC pago da {empresa}.',
   company_page_morta:
-    'em earned media equivalente por mês, que sua Company Page sozinha nunca vai entregar.',
+    'em earned media equivalente por mês, que vem dos perfis dos seus colaboradores ocupando o espaço técnico no feed, enquanto a Company Page segue cuidando bem da marca empregadora.',
   concorrente_dominando:
     'em earned media equivalente por mês, parados enquanto o concorrente posta sozinho.',
   vendedor_invisivel:
@@ -355,10 +355,11 @@ export const TIPS_LIBRARY: Tip[] = [
       'Earned media é argumento que finance entende. Calcule o que cada post teria custado em CPM LinkedIn Brasil e leve pra revisão de budget.',
     icon: 'DollarSign',
     boldfy: {
-      titulo: 'Dashboard de earned media + slide de defesa',
+      titulo: 'Dashboard de earned media + lista de remarketing',
       items: [
         '[[Dashboard de earned media]] calcula CPM equivalente automaticamente',
         'Comparativo earned vs paid sai pronto no relatório mensal',
+        'Lista de profissionais que engajaram com os perfis vira público de remarketing morno em Ads',
         'Slide pra board exportável sem planilha',
         'Linguagem pronta pra finance e CFO',
       ],
@@ -368,10 +369,10 @@ export const TIPS_LIBRARY: Tip[] = [
   {
     id: 'D_COMPANYPAGE',
     numero: '',
-    titulo: 'Use a page pra cultura e história do time, não pra conteúdo técnico',
-    tagEspecifica: 'Company Page morta',
+    titulo: 'Distribua os papéis: page cuida da cultura, perfis cuidam da autoridade técnica',
+    tagEspecifica: 'Cada canal, seu papel',
     descricao:
-      'Page funciona pra coisas humanas: bastidor, eventos, história dos colaboradores. Voz técnica vai pros perfis de quem tem autoridade no assunto.',
+      'O LinkedIn redistribuiu os papéis. A Company Page exerce hoje muito bem a marca empregadora: cultura, eventos, milestones, causas, benefícios, notícias. Quem puxa autoridade técnica e demanda são as pessoas. Essa divisão é estratégica, não problema.',
     icon: 'Globe',
     boldfy: {
       titulo: 'Vozes técnicas distribuídas + Brand Context',
@@ -699,10 +700,11 @@ export function getResultadoShort(longText: string): string {
 export const SETOR_APLICACAO: Record<'marketing' | 'vendas' | 'rh', SetorAplicacao> = {
   marketing: {
     setorBadge: 'Marketing/Growth',
-    titulo: 'Trate Employee-Led como canal de mídia, não como engajamento',
+    titulo: 'Trate Employee-Led como peça do mix, não como canal isolado',
     dicas: [
       'Marketing como dono do programa, ranqueado igual paid/organic/SEO',
       'CPM equivalente entra no relatório mensal, lado a lado com paid',
+      'Lista de engajamento gerada pelos perfis vira público pra remarketing morno em Ads',
       'Pauta editorial casa com calendário de produto e campanha',
       'Inbound vindo do programa atribuído ao colaborador certo',
     ],
@@ -845,6 +847,7 @@ export const SOBRE_BOLDFY_SAAS: SobreBoldfyCard = {
   bullets: [
     'IA contextual pra ideação, refino e calendário de cada colaborador',
     'Brand Context: tom, pilares e territórios em um setup único',
+    'Conteúdo autoral: cada pessoa escreve com IA assistindo, não é o mesmo post pra 50 colaboradores postarem igual',
     'Trilhas LXP, missões semanais e gamificação rodando sem cobrança manual',
     'Dashboard de earned media e alcance pronto pra board',
   ],
@@ -861,6 +864,7 @@ export const SOBRE_BOLDFY_CAAS: SobreBoldfyCard = {
     'Time de conteúdo produz posts no tom autêntico da pessoa',
     'Líder revisa e aprova em minutos pelo próprio painel',
     'Mantém autoria e voz, sem custo de tempo do líder',
+    'Aproximadamente 1/4 do custo de uma agência B2B equivalente, com dados dentro da sua empresa',
   ],
   ctaLabel: 'Quero entender o Full Content',
 };
