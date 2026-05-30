@@ -16,15 +16,22 @@
  */
 
 import { CheckCircle2, Sparkles } from 'lucide-react';
-import type { ChecklistItem } from '@/lib/playbook/templates/types';
+import type { ChecklistItem, RenderedData } from '@/lib/playbook/templates/types';
 import { SectionTag } from './playbook-snapshot';
+import { PlaybookBattleCard } from './playbook-battle-card';
 
 export function PlaybookChecklist({
   antes,
   naBoldfy,
+  battleCard,
+  empresa,
+  colabAtivos,
 }: {
   antes: ChecklistItem[];
   naBoldfy: ChecklistItem[];
+  battleCard: RenderedData['battleCard'];
+  empresa: string;
+  colabAtivos: number;
 }) {
   // Item-zero: o primeiro da lista quando tentativas !== 'nunca' (render
   // adiciona no início). Detecta pelo título começar com "Antes de tudo".
@@ -94,6 +101,13 @@ export function PlaybookChecklist({
               <ChecklistRow key={i} item={item} />
             ))}
           </div>
+
+          {/* Comparativo embutido — atrelado ao "Na Boldfy" (jun/2026, Clara) */}
+          <PlaybookBattleCard
+            battleCard={battleCard}
+            empresa={empresa}
+            colabAtivos={colabAtivos}
+          />
         </div>
       </div>
     </section>

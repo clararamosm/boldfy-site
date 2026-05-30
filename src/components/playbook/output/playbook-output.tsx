@@ -83,16 +83,16 @@ export function PlaybookOutput({ slug, templateKey, data }: PlaybookOutputProps)
         />
       )}
 
-      {/* Bloco 5 — Checklist */}
-      <PlaybookChecklist antes={data.checklistAntes} naBoldfy={data.checklistBoldfy} />
-
-      {/* Narrativa (jun/2026, Clara): Ação (checklist "Na Boldfy · primeiro
-          mês") → Comparativo → Simulação → presentinho "Sobre a Boldfy".
-          O comparativo (battle card) sobe pra logo depois da Ação e roda sem
-          título — o contexto já explica a comparação. */}
-
-      {/* Comparativo — battle card (gráfico 2 colunas, sem título próprio) */}
-      <PlaybookBattleCard battleCard={data.battleCard} empresa={data.hero.headlineEmpresa} colabAtivos={data.curvaAtivacao.colabAtivos} />
+      {/* Bloco 5 — Ação (checklist). O comparativo "Sem/Com Boldfy" agora vive
+          EMBUTIDO dentro do box "Na Boldfy · primeiro mês" (jun/2026, Clara) —
+          antes era uma seção solta e distante, sem parecer atrelado. */}
+      <PlaybookChecklist
+        antes={data.checklistAntes}
+        naBoldfy={data.checklistBoldfy}
+        battleCard={data.battleCard}
+        empresa={data.hero.headlineEmpresa}
+        colabAtivos={data.curvaAtivacao.colabAtivos}
+      />
 
       {/* Simulação — calculadora interativa (RoiSimulator embed) + Banner Beta */}
       <PlaybookCalculadora calculadora={data.calculadora} />
