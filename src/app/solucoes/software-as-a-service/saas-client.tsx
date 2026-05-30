@@ -17,6 +17,7 @@ import {
   BookOpen,
   Flame,
   MessageSquare,
+  Mic,
   Calendar,
   CheckCircle2,
   ChevronDown,
@@ -1134,7 +1135,7 @@ export default function SaasPageClient() {
                   className="mb-4 inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
                   style={{ backgroundColor: '#5E2A67' }}
                 >
-                  <MessageSquare className="h-3 w-3" />
+                  <Mic className="h-3 w-3" />
                   {c.togetherCaasLabel}
                 </span>
                 <h3 className="mb-5 font-headline text-[20px] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">

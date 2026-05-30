@@ -19,7 +19,8 @@
  * segmentar no AC quem clicou em SaaS vs CaaS.
  */
 
-import { ArrowRight, Layers, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, Mic, Sparkles } from 'lucide-react';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { trackEvent } from '@/lib/track';
@@ -61,14 +62,12 @@ export function PlaybookSobreBoldfy({
         <div className={hasCaas ? 'grid gap-6 lg:grid-cols-2' : 'grid gap-6'}>
           <Card
             card={sobreBoldfy.saas}
-            icon={<Layers className="h-5 w-5" />}
             accent="primary"
             onClick={() => handleClick('saas')}
           />
           {sobreBoldfy.caas && (
             <Card
               card={sobreBoldfy.caas}
-              icon={<Sparkles className="h-5 w-5" />}
               accent="service"
               onClick={() => handleClick('caas')}
             />
@@ -81,24 +80,27 @@ export function PlaybookSobreBoldfy({
 
 function Card({
   card,
-  icon,
   accent,
   onClick,
 }: {
   card: SobreBoldfy['saas'];
-  icon: React.ReactNode;
   accent: 'primary' | 'service';
   onClick: () => void;
 }) {
   const isService = accent === 'service';
-  // Serviço (CaaS) = roxo escuro premium com borda animada. Nunca amarelo
-  // (amarelo é do Vendas). Plataforma (SaaS) = roxo vivo (primary).
-  const badgeClass = isService
-    ? 'border-[#8E4FB0]/30 bg-[#5E2A67]/10 text-[#5E2A67]'
-    : 'border-primary/25 bg-primary/10 text-primary';
-  const iconClass = isService
-    ? 'bg-[#5E2A67]/10 text-[#5E2A67]'
-    : 'bg-primary/10 text-primary';
+  // Mesma seção da página de Soluções ("dois caminhos"):
+  // Plataforma (SaaS) = roxo vivo + ícone de brilho (Sparkles).
+  // Serviço/Full Content (CaaS) = roxo escuro premium + borda animada +
+  // ícone de microfone (Mic). Nunca amarelo (amarelo é do Vendas).
+  const banner = isService
+    ? { src: '/images/caas-section-banner.jpg', alt: 'Estrategista Boldfy operando conteúdo para executivo' }
+    : { src: '/images/saas-section-banner.jpg', alt: 'Time usando a Plataforma Boldfy em self-service' };
+  const TagIcon = isService ? Mic : Sparkles;
+  const tagLabel = isService ? 'Serviço (CaaS)' : 'Plataforma (SaaS)';
+  const tagClass = isService
+    ? 'text-white'
+    : 'border border-primary/25 bg-primary/[0.08] text-primary';
+  const tagStyle = isService ? { backgroundColor: '#5E2A67' } : undefined;
   const btnClass = isService
     ? 'text-white shadow-[0_8px_24px_rgba(94,42,103,.3)] hover:shadow-[0_12px_32px_rgba(94,42,103,.4)]'
     : 'bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(205,80,241,.28)] hover:shadow-[0_12px_32px_rgba(205,80,241,.38)]';
@@ -108,20 +110,33 @@ function Card({
 
   return (
     <div
-      className={`flex flex-col rounded-2xl bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8 ${
-        isService ? 'boldfy-service-glow' : 'border border-border'
+      className={`flex flex-col rounded-2xl p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8 ${
+        isService ? 'boldfy-service-glow' : 'border border-primary/30 bg-card'
       }`}
+      style={
+        isService
+          ? { backgroundImage: 'linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)' }
+          : undefined
+      }
     >
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconClass}`}>
-          {icon}
-        </span>
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] ${badgeClass}`}
-        >
-          {card.badge}
-        </span>
+      {/* Banner — mesma foto da página de Soluções */}
+      <div className="relative mb-5 h-[140px] w-full overflow-hidden rounded-[14px]">
+        <Image
+          src={banner.src}
+          alt={banner.alt}
+          fill
+          sizes="(max-width: 1024px) 100vw, 45vw"
+          className="object-cover"
+        />
       </div>
+
+      <span
+        className={`mb-4 inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${tagClass}`}
+        style={tagStyle}
+      >
+        <TagIcon className="h-3 w-3" />
+        {tagLabel}
+      </span>
 
       <h3 className="mb-2 font-headline text-xl font-black tracking-tight text-foreground sm:text-2xl">
         {card.titulo}
