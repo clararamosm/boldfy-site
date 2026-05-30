@@ -145,6 +145,94 @@ html {
 }
 
 /* ============================================================ */
+/*  Borda premium do SERVIÇO (CaaS = roxo escuro)               */
+/*  Brilho viajando ao redor da borda, efeito vidro. Diferencia */
+/*  o roxo escuro do serviço do roxo vivo da plataforma (SaaS). */
+/*  Uso: wrapper .boldfy-service-border > .boldfy-service-inner */
+/* ============================================================ */
+
+@property --svc-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.boldfy-service-border {
+  position: relative;
+  border-radius: 22px;
+  padding: 1.5px;
+  background:
+    conic-gradient(
+      from var(--svc-angle),
+      transparent 0deg,
+      transparent 48deg,
+      rgba(201, 162, 232, 0.45) 68deg,
+      #8E4FB0 82deg,
+      #C9A2E8 94deg,
+      #8E4FB0 106deg,
+      rgba(201, 162, 232, 0.45) 120deg,
+      transparent 140deg,
+      transparent 360deg
+    ),
+    linear-gradient(rgba(94, 42, 103, 0.35), rgba(94, 42, 103, 0.35));
+  animation: boldfy-service-shimmer 3.5s linear infinite;
+  isolation: isolate;
+}
+
+.boldfy-service-border::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 30px;
+  background: radial-gradient(circle, rgba(94, 42, 103, 0.16), transparent 62%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.boldfy-service-inner {
+  position: relative;
+  background: hsl(var(--card));
+  border-radius: 20.5px;
+}
+
+@keyframes boldfy-service-shimmer {
+  to { --svc-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boldfy-service-border { animation: none; }
+}
+
+/* Shimmer de texto do SERVIÇO — degradê roxo escuro percorrendo a palavra.
+   Aplicar na palavra-destaque do CaaS pra um brilho premium. */
+.boldfy-shimmer-text {
+  background: linear-gradient(
+    100deg,
+    #5E2A67 0%,
+    #8E4FB0 25%,
+    #C9A2E8 50%,
+    #8E4FB0 75%,
+    #5E2A67 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: boldfy-shimmer-text 4.5s linear infinite;
+}
+
+@keyframes boldfy-shimmer-text {
+  to { background-position: 200% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boldfy-shimmer-text {
+    animation: none;
+    background-position: 0 center;
+  }
+}
+
+/* ============================================================ */
 /*  State of ELG opt-in box (Playbook wizard, identificacao step) */
 /*  ------------------------------------------------------------ */
 /*  Borda roxa fixa visível + ponto de brilho viajando ao redor.  */

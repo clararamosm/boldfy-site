@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useT } from '@/lib/i18n/context';
+import { trackEvent } from '@/lib/track';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
@@ -182,15 +183,25 @@ export function CaasClient() {
   const c = t.solucoesCaas;
 
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const toggleFaq = (i: number) =>
-    setFaqOpen((prev) => (prev === i ? null : i));
+  const toggleFaq = (i: number, question: string) => {
+    setFaqOpen((prev) => {
+      if (prev !== i) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return i;
+      }
+      return null;
+    });
+  };
 
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#F6F1FB]">
       {/* ============================================================ */}
       {/*  S1 — HERO (Google Meet tiles + calendário + post aprovado)   */}
       {/* ============================================================ */}
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative flex min-h-[90vh] items-center px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-150px] top-[-10%] h-[700px] w-[700px] opacity-[0.12]" />
         <Glow
           className="bottom-[-100px] left-[-50px] h-[500px] w-[500px] opacity-[0.10]"
@@ -395,10 +406,10 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S2 — DOIS MODOS (card duplo)                                 */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]" color={CAAS_ACCENT_LIGHT} />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mx-auto mb-14 max-w-[820px] text-center">
             <PreTag>{c.modesTag}</PreTag>
             <SectionHeading title={c.modesTitle} highlight={c.modesTitleHighlight} />
@@ -669,10 +680,10 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S3 — MODO DESIGN EM DETALHE                                  */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.07]" />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mb-10 max-w-[820px]">
             <PreTag>{c.designTag}</PreTag>
             <SectionHeading title={c.designTitle} highlight={c.designTitleHighlight} className="mb-5" />
@@ -844,7 +855,7 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S4 — MODO EXECUTIVO EM DETALHE                               */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[5%] h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto max-w-[1280px]">
@@ -994,7 +1005,7 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S5 — PLATAFORMA E SERVIÇO JUNTOS (invertido: CaaS primeiro)  */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto max-w-[1000px]">
@@ -1135,10 +1146,10 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S6 — GHOSTWRITING VS BOLDFY (tabela comparativa visual)      */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]" color={CAAS_ACCENT_LIGHT} />
 
-        <div className="relative z-10 mx-auto max-w-[1100px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mx-auto mb-12 max-w-[820px] text-center">
             <PreTag>{c.compareTag}</PreTag>
             <SectionHeading title={c.compareTitle} highlight={c.compareTitleHighlight} />
@@ -1226,7 +1237,7 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S7 — FAQ                                                     */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto max-w-[900px]">
@@ -1262,7 +1273,7 @@ export function CaasClient() {
                 key={faq.q}
                 question={faq.q}
                 isOpen={faqOpen === i}
-                onToggle={() => toggleFaq(i)}
+                onToggle={() => toggleFaq(i, faq.q)}
               >
                 {faq.answer}
               </FaqItem>
@@ -1274,7 +1285,7 @@ export function CaasClient() {
       {/* ============================================================ */}
       {/*  S8 — CTA FINAL                                                */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 pb-28 pt-16 md:px-12">
+      <section className="relative px-4 pb-28 pt-16 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.1]" />
         <Glow className="left-[-100px] bottom-0 h-[500px] w-[500px] opacity-[0.08]" color={CAAS_ACCENT_LIGHT} />
         <GridPattern />
@@ -1316,6 +1327,6 @@ export function CaasClient() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
