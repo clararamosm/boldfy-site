@@ -251,7 +251,7 @@ export function CaasClient() {
                 que sempre apareça no lugar certo.
                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
             <div className="absolute left-0 right-0 top-[120px] z-10 mx-auto w-[420px] rounded-[18px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(94,42,103,0.18)] lg:w-[440px]">
-              <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <div className="mb-4 flex items-center justify-end border-b border-border pb-3">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" style={{ color: CAAS_ACCENT }} />
                   <div>
@@ -519,9 +519,8 @@ export function CaasClient() {
             {/*  Mode 2 — Ativação executiva (mini-interface)   */}
             {/* =============================================== */}
             <div
-              className="group relative flex flex-col overflow-hidden rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
+              className="group boldfy-service-glow relative flex flex-col rounded-[20px] p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
               style={{
-                borderColor: CAAS_ACCENT,
                 backgroundImage: `linear-gradient(135deg, rgba(94,42,103,0.06) 0%, rgba(152,64,173,0.03) 100%)`,
               }}
             >
