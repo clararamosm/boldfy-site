@@ -28,6 +28,7 @@ import {
   Wrench,
   Link2,
   File,
+  BellOff,
 } from 'lucide-react';
 
 /** Chave semântica de ícone — agrupa por TIPO, não por form individual. */
@@ -39,6 +40,7 @@ export type FormTagIconKey =
   | 'material'
   | 'ferramenta'
   | 'linkedin'
+  | 'unsubscribed'
   | 'fallback';
 
 const ICONS: Record<FormTagIconKey, typeof Users> = {
@@ -49,6 +51,7 @@ const ICONS: Record<FormTagIconKey, typeof Users> = {
   material: FileText,
   ferramenta: Wrench,
   linkedin: Link2,
+  unsubscribed: BellOff,
   fallback: File,
 };
 

@@ -808,6 +808,34 @@ export async function removeTagFromContact(
 }
 
 /**
+ * Deleta um contato DEFINITIVAMENTE do ActiveCampaign (DELETE /api/3/contacts/{id}).
+ *
+ * Usado pela exclusão de respondentes de teste no CRM (mai/2026) — remove o
+ * resíduo do AC pra não sobrar contato fantasma em lista/cadência. Best-effort:
+ *  - 200 OK → removido.
+ *  - 404 → contato já não existe; tratamos como sucesso idempotente.
+ *  - Qualquer outro erro → loga e retorna false (a exclusão local do CRM NÃO
+ *    deve travar por causa do AC; o caller decide o que fazer com o false).
+ */
+export async function deleteContactFromAC(contactId: string): Promise<boolean> {
+  if (!AC_API_URL || !AC_API_KEY || !contactId) return false;
+
+  try {
+    const res = await fetch(`${AC_API_URL}/api/3/contacts/${contactId}`, {
+      method: 'DELETE',
+      headers: acHeaders(),
+    });
+    if (res.ok || res.status === 404) return true;
+    const errText = await res.text().catch(() => '');
+    console.error(`[activecampaign] Falha ao deletar contato ${contactId}:`, res.status, errText);
+    return false;
+  } catch (err) {
+    console.error(`[activecampaign] Erro ao deletar contato ${contactId}:`, err);
+    return false;
+  }
+}
+
+/**
  * Variante de findOrCreateTag que so busca (nao cria). Retorna null se a tag
  * nao existe. Usado pra remoção de tag — nao faz sentido criar tag so pra
  * dizer que alguem nao a tem.

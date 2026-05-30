@@ -11,11 +11,14 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { Trash2 } from 'lucide-react';
 import type { PersonRow } from './shared';
 import { FORM_LABELS } from './shared';
 import { timeAgo, formatDateTime, channelLabel } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from '@/components/crm/column-picker';
 import { FormTagIcon, iconKeyForFormType } from '@/components/crm/form-tag-icon';
+import { deleteRespondents, type DeleteRespondentsResult } from './actions';
 
 // Spec §2: "default fields visíveis: name, email, phone, jobTitle. Campos
 // opcionais ativáveis na visualização (column picker)". Defaults abaixo
@@ -77,6 +80,58 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
   const currentSortBy = searchParams.get('sortBy') ?? 'lastFormAt';
   const currentSortDir = searchParams.get('sortDir') ?? 'desc';
 
+  /* ---- Seleção + exclusão em massa (Clara, mai/2026) ---- */
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, startDelete] = useTransition();
+  const [resultMsg, setResultMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const pageIds = rows.map((r) => r.person.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllOnPage() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function runDelete() {
+    setErrorMsg(null);
+    setResultMsg(null);
+    const ids = Array.from(selected);
+    startDelete(async () => {
+      const res: DeleteRespondentsResult = await deleteRespondents(ids);
+      if (res.ok) {
+        const acPart = res.ac.deleted > 0 || res.ac.failed > 0
+          ? ` · AC: ${res.ac.deleted} removido${res.ac.deleted === 1 ? '' : 's'}${res.ac.failed > 0 ? `, ${res.ac.failed} falhou` : ''}`
+          : '';
+        const coPart = res.deleted.companies > 0 ? ` · ${res.deleted.companies} empresa(s) órfã(s)` : '';
+        setResultMsg(`✓ ${res.deleted.people} pessoa(s) excluída(s)${acPart}${coPart}.`);
+        setConfirmOpen(false);
+        clearSelection();
+        router.refresh();
+      } else {
+        setErrorMsg(res.error);
+        setConfirmOpen(false);
+      }
+    });
+  }
+
   function setSort(col: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (currentSortBy === col) {
@@ -96,13 +151,7 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  if (rows.length === 0) {
-    return (
-      <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, padding: 48, textAlign: 'center', color: '#9D85B3', fontSize: 14 }}>
-        Nenhuma pessoa encontrada com esses filtros.
-      </div>
-    );
-  }
+  const isEmpty = rows.length === 0;
 
   const SortHeader = ({ colKey, label, align = 'left' }: { colKey: string; label: string; align?: 'left' | 'right' }) => {
     const isSorted = currentSortBy === colKey;
@@ -144,18 +193,70 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
     whiteSpace: 'nowrap',
   };
 
+  const selectedCount = selected.size;
+
   return (
     <div>
-      {/* Toolbar com column picker (spec §8: ativar campos opcionais) */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+      {/* Banners de resultado/erro da exclusão */}
+      {resultMsg ? (
+        <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#0F7A5A', fontSize: 13, fontWeight: 600 }}>
+          {resultMsg}
+        </div>
+      ) : null}
+      {errorMsg ? (
+        <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(238, 90, 82, 0.1)', border: '1px solid rgba(238, 90, 82, 0.35)', color: '#C0392B', fontSize: 13, fontWeight: 600 }}>
+          Erro ao excluir: {errorMsg}
+        </div>
+      ) : null}
+
+      {/* Toolbar: barra de ações em massa (esquerda) + column picker (direita) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div>
+          {selectedCount > 0 ? (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '6px 10px 6px 14px', background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 999 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#5E2A67' }}>
+                {selectedCount} selecionado{selectedCount === 1 ? '' : 's'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                style={{ fontSize: 12, color: '#9D85B3', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                limpar
+              </button>
+              <button
+                type="button"
+                onClick={() => { setErrorMsg(null); setConfirmOpen(true); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#EE5A52', color: '#FFFFFF', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <Trash2 size={13} strokeWidth={2} aria-hidden />
+                Excluir
+              </button>
+            </div>
+          ) : null}
+        </div>
         {ColumnPickerUI}
       </div>
 
+      {isEmpty ? (
+        <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, padding: 48, textAlign: 'center', color: '#9D85B3', fontSize: 14 }}>
+          Nenhuma pessoa encontrada com esses filtros.
+        </div>
+      ) : (
       <div style={{ background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 14, overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 900 }}>
           <thead>
             <tr style={{ background: '#FAF7FF' }}>
+              <th style={{ ...thBase, width: 36, padding: '10px 8px 10px 12px' }}>
+                <input
+                  type="checkbox"
+                  checked={allOnPageSelected}
+                  onChange={toggleAllOnPage}
+                  aria-label="Selecionar todos da página"
+                  style={{ cursor: 'pointer', accentColor: '#CD50F1', width: 15, height: 15 }}
+                />
+              </th>
               {visibleCols.has('name') ? <SortHeader colKey="name" label="Nome" /> : null}
               {visibleCols.has('email') ? <SortHeader colKey="email" label="Email" /> : null}
               {visibleCols.has('phone') ? <th style={thBase}>Telefone</th> : null}
@@ -174,10 +275,20 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
               const segment = segmentDisplay(row.person.segment);
               const optIn = row.person.newsletterOptIn;
               const isUnsub = row.person.unsubscribed;
+              const isSelected = selected.has(row.person.id);
               const canalLabel = row.person.sourceChannel && row.person.sourceChannel !== 'unknown'
                 ? channelLabel(row.person.sourceChannel) : '—';
               return (
-                <tr key={row.person.id} style={{ borderBottom: '1px solid #F7EEFC', opacity: isUnsub ? 0.55 : 1 }}>
+                <tr key={row.person.id} style={{ borderBottom: '1px solid #F7EEFC', opacity: isUnsub ? 0.55 : 1, background: isSelected ? 'rgba(205, 80, 241, 0.06)' : undefined }}>
+                  <td style={{ padding: '10px 8px 10px 12px', verticalAlign: 'middle', width: 36 }}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleOne(row.person.id)}
+                      aria-label={`Selecionar ${row.person.name || 'pessoa'}`}
+                      style={{ cursor: 'pointer', accentColor: '#CD50F1', width: 15, height: 15 }}
+                    />
+                  </td>
                   {visibleCols.has('name') ? (
                     <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
                       <Link href={`/internal/crm/people/${row.person.id}`} style={{ color: '#5E2A67', fontWeight: 600, textDecoration: 'none' }}>
@@ -294,6 +405,59 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
         </div>
       ) : null}
       </div>
+      )}
+
+      {/* Modal de confirmação da exclusão (destrutivo + irreversível) */}
+      {confirmOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 10, 24, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => { if (!deleting) setConfirmOpen(false); }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 460, background: '#FFFFFF', borderRadius: 16, padding: 24, boxShadow: '0 20px 50px rgba(93, 42, 103, 0.25)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: 'rgba(238, 90, 82, 0.12)', color: '#EE5A52' }}>
+                <Trash2 size={18} strokeWidth={2} aria-hidden />
+              </span>
+              <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#5E2A67' }}>
+                Excluir {selectedCount} pessoa{selectedCount === 1 ? '' : 's'}?
+              </h2>
+            </div>
+            <p style={{ margin: '0 0 8px', fontSize: 13, lineHeight: 1.6, color: '#45336B' }}>
+              Isso remove cada pessoa <strong>de todos os lugares, em definitivo</strong>: do CRM
+              (incluindo formulários, reuniões, propostas e playbooks), do ActiveCampaign, e a
+              empresa vinculada se ela ficar sem nenhuma pessoa.
+            </p>
+            <p style={{ margin: '0 0 20px', fontSize: 12, color: '#9D85B3' }}>
+              Ação irreversível. Use para limpar contatos de teste.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={deleting}
+                className="crm-btn"
+                style={{ fontSize: 13, padding: '8px 16px', cursor: deleting ? 'progress' : 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={runDelete}
+                disabled={deleting}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', background: '#EE5A52', color: '#FFFFFF', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: deleting ? 'progress' : 'pointer', fontFamily: 'inherit', opacity: deleting ? 0.7 : 1 }}
+              >
+                <Trash2 size={14} strokeWidth={2} aria-hidden />
+                {deleting ? 'Excluindo…' : 'Excluir definitivamente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

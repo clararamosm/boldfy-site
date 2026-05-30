@@ -20,6 +20,8 @@ type Props = {
   channels: string[];
   pages: string[];
   countsByForm: Record<FormType, number>;
+  /** Total de leads descadastrados (badge do chip Descadastrados). */
+  unsubscribedCount: number;
 };
 
 const PERIODS = [
@@ -39,14 +41,16 @@ const SEGMENTS = [
 
 const PAGE_SIZES = [20, 50, 100] as const;
 
-type FormChip = { value: 'all' | FormType; icon: FormTagIconKey; label: string };
+type FormChip = { value: 'all' | FormType | 'unsubscribed'; icon: FormTagIconKey; label: string };
 
 // Linha 1 — formulários gerais do site (produto/marcação, não material).
+// 'unsubscribed' não é form: é a lista de "não contatar" (descadastrados do AC).
 const GENERAL_CHIPS: FormChip[] = [
   { value: 'all', icon: 'all', label: 'Todos' },
   { value: 'form_submit_demo', icon: 'demo', label: 'Demo' },
   { value: 'form_submit_beta', icon: 'beta', label: 'Beta' },
   { value: 'form_submit_proposta', icon: 'proposta', label: 'Proposta' },
+  { value: 'unsubscribed', icon: 'unsubscribed', label: 'Descadastrados' },
 ];
 
 // Linha 2 — materiais ricos e ferramentas. Materiais (Algoritmo, Semrush)
@@ -57,7 +61,7 @@ const MATERIAL_CHIPS: FormChip[] = [
   { value: 'form_submit_playbook_employee_led_growth', icon: 'ferramenta', label: 'Playbook' },
 ];
 
-export function FormsFilters({ statuses, channels, pages, countsByForm }: Props) {
+export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscribedCount }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -112,7 +116,9 @@ export function FormsFilters({ statuses, channels, pages, countsByForm }: Props)
     const isActive = currentFormType === chip.value;
     const count = chip.value === 'all'
       ? Object.values(countsByForm).reduce((s, n) => s + n, 0) // não bate exato com totalPeople (pessoa em N forms conta N), só pra dar ordem de grandeza
-      : countsByForm[chip.value as FormType];
+      : chip.value === 'unsubscribed'
+        ? unsubscribedCount
+        : countsByForm[chip.value as FormType];
     return (
       <button
         key={chip.value}

@@ -36,7 +36,9 @@ export const dynamic = 'force-dynamic';
 type Params = {
   period: 'all' | '7d' | '30d' | '90d';
   segmento: 'all' | 'lider_b2b' | 'parceiro' | 'profissional_individual' | 'newsletter';
-  formType: 'all' | FormType;
+  // 'unsubscribed' é uma visão especial (não um form): lista TODOS os
+  // descadastrados, mesmo quem nunca preencheu form. Lista de "não contatar".
+  formType: 'all' | FormType | 'unsubscribed';
   statusId: string | null;
   canal: string | null;
   pagina: string | null;
@@ -62,7 +64,7 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
   const sortDir = (sp.sortDir as Params['sortDir']) ?? 'desc';
   const page = Math.max(1, parseInt(typeof sp.page === 'string' ? sp.page : '1', 10) || 1);
   const pageSize = ([20, 50, 100].includes(Number(sp.pageSize)) ? Number(sp.pageSize) : 20) as Params['pageSize'];
-  const validFormTypes: Array<Params['formType']> = ['all', 'form_submit_demo', 'form_submit_beta', 'form_submit_algoritmo_linkedin', 'form_submit_case_semrush', 'form_submit_proposta', 'form_submit_playbook_employee_led_growth'];
+  const validFormTypes: Array<Params['formType']> = ['all', 'form_submit_demo', 'form_submit_beta', 'form_submit_algoritmo_linkedin', 'form_submit_case_semrush', 'form_submit_proposta', 'form_submit_playbook_employee_led_growth', 'unsubscribed'];
   return {
     period: ['all', '7d', '30d', '90d'].includes(period as string) ? (period as Params['period']) : 'all',
     segmento: ['all', 'lider_b2b', 'parceiro', 'profissional_individual', 'newsletter'].includes(segmento as string)
@@ -232,6 +234,121 @@ async function getFilterOptions(): Promise<{ channels: string[]; pages: string[]
   return { channels, pages };
 }
 
+/**
+ * Visão "Descadastrados" — lista TODOS os leads com unsubscribed=true, mesmo
+ * os que nunca preencheram form (importados, extensão). É a lista de "não
+ * contatar": garante visibilidade fácil pra não incluir essas pessoas em
+ * nenhuma cadência ou prospecção ativa.
+ *
+ * Diferente de getPeopleWithForms, parte de `people` (não de activities), então
+ * inclui quem não tem nenhum form_submit. Ignora o filtro de período (que é
+ * sobre data de form) e não esconde inativos — aqui o ponto é justamente vê-los.
+ */
+async function getUnsubscribedPeople(params: Params): Promise<{ rows: PersonRow[]; totalPeople: number }> {
+  const filters: SQL[] = [eq(people.unsubscribed, true)];
+
+  if (params.segmento === 'newsletter') {
+    filters.push(eq(people.newsletterOptIn, true));
+  } else if (params.segmento !== 'all') {
+    filters.push(eq(people.segment, params.segmento));
+  }
+  if (params.statusId) filters.push(eq(people.statusId, params.statusId));
+  if (params.canal) filters.push(eq(people.sourceChannel, params.canal as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown'));
+  if (params.pagina) filters.push(eq(people.sourcePage, params.pagina));
+
+  const rawRows = await db
+    .select({
+      personId: people.id,
+      personName: people.name,
+      personEmail: people.email,
+      personJobTitle: people.jobTitle,
+      personMetadata: people.metadata,
+      personPhone: people.phone,
+      personSourceChannel: people.sourceChannel,
+      personSourcePage: people.sourcePage,
+      personAcTags: people.acTags,
+      personSegment: people.segment,
+      personOptIn: people.newsletterOptIn,
+      personUnsubscribed: people.unsubscribed,
+      personUnsubscribedAt: people.unsubscribedAt,
+      personFormsSubmitted: people.formsSubmitted,
+      personCreatedAt: people.createdAt,
+      personStatusLabel: statuses.label,
+      personStatusColor: statuses.color,
+      companyId: companies.id,
+      companyName: companies.name,
+      activityType: activities.type,
+      activityCreatedAt: activities.createdAt,
+    })
+    .from(people)
+    .leftJoin(activities, and(eq(activities.personId, people.id), like(activities.type, 'form_submit_%')))
+    .leftJoin(companies, eq(people.companyId, companies.id))
+    .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .where(and(...filters))
+    .limit(10000);
+
+  const byPersonId = new Map<string, PersonRow>();
+  for (const row of rawRows) {
+    const existing = byPersonId.get(row.personId);
+    const ft = row.activityType as FormType | null;
+    if (existing) {
+      if (ft && !existing.forms.includes(ft)) existing.forms.push(ft);
+      if (row.activityCreatedAt && row.activityCreatedAt > existing.lastFormAt) existing.lastFormAt = row.activityCreatedAt;
+      if (row.activityCreatedAt && row.activityCreatedAt < existing.firstFormAt) existing.firstFormAt = row.activityCreatedAt;
+    } else {
+      // Fallback de data pra ordenação/exibição quando a pessoa não tem form:
+      // usa a data de descadastro, senão a de criação.
+      const fallbackDate = row.personUnsubscribedAt ?? row.personCreatedAt ?? new Date(0);
+      byPersonId.set(row.personId, {
+        person: {
+          id: row.personId,
+          name: row.personName ?? '',
+          email: row.personEmail,
+          jobTitle: row.personJobTitle ?? null,
+          phone: row.personPhone ?? null,
+          sourceChannel: row.personSourceChannel,
+          sourcePage: row.personSourcePage,
+          acTags: row.personAcTags as string[] | null,
+          statusLabel: row.personStatusLabel ?? null,
+          statusColor: row.personStatusColor ?? null,
+          metadata: row.personMetadata as Record<string, unknown> | null,
+          segment: row.personSegment ?? null,
+          newsletterOptIn: row.personOptIn ?? false,
+          unsubscribed: row.personUnsubscribed ?? true,
+          unsubscribedAt: row.personUnsubscribedAt ?? null,
+          formsSubmitted: (row.personFormsSubmitted as string[] | null) ?? [],
+        },
+        company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
+        forms: ft ? [ft] : [],
+        lastFormAt: row.activityCreatedAt ?? fallbackDate,
+        firstFormAt: row.activityCreatedAt ?? fallbackDate,
+      });
+    }
+  }
+
+  const list = Array.from(byPersonId.values());
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (params.sortBy === 'name') cmp = a.person.name.localeCompare(b.person.name);
+    else if (params.sortBy === 'email') cmp = (a.person.email ?? '').localeCompare(b.person.email ?? '');
+    else cmp = a.lastFormAt.getTime() - b.lastFormAt.getTime();
+    return params.sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const totalPeople = list.length;
+  const offset = (params.page - 1) * params.pageSize;
+  return { rows: list.slice(offset, offset + params.pageSize), totalPeople };
+}
+
+/** Total de leads descadastrados (badge do chip Descadastrados). */
+async function getUnsubscribedCount(): Promise<number> {
+  const res = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(people)
+    .where(eq(people.unsubscribed, true));
+  return res[0]?.c ?? 0;
+}
+
 export default async function CrmFormsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const params = parseParams(sp);
@@ -241,21 +358,33 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
     form_submit_demo: 0, form_submit_beta: 0, form_submit_algoritmo_linkedin: 0, form_submit_case_semrush: 0, form_submit_proposta: 0, form_submit_playbook_employee_led_growth: 0,
   };
   let totalPeople = 0;
+  let unsubscribedCount = 0;
   let dbError: string | null = null;
   let personStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   let filterOptions: { channels: string[]; pages: string[] } = { channels: [], pages: [] };
 
   try {
-    const [result, statusesData, options] = await Promise.all([
+    // getPeopleWithForms roda sempre — fornece os counts dos chips de form.
+    // A visão "Descadastrados" troca só as ROWS exibidas (counts seguem reais).
+    const [result, statusesData, options, unsubCount] = await Promise.all([
       getPeopleWithForms(params),
       getStatuses('person'),
       getFilterOptions(),
+      getUnsubscribedCount(),
     ]);
-    rows = result.rows;
     countsByForm = result.countsByForm;
-    totalPeople = result.totalPeople;
     personStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
     filterOptions = options;
+    unsubscribedCount = unsubCount;
+
+    if (params.formType === 'unsubscribed') {
+      const unsub = await getUnsubscribedPeople(params);
+      rows = unsub.rows;
+      totalPeople = unsub.totalPeople;
+    } else {
+      rows = result.rows;
+      totalPeople = result.totalPeople;
+    }
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }
@@ -279,6 +408,7 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
           channels={filterOptions.channels}
           pages={filterOptions.pages}
           countsByForm={countsByForm}
+          unsubscribedCount={unsubscribedCount}
         />
       </Suspense>
 
