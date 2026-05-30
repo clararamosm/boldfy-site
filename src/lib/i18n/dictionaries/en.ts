@@ -194,6 +194,114 @@ const en = {
     rewStoreTab3: 'History',
     rewCta: 'Redeem',
   },
+
+  // /para/marketing page — honest version, mirrors paraMarketing in pt-BR.ts
+  paraMarketing: {
+    metaTitle: 'Boldfy · For marketing teams',
+    metaDesc:
+      "Your CAC went up, your Ads hit a ceiling, and your marketing needs a channel that doesn't charge per impression. See how Boldfy turns your team into an organic acquisition engine.",
+    heroTag: 'For marketing teams',
+    heroTitle: "Your marketing doesn't need more Ads budget.",
+    heroTitleHighlight: 'It needs more organic voices.',
+    heroSubtitle:
+      'Boldfy is the Employee Advocacy platform that turns your employees into original content creators on LinkedIn. Measurable awareness, qualified remarketing lists, and an organic channel that eases the weight of paid traffic on your CAC.',
+    heroCta1: 'Build my package',
+    heroCta2: 'Book a demo',
+    diagTag: 'The B2B marketing pain in 2026',
+    diagTitle: 'You already know',
+    diagTitleHighlight: 'this movie.',
+    diagStat1: '+50% of Google searches with no click',
+    diagStat2: '12-15 searches before contact',
+    diagBody1:
+      'In this scenario, depending 100% on Ads means chasing a ceiling that rises faster than the budget. CAC climbs every quarter, LinkedIn Ads got unaffordable, the Company Page has 8 likes (all from the team).',
+    diagBody2:
+      'Meanwhile, your smaller competitor, with a worse product, has three people posting every week on LinkedIn. And the market sees them as the category leader.',
+    diagChartTitle: 'Quarterly CAC',
+    diagChartPill: '+38%',
+    diagCacYoy: '+38%',
+    diagCacYoyLabel: 'CAC YoY',
+    diagRoasYoy: '-22%',
+    diagRoasYoyLabel: 'ROAS YoY',
+    diagCurtidas: '8',
+    diagCurtidasLabel: 'likes/post',
+    viradaTag: 'How Boldfy solves it',
+    viradaTitle: 'The whole team becomes the new',
+    viradaTitleHighlight: 'acquisition channel.',
+    viradaIntro:
+      "It's not a scheduler. It's not a template. It's a content-intelligence system with three gears.",
+    virada1Title: 'Method.',
+    virada1Desc: 'Each employee learns to see their own routine as a source of content.',
+    virada2Title: 'Tool.',
+    virada2Desc:
+      "Contextual AI trained on your brand's voice and each person's voice. Original content, without turning into a template.",
+    virada3Title: 'Celebration.',
+    virada3Desc:
+      "Gamification that makes the habit last. Missions, ranking, Monthly Prize. The program doesn't die in month three.",
+    result1: 'Measurable organic awareness (impressions, reach, engagement)',
+    result2: 'Qualified remarketing lists that feed the top of the funnel',
+    result3: 'Less dependence on Ads as the organic channel scales',
+    result4: 'Category authority built over time',
+    numTag: 'What this can generate',
+    numTitle: 'The numbers,',
+    numTitleHighlight: 'no fluff.',
+    numCenario:
+      'Base scenario: {bold}20 active employees posting 2-3x a week{/bold} · LinkedIn Brazil CPM R$ 300/thousand',
+    numStat1Value: '80k–120k',
+    numStat1Label: 'organic impressions/month',
+    numStat1Tag1: 'Reach',
+    numStat1Tag2: 'Awareness',
+    numStat2Value: 'R$ 24k–36k',
+    numStat2Label: 'paid-media equivalent value',
+    numStat2Tag1: 'CPM R$300',
+    numStat2Tag2: 'EMV',
+    numStat3Value: '~2k–3.5k',
+    numStat3Label: 'engaged profiles/month',
+    numStat3Tag1: 'Remarketing',
+    numStat3Tag2: '2-3% eng.',
+    numKpiTitle: 'Suggested KPIs',
+    numKpiTag1: 'Branded searches',
+    numKpiTag2: 'Sales cycle ↓',
+    numKpiTag3: 'Brand recall',
+    numKpiTag4: 'Outbound reply rate',
+    numKpiTag5: 'Market NPS',
+    numKpiTag6: 'Share of voice',
+    numDisclaimer:
+      'Numbers based on market averages and the Boldfy method applied in active companies. Not a promise, a reference of potential.',
+    numCta: 'See the calculation for your company',
+    camTag: 'Which solution fits',
+    camTitle: 'Which path',
+    camTitleHighlight: 'to take.',
+    camIntro:
+      'For marketing, the most common path is the SaaS platform. Lean marketing with no designer? Worth combining with Content as a Service (design track). CMO wants to build personal authority alongside the team? The executive track comes in too.',
+    cam1Tag: 'Software as a Service',
+    cam1Title: 'Boldfy platform',
+    cam1Desc:
+      'The complete system for your team to create original content at scale. Contextual AI, gamification, learning tracks and dashboard, all self-serve.',
+    cam1Cta: 'Explore the platform',
+    cam2Tag: 'Content as a Service',
+    cam2Title: 'Content production',
+    cam2Desc:
+      'We operate alongside you. Strategy, production and handcrafted publishing, with Boldfy underneath organizing everything.',
+    cam2Cta: 'Explore the service',
+    faqTag: 'FAQ',
+    faqTitle: 'Questions CMOs ask',
+    faqTitleHighlight: 'every week.',
+    faq1Q: 'Does this replace my investment in Ads?',
+    faq1A:
+      "It doesn't replace, it complements. Employee Advocacy done well creates a new organic channel that shares the load with paid traffic, reduces dependence and feeds qualified remarketing lists. Ads can keep running, it just stops being the only engine.",
+    faq2Q: 'How long until results show up?',
+    faq2A:
+      'The first months are channel-building: onboarding, first posts and the first remarketing lists. Reach and paid-media equivalent value show up early. As the organic channel scales, it takes load off paid traffic, which tends to improve your acquisition cost. Boldfy measures reach, engagement, EMV and the lists; CAC itself you track in your own funnel.',
+    faq3Q: 'My marketing team is lean. How much time will Boldfy take from us?',
+    faq3A:
+      "Program admins spend on average 2-4 hours a week after onboarding. That's less time than marketing spends today reviewing scattered Company Page posts.",
+    faq4Q: 'How do I measure ROI to present to the CFO?',
+    faq4A:
+      "Boldfy's dashboard calculates the paid-media equivalent value, based on the average LinkedIn Ads Brazil CPM. You can literally say \"the team generated X impressions that, in Ads, would cost Y\". It's not a pipeline promise, it's media equivalence, which is much easier to defend in the budget meeting.",
+    faq5Q: 'Is Boldfy for companies with a strong or weak Company Page?',
+    faq5A:
+      "It works either way, because the growth of the employees' channel expands the Company Page's growth too. After all, employee posts amplify reach far beyond what the page achieves on its own.",
+  },
 };
 
 export default en;

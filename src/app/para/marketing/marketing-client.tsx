@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { trackEvent } from '@/lib/track';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -158,8 +159,45 @@ export function MarketingClient() {
   const c = t.paraMarketing;
 
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const toggleFaq = (i: number) =>
-    setFaqOpen((prev) => (prev === i ? null : i));
+  // Dispara faq_expanded só ao ABRIR, trim 80 chars, mesmo padrão do faq.tsx.
+  const toggleFaq = (i: number, question: string) => {
+    setFaqOpen((prev) => {
+      if (prev !== i) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return i;
+      }
+      return null;
+    });
+  };
+
+  // Anima o gráfico de CAC (linha desenhando + bolinha percorrendo) ao entrar
+  // na viewport, uma vez. Respeita prefers-reduced-motion; sem JS a linha já
+  // aparece normal (a classe de animação só é aplicada quando cacAnimate=true).
+  const cacPath = 'M 10 140 L 70 125 L 130 100 L 190 75 L 250 45 L 310 20';
+  const cacChartRef = useRef<SVGSVGElement>(null);
+  const [cacAnimate, setCacAnimate] = useState(false);
+  useEffect(() => {
+    const el = cacChartRef.current;
+    if (!el) return;
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCacAnimate(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
     <>
@@ -305,10 +343,18 @@ export function MarketingClient() {
             </div>
 
             {/* SVG chart */}
+            <style>{`
+              .cac-line-draw {
+                stroke-dasharray: 1;
+                stroke-dashoffset: 1;
+                animation: cacDraw 1.8s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+              }
+              @keyframes cacDraw { to { stroke-dashoffset: 0; } }
+            `}</style>
             <svg
-              className="h-[180px] w-full"
+              ref={cacChartRef}
+              className="w-full"
               viewBox="0 0 320 180"
-              preserveAspectRatio="none"
             >
               <line x1="0" y1="45" x2="320" y2="45" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 4" />
               <line x1="0" y1="90" x2="320" y2="90" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 4" />
@@ -320,11 +366,32 @@ export function MarketingClient() {
                 </linearGradient>
               </defs>
               <path d="M 10 140 L 70 125 L 130 100 L 190 75 L 250 45 L 310 20 L 310 180 L 10 180 Z" fill="url(#cacGrad)" />
-              <path d="M 10 140 L 70 125 L 130 100 L 190 75 L 250 45 L 310 20" fill="none" stroke="hsl(var(--accent-foreground))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d={cacPath}
+                fill="none"
+                stroke="hsl(var(--accent-foreground))"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                pathLength={1}
+                className={cacAnimate ? 'cac-line-draw' : undefined}
+              />
               {[[10,140],[70,125],[130,100],[190,75],[250,45]].map(([cx,cy], i) => (
                 <circle key={i} cx={cx} cy={cy} r="4" fill="hsl(var(--card))" stroke="hsl(var(--accent-foreground))" strokeWidth="2" />
               ))}
               <circle cx="310" cy="20" r="5" fill="hsl(var(--accent-foreground))" />
+              {cacAnimate && (
+                <circle r="5" fill="hsl(var(--accent-foreground))">
+                  <animateMotion
+                    dur="1.8s"
+                    fill="freeze"
+                    path={cacPath}
+                    calcMode="spline"
+                    keyTimes="0;1"
+                    keySplines="0.45 0 0.2 1"
+                  />
+                </circle>
+              )}
               {['Q1','Q2','Q3','Q4','Q1+1'].map((label, i) => (
                 <text key={label} x={10 + i * 60 + (i === 4 ? 8 : 0)} y="172" fill="hsl(var(--muted-foreground))" fontSize="9" fontFamily="Inter">{label}</text>
               ))}
@@ -456,7 +523,7 @@ export function MarketingClient() {
           <p className="mx-auto mb-10 text-center text-[13px] text-muted-foreground">
             Cenário base:{' '}
             <strong className="font-bold text-green-500">
-              20 colaboradores ativos publicando 2x por mês
+              20 colaboradores ativos publicando 2-3x por semana
             </strong>{' '}
             · CPM LinkedIn Brasil R$ 300/mil
           </p>
@@ -652,7 +719,7 @@ export function MarketingClient() {
                 key={faq.q}
                 question={faq.q}
                 isOpen={faqOpen === i}
-                onToggle={() => toggleFaq(i)}
+                onToggle={() => toggleFaq(i, faq.q)}
               >
                 <p>{faq.a}</p>
               </FaqItem>
