@@ -186,8 +186,9 @@ const en = {
     rew4Name: 'Spa day', rew4Desc: 'Care for those who care for the brand', rew4Badge: 'Wellbeing',
     rew5Name: 'Branded kit', rew5Desc: 'Backpack and hoodie', rew5Badge: 'Brand',
     rew6Name: 'Mentorship with leadership', rew6Desc: '1:1 with someone you admire', rew6Badge: 'Connection',
-    rewFootnote:
-      'And vouchers run on autopilot: Boldfy shows where to buy and you upload the codes to the platform, with no HR time spent.',
+    rewPoint1: 'The catalog is yours: you define each reward and how much it costs in points.',
+    rewPoint2: 'Vouchers on autopilot: Boldfy shows where to buy, you upload the codes and redemption runs on its own, with no HR time spent.',
+    rewPoint3: 'From monetary to cultural: voucher, day off, spa day, branded kit or mentorship, all in one place.',
     rewStoreTab1: 'Store',
     rewStoreTab2: 'My redemptions',
     rewStoreTab3: 'History',

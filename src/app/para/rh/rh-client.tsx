@@ -25,6 +25,7 @@ import {
   Gift,
   Sparkles,
   Star,
+  Check,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -543,31 +544,42 @@ export function RhClient() {
       <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
         <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.07]" />
 
-        <div className="relative z-10 mx-auto max-w-[1100px]">
-          <div className="mb-9 max-w-[760px]">
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-[60px]">
+          {/* Text (left) */}
+          <div>
             <PreTag>{c.rewTag}</PreTag>
             <SectionHeading
               title={c.rewTitle}
               highlight={c.rewTitleHighlight}
               className="mb-4"
             />
-            <p className="text-[15px] leading-[1.6] text-muted-foreground">
+            <p className="mb-6 text-[15px] leading-[1.6] text-muted-foreground">
               {c.rewIntro}
             </p>
+            <ul className="flex flex-col gap-3.5">
+              {[c.rewPoint1, c.rewPoint2, c.rewPoint3].map((p) => (
+                <li key={p} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/[0.12] text-blue-500">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  <span className="text-[14px] leading-[1.5] text-foreground">{p}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Store mock */}
-          <div className="rounded-[20px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(59,130,246,0.06)] md:p-7">
+          {/* Store mock (right, compact) */}
+          <div className="rounded-[20px] border border-border bg-card p-4 shadow-[0_20px_50px_rgba(59,130,246,0.08)] md:p-5">
             {/* faux tabs */}
-            <div className="mb-6 inline-flex gap-1 rounded-xl bg-accent-foreground/[0.04] p-1 text-[12px] font-semibold">
-              <span className="rounded-lg bg-card px-3 py-1.5 text-accent-foreground shadow-sm">
+            <div className="mb-4 inline-flex gap-1 rounded-xl bg-accent-foreground/[0.04] p-1 text-[11px] font-semibold">
+              <span className="rounded-lg bg-card px-2.5 py-1 text-accent-foreground shadow-sm">
                 {c.rewStoreTab1}
               </span>
-              <span className="px-3 py-1.5 text-muted-foreground">{c.rewStoreTab2}</span>
-              <span className="px-3 py-1.5 text-muted-foreground">{c.rewStoreTab3}</span>
+              <span className="px-2.5 py-1 text-muted-foreground">{c.rewStoreTab2}</span>
+              <span className="px-2.5 py-1 text-muted-foreground">{c.rewStoreTab3}</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
                 { icon: Sparkles, name: c.rew1Name, desc: c.rew1Desc, badge: c.rew1Badge, pts: '100' },
                 { icon: Gift, name: c.rew2Name, desc: c.rew2Desc, badge: c.rew2Badge, pts: '2.000' },
@@ -578,37 +590,32 @@ export function RhClient() {
               ].map((r) => (
                 <div
                   key={r.name}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background"
+                  className="flex flex-col overflow-hidden rounded-xl border border-border bg-background"
                 >
-                  <div className="flex h-[78px] items-center justify-center bg-gradient-to-b from-blue-500/[0.10] to-transparent">
-                    <r.icon className="h-7 w-7 text-blue-500" />
+                  <div className="flex h-[56px] items-center justify-center bg-gradient-to-b from-blue-500/[0.10] to-transparent">
+                    <r.icon className="h-6 w-6 text-blue-500" />
                   </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="font-headline text-[15px] font-black leading-tight text-accent-foreground">
+                  <div className="flex flex-1 flex-col p-3">
+                    <div className="font-headline text-[13px] font-black leading-tight text-accent-foreground">
                       {r.name}
                     </div>
-                    <div className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                    <div className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
                       {r.desc}
                     </div>
-                    <span className="mt-2.5 inline-flex self-start rounded-full bg-blue-500/[0.12] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600">
+                    <span className="mt-2 inline-flex self-start rounded-full bg-blue-500/[0.12] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-600">
                       {r.badge}
                     </span>
-                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-primary">
-                        <Star className="h-3 w-3 fill-current" />
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-2.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-primary">
+                        <Star className="h-2.5 w-2.5 fill-current" />
                         {r.pts}
                       </span>
-                      <span className="text-[11px] font-bold text-blue-600">{c.rewCta}</span>
+                      <span className="text-[10px] font-bold text-blue-600">{c.rewCta}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            <p className="mt-6 flex items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.05] px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-              {c.rewFootnote}
-            </p>
           </div>
         </div>
       </section>
