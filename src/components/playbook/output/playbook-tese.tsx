@@ -64,32 +64,44 @@ export function PlaybookTese({
           clássicos, e cobrir os três é o que sustenta o resultado.
         </p>
 
-        <div className="grid gap-5 sm:grid-cols-3">
-          {motivos.map((m) => {
-            const Icon = ICON_MAP[m.icon] ?? CheckSquare;
-            return (
-              <div
-                key={m.num}
-                className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)]"
-              >
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
+        {/* Wrapper relativo pra hospedar as conexões SVG (jun/2026 polish):
+            linhas pontilhadas animadas saem do bottom de cada card da Tese
+            e descem até o mini-card correspondente do Bloco 3.5, mostrando
+            que cada motivo do "porquê programas morrem" tem solução direta
+            na entrega da empresa + plataforma. Só desktop (mobile cai pra
+            stack). */}
+        <div className="relative">
+          <div className="grid gap-5 sm:grid-cols-3">
+            {motivos.map((m) => {
+              const Icon = ICON_MAP[m.icon] ?? CheckSquare;
+              return (
+                <div
+                  key={m.num}
+                  className="rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)]"
+                >
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
+                    Motivo {m.num}
+                  </div>
+                  <h3 className="mb-2 font-headline text-lg font-black leading-tight tracking-tight text-foreground">
+                    {m.titulo}
+                  </h3>
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">{m.desc}</p>
                 </div>
-                <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
-                  Motivo {m.num}
-                </div>
-                <h3 className="mb-2 font-headline text-lg font-black leading-tight tracking-tight text-foreground">
-                  {m.titulo}
-                </h3>
-                <p className="text-[13px] leading-relaxed text-muted-foreground">{m.desc}</p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Bloco 3.5 — Setor aplicação (logo abaixo dos cards da tese,
-            sem título separado, faz parte do mesmo bloco visual) */}
-        {setorAplicacao && <SetorAplicacaoCard data={setorAplicacao} />}
+          {/* Bloco 3.5 — Setor aplicação (logo abaixo dos cards da tese,
+              sem título separado, faz parte do mesmo bloco visual) */}
+          {setorAplicacao && <SetorAplicacaoCard data={setorAplicacao} />}
+
+          {/* Conexões SVG da Tese ao Bloco 3.5 — só renderiza se houver
+              SetorAplicacaoCard (caso contrário não há onde conectar). */}
+          {setorAplicacao && <TeseSetorConnectors />}
+        </div>
 
         {/* Bridge curto pras outras áreas — embaixo do card de setor.
             Veio da calculadora no refinamento de jun/2026 (Clara). */}
@@ -158,6 +170,91 @@ function SetorAplicacaoCard({ data }: { data: SetorAplicacao }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Conexões Tese -> Setor Aplicação (SVG animado, jun/2026)                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Linhas pontilhadas animadas conectando cada card da Tese (Bloco 3) ao
+ * mini-card correspondente do Bloco 3.5 (Motivo 01 / 02 / 03 do setor).
+ *
+ * Conceito: mostrar que cada motivo do "por que programas morrem" tem
+ * solução direta no que a empresa entrega + a plataforma. Pedido da Clara.
+ *
+ * Implementação:
+ * - SVG absoluto cobrindo o gap entre cards Tese e mini-cards do Bloco 3.5.
+ * - viewBox proporcional ao container (max-w-[1080px]) — 1032px de largura
+ *   útil após padding. preserveAspectRatio="none" pra esticar conforme
+ *   viewport.
+ * - 3 curvas Bézier quadráticas saindo do bottom-center de cada card Tese
+ *   e indo até o top-center do mini-card correspondente (que fica na
+ *   coluna direita do SetorAplicacaoCard, ~60% à direita do container).
+ * - stroke-dasharray + animação stroke-dashoffset → efeito de fluxo
+ *   contínuo (pontos descendo).
+ * - opacity baixa pra ficar sutil.
+ * - hidden md:block — mobile não tem layout em colunas, conexões ficariam
+ *   confusas.
+ *
+ * Coordenadas calculadas a partir do layout real:
+ *   Cards Tese: grid 3 colunas, gap-5 (20px). Larguras iguais ~330px.
+ *     Card 1 centro x ≈ 167  (165 + half-width)
+ *     Card 2 centro x ≈ 516
+ *     Card 3 centro x ≈ 865
+ *   Mini-cards (coluna direita do SetorAplicacao, grid 1.1fr/1fr com gap):
+ *     Coluna direita começa em x ≈ 562, largura ≈ 470.
+ *     Mini-card 1 centro x ≈ 638
+ *     Mini-card 2 centro x ≈ 795
+ *     Mini-card 3 centro x ≈ 953
+ *
+ * Top/Bottom do SVG (Y=0 a Y=140) cobre o gap entre os 2 blocos —
+ * paddings dos cards já absorvem a região interna, então as linhas
+ * "saem" e "chegam" nas bordas dos containers.
+ */
+function TeseSetorConnectors() {
+  return (
+    <svg
+      aria-hidden
+      preserveAspectRatio="none"
+      viewBox="0 0 1032 140"
+      className="pointer-events-none absolute left-0 right-0 z-[1] hidden h-[140px] md:block"
+      style={{ top: 'calc(50% - 70px)' }}
+    >
+      {/* Path 1: card Tese 1 (left) → mini-card Motivo 1 */}
+      <path
+        d="M 167 0 Q 167 70, 638 140"
+        fill="none"
+        stroke="rgba(205,80,241,0.55)"
+        strokeWidth="1.5"
+        strokeDasharray="4 8"
+        strokeLinecap="round"
+        className="tese-connector-flow"
+      />
+      {/* Path 2: card Tese 2 (center) → mini-card Motivo 2 */}
+      <path
+        d="M 516 0 Q 516 70, 795 140"
+        fill="none"
+        stroke="rgba(205,80,241,0.55)"
+        strokeWidth="1.5"
+        strokeDasharray="4 8"
+        strokeLinecap="round"
+        className="tese-connector-flow"
+        style={{ animationDelay: '0.4s' }}
+      />
+      {/* Path 3: card Tese 3 (right) → mini-card Motivo 3 */}
+      <path
+        d="M 865 0 Q 865 70, 953 140"
+        fill="none"
+        stroke="rgba(205,80,241,0.55)"
+        strokeWidth="1.5"
+        strokeDasharray="4 8"
+        strokeLinecap="round"
+        className="tese-connector-flow"
+        style={{ animationDelay: '0.8s' }}
+      />
+    </svg>
   );
 }
 

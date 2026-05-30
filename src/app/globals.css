@@ -508,3 +508,21 @@ html {
   .resultados-rede-pulse,
   .resultados-rede-tag { animation: none !important; }
 }
+
+/* ============================================================== */
+/*  Bloco 3/3.5 — Conexões Tese → Setor Aplicação (jun/2026)        */
+/* ============================================================== */
+/* Linhas pontilhadas animadas em SVG conectando cada card da Tese
+   ao mini-card correspondente do Bloco 3.5. Animação stroke-dashoffset
+   cria efeito de fluxo contínuo (pontos descendo a linha). */
+
+@keyframes tese-connector-flow {
+  to { stroke-dashoffset: -24; }
+}
+.tese-connector-flow {
+  animation: tese-connector-flow 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tese-connector-flow { animation: none !important; }
+}
