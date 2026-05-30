@@ -405,18 +405,18 @@ export function RhClient() {
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.07]" />
 
         <div className="relative z-10 mx-auto max-w-[1280px]">
-          <div className="grid grid-cols-1 items-start gap-7 rounded-[20px] border border-border border-l-[4px] border-l-blue-500 bg-card p-9 shadow-[0_20px_50px_rgba(59,130,246,0.08)] lg:grid-cols-[auto_1fr]">
+          <div className="grid grid-cols-1 items-start gap-6 rounded-2xl border border-border bg-card p-7 shadow-[0_8px_30px_rgba(59,130,246,0.06)] lg:grid-cols-[auto_1fr]">
             {/* Icon */}
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/[0.12] text-blue-500">
-              <AlertTriangle className="h-8 w-8" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/[0.10] text-blue-500">
+              <AlertTriangle className="h-6 w-6" />
             </div>
 
             {/* Content */}
             <div className="min-w-0">
-              <span className="mb-3 inline-block rounded-full border border-blue-500/30 bg-blue-500/[0.12] px-[11px] py-[5px] text-[10px] font-bold uppercase tracking-[0.12em] text-blue-500">
+              <span className="mb-3 inline-block rounded-full border border-blue-500/20 bg-blue-500/[0.08] px-[11px] py-[5px] text-[10px] font-bold uppercase tracking-[0.12em] text-blue-500">
                 {c.diffTag}
               </span>
-              <h3 className="mb-4 font-headline text-[clamp(22px,2.6vw,30px)] font-black leading-[1.15] tracking-[-0.02em] text-accent-foreground">
+              <h3 className="mb-4 font-headline text-[clamp(20px,2.2vw,26px)] font-black leading-[1.2] tracking-[-0.02em] text-accent-foreground">
                 {c.diffTitle}{' '}
                 <span className="bg-gradient-to-br from-blue-500 to-blue-300 bg-clip-text text-transparent">
                   {c.diffTitleHighlight}
@@ -450,7 +450,7 @@ export function RhClient() {
                 </div>
 
                 {/* Right — Somos */}
-                <div className="rounded-xl border border-blue-500/30 bg-blue-500/[0.12] p-4">
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.06] p-4">
                   <div className="mb-2 text-[9px] font-bold uppercase tracking-[0.1em] text-blue-700">
                     {c.diffRightLabel}
                   </div>
