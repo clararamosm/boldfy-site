@@ -177,7 +177,7 @@ export function MarketingClient() {
   // Anima o gráfico de CAC (linha desenhando + bolinha percorrendo) ao entrar
   // na viewport, uma vez. Respeita prefers-reduced-motion; sem JS a linha já
   // aparece normal (a classe de animação só é aplicada quando cacAnimate=true).
-  const cacPath = 'M 20 96 L 84 88 L 148 74 L 212 56 L 276 40 L 340 22';
+  const cacPath = 'M 20 138 L 84 128 L 148 108 L 212 84 L 276 56 L 340 30';
   const cacChartRef = useRef<SVGSVGElement>(null);
   const [cacAnimate, setCacAnimate] = useState(false);
   useEffect(() => {
@@ -343,7 +343,7 @@ export function MarketingClient() {
               </span>
             </div>
 
-            {/* SVG chart — minimalista: linha fina + tag início/fim */}
+            {/* SVG chart — rico mas delicado (linha fina, grade leve, fill sutil) */}
             <style>{`
               .cac-line-draw {
                 stroke-dasharray: 1;
@@ -355,8 +355,18 @@ export function MarketingClient() {
             <svg
               ref={cacChartRef}
               className="w-full"
-              viewBox="0 0 360 120"
+              viewBox="0 0 360 170"
             >
+              <line x1="0" y1="50" x2="360" y2="50" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 5" strokeOpacity="0.7" />
+              <line x1="0" y1="90" x2="360" y2="90" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 5" strokeOpacity="0.7" />
+              <line x1="0" y1="130" x2="360" y2="130" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 5" strokeOpacity="0.7" />
+              <defs>
+                <linearGradient id="cacGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(var(--accent-foreground))" stopOpacity="0.10" />
+                  <stop offset="100%" stopColor="hsl(var(--accent-foreground))" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d="M 20 138 L 84 128 L 148 108 L 212 84 L 276 56 L 340 30 L 340 170 L 20 170 Z" fill="url(#cacGrad)" />
               <path
                 d={cacPath}
                 fill="none"
@@ -367,10 +377,12 @@ export function MarketingClient() {
                 pathLength={1}
                 className={cacAnimate ? 'cac-line-draw' : undefined}
               />
-              <circle cx="20" cy="96" r="3" fill="hsl(var(--card))" stroke="hsl(var(--accent-foreground))" strokeWidth="2" />
-              <circle cx="340" cy="22" r="4.5" fill="hsl(var(--accent-foreground))" />
+              {[[20,138],[84,128],[148,108],[212,84],[276,56]].map(([cx,cy], i) => (
+                <circle key={i} cx={cx} cy={cy} r="2.5" fill="hsl(var(--card))" stroke="hsl(var(--accent-foreground))" strokeWidth="1.5" />
+              ))}
+              <circle cx="340" cy="30" r="3.5" fill="hsl(var(--accent-foreground))" />
               {cacAnimate && (
-                <circle r="4.5" fill="hsl(var(--accent-foreground))">
+                <circle r="3.5" fill="hsl(var(--accent-foreground))">
                   <animateMotion
                     dur="1.8s"
                     fill="freeze"
@@ -381,8 +393,10 @@ export function MarketingClient() {
                   />
                 </circle>
               )}
-              <text x="12" y="114" fill="hsl(var(--muted-foreground))" fontSize="10" fontFamily="Inter">Q1</text>
-              <text x="318" y="114" fill="hsl(var(--accent-foreground))" fontSize="10" fontFamily="Inter" fontWeight="700">Hoje</text>
+              {['Q1', 'Q2', 'Q3', 'Q4', 'Q1+1'].map((label, i) => (
+                <text key={label} x={20 + i * 64} y="160" fill="hsl(var(--muted-foreground))" fontSize="9" fontFamily="Inter" textAnchor="middle">{label}</text>
+              ))}
+              <text x="340" y="160" fill="hsl(var(--accent-foreground))" fontSize="9" fontFamily="Inter" fontWeight="700" textAnchor="middle">Hoje</text>
             </svg>
 
             {/* Bottom stats */}
