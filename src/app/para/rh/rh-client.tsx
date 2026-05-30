@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { trackEvent } from '@/lib/track';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -161,8 +162,20 @@ export function RhClient() {
   const c = t.paraRh;
 
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const toggleFaq = (i: number) =>
-    setFaqOpen((prev) => (prev === i ? null : i));
+  // Dispara faq_expanded só ao ABRIR (não ao fechar nem ao trocar), trim 80
+  // chars, mesmo padrão do componente compartilhado faq.tsx.
+  const toggleFaq = (i: number, question: string) => {
+    setFaqOpen((prev) => {
+      if (prev !== i) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return i;
+      }
+      return null;
+    });
+  };
 
   return (
     <>
@@ -800,7 +813,7 @@ export function RhClient() {
                 key={faq.q}
                 question={faq.q}
                 isOpen={faqOpen === i}
-                onToggle={() => toggleFaq(i)}
+                onToggle={() => toggleFaq(i, faq.q)}
               >
                 <p>{faq.a}</p>
               </FaqItem>
