@@ -624,6 +624,111 @@ export function MarketingClient() {
       </section>
 
       {/* ============================================================ */}
+      {/*  S4b — PAINEL (teaser borrado)                               */}
+      {/* ============================================================ */}
+      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+        <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.07]" />
+
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-[60px]">
+          {/* Text (left) */}
+          <div>
+            <PreTag>{c.dashTag}</PreTag>
+            <SectionHeading
+              title={c.dashTitle}
+              highlight={c.dashTitleHighlight}
+              className="mb-4"
+            />
+            <p className="mb-6 text-[15px] leading-[1.6] text-muted-foreground">
+              {c.dashIntro}
+            </p>
+            <ul className="flex flex-col gap-3.5">
+              {[c.dashPoint1, c.dashPoint2, c.dashPoint3].map((p) => (
+                <li key={p} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/[0.12] text-green-600">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  <span className="text-[14px] leading-[1.5] text-foreground">{p}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Blurred dashboard teaser (right) */}
+          <div className="relative h-[360px] overflow-hidden rounded-[20px] border border-border bg-card shadow-[0_20px_50px_rgba(16,185,129,0.08)]">
+            {/* faux dashboard backdrop (blurred, decorative) */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 select-none p-4 opacity-60 blur-[3px]"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="h-3 w-24 rounded bg-accent-foreground/20" />
+                <div className="h-5 w-16 rounded-full bg-green-500/25" />
+              </div>
+              <div className="mb-3 grid grid-cols-4 gap-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-lg border border-border bg-background p-2">
+                    <div className="mb-2 h-2 w-8 rounded bg-accent-foreground/15" />
+                    <div className="h-3 w-10 rounded bg-accent-foreground/25" />
+                  </div>
+                ))}
+              </div>
+              <div className="mb-3 flex h-28 items-end gap-1.5 rounded-lg border border-border bg-background p-3">
+                {[40, 55, 48, 70, 62, 85, 78, 95].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-t bg-green-500/30"
+                    style={{ height: `${h}%` }}
+                  />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[0, 1].map((i) => (
+                  <div key={i} className="h-12 rounded-lg border border-border bg-background" />
+                ))}
+              </div>
+            </div>
+
+            {/* crisp highlights overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 bg-gradient-to-b from-card/50 via-card/35 to-card/70 p-5">
+              <span className="rounded-full border border-green-500/25 bg-green-500/[0.10] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-green-700">
+                {c.dashBadge}
+              </span>
+              <div className="grid w-full max-w-[340px] grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {[
+                  { icon: Eye, value: c.dashKpi1Value, label: c.dashKpi1Label },
+                  { icon: DollarSign, value: c.dashKpi2Value, label: c.dashKpi2Label },
+                  { icon: TrendingUp, value: c.dashKpi3Value, label: c.dashKpi3Label },
+                ].map((k) => (
+                  <div
+                    key={k.label}
+                    className="flex flex-col items-center rounded-xl border border-border bg-card p-3 text-center shadow-[0_8px_24px_rgba(15,10,24,0.10)]"
+                  >
+                    <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/[0.12] text-green-600">
+                      <k.icon className="h-4 w-4" />
+                    </div>
+                    <div className="font-headline text-[17px] font-black leading-none text-accent-foreground">
+                      {k.value}
+                    </div>
+                    <div className="mt-1 text-[9px] leading-tight text-muted-foreground">
+                      {k.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => openPopup('marketing:dashboard')}
+                className="inline-flex items-center gap-1.5 text-[12px] font-bold text-primary transition-all hover:gap-2.5"
+              >
+                {c.dashCta}
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/*  S5 — CAMINHOS                                                */}
       {/* ============================================================ */}
       <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">

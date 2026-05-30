@@ -301,6 +301,22 @@ const en = {
     faq5Q: 'Is Boldfy for companies with a strong or weak Company Page?',
     faq5A:
       "It works either way, because the growth of the employees' channel expands the Company Page's growth too. After all, employee posts amplify reach far beyond what the page achieves on its own.",
+    dashTag: 'The dashboard',
+    dashTitle: 'All of it becomes a number on',
+    dashTitleHighlight: 'your dashboard.',
+    dashIntro:
+      "Impressions, reach, engagement and the paid-media equivalent value, calculated against LinkedIn's real CPM. Not a pipeline promise, it's media equivalence, easy to defend in the budget meeting.",
+    dashPoint1: 'Measurable awareness: impressions, reach and engagement from the team.',
+    dashPoint2: 'Paid-media equivalent value in R$, ready for the budget meeting.',
+    dashPoint3: 'Exportable remarketing lists that feed paid.',
+    dashBadge: 'Program dashboard',
+    dashKpi1Value: '128k',
+    dashKpi1Label: 'organic impressions',
+    dashKpi2Value: 'R$ 38k',
+    dashKpi2Label: 'paid-media equivalent value',
+    dashKpi3Value: '3.2k',
+    dashKpi3Label: 'total engagement',
+    dashCta: 'See the dashboard in the demo',
   },
 };
 

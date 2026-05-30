@@ -1160,6 +1160,22 @@ const ptBR = {
     faq4A: 'O dashboard da Boldfy calcula o valor equivalente em mídia paga, baseado no CPM médio do LinkedIn Ads Brasil. Você consegue dizer literalmente "o time gerou X impressões que, em Ads, custariam Y reais". Não é promessa de pipeline, é equivalência de mídia, que é muito mais fácil de defender na reunião de orçamento.',
     faq5Q: 'A Boldfy é pra quem tem Company Page forte ou fraca?',
     faq5A: 'Funciona de qualquer forma, porque o crescimento do canal dos colaboradores expande o crescimento da Company Page também. Afinal os posts dos colaboradores amplificam o alcance muito além do que a própria página consegue sozinha.',
+    // Painel (teaser)
+    dashTag: 'O painel',
+    dashTitle: 'Tudo isso vira número no',
+    dashTitleHighlight: 'seu painel.',
+    dashIntro: 'Impressões, alcance, engajamento e o valor equivalente em mídia paga, calculado contra o CPM real do LinkedIn. Não é promessa de pipeline, é equivalência de mídia, fácil de defender no orçamento.',
+    dashPoint1: 'Awareness mensurável: impressões, alcance e engajamento do time.',
+    dashPoint2: 'Valor equivalente em mídia paga em R$, pronto pra reunião de orçamento.',
+    dashPoint3: 'Listas de remarketing exportáveis que alimentam o paid.',
+    dashBadge: 'Painel do programa',
+    dashKpi1Value: '128k',
+    dashKpi1Label: 'impressões orgânicas',
+    dashKpi2Value: 'R$ 38k',
+    dashKpi2Label: 'valor equivalente em mídia paga',
+    dashKpi3Value: '3,2k',
+    dashKpi3Label: 'engajamento total',
+    dashCta: 'Ver o painel na demo',
   },
 
   // Para Vendas (full page)
