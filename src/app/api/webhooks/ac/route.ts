@@ -150,12 +150,29 @@ function mapEvent(payload: ACWebhookPayload): { type: string; weight: number; da
         data: { ...baseData, bounce_type: payload.bounce_type ?? 'soft' },
       };
     case 'unsubscribe':
-    case 'contact_unsubscription':
-      // Task 1 (mai/2026): unsubscribe agora vira 'lead_unsubscribed' (semântica
-      // de pessoa, não de email) — pois também flipa people.unsubscribed=true.
-      // O type antigo 'email_unsubscribed' continua existindo pra activities
-      // históricas. Render bonito vem na Task 2.
+    case 'contact_unsubscription': {
+      // Descadastro REAL = opt-out do próprio contato (clicou no link de
+      // unsubscribe). Ações de ADMIN/SISTEMA — gerência de lista, remoção em
+      // massa, "descadastrar todo mundo pra re-ativar gatilho", automação —
+      // NÃO são opt-out global e não podem virar people.unsubscribed=true.
+      //
+      // Bug de 30/05/2026: ao criar uma lista nova e descadastrar a base toda
+      // no AC pra re-disparar uma cadência, o AC mandou 199 unsubscribes com
+      // initiated_from='admin' e o webhook marcou todo mundo como descadastrado
+      // global, sumindo os leads do Report da aba (filtro "Ocultar inativos").
+      //
+      // Por isso: só geramos lead_unsubscribed (que flipa a flag) quando NÃO é
+      // ação de admin/sistema. Eventos de admin viram no-op (ignorados) — são
+      // gerência de lista, não descadastro do lead.
+      const initiatedFrom = (typeof payload.initiated_from === 'string' ? payload.initiated_from : '').toLowerCase();
+      const NON_OPTOUT_SOURCES = new Set(['admin', 'system', 'automation', 'bulk', 'api']);
+      if (NON_OPTOUT_SOURCES.has(initiatedFrom)) {
+        return null;
+      }
+      // Task 1 (mai/2026): unsubscribe genuíno vira 'lead_unsubscribed'
+      // (semântica de pessoa) — flipa people.unsubscribed=true no handler.
       return { type: 'lead_unsubscribed', weight: 0, data: baseData };
+    }
     case 'subscribe':
     case 'contact_subscribed':
       // Resubscribe via UI do AC (raro — usuário normalmente volta via form
@@ -331,16 +348,29 @@ export async function POST(req: NextRequest) {
     // Pra bounce/unsubscribe, também atualiza flag em metadata.ac_extra
     // pro display (pill vermelho no header).
     if (event.type === 'email_bounce') {
+      const isHard = (typeof payload.bounce_type === 'string' ? payload.bounce_type : '').toLowerCase() === 'hard';
       await db.update(people).set({
         metadata: sql`
           jsonb_set(
             COALESCE(${people.metadata}, '{}'::jsonb),
-            '{ac_extra,bounced_${sql.raw(payload.bounce_type === 'hard' ? 'hard' : 'soft')}}',
+            '{ac_extra,bounced_${sql.raw(isHard ? 'hard' : 'soft')}}',
             'true'::jsonb
           )
         `,
         updatedAt: new Date(),
       }).where(eq(people.id, person.id));
+
+      // Hard bounce = email permanentemente inválido → entra na lista de
+      // "não contatar" (descadastro), alinhado com a definição da Clara
+      // ("descadastro = opt-out OU bounce"). Soft bounce é transitório (caixa
+      // cheia etc.) e NÃO marca — só fica o flag em metadata.
+      if (isHard) {
+        await db.update(people).set({
+          unsubscribed: true,
+          unsubscribedAt: new Date(),
+          updatedAt: new Date(),
+        }).where(eq(people.id, person.id));
+      }
     }
 
     // Task 1: unsubscribe/resubscribe flipam flag dedicada em people.
