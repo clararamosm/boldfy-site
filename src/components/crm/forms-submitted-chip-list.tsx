@@ -14,6 +14,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { FormTagIcon, iconKeyForFormSlug } from './form-tag-icon';
 
 type Props = {
   /** Array de slugs (people.forms_submitted ou agregado de companies). */
@@ -29,25 +30,29 @@ type Props = {
   title?: string;
 };
 
-const SLUG_DISPLAY: Record<string, { emoji: string; label: string }> = {
-  report: { emoji: '📥', label: 'Report' },
-  beta: { emoji: '🧪', label: 'Beta' },
-  demo: { emoji: '🎯', label: 'Demo' },
-  proposta: { emoji: '💼', label: 'Proposta' },
-  linkedin_extension: { emoji: '🔗', label: 'LinkedIn' },
+// Label legível por slug. Slugs espelham people.forms_submitted (= FormSlug).
+// O ÍCONE vem de iconKeyForFormSlug (um por tipo); aqui só o texto.
+const SLUG_LABELS: Record<string, string> = {
+  'algoritmo-linkedin': 'Algoritmo LinkedIn',
+  'case-semrush': 'Case Semrush',
+  'playbook-employee-led-growth': 'Playbook',
+  beta: 'Beta',
+  demo: 'Demo',
+  proposta: 'Proposta',
+  linkedin_extension: 'LinkedIn',
 };
 
 export function FormsSubmittedChipList({
   formsSubmitted,
   withCard = true,
-  title = '📋 Formulários preenchidos',
+  title = 'Formulários preenchidos',
 }: Props): ReactNode {
   if (!formsSubmitted || formsSubmitted.length === 0) return null;
 
   const chips = (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
       {formsSubmitted.map((slug) => {
-        const meta = SLUG_DISPLAY[slug] ?? { emoji: '📄', label: slug };
+        const label = SLUG_LABELS[slug] ?? slug;
         return (
           <a
             key={slug}
@@ -64,10 +69,10 @@ export function FormsSubmittedChipList({
               fontWeight: 700,
               textDecoration: 'none',
             }}
-            title={`Ver registro do form ${meta.label} na timeline`}
+            title={`Ver registro do form ${label} na timeline`}
           >
-            <span>{meta.emoji}</span>
-            <span>{meta.label}</span>
+            <FormTagIcon name={iconKeyForFormSlug(slug)} size={12} />
+            <span>{label}</span>
           </a>
         );
       })}

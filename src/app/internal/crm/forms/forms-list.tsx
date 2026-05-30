@@ -11,10 +11,11 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import type { PersonRow, FormType } from './shared';
+import type { PersonRow } from './shared';
 import { FORM_LABELS } from './shared';
 import { timeAgo, formatDateTime, channelLabel } from '@/lib/crm-format';
 import { useColumnPicker, type ColumnDef } from '@/components/crm/column-picker';
+import { FormTagIcon, iconKeyForFormType } from '@/components/crm/form-tag-icon';
 
 // Spec §2: "default fields visíveis: name, email, phone, jobTitle. Campos
 // opcionais ativáveis na visualização (column picker)". Defaults abaixo
@@ -48,14 +49,6 @@ type Props = {
   totalPeople: number;
   totalPages: number;
   currentPage: number;
-};
-
-const FORM_EMOJI: Record<FormType, string> = {
-  form_submit_demo: '🎯',
-  form_submit_beta: '🧪',
-  form_submit_algoritmo_linkedin: '📥',
-  form_submit_case_semrush: '📑',
-  form_submit_proposta: '💼',
 };
 
 /**
@@ -231,7 +224,7 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                         {row.forms.map((f) => (
                           <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(205, 80, 241, 0.1)', color: '#CD50F1', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
-                            <span>{FORM_EMOJI[f]}</span>
+                            <FormTagIcon name={iconKeyForFormType(f)} size={12} />
                             {FORM_LABELS[f]}
                           </span>
                         ))}

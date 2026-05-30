@@ -13,6 +13,7 @@
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
 import type { FormType } from './shared';
+import { FormTagIcon, type FormTagIconKey } from '@/components/crm/form-tag-icon';
 
 type Props = {
   statuses: Array<{ id: string; label: string; color: string | null }>;
@@ -38,13 +39,22 @@ const SEGMENTS = [
 
 const PAGE_SIZES = [20, 50, 100] as const;
 
-const FORM_CHIPS: Array<{ value: 'all' | FormType; emoji: string; label: string }> = [
-  { value: 'all', emoji: '👥', label: 'Todos' },
-  { value: 'form_submit_demo', emoji: '🎯', label: 'Demo' },
-  { value: 'form_submit_beta', emoji: '🧪', label: 'Beta' },
-  { value: 'form_submit_algoritmo_linkedin', emoji: '📥', label: 'Algoritmo LinkedIn' },
-  { value: 'form_submit_case_semrush', emoji: '📑', label: 'Case Semrush' },
-  { value: 'form_submit_proposta', emoji: '💼', label: 'Proposta' },
+type FormChip = { value: 'all' | FormType; icon: FormTagIconKey; label: string };
+
+// Linha 1 — formulários gerais do site (produto/marcação, não material).
+const GENERAL_CHIPS: FormChip[] = [
+  { value: 'all', icon: 'all', label: 'Todos' },
+  { value: 'form_submit_demo', icon: 'demo', label: 'Demo' },
+  { value: 'form_submit_beta', icon: 'beta', label: 'Beta' },
+  { value: 'form_submit_proposta', icon: 'proposta', label: 'Proposta' },
+];
+
+// Linha 2 — materiais ricos e ferramentas. Materiais (Algoritmo, Semrush)
+// compartilham o ícone de material; Playbook usa o de ferramenta.
+const MATERIAL_CHIPS: FormChip[] = [
+  { value: 'form_submit_algoritmo_linkedin', icon: 'material', label: 'Algoritmo LinkedIn' },
+  { value: 'form_submit_case_semrush', icon: 'material', label: 'Case Semrush' },
+  { value: 'form_submit_playbook_employee_led_growth', icon: 'ferramenta', label: 'Playbook' },
 ];
 
 export function FormsFilters({ statuses, channels, pages, countsByForm }: Props) {
@@ -98,47 +108,70 @@ export function FormsFilters({ statuses, channels, pages, countsByForm }: Props)
     display: 'block',
   };
 
+  const renderChip = (chip: FormChip) => {
+    const isActive = currentFormType === chip.value;
+    const count = chip.value === 'all'
+      ? Object.values(countsByForm).reduce((s, n) => s + n, 0) // não bate exato com totalPeople (pessoa em N forms conta N), só pra dar ordem de grandeza
+      : countsByForm[chip.value as FormType];
+    return (
+      <button
+        key={chip.value}
+        type="button"
+        onClick={() => updateParam('formType', chip.value)}
+        disabled={pending}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '6px 12px',
+          borderRadius: 999,
+          border: isActive ? '1px solid #CD50F1' : '1px solid #E4D8ED',
+          background: isActive ? 'rgba(205, 80, 241, 0.12)' : '#FFFFFF',
+          color: isActive ? '#CD50F1' : '#45336B',
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: pending ? 'progress' : 'pointer',
+          fontFamily: 'inherit',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        <FormTagIcon name={chip.icon} />
+        <span>{chip.label}</span>
+        {chip.value !== 'all' ? (
+          <span style={{ padding: '1px 6px', background: isActive ? '#CD50F1' : '#FAF7FF', color: isActive ? '#FFFFFF' : '#9D85B3', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>
+            {count}
+          </span>
+        ) : null}
+      </button>
+    );
+  };
+
+  const groupLabelStyle: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#9D85B3',
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    marginBottom: 6,
+    display: 'block',
+  };
+
   return (
     <div style={{ marginBottom: 16, padding: 14, background: '#FFFFFF', border: '1px solid #E4D8ED', borderRadius: 12 }}>
-      {/* Chips de form acima */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #F0E5F8' }}>
-        {FORM_CHIPS.map((chip) => {
-          const isActive = currentFormType === chip.value;
-          const count = chip.value === 'all'
-            ? Object.values(countsByForm).reduce((s, n) => s + n, 0) // não bate exato com totalPeople (pessoa em N forms conta N), só pra dar ordem de grandeza
-            : countsByForm[chip.value as FormType];
-          return (
-            <button
-              key={chip.value}
-              type="button"
-              onClick={() => updateParam('formType', chip.value)}
-              disabled={pending}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 999,
-                border: isActive ? '1px solid #CD50F1' : '1px solid #E4D8ED',
-                background: isActive ? 'rgba(205, 80, 241, 0.12)' : '#FFFFFF',
-                color: isActive ? '#CD50F1' : '#45336B',
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: pending ? 'progress' : 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span>{chip.emoji}</span>
-              <span>{chip.label}</span>
-              {chip.value !== 'all' ? (
-                <span style={{ padding: '1px 6px', background: isActive ? '#CD50F1' : '#FAF7FF', color: isActive ? '#FFFFFF' : '#9D85B3', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>
-                  {count}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
+      {/* Chips de form — 2 linhas: gerais + materiais/ferramentas */}
+      <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #F0E5F8' }}>
+        <div style={{ marginBottom: 12 }}>
+          <span style={groupLabelStyle}>Formulários gerais</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {GENERAL_CHIPS.map(renderChip)}
+          </div>
+        </div>
+        <div>
+          <span style={groupLabelStyle}>Materiais e ferramentas</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {MATERIAL_CHIPS.map(renderChip)}
+          </div>
+        </div>
       </div>
 
       {/* Filtros (selects) */}
