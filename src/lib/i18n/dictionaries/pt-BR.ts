@@ -819,7 +819,7 @@ const ptBR = {
     cluster3Card2Title: 'LinkedIn Feed integrado',
     cluster3Card2Desc: 'Feed do LinkedIn dentro do app. Curadoria e inspiração sem sair da Boldfy.',
     cluster3Card3Title: 'Dashboard de performance',
-    cluster3Card3Desc: 'Impressões, engajamento e valor em earned media que o time gerou no mês. Consolidado pro admin, individual pro colaborador.',
+    cluster3Card3Desc: 'Impressões, engajamento e valor equivalente em mídia paga que o time gerou no mês. Consolidado pro admin, individual pro colaborador.',
     cluster3Card4Title: 'LinkedIn Leads',
     cluster3Card4Desc: 'Listas qualificadas de quem engajou com os posts do time, prontas pra remarketing ou abordagem.',
     // Cluster 3 mockup labels (stats card compacto)
@@ -829,7 +829,7 @@ const ptBR = {
     cluster3MockupKpi1Value: '214k',
     cluster3MockupKpi2Label: 'Engajamento',
     cluster3MockupKpi2Value: '13.2k',
-    cluster3MockupKpi3Label: 'Valor em earned media',
+    cluster3MockupKpi3Label: 'Valor equiv. em mídia paga',
     cluster3MockupKpi3Value: 'R$ 64k',
     cluster3MockupLeadsLabel: 'Novos LinkedIn Leads',
     cluster3MockupLeadsValue: '142',
@@ -854,7 +854,7 @@ const ptBR = {
     togetherSaasItem1: 'Colaboradores criam com IA contextual',
     togetherSaasItem2: 'Gamificação segura o hábito',
     togetherSaasItem3: 'Trilhas desenvolvem mindset',
-    togetherSaasItem4: 'Dashboard mede em earned media',
+    togetherSaasItem4: 'Dashboard mede em valor equivalente em mídia paga',
     togetherCaasLabel: 'Serviço (CaaS)',
     togetherCaasTitle: 'A gente opera ao lado',
     togetherCaasItem1: 'Modo Design · peças gráficas pra biblioteca',
@@ -1006,7 +1006,7 @@ const ptBR = {
     togetherSaasItem1: 'Colaboradores criam com IA contextual',
     togetherSaasItem2: 'Gamificação segura o hábito',
     togetherSaasItem3: 'Trilhas desenvolvem mindset',
-    togetherSaasItem4: 'Dashboard mede em earned media',
+    togetherSaasItem4: 'Dashboard mede em valor equivalente em mídia paga',
     togetherCtaSaas: 'Conhecer Software as a Service',
 
     // S6 — Ghostwriting vs Boldfy (tabela comparativa)

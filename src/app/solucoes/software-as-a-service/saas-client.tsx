@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { trackEvent } from '@/lib/track';
 import { BattleCardTrigger } from '@/components/battle-card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -162,15 +163,25 @@ export default function SaasPageClient() {
   const c = t.solucoesSaas;
 
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const toggleFaq = (i: number) =>
-    setFaqOpen((prev) => (prev === i ? null : i));
+  const toggleFaq = (i: number, question: string) => {
+    setFaqOpen((prev) => {
+      if (prev !== i) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return i;
+      }
+      return null;
+    });
+  };
 
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#FAF6FF]">
       {/* ============================================================ */}
       {/*  S1 — HERO                                                    */}
       {/* ============================================================ */}
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative flex min-h-[90vh] items-center px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-150px] top-[-10%] h-[700px] w-[700px] opacity-[0.12]" />
         <Glow
           className="bottom-[-100px] left-[-50px] h-[500px] w-[500px] opacity-[0.10]"
@@ -337,7 +348,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S2 — PROBLEMAS & SOLUÇÕES (wide-frame workflow)              */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]"
           color="bg-[#E875FF]"
@@ -506,7 +517,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S3 — CLUSTER 1: Criação de conteúdo                           */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.09]" />
 
         <div className="relative z-10 mx-auto max-w-[1280px]">
@@ -696,7 +707,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S4 — CLUSTER 2: Engajamento e Desenvolvimento                */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]"
           color="bg-[#E875FF]"
@@ -843,7 +854,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S5 — CLUSTER 3: LinkedIn e Métricas                          */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] bottom-0 h-[600px] w-[600px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto max-w-[1280px]">
@@ -987,7 +998,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S6 — ESTRATEGISTA DE CONTA (blocked with features)           */}
       {/* ============================================================ */}
-      <section className="relative bg-background px-6 py-16 md:px-12 md:py-20">
+      <section className="relative px-4 py-16 sm:px-6 lg:px-8 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <div className="grid grid-cols-1 items-stretch gap-5 rounded-[22px] border border-border bg-card p-5 shadow-[0_12px_36px_rgba(205,80,241,0.06)] lg:grid-cols-[1fr_1.3fr] lg:p-6">
             {/* Header com título e corpo */}
@@ -1031,7 +1042,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S7 — SAAS + CAAS TRABALHANDO JUNTOS                          */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]"
           color="bg-[#5E2A67]"
@@ -1165,7 +1176,7 @@ export default function SaasPageClient() {
       {/* ============================================================ */}
       {/*  S8 — FAQ                                                     */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 pb-20 pt-24 md:px-12">
+      <section className="relative px-4 pb-20 pt-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.08]" />
         <GridPattern />
 
@@ -1201,7 +1212,7 @@ export default function SaasPageClient() {
                 key={faq.q}
                 question={faq.q}
                 isOpen={faqOpen === i}
-                onToggle={() => toggleFaq(i)}
+                onToggle={() => toggleFaq(i, faq.q)}
               >
                 {faq.answer}
               </FaqItem>
@@ -1209,6 +1220,6 @@ export default function SaasPageClient() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
