@@ -774,8 +774,8 @@ export function MarketingClient() {
             </div>
 
             {/* CaaS card */}
-            <div className="flex flex-col rounded-3xl border border-border bg-card p-9 transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/35 hover:shadow-[0_20px_48px_rgba(249,115,22,0.14)]">
-              <span className="mb-[22px] inline-flex items-center gap-2 self-start rounded-full border border-orange-500/25 bg-orange-500/[0.08] px-3.5 py-[7px] text-[11px] font-bold uppercase tracking-[0.12em] text-orange-500">
+            <div className="flex flex-col rounded-3xl border border-border bg-card p-9 transition-all duration-300 hover:-translate-y-1 hover:border-[#5E2A67]/35 hover:shadow-[0_20px_48px_rgba(94,42,103,0.16)]">
+              <span className="mb-[22px] inline-flex items-center gap-2 self-start rounded-full border border-[#5E2A67]/25 bg-[#5E2A67]/[0.08] px-3.5 py-[7px] text-[11px] font-bold uppercase tracking-[0.12em] text-[#5E2A67]">
                 <PenTool className="h-[13px] w-[13px]" />
                 {c.cam2Tag}
               </span>

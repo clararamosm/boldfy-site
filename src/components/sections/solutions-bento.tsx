@@ -103,7 +103,7 @@ function VisualProducao() {
       icon: Palette,
       title: 'Design',
       sub: 'Peças sob demanda',
-      iconBg: 'bg-amber-400/15 text-amber-500',
+      iconBg: 'bg-[#9840AD]/12 text-[#9840AD]',
     },
     {
       icon: MessageSquare,
