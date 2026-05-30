@@ -519,7 +519,7 @@ export function CaasClient() {
             {/*  Mode 2 — Ativação executiva (mini-interface)   */}
             {/* =============================================== */}
             <div
-              className="group boldfy-service-glow relative flex flex-col rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
+              className="group relative flex flex-col overflow-hidden rounded-[20px] border-2 p-7 shadow-[0_12px_32px_rgba(94,42,103,0.14)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_48px_rgba(94,42,103,0.2)]"
               style={{
                 borderColor: CAAS_ACCENT,
                 backgroundImage: `linear-gradient(135deg, rgba(94,42,103,0.06) 0%, rgba(152,64,173,0.03) 100%)`,
@@ -680,7 +680,21 @@ export function CaasClient() {
 
         <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mb-10 max-w-[820px]">
-            <PreTag>{c.designTag}</PreTag>
+            <div className="mb-5 flex flex-wrap items-center gap-2.5">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                style={{ backgroundColor: CAAS_ACCENT }}
+              >
+                <Palette className="h-3 w-3" />
+                {c.mode1Tag}
+              </span>
+              <span
+                className="inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
+                style={{ borderColor: CAAS_ACCENT, color: CAAS_ACCENT }}
+              >
+                {c.mode1Title}
+              </span>
+            </div>
             <SectionHeading title={c.designTitle} highlight={c.designTitleHighlight} className="mb-5" />
             <p className="text-[15px] leading-[1.65] text-muted-foreground">{c.designBody}</p>
           </div>
@@ -857,7 +871,21 @@ export function CaasClient() {
           <div className="mb-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1fr]">
             {/* Texto */}
             <div>
-              <PreTag>{c.execTag}</PreTag>
+              <div className="mb-5 flex flex-wrap items-center gap-2.5">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                >
+                  <Mic className="h-3 w-3" />
+                  {c.mode2Tag}
+                </span>
+                <span
+                  className="inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em]"
+                  style={{ borderColor: CAAS_ACCENT, color: CAAS_ACCENT }}
+                >
+                  {c.mode2Title}
+                </span>
+              </div>
               <SectionHeading title={c.execTitle} highlight={c.execTitleHighlight} className="mb-5" />
               <p className="text-[15px] leading-[1.65] text-muted-foreground">{c.execBody}</p>
             </div>
@@ -1021,9 +1049,8 @@ export function CaasClient() {
           <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-[1fr_auto_1fr]">
             {/* CaaS column (prioridade, fica à esquerda) */}
             <div
-              className="flex flex-col rounded-[20px] border p-5 shadow-[0_12px_32px_rgba(94,42,103,0.1)] lg:p-6"
+              className="boldfy-service-glow flex flex-col rounded-[20px] p-5 shadow-[0_12px_32px_rgba(94,42,103,0.1)] lg:p-6"
               style={{
-                borderColor: CAAS_ACCENT,
                 backgroundImage:
                   'linear-gradient(135deg, rgba(94,42,103,0.04) 0%, rgba(152,64,173,0.02) 100%)',
               }}
