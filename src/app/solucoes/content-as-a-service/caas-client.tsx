@@ -747,7 +747,10 @@ export function CaasClient() {
               <div
                 className="pointer-events-none absolute top-1/2 hidden h-[2px] -translate-y-1/2 md:block"
                 style={{
-                  left: 'calc(0.283 * (100% - 64px))',
+                  // Começa DENTRO da coluna 1 (escondida atrás dos cards 1/2) e
+                  // só aparece na borda direita deles — assim a linha "começa
+                  // onde o card termina", sem vão. Termina na origem do leque.
+                  left: 'calc(0.15 * (100% - 64px))',
                   right: 'calc(0.151 * (100% - 64px))',
                   backgroundImage:
                     'repeating-linear-gradient(90deg, rgba(94,42,103,0.45) 0 4px, transparent 4px 10px)',
