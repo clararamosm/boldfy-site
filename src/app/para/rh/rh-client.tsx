@@ -21,6 +21,9 @@ import {
   PenTool,
   ChevronDown,
   Search,
+  Gift,
+  Sparkles,
+  Star,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -215,25 +218,25 @@ export function RhClient() {
               />
             </div>
 
-            {/* Mini floating card — Candidaturas Inbound */}
+            {/* Mini floating card — Cultura no feed */}
             <div className="absolute -bottom-[30px] -right-[20px] z-20 w-[290px] rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(59,130,246,0.15)]">
               <div className="mb-3.5 flex items-center gap-3">
                 <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-blue-500/[0.12] text-blue-500">
-                  <UserCheck className="h-[19px] w-[19px]" />
+                  <Eye className="h-[19px] w-[19px]" />
                 </div>
                 <div>
                   <div className="font-headline text-[13px] font-black text-accent-foreground">
-                    Candidaturas Inbound
+                    Cultura no feed
                   </div>
                   <div className="text-[10px] text-muted-foreground">
-                    vaga: Product Designer Sr
+                    time postando esta semana
                   </div>
                 </div>
               </div>
               {[
-                { name: 'Mariana S.', via: 'via post Carla' },
-                { name: 'João P.', via: 'via post Rafa' },
-                { name: 'Bia M.', via: 'via post Carla' },
+                { name: 'Carla S.', what: 'um dia no time' },
+                { name: 'Rafa M.', what: 'bastidor do projeto' },
+                { name: 'Bia P.', what: 'por que eu fico' },
               ].map((row) => (
                 <div
                   key={row.name}
@@ -243,16 +246,16 @@ export function RhClient() {
                     {row.name}
                   </span>
                   <span className="rounded-full bg-blue-500/[0.12] px-2 py-0.5 text-[9px] font-bold text-blue-500">
-                    {row.via}
+                    {row.what}
                   </span>
                 </div>
               ))}
               <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2.5">
                 <div className="font-headline text-[22px] font-black leading-none text-blue-500">
-                  12
+                  48k
                 </div>
                 <div className="text-right text-[10px] leading-[1.3] text-muted-foreground">
-                  candidaturas qualificadas
+                  pessoas alcançadas
                   <br />
                   esta semana
                 </div>
@@ -491,7 +494,7 @@ export function RhClient() {
               {[
                 { num: 1, icon: Heart, title: c.virada1Title, desc: c.virada1Desc },
                 { num: 2, icon: UserCheck, title: c.virada2Title, desc: c.virada2Desc },
-                { num: 3, icon: DollarSign, title: c.virada3Title, desc: c.virada3Desc },
+                { num: 3, icon: Users, title: c.virada3Title, desc: c.virada3Desc },
                 { num: 4, icon: Award, title: c.virada4Title, desc: c.virada4Desc },
               ].map((card) => (
                 <div
@@ -517,6 +520,82 @@ export function RhClient() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  S4b — VITRINE DE RECOMPENSAS                                 */}
+      {/* ============================================================ */}
+      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+        <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.07]" />
+
+        <div className="relative z-10 mx-auto max-w-[1100px]">
+          <div className="mb-9 max-w-[760px]">
+            <PreTag>{c.rewTag}</PreTag>
+            <SectionHeading
+              title={c.rewTitle}
+              highlight={c.rewTitleHighlight}
+              className="mb-4"
+            />
+            <p className="text-[15px] leading-[1.6] text-muted-foreground">
+              {c.rewIntro}
+            </p>
+          </div>
+
+          {/* Store mock */}
+          <div className="rounded-[20px] border border-border bg-card p-5 shadow-[0_20px_50px_rgba(59,130,246,0.06)] md:p-7">
+            {/* faux tabs */}
+            <div className="mb-6 inline-flex gap-1 rounded-xl bg-accent-foreground/[0.04] p-1 text-[12px] font-semibold">
+              <span className="rounded-lg bg-card px-3 py-1.5 text-accent-foreground shadow-sm">
+                {c.rewStoreTab1}
+              </span>
+              <span className="px-3 py-1.5 text-muted-foreground">{c.rewStoreTab2}</span>
+              <span className="px-3 py-1.5 text-muted-foreground">{c.rewStoreTab3}</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: Sparkles, name: c.rew1Name, desc: c.rew1Desc, badge: c.rew1Badge, pts: '100' },
+                { icon: Gift, name: c.rew2Name, desc: c.rew2Desc, badge: c.rew2Badge, pts: '2.000' },
+                { icon: Clock, name: c.rew3Name, desc: c.rew3Desc, badge: c.rew3Badge, pts: '3.000' },
+                { icon: Heart, name: c.rew4Name, desc: c.rew4Desc, badge: c.rew4Badge, pts: '2.500' },
+                { icon: Award, name: c.rew5Name, desc: c.rew5Desc, badge: c.rew5Badge, pts: '1.500' },
+                { icon: Users, name: c.rew6Name, desc: c.rew6Desc, badge: c.rew6Badge, pts: '4.000' },
+              ].map((r) => (
+                <div
+                  key={r.name}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background"
+                >
+                  <div className="flex h-[78px] items-center justify-center bg-gradient-to-b from-blue-500/[0.10] to-transparent">
+                    <r.icon className="h-7 w-7 text-blue-500" />
+                  </div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <div className="font-headline text-[15px] font-black leading-tight text-accent-foreground">
+                      {r.name}
+                    </div>
+                    <div className="mt-1 text-[11px] leading-snug text-muted-foreground">
+                      {r.desc}
+                    </div>
+                    <span className="mt-2.5 inline-flex self-start rounded-full bg-blue-500/[0.12] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600">
+                      {r.badge}
+                    </span>
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-primary">
+                        <Star className="h-3 w-3 fill-current" />
+                        {r.pts}
+                      </span>
+                      <span className="text-[11px] font-bold text-blue-600">{c.rewCta}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-6 flex items-start gap-2 rounded-xl border border-blue-500/20 bg-blue-500/[0.05] px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+              {c.rewFootnote}
+            </p>
           </div>
         </div>
       </section>
@@ -715,6 +794,7 @@ export function RhClient() {
               { q: c.faq3Q, a: c.faq3A },
               { q: c.faq4Q, a: c.faq4A },
               { q: c.faq5Q, a: c.faq5A },
+              { q: c.faq6Q, a: c.faq6A },
             ].map((faq, i) => (
               <FaqItem
                 key={faq.q}
