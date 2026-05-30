@@ -727,10 +727,10 @@ export const SETOR_APLICACAO: Record<'marketing' | 'vendas' | 'rh', SetorAplicac
     // vivida. Talento sênior pesquisa AMBOS antes de aplicar.
     titulo: 'Distribua a cultura entre Company Page e perfis pra atrair talento sênior',
     dicas: [
-      'Cultura é conteúdo premium no LinkedIn — divida em camadas: Company Page fala "como somos", perfis dos colaboradores mostram "como vivo isso"',
-      'Conteúdo dos colaboradores mistura autoridade técnica + bastidor + cultura vivida (não só uma das três)',
-      'Pilares culturais saem do mesmo Brand Context que Marketing usa — narrativa de empresa e perfis batem',
-      'Talento sênior pesquisa pessoas E empresa antes de aplicar — precisa achar os dois falando',
+      'Cultura é conteúdo premium no LinkedIn, divida em camadas: Company Page fala "como somos", perfis dos colaboradores mostram "como vivo isso"',
+      'Conteúdo dos colaboradores mistura autoridade técnica, bastidor e cultura vivida (não só uma das três)',
+      'Pilares culturais saem do mesmo Brand Context que Marketing usa, narrativa de empresa e perfis batem',
+      'Talento sênior pesquisa pessoas E empresa antes de aplicar. Precisa achar os dois falando',
     ],
   },
 };

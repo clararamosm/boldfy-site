@@ -205,7 +205,7 @@ function CurvaTabela({ porte, faixaLabel }: { porte: number; faixaLabel: string 
           <div key={r.label} className={`contents ${r.match ? 'bg-primary/5' : ''}`}>
             <div className={`px-4 py-3 text-sm ${r.match ? 'font-bold text-primary' : 'text-foreground'}`}>
               {r.label}
-              {r.match && <span className="ml-2 text-xs font-semibold text-primary/70">({faixaLabel} — você está aqui)</span>}
+              {r.match && <span className="ml-2 text-xs font-semibold text-primary/70">({faixaLabel}, você está aqui)</span>}
             </div>
             <div className={`px-4 py-3 text-sm tabular-nums ${r.match ? 'font-bold text-primary' : 'text-foreground'}`}>
               {r.percent}

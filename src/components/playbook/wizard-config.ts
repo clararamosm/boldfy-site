@@ -147,7 +147,7 @@ export const QUESTIONS = {
   // P7 — tentativas anteriores
   tentativasAnteriores: {
     n: 6,
-    faiSay: 'Histórico importa — vou contornar erros se houver.',
+    faiSay: 'Histórico importa, vou contornar erros se houver.',
     title: 'Vocês já tentaram algum programa de advocacy antes?',
     sub: '',
     options: [
@@ -197,12 +197,12 @@ export const QUESTIONS = {
   // P11 — sponsorship/Full Content reformulada (mai/2026)
   sponsorshipLideranca: {
     n: 9,
-    faiSay: 'Última pergunta — sobre suas lideranças.',
+    faiSay: 'Última pergunta, sobre suas lideranças.',
     title: 'Sua liderança (C-level, founder) tem interesse em fazer parte do programa?',
     sub: 'Se sim, isso muda o caminho da Boldfy pra vocês.',
     options: [
-      { v: 'sim_proprio', label: 'Sim — toparia postar do próprio perfil regularmente' },
-      { v: 'sim_full_content', label: 'Sim — mas só se alguém produzisse o conteúdo por ela' },
+      { v: 'sim_proprio', label: 'Sim, toparia postar do próprio perfil regularmente' },
+      { v: 'sim_full_content', label: 'Sim, mas só se alguém produzisse o conteúdo por ela' },
       { v: 'nao_foco', label: 'Não é o foco agora' },
     ] satisfies Array<ChoiceOption<SponsorshipValue>>,
   },
@@ -213,7 +213,7 @@ export const QUESTIONS = {
   // Faixas largas pra reduzir fricção; midpoint é calculado no render.
   gastoMensalAds: {
     n: 9, // opcional, não conta como obrigatória — fica no mesmo nº da P9
-    faiSay: 'Bônus opcional — vai me ajudar a desenhar um gráfico exclusivo pra vocês.',
+    faiSay: 'Bônus opcional. Vai me ajudar a desenhar um gráfico exclusivo pra vocês.',
     title: 'Quanto vocês investem em ads por mês hoje?',
     sub: 'Vou comparar com o cenário de Employee-Led Growth no seu playbook. Se preferir não dizer, pula pro próximo.',
     options: [
@@ -229,7 +229,7 @@ export const QUESTIONS = {
   // Aberta opcional
   observacoesLivres: {
     n: 9, // pergunta opcional, não conta como obrigatória
-    faiSay: 'Antes da identificação, uma livre — pode pular se preferir.',
+    faiSay: 'Antes da identificação, uma livre, pode pular se preferir.',
     title: 'Tem alguma dor específica que não cobrimos?',
     sub: 'Conta o que tá te incomodando, vou incorporar no plano.',
     placeholder: 'Ex: nosso time é muito técnico e resiste a expor opinião pública...',
