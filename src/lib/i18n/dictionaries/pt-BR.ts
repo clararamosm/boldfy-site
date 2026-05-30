@@ -821,7 +821,7 @@ const ptBR = {
     cluster3Card3Title: 'Dashboard de performance',
     cluster3Card3Desc: 'Impressões, engajamento e valor equivalente em mídia paga que o time gerou no mês. Consolidado pro admin, individual pro colaborador.',
     cluster3Card4Title: 'LinkedIn Leads',
-    cluster3Card4Desc: 'Listas qualificadas de quem engajou com os posts do time, prontas pra remarketing ou abordagem.',
+    cluster3Card4Desc: 'Em breve · listas de quem engajou (curtidas e comentários) com os posts do time, pra remarketing ou abordagem.',
     // Cluster 3 mockup labels (stats card compacto)
     cluster3MockupHeader: 'Performance do time',
     cluster3MockupPeriod: 'Últimos 30 dias',

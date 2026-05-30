@@ -931,6 +931,9 @@ export default function SaasPageClient() {
                       +{c.cluster3MockupLeadsValue}
                     </div>
                   </div>
+                  <span className="shrink-0 self-start rounded-full bg-primary/[0.10] px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
+                    Em breve
+                  </span>
                 </div>
 
                 <div className="space-y-1.5">

@@ -247,12 +247,12 @@ export function VendasClient() {
                 <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.2)]" />
               </div>
               <div className="mb-1.5 flex items-center gap-2 rounded-[9px] bg-amber-500/[0.14] px-3 py-2 text-[11px] font-semibold text-amber-700">
-                <Eye className="h-3.5 w-3.5 shrink-0" />
-                Viu seu post sobre GTM B2B
+                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                Comentou no seu post sobre GTM B2B
               </div>
               <div className="mb-1.5 flex items-center gap-2 rounded-[9px] bg-amber-500/[0.14] px-3 py-2 text-[11px] font-semibold text-amber-700">
                 <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
-                Salvou o post
+                Começou a te seguir
               </div>
               <div className="text-right text-[10px] italic text-muted-foreground">
                 há 2 minutos
