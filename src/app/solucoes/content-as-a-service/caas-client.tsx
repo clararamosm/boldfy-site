@@ -312,7 +312,7 @@ export function CaasClient() {
                 Meet tile 1 — CEO (ESQUERDA, cola no calendário)
                 Fica parcialmente sobre o lado esquerdo do calendário
                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            <div className="absolute left-[-18px] top-[60px] z-30 w-[200px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[220px]">
+            <div className="absolute left-[-34px] top-[28px] z-30 w-[190px] animate-hero-float overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[205px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-ceo.jpeg"
@@ -342,7 +342,7 @@ export function CaasClient() {
                 Fica parcialmente sobre o lado direito do calendário,
                 um pouco mais embaixo criando rítmo visual
                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-            <div className="absolute right-[-18px] top-[230px] z-30 w-[200px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[220px]">
+            <div className="absolute right-[-34px] top-[336px] z-30 w-[190px] animate-hero-float-reverse overflow-hidden rounded-[14px] border-2 border-white bg-[#0F0A18] shadow-[0_20px_50px_rgba(94,42,103,0.32)] lg:w-[205px]">
               <div className="relative aspect-[4/3] w-full">
                 <Image
                   src="/images/solucoes-caas-hero-estrategista.jpeg"
@@ -374,7 +374,7 @@ export function CaasClient() {
                 Posicionado no topo-direita do calendário, sobrepondo
                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
             <div
-              className="absolute right-[10px] top-[10px] z-40 w-[220px] rounded-[12px] bg-card p-3"
+              className="absolute right-[-20px] top-[-10px] z-40 w-[210px] rounded-[12px] bg-card p-3"
               style={{ boxShadow: '0 16px 40px rgba(15,10,24,0.2), 0 0 0 1px rgba(94,42,103,0.25)' }}
             >
               <div className="flex items-center gap-2.5">
@@ -828,7 +828,7 @@ export function CaasClient() {
                   ].map((p) => (
                     <div
                       key={p.avatar}
-                      className="absolute right-0 h-9 w-9 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-background shadow-[0_6px_16px_rgba(94,42,103,0.2)]"
+                      className="absolute right-0 h-9 w-9 -translate-y-1/2 overflow-hidden rounded-full border-[3px] border-background shadow-[0_6px_16px_rgba(94,42,103,0.2)] transition-all duration-300 hover:z-20 hover:scale-[1.18] hover:border-[#8E4FB0] hover:shadow-[0_12px_28px_rgba(94,42,103,0.4)]"
                       style={{ top: p.top }}
                     >
                       <Image
