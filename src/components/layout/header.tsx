@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
+import { Menu, X, ChevronDown, ArrowRight, Sparkles, Mic, type LucideIcon } from 'lucide-react';
 import { LogoFull } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 
@@ -17,7 +17,7 @@ import { useDemoPopup } from '@/components/forms/demo-popup';
 interface NavItem {
   label: string;
   href: string;
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; icon?: LucideIcon; iconClass?: string }[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -105,6 +105,7 @@ function DesktopDropdown({
               'transition-colors duration-150',
             )}
           >
+            {child.icon && <child.icon className={cn('h-4 w-4 shrink-0', child.iconClass)} />}
             {child.label}
           </Link>
         ))}
@@ -219,11 +220,12 @@ function MobileMenu({
                             href={child.href}
                             onClick={onClose}
                             className={cn(
-                              'block rounded-md py-2 pl-7 pr-3 text-sm',
+                              'flex items-center gap-2 rounded-md py-2 pl-7 pr-3 text-sm',
                               'text-foreground/60 hover:bg-accent hover:text-foreground',
                               'transition-colors duration-150',
                             )}
                           >
+                            {child.icon && <child.icon className={cn('h-4 w-4 shrink-0', child.iconClass)} />}
                             {child.label}
                           </Link>
                         </li>
@@ -278,8 +280,8 @@ export function Header() {
       label: t.nav.solucoes,
       href: '#',
       children: [
-        { label: t.nav.plataforma, href: '/solucoes/software-as-a-service' },
-        { label: t.nav.servico, href: '/solucoes/content-as-a-service' },
+        { label: t.nav.plataforma, href: '/solucoes/software-as-a-service', icon: Sparkles, iconClass: 'text-primary' },
+        { label: t.nav.servico, href: '/solucoes/content-as-a-service', icon: Mic, iconClass: 'text-[#5E2A67]' },
       ],
     },
     {
