@@ -860,7 +860,7 @@ const ptBR = {
     togetherCaasItem1: 'Modo Design · peças gráficas pra biblioteca',
     togetherCaasItem2: 'Modo Executivo · ativação completa de Thought Leaders',
     togetherCaasItem3: 'Estrategista produz + publica + mede',
-    togetherCaasItem4: 'Report trimestral exclusivo do Modo Executivo',
+    togetherCaasItem4: 'Mesmo dashboard da plataforma, medindo em valor equivalente em mídia paga',
     togetherCtaCaas: 'Conhecer Content as a Service',
 
     // S8 — FAQ
@@ -1000,7 +1000,7 @@ const ptBR = {
     togetherCaasItem1: 'Modo Design · peças gráficas pra biblioteca',
     togetherCaasItem2: 'Modo Executivo · ativação completa de Thought Leaders',
     togetherCaasItem3: 'Estrategista produz + publica + mede',
-    togetherCaasItem4: 'Report trimestral exclusivo do Modo Executivo',
+    togetherCaasItem4: 'Mesmo dashboard da plataforma, medindo em valor equivalente em mídia paga',
     togetherSaasLabel: 'Plataforma (SaaS)',
     togetherSaasTitle: 'O time cria no self-service',
     togetherSaasItem1: 'Colaboradores criam com IA contextual',
