@@ -313,8 +313,8 @@ export function RoiSimulator({
  */
 export function RoiSimulatorSection() {
   return (
-    <section className="py-20">
-      <div className="mx-auto max-w-6xl px-6">
+    <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1280px]">
         <RoiSimulator />
       </div>
     </section>

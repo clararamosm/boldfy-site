@@ -169,7 +169,7 @@ export function SolutionsBentoSection() {
   const t = useT();
 
   return (
-    <section className="relative bg-background px-6 py-16 md:px-12 md:py-24">
+    <section className="relative px-4 py-16 sm:px-6 lg:px-8 md:py-24">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute left-[-100px] top-[-10%] h-[700px] w-[700px] rounded-full bg-primary opacity-[0.08] blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[10%] right-[-50px] h-[500px] w-[500px] rounded-full bg-[#E875FF] opacity-[0.06] blur-[120px]" />
@@ -188,7 +188,7 @@ export function SolutionsBentoSection() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl">
+      <div className="relative z-10 mx-auto max-w-[1280px]">
         {/* Header */}
         <div className="mx-auto mb-14 max-w-[1100px] text-center md:mb-16">
           <span className="mb-5 inline-block rounded-full border border-primary/20 bg-primary/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">

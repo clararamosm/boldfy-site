@@ -8,7 +8,7 @@ export function ManifestoSection() {
   return (
     <section
       id="manifesto"
-      className="relative w-full overflow-hidden px-6 py-11 md:px-12"
+      className="relative w-full overflow-hidden px-4 py-11 sm:px-6 lg:px-8"
       style={{
         background:
           'linear-gradient(180deg, #0F0A18 0%, #1A0E2E 50%, #2D1445 100%)',

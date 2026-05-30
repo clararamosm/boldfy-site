@@ -238,7 +238,7 @@ export function UseCasesSection() {
   ];
 
   return (
-    <section className="relative px-4 py-10 md:px-6 md:py-14">
+    <section className="relative px-4 py-10 sm:px-6 lg:px-8 md:py-14">
       {/* Dark container */}
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[28px] bg-gradient-to-b from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-5 py-14 shadow-[0_20px_80px_rgba(45,20,69,0.25),0_0_0_1px_rgba(205,80,241,0.08)] md:px-10 md:py-16">
         {/* Ambient glows */}

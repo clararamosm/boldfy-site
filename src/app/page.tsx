@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#F6F1FB]">
       <HeroSection />
       <ProblemSection />
       <UseCasesSection />
@@ -51,6 +51,6 @@ export default function Home() {
       <ManifestoSection />
       <FaqSection />
       <CtaFinalSection />
-    </>
+    </div>
   );
 }
