@@ -796,34 +796,8 @@ export function CaasClient() {
                     ou
                   </span>
                 </div>
-
-                {/* Conector convergente 2→1 (espelho do leque de avatares), desktop */}
-                <svg
-                  className="pointer-events-none absolute right-[-10px] top-0 hidden h-full w-[32px] md:block"
-                  viewBox="0 0 100 100"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                >
-                  {[{ y: 27 }, { y: 73 }].map((p, i) => (
-                    <path
-                      key={i}
-                      d={`M 0 ${p.y} C 55 ${p.y}, 45 50, 100 50`}
-                      stroke={CAAS_ACCENT}
-                      strokeOpacity="0.4"
-                      strokeWidth="1.5"
-                      strokeDasharray="4 4"
-                      strokeLinecap="round"
-                      fill="none"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  ))}
-                </svg>
-
-                {/* Ponto de convergência — bolinha na borda direita, centro vertical */}
-                <div
-                  className="absolute right-[-12px] top-1/2 z-10 hidden h-3 w-3 -translate-y-1/2 rounded-full border-2 border-white shadow-md md:block"
-                  style={{ backgroundColor: CAAS_ACCENT }}
-                />
+                {/* Sem curvas de convergência (jun/2026, Clara): a linha reta do
+                    meio sai do "ou" e segue até o leque — só quebra lá no fim. */}
               </div>
 
               {/* Passos 2 a 4 — cards lineares (numerados 3, 4, 5) */}
