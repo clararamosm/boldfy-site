@@ -95,17 +95,17 @@ const ptBR = {
     ucVendasHeadline: 'Vendedores com autoridade digital antes da primeira abordagem',
     ucVendasDesc: 'O prospect já conhece quem vai falar com ele. Ciclo encurta, ghosting cai.',
     ucVendasBenefit1: 'Social selling estruturado com gamificação',
-    ucVendasBenefit2: 'Posts de autoridade técnica automatizados',
+    ucVendasBenefit2: 'Autoridade técnica com a IA assistindo',
     ucVendasBenefit3: 'Taxa de resposta maior em cold outreach',
     ucVendasCta: 'Ver como a Boldfy resolve',
 
     // Persona: RH
     ucRhTitle: 'Para RH',
     ucRhHeadline: 'Marca empregadora contada pelo próprio time',
-    ucRhDesc: 'Candidatura inbound qualificada que chega porque a pessoa já sabe como é trabalhar aí.',
+    ucRhDesc: 'A cultura aparece no feed pela voz de quem vive ela. Quem chega já sabe como é trabalhar aí.',
     ucRhBenefit1: 'Employer branding autêntico via EGC',
     ucRhBenefit2: 'Cultura mostrada por quem vive ela',
-    ucRhBenefit3: 'Redução de custo por contratação',
+    ucRhBenefit3: 'Time atual mais reconhecido, com efeito no turnover',
     ucRhCta: 'Ver como a Boldfy resolve',
 
     // Section 4 — Product Motion (Sistema)

@@ -71,14 +71,14 @@ function MiniRh() {
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-          Candidaturas inbound
+          Time engajado
         </p>
         <p className="font-headline text-base font-black leading-none tracking-tight text-accent-foreground">
-          12{' '}
-          <span className="text-[9px] font-bold text-blue-500">qualificadas</span>
+          18{' '}
+          <span className="text-[9px] font-bold text-blue-500">colaboradores</span>
         </p>
         <p className="text-[9px] text-muted-foreground">
-          Todas de posts de colaboradores
+          Compartilhando a cultura
         </p>
       </div>
     </div>
