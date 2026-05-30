@@ -739,13 +739,18 @@ export function CaasClient() {
 
           {/* Wrapper com grid de 5 colunas: 4 cards (1fr cada) + coluna de avatares (0.9fr) */}
           <div className="relative">
-            <div className="relative z-[2] grid grid-cols-2 items-stretch gap-3 md:grid-cols-[repeat(4,1fr)_0.9fr] md:gap-4">
-              {/* Linha conectora horizontal entre os 4 cards (não chega nos avatares) */}
+            <div className="relative z-[2] grid grid-cols-2 items-stretch gap-3 md:grid-cols-[1.5fr_1fr_1fr_1fr_0.8fr] md:gap-4">
+              {/* Linha conectora horizontal — pontilhada e contínua: começa no
+                  ponto de convergência (saída do 1+2), atravessa 3-4-5 e
+                  encosta na origem do leque de avatares. Mesmo tracejado das
+                  curvas (4px traço / 6px vão), centralizada na vertical. */}
               <div
-                className="pointer-events-none absolute left-[48px] top-1/2 hidden h-[2px] -translate-y-1/2 md:block"
+                className="pointer-events-none absolute top-1/2 hidden h-[2px] -translate-y-1/2 md:block"
                 style={{
-                  width: 'calc((100% - 0.9 * ((100% - 16px * 4) / 4.9)) - 96px - 16px)',
-                  backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
+                  left: 'calc(0.283 * (100% - 64px))',
+                  right: 'calc(0.151 * (100% - 64px))',
+                  backgroundImage:
+                    'repeating-linear-gradient(90deg, rgba(94,42,103,0.45) 0 4px, transparent 4px 10px)',
                 }}
               />
 
@@ -759,7 +764,7 @@ export function CaasClient() {
                   ].map((step) => (
                     <div
                       key={step.n}
-                      className="relative rounded-[14px] border bg-card p-3 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+                      className="relative flex items-center gap-3 rounded-[14px] border bg-card p-3.5 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
                       style={{ borderColor: 'rgba(94,42,103,0.2)' }}
                     >
                       <div
@@ -769,12 +774,12 @@ export function CaasClient() {
                         {step.n}
                       </div>
                       <div
-                        className="mb-2 flex h-8 w-8 items-center justify-center rounded-[9px]"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px]"
                         style={{ backgroundColor: 'rgba(94,42,103,0.12)', color: CAAS_ACCENT }}
                       >
                         <step.icon className="h-4 w-4" />
                       </div>
-                      <p className="text-[12px] font-semibold leading-[1.35] text-accent-foreground">
+                      <p className="text-[12px] font-semibold leading-[1.3] text-accent-foreground">
                         {step.label}
                       </p>
                     </div>
