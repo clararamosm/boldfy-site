@@ -5,6 +5,7 @@ import { useT } from '@/lib/i18n/context';
 import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { trackEvent } from '@/lib/track';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -160,15 +161,26 @@ export function VendasClient() {
   const c = t.paraVendas;
 
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const toggleFaq = (i: number) =>
-    setFaqOpen((prev) => (prev === i ? null : i));
+  // Dispara faq_expanded só ao ABRIR, trim 80 chars, mesmo padrão do faq.tsx.
+  const toggleFaq = (i: number, question: string) => {
+    setFaqOpen((prev) => {
+      if (prev !== i) {
+        trackEvent('faq_expanded', {
+          question: question.slice(0, 80),
+          page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+        return i;
+      }
+      return null;
+    });
+  };
 
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#FFFBF2]">
       {/* ============================================================ */}
       {/*  S1 — HERO                                                    */}
       {/* ============================================================ */}
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative flex min-h-[90vh] items-center px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-150px] top-[-10%] h-[700px] w-[700px] opacity-[0.12]" />
         <Glow
           className="bottom-[-100px] left-[-50px] h-[500px] w-[500px] opacity-[0.12]"
@@ -217,8 +229,9 @@ export function VendasClient() {
               />
             </div>
 
-            {/* Mini floating card — prospect engajou */}
-            <div className="absolute -bottom-[30px] -right-[20px] z-20 w-[300px] rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(245,158,11,0.2)]">
+            {/* Mini floating card — prospect engajou, animado e sobrevoando */}
+            <div className="absolute -bottom-[26px] left-1/2 z-20 -translate-x-1/2">
+              <div className="boldfy-float w-[300px] rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(245,158,11,0.2)]">
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 font-headline text-sm font-black text-white">
                   JS
@@ -244,6 +257,7 @@ export function VendasClient() {
               <div className="text-right text-[10px] italic text-muted-foreground">
                 há 2 minutos
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -252,13 +266,13 @@ export function VendasClient() {
       {/* ============================================================ */}
       {/*  S2 — DIAGNÓSTICO                                             */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
           {/* Text */}
           <div>
             <PreTag>{c.diagTag}</PreTag>
@@ -358,7 +372,7 @@ export function VendasClient() {
       {/* ============================================================ */}
       {/*  S3 — VIRADA                                                  */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.1]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-stretch gap-14 lg:grid-cols-[0.85fr_1.15fr]">
@@ -425,10 +439,10 @@ export function VendasClient() {
       {/* ============================================================ */}
       {/*  S4 — LEADERBOARD (seção exclusiva Vendas)                    */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[20%] h-[700px] w-[700px] opacity-[0.1]" />
 
-        <div className="relative z-10 mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
           {/* Text */}
           <div>
             <PreTag>{c.lbTag}</PreTag>
@@ -553,13 +567,13 @@ export function VendasClient() {
       {/* ============================================================ */}
       {/*  S5 — NÚMEROS                                                 */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-50px] top-[20%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           {/* Header */}
           <div className="mx-auto mb-4 max-w-[720px] text-center">
             <PreTag>{c.numTag}</PreTag>
@@ -583,13 +597,13 @@ export function VendasClient() {
                 tags: [c.numStat1Tag1, c.numStat1Tag2],
               },
               {
-                icon: Inbox,
+                icon: MessageSquare,
                 value: c.numStat2Value,
                 label: c.numStat2Label,
                 tags: [c.numStat2Tag1, c.numStat2Tag2],
               },
               {
-                icon: Clock,
+                icon: BadgeCheck,
                 value: c.numStat3Value,
                 label: c.numStat3Label,
                 tags: [c.numStat3Tag1, c.numStat3Tag2],
@@ -649,13 +663,17 @@ export function VendasClient() {
               </div>
             </div>
           </div>
+
+          <p className="mx-auto mt-8 max-w-[720px] text-center text-xs italic leading-[1.5] text-muted-foreground">
+            {c.numDisclaimer}
+          </p>
         </div>
       </section>
 
       {/* ============================================================ */}
       {/*  S6 — CAMINHOS (só 1 card pra Vendas)                         */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]"
           color="bg-primary"
@@ -699,7 +717,7 @@ export function VendasClient() {
       {/* ============================================================ */}
       {/*  S7 — FAQ                                                     */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 pb-10 pt-24 md:px-12">
+      <section className="relative px-4 pb-10 pt-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
@@ -728,7 +746,7 @@ export function VendasClient() {
                 key={faq.q}
                 question={faq.q}
                 isOpen={faqOpen === i}
-                onToggle={() => toggleFaq(i)}
+                onToggle={() => toggleFaq(i, faq.q)}
               >
                 <p>{faq.a}</p>
               </FaqItem>
@@ -736,6 +754,6 @@ export function VendasClient() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

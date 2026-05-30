@@ -318,6 +318,113 @@ const en = {
     dashKpi3Label: 'total engagement',
     dashCta: 'See the dashboard in the demo',
   },
+
+  // /para/vendas page — honest version, mirrors paraVendas in pt-BR.ts
+  paraVendas: {
+    metaTitle: 'Boldfy · For sales teams',
+    metaDesc:
+      'Your reps make 100 outreach attempts and get 99 silences. See how to turn every person in sales into a digital authority before the first touch.',
+    heroTag: 'For sales teams',
+    heroTitle: 'Your reps need to be',
+    heroTitleHighlight: 'known before they are heard.',
+    heroSubtitle:
+      'The structured Social Selling platform that turns each rep into a digital authority before the first touch. When the prospect already recognizes the name in the feed, cold outreach stops being a lottery.',
+    heroCta1: 'Build my package',
+    heroCta2: 'Book a demo',
+    diagTag: 'The pain of sales teams',
+    diagTitle: 'Cold outreach',
+    diagTitleHighlight: 'became a lottery.',
+    diagStat1: '1-3% reply rate on cold email',
+    diagStat2: 'Cycle of 60 → 120 days',
+    diagBody1:
+      'Your SDRs send 7 emails and get 2 replies (one of them is "no, thanks"). The problem is not the product, the pitch or the script. It is that the reps are invisible.',
+    diagBody2:
+      'The modern B2B buyer researches on LinkedIn before replying to any email. If the profile is empty, no content, no authority, the answer is ghosting.',
+    viradaTag: 'How Boldfy solves it',
+    viradaTitle: 'Authority',
+    viradaTitleHighlight: 'before the approach.',
+    viradaIntro:
+      'Each rep becomes a recognized authority in their niche. By the time they reach out, the prospect already has three mental references for the name.',
+    virada1Title: 'Automatic ice-breaker.',
+    virada1Desc: '"I have seen this name on LinkedIn talking about X." The reply stops being silence.',
+    virada2Title: 'Sales cycle shortens.',
+    virada2Desc:
+      'With prior familiarity, meetings happen faster and credibility objections drop before they even come up.',
+    virada3Title: 'Passive inbound.',
+    virada3Desc:
+      'Reps with authority start getting messages from interested prospects. Literally flipping the flow.',
+    virada4Title: 'A content culture in sales.',
+    virada4Desc: "Gamification works because competition is in the team's DNA. The ranking engages naturally.",
+    lbTag: 'The sales edge',
+    lbTitle: 'Salespeople love to compete.',
+    lbTitleHighlight: 'We use that in your favor.',
+    lbBody1intro: 'In marketing, gamification is an incentive.',
+    lbBody1bold: 'In sales, gamification is culture.',
+    lbBody1end: ' The sales team already lives in goal rankings, monthly quota, quarterly commission.',
+    lbBody2:
+      'When we add a content ranking on top of that, it stops being an obligation. It is one more contest.',
+    lbHighlight:
+      'Within 90 days, the whole team is producing content because nobody wants to be last on the ranking.',
+    lbCardTitle: 'Content ranking',
+    lbCardSub: 'Sales team · 15 reps',
+    lbCardMonth: 'This month',
+    lbCardFooterLabel: 'Ends in 8 days',
+    lbCardFooterPrize: 'Monthly Prize active',
+    numTag: 'What this can generate',
+    numTitle: 'The numbers,',
+    numTitleHighlight: 'no fluff.',
+    numCenario: 'a 15-person sales team posting 2-3x a week',
+    numStat1Value: '60k–100k',
+    numStat1Label: 'organic impressions/month from the team',
+    numStat1Tag1: 'Authority',
+    numStat1Tag2: 'Reach',
+    numStat2Value: '12–15',
+    numStat2Label: 'active reps posting',
+    numStat2Tag1: 'Real adoption',
+    numStat2Tag2: 'At scale',
+    numStat3Value: 'Familiarity',
+    numStat3Label: 'the prospect already recognizes the rep before the approach',
+    numStat3Tag1: 'Less ghosting',
+    numStat3Tag2: 'Ice-breaker',
+    numDisclaimer:
+      'Numbers based on market averages and the Boldfy method. Not a promise, a reference of potential: reply rate, cycle and inbound you track in your own CRM.',
+    numKpiTitle: 'Suggested KPIs',
+    numKpiTag1: 'Show rate',
+    numKpiTag2: 'Win rate',
+    numKpiTag3: 'ACV',
+    numKpiTag4: 'Reply rate',
+    numKpiTag5: 'Meetings booked',
+    numKpiTag6: 'Quota attainment',
+    camTag: 'Which solution fits',
+    camTitle: 'Which path',
+    camTitleHighlight: 'to take.',
+    camIntro:
+      'For sales, in the vast majority of cases, the SaaS platform alone solves it. Gamification works so well in sales culture that the whole team produces content without outsourced production. Content as a Service (executive track) only comes in when the Head of Sales wants to build authority as a thought leader alongside the team.',
+    cam1Tag: 'Software as a Service',
+    cam1Title: 'Boldfy platform',
+    cam1Desc:
+      'The complete system for the sales team to become content creators. Contextual AI, social-selling tracks, gamified ranking and dashboard. All self-serve, with competition doing the heavy lifting.',
+    cam1Cta: 'Explore the platform',
+    faqTag: 'FAQ',
+    faqTitle: 'Questions',
+    faqTitleHighlight: 'Heads of Sales',
+    faqTitleEnd: ' ask.',
+    faq1Q: "My reps don't like to write. How do we solve that?",
+    faq1A:
+      'Contextual AI helps at every step. Tracks teach mindset, not advanced copywriting. Most discover they have a lot to say, they just never had a method. The ranking does the rest, because reps compete with reps.',
+    faq2Q: 'Do rep posts actually work or is it guesswork?',
+    faq2A:
+      "They work. Content published by a person gets on average 8x more engagement than the same content from a Company Page, LinkedIn's own benchmark. The feed prioritizes person-to-person relationships.",
+    faq3Q: 'What if the rep leaves taking the followers?',
+    faq3A:
+      "The followers were always theirs, not the company's. But the content produced inside Boldfy stays archived as a reference. The next rep in the same segment starts with a playbook of posts that worked in the niche.",
+    faq4Q: 'How long until results show up?',
+    faq4A:
+      "The first signs show up in 30-45 days: the prospect starts mentioning the rep's posts and the profile gains authority. The effect on reply rate and cycle is gradual over the following months, but that you track in your own CRM. Boldfy measures reach, engagement and the team's activity.",
+    faq5Q: "Won't gamification become a source of complaints from the team?",
+    faq5A:
+      "Quite the opposite. Reps already live in goal, quota and commission rankings. Adding a content ranking is just one more contest, and most embrace it. The 10-20% who don't engage we leave alone, forcing it produces bad posts.",
+  },
 };
 
 export default en;
