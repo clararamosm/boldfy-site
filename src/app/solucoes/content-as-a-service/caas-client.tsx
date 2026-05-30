@@ -33,6 +33,7 @@ import {
   PenTool,
   FileSpreadsheet,
   Lightbulb,
+  type LucideIcon,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -42,16 +43,17 @@ import {
 const CAAS_ACCENT = '#5E2A67';
 const CAAS_ACCENT_LIGHT = '#9840AD';
 
-function PreTag({ children }: { children: React.ReactNode }) {
+function PreTag({ children, icon: Icon }: { children: React.ReactNode; icon?: LucideIcon }) {
   return (
     <span
-      className="mb-6 inline-block rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em]"
+      className="mb-6 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em]"
       style={{
         borderColor: 'rgba(94, 42, 103, 0.35)',
         backgroundColor: 'rgba(94, 42, 103, 0.08)',
         color: CAAS_ACCENT,
       }}
     >
+      {Icon && <Icon className="h-3 w-3" />}
       {children}
     </span>
   );
@@ -213,7 +215,7 @@ export function CaasClient() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-[60px]">
           {/* Text */}
           <div>
-            <PreTag>{c.heroTag}</PreTag>
+            <PreTag icon={Mic}>{c.heroTag}</PreTag>
             <h1 className="font-headline text-[clamp(36px,4.6vw,58px)] font-black leading-[1.05] tracking-[-0.035em] text-accent-foreground">
               {c.heroTitle}{' '}
               <span className="boldfy-shimmer-text">

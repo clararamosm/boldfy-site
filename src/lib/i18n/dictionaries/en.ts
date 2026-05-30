@@ -600,8 +600,8 @@ const en = {
 
     // S1 - Hero
     heroTag: 'Content as a Service',
-    heroTitle: 'Content production with',
-    heroTitleHighlight: 'method and scale.',
+    heroTitle: 'Content production with method and scale',
+    heroTitleHighlight: 'for Thought Leaders.',
     heroSubtitle: 'When the team has no time, no designer or no structure to do it in-house, the Boldfy strategist steps in. Two modes, inside the same platform: design to feed the company library or full activation of executive profiles, always preserving the voice of whoever signs it.',
     heroCta1: 'Build my package',
     heroCta2: 'Book a call',

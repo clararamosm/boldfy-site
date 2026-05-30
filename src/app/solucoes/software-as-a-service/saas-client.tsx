@@ -18,6 +18,7 @@ import {
   Flame,
   MessageSquare,
   Mic,
+  type LucideIcon,
   Calendar,
   CheckCircle2,
   ChevronDown,
@@ -39,9 +40,10 @@ import {
 /*  Reusable sub-components (primary/purple accent)                    */
 /* ------------------------------------------------------------------ */
 
-function PreTag({ children }: { children: React.ReactNode }) {
+function PreTag({ children, icon: Icon }: { children: React.ReactNode; icon?: LucideIcon }) {
   return (
-    <span className="mb-6 inline-block rounded-full border border-primary/[0.25] bg-primary/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
+    <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-primary/[0.25] bg-primary/[0.08] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-primary">
+      {Icon && <Icon className="h-3 w-3" />}
       {children}
     </span>
   );
@@ -193,7 +195,7 @@ export default function SaasPageClient() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-[60px]">
           {/* Text */}
           <div>
-            <PreTag>{c.heroTag}</PreTag>
+            <PreTag icon={Sparkles}>{c.heroTag}</PreTag>
             <h1 className="font-headline text-[clamp(36px,4.6vw,58px)] font-black leading-[1.05] tracking-[-0.035em] text-accent-foreground">
               {c.heroTitle}{' '}
               <span className="bg-gradient-to-br from-primary to-[#E875FF] bg-clip-text text-transparent">

@@ -886,8 +886,8 @@ const ptBR = {
 
     // S1 - Hero
     heroTag: 'Content as a Service',
-    heroTitle: 'Produção de conteúdo com',
-    heroTitleHighlight: 'método e escala.',
+    heroTitle: 'Produção de conteúdo com método e escala',
+    heroTitleHighlight: 'para Thought Leaders.',
     heroSubtitle: 'Quando o time não tem tempo, não tem designer ou não tem estrutura pra fazer internamente, o estrategista Boldfy entra. Dois modos, dentro da mesma plataforma: design pra alimentar a biblioteca da empresa ou ativação completa de perfis executivos, sempre preservando a voz de quem assina.',
     heroCta1: 'Montar meu pacote',
     heroCta2: 'Agendar conversa',
