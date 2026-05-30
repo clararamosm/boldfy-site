@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
 import { trackEvent } from '@/lib/track';
+import { CountUp } from '@/components/ui/count-up';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -179,11 +180,11 @@ export function RhClient() {
   };
 
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#EFF5FF]">
       {/* ============================================================ */}
       {/*  S1 — HERO                                                    */}
       {/* ============================================================ */}
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative flex min-h-[90vh] items-center px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-150px] top-[-10%] h-[700px] w-[700px] opacity-[0.10]" />
         <Glow
           className="bottom-[-100px] left-[-50px] h-[500px] w-[500px] opacity-[0.12]"
@@ -232,46 +233,48 @@ export function RhClient() {
               />
             </div>
 
-            {/* Mini floating card — Cultura no feed */}
-            <div className="absolute -bottom-[30px] -right-[20px] z-20 w-[290px] rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(59,130,246,0.15)]">
-              <div className="mb-3.5 flex items-center gap-3">
-                <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-blue-500/[0.12] text-blue-500">
-                  <Eye className="h-[19px] w-[19px]" />
-                </div>
-                <div>
-                  <div className="font-headline text-[13px] font-black text-accent-foreground">
-                    Cultura no feed
+            {/* Mini floating card — Cultura no feed, animado e sobrevoando */}
+            <div className="absolute -bottom-[26px] left-1/2 z-20 -translate-x-1/2">
+              <div className="boldfy-float w-[290px] rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(59,130,246,0.15)]">
+                <div className="mb-3.5 flex items-center gap-3">
+                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[11px] bg-blue-500/[0.12] text-blue-500">
+                    <Eye className="h-[19px] w-[19px]" />
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    time postando esta semana
+                  <div>
+                    <div className="font-headline text-[13px] font-black text-accent-foreground">
+                      Cultura no feed
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      time postando esta semana
+                    </div>
                   </div>
                 </div>
-              </div>
-              {[
-                { name: 'Carla S.', what: 'um dia no time' },
-                { name: 'Rafa M.', what: 'bastidor do projeto' },
-                { name: 'Bia P.', what: 'por que eu fico' },
-              ].map((row) => (
-                <div
-                  key={row.name}
-                  className="flex items-center justify-between border-t border-border py-2 text-[11px]"
-                >
-                  <span className="font-semibold text-accent-foreground">
-                    {row.name}
-                  </span>
-                  <span className="rounded-full bg-blue-500/[0.12] px-2 py-0.5 text-[9px] font-bold text-blue-500">
-                    {row.what}
-                  </span>
-                </div>
-              ))}
-              <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2.5">
-                <div className="font-headline text-[22px] font-black leading-none text-blue-500">
-                  48k
-                </div>
-                <div className="text-right text-[10px] leading-[1.3] text-muted-foreground">
-                  pessoas alcançadas
-                  <br />
-                  esta semana
+                {[
+                  { name: 'Carla S.', what: 'um dia no time' },
+                  { name: 'Rafa M.', what: 'bastidor do projeto' },
+                  { name: 'Bia P.', what: 'por que eu fico' },
+                ].map((row) => (
+                  <div
+                    key={row.name}
+                    className="flex items-center justify-between border-t border-border py-2 text-[11px]"
+                  >
+                    <span className="font-semibold text-accent-foreground">
+                      {row.name}
+                    </span>
+                    <span className="rounded-full bg-blue-500/[0.12] px-2 py-0.5 text-[9px] font-bold text-blue-500">
+                      {row.what}
+                    </span>
+                  </div>
+                ))}
+                <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2.5">
+                  <div className="font-headline text-[22px] font-black leading-none text-blue-500">
+                    <CountUp to={48} suffix="k" />
+                  </div>
+                  <div className="text-right text-[10px] leading-[1.3] text-muted-foreground">
+                    pessoas alcançadas
+                    <br />
+                    esta semana
+                  </div>
                 </div>
               </div>
             </div>
@@ -282,13 +285,13 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S2 — DIAGNÓSTICO                                             */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
           {/* Text */}
           <div>
             <PreTag>{c.diagTag}</PreTag>
@@ -398,10 +401,10 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S3 — DIFERENCIAÇÃO CRÍTICA (exclusiva RH)                    */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-20 md:px-12">
+      <section className="relative px-6 py-20 md:px-12">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.07]" />
 
-        <div className="relative z-10 mx-auto max-w-[1100px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="grid grid-cols-1 items-start gap-7 rounded-[20px] border border-border border-l-[4px] border-l-blue-500 bg-card p-9 shadow-[0_20px_50px_rgba(59,130,246,0.08)] lg:grid-cols-[auto_1fr]">
             {/* Icon */}
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/[0.12] text-blue-500">
@@ -474,7 +477,7 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S4 — VIRADA                                                  */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-stretch gap-14 lg:grid-cols-[0.85fr_1.15fr]">
@@ -541,7 +544,7 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S4b — VITRINE DE RECOMPENSAS                                 */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.07]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-[60px]">
@@ -623,13 +626,13 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S5 — NÚMEROS                                                 */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-50px] top-[20%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           {/* Header */}
           <div className="mx-auto mb-4 max-w-[720px] text-center">
             <PreTag>{c.numTag}</PreTag>
@@ -726,13 +729,13 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S6 — CAMINHOS                                                */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mb-14 max-w-[820px]">
             <PreTag>{c.camTag}</PreTag>
             <SectionHeading
@@ -794,7 +797,7 @@ export function RhClient() {
       {/* ============================================================ */}
       {/*  S7 — FAQ                                                     */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 pb-10 pt-24 md:px-12">
+      <section className="relative px-4 pb-10 pt-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
@@ -828,6 +831,6 @@ export function RhClient() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

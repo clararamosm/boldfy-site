@@ -90,6 +90,21 @@ html {
   }
 }
 
+/* Float suave pros mini-cards do hero (sobrevoando) */
+.boldfy-float {
+  animation: boldfy-float 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes boldfy-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boldfy-float { animation: none; }
+}
+
 /* Rotating glow border on IA card */
 @property --glow-angle {
   syntax: '<angle>';

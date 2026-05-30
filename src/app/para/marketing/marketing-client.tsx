@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useDemoPopup } from '@/components/forms/demo-popup';
 import { useProposalBuilder } from '@/components/proposal-builder';
 import { trackEvent } from '@/lib/track';
+import { CountUp } from '@/components/ui/count-up';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -176,7 +177,7 @@ export function MarketingClient() {
   // Anima o gráfico de CAC (linha desenhando + bolinha percorrendo) ao entrar
   // na viewport, uma vez. Respeita prefers-reduced-motion; sem JS a linha já
   // aparece normal (a classe de animação só é aplicada quando cacAnimate=true).
-  const cacPath = 'M 10 140 L 70 125 L 130 100 L 190 75 L 250 45 L 310 20';
+  const cacPath = 'M 20 96 L 84 88 L 148 74 L 212 56 L 276 40 L 340 22';
   const cacChartRef = useRef<SVGSVGElement>(null);
   const [cacAnimate, setCacAnimate] = useState(false);
   useEffect(() => {
@@ -200,11 +201,11 @@ export function MarketingClient() {
   }, []);
 
   return (
-    <>
+    <div className="relative overflow-hidden bg-gradient-to-b from-[#FBF8FF] via-[#FCFBFF] to-[#F1FAF5]">
       {/* ============================================================ */}
       {/*  S1 — HERO                                                    */}
       {/* ============================================================ */}
-      <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative flex min-h-[90vh] items-center px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-150px] top-[-10%] h-[700px] w-[700px] opacity-[0.10]" />
         <Glow
           className="bottom-[-100px] left-[-50px] h-[500px] w-[500px] opacity-[0.12]"
@@ -253,32 +254,32 @@ export function MarketingClient() {
               />
             </div>
 
-            {/* Mini floating card */}
-            <div className="absolute -bottom-[30px] -right-[20px] z-20 flex w-[280px] items-center gap-3.5 rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(16,185,129,0.15)]">
-              <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-green-500/[0.12] text-green-500">
-                <TrendingUp className="h-[22px] w-[22px]" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-                  Impressões orgânicas
+            {/* Mini floating card — animado, sobrevoando o centro-baixo */}
+            <div className="absolute -bottom-[26px] left-1/2 z-20 -translate-x-1/2">
+              <div className="boldfy-float flex w-[280px] items-center gap-3.5 rounded-[14px] bg-card p-4 shadow-[0_16px_40px_rgba(15,10,24,0.15),0_0_0_1px_rgba(16,185,129,0.15)]">
+                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl bg-green-500/[0.12] text-green-500">
+                  <TrendingUp className="h-[22px] w-[22px]" />
                 </div>
-                <div className="font-headline text-[22px] font-black leading-none tracking-[-0.02em] text-accent-foreground">
-                  128k
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    Impressões orgânicas
+                  </div>
+                  <div className="font-headline text-[22px] font-black leading-none tracking-[-0.02em] text-accent-foreground">
+                    <CountUp to={128} suffix="k" />
+                  </div>
+                  <div className="mt-0.5 text-[11px] text-muted-foreground">
+                    <strong className="font-bold text-green-500">+47%</strong> vs mês anterior
+                  </div>
                 </div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">
-                  <strong className="font-bold text-green-500">+47%</strong> vs
-                  mês anterior
+                <div className="flex h-8 shrink-0 items-end gap-[3px]">
+                  {[35, 50, 42, 68, 78, 100].map((h, i) => (
+                    <div
+                      key={i}
+                      className="w-[5px] rounded-t bg-gradient-to-b from-green-500 to-green-700"
+                      style={{ height: `${h}%` }}
+                    />
+                  ))}
                 </div>
-              </div>
-              {/* Mini bar chart */}
-              <div className="flex h-8 shrink-0 items-end gap-[3px]">
-                {[35, 50, 42, 68, 78, 100].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-[5px] rounded-t bg-gradient-to-b from-green-500 to-green-700"
-                    style={{ height: `${h}%` }}
-                  />
-                ))}
               </div>
             </div>
           </div>
@@ -288,13 +289,13 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S2 — DIAGNÓSTICO                                             */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="left-[-100px] top-[30%] h-[600px] w-[600px] opacity-[0.05]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
+        <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-[60px]">
           {/* Text */}
           <div>
             <PreTag>{c.diagTag}</PreTag>
@@ -342,7 +343,7 @@ export function MarketingClient() {
               </span>
             </div>
 
-            {/* SVG chart */}
+            {/* SVG chart — minimalista: linha fina + tag início/fim */}
             <style>{`
               .cac-line-draw {
                 stroke-dasharray: 1;
@@ -354,34 +355,22 @@ export function MarketingClient() {
             <svg
               ref={cacChartRef}
               className="w-full"
-              viewBox="0 0 320 180"
+              viewBox="0 0 360 120"
             >
-              <line x1="0" y1="45" x2="320" y2="45" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 4" />
-              <line x1="0" y1="90" x2="320" y2="90" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 4" />
-              <line x1="0" y1="135" x2="320" y2="135" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 4" />
-              <defs>
-                <linearGradient id="cacGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(var(--accent-foreground))" stopOpacity="0.22" />
-                  <stop offset="100%" stopColor="hsl(var(--accent-foreground))" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path d="M 10 140 L 70 125 L 130 100 L 190 75 L 250 45 L 310 20 L 310 180 L 10 180 Z" fill="url(#cacGrad)" />
               <path
                 d={cacPath}
                 fill="none"
                 stroke="hsl(var(--accent-foreground))"
-                strokeWidth="2.5"
+                strokeWidth="1.75"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 pathLength={1}
                 className={cacAnimate ? 'cac-line-draw' : undefined}
               />
-              {[[10,140],[70,125],[130,100],[190,75],[250,45]].map(([cx,cy], i) => (
-                <circle key={i} cx={cx} cy={cy} r="4" fill="hsl(var(--card))" stroke="hsl(var(--accent-foreground))" strokeWidth="2" />
-              ))}
-              <circle cx="310" cy="20" r="5" fill="hsl(var(--accent-foreground))" />
+              <circle cx="20" cy="96" r="3" fill="hsl(var(--card))" stroke="hsl(var(--accent-foreground))" strokeWidth="2" />
+              <circle cx="340" cy="22" r="4.5" fill="hsl(var(--accent-foreground))" />
               {cacAnimate && (
-                <circle r="5" fill="hsl(var(--accent-foreground))">
+                <circle r="4.5" fill="hsl(var(--accent-foreground))">
                   <animateMotion
                     dur="1.8s"
                     fill="freeze"
@@ -392,10 +381,8 @@ export function MarketingClient() {
                   />
                 </circle>
               )}
-              {['Q1','Q2','Q3','Q4','Q1+1'].map((label, i) => (
-                <text key={label} x={10 + i * 60 + (i === 4 ? 8 : 0)} y="172" fill="hsl(var(--muted-foreground))" fontSize="9" fontFamily="Inter">{label}</text>
-              ))}
-              <text x="294" y="172" fill="hsl(var(--accent-foreground))" fontSize="9" fontFamily="Inter" fontWeight="700">Hoje</text>
+              <text x="12" y="114" fill="hsl(var(--muted-foreground))" fontSize="10" fontFamily="Inter">Q1</text>
+              <text x="318" y="114" fill="hsl(var(--accent-foreground))" fontSize="10" fontFamily="Inter" fontWeight="700">Hoje</text>
             </svg>
 
             {/* Bottom stats */}
@@ -422,7 +409,7 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S3 — VIRADA                                                  */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="right-[-100px] top-0 h-[700px] w-[700px] opacity-[0.08]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-stretch gap-14 lg:grid-cols-[0.85fr_1.15fr]">
@@ -507,13 +494,13 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S4 — NÚMEROS                                                 */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-50px] top-[20%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           {/* Header */}
           <div className="mx-auto mb-4 max-w-[720px] text-center">
             <PreTag>{c.numTag}</PreTag>
@@ -626,7 +613,7 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S4b — PAINEL (teaser borrado)                               */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow className="left-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.07]" />
 
         <div className="relative z-10 mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-[60px]">
@@ -731,13 +718,13 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S5 — CAMINHOS                                                */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 py-24 md:px-12">
+      <section className="relative px-4 py-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[700px] w-[700px] opacity-[0.08]"
           color="bg-primary"
         />
 
-        <div className="relative z-10 mx-auto max-w-[1200px]">
+        <div className="relative z-10 mx-auto max-w-[1280px]">
           <div className="mb-14 max-w-[820px]">
             <PreTag>{c.camTag}</PreTag>
             <SectionHeading
@@ -799,7 +786,7 @@ export function MarketingClient() {
       {/* ============================================================ */}
       {/*  S6 — FAQ                                                     */}
       {/* ============================================================ */}
-      <section className="relative overflow-hidden bg-background px-6 pb-10 pt-24 md:px-12">
+      <section className="relative px-4 pb-10 pt-24 sm:px-6 lg:px-8">
         <Glow
           className="right-[-100px] top-[10%] h-[600px] w-[600px] opacity-[0.08]"
           color="bg-primary"
@@ -832,6 +819,6 @@ export function MarketingClient() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
