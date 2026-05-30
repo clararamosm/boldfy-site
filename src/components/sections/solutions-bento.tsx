@@ -2,8 +2,8 @@ import { useT } from '@/lib/i18n/context';
 import { BattleCardTrigger } from '@/components/battle-card';
 import {
   ArrowRight,
-  Monitor,
-  Rocket,
+  Sparkles,
+  Mic,
   Clock,
   Palette,
   MessageSquare,
@@ -216,7 +216,7 @@ export function SolutionsBentoSection() {
           <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
             {/* Tag */}
             <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-              <Monitor className="h-3 w-3" />
+              <Sparkles className="h-3 w-3" />
               {t.home.solSaasTag}
             </span>
 
@@ -269,10 +269,10 @@ export function SolutionsBentoSection() {
           </div>
 
           {/* ── Card 2: Produção (CaaS) ── */}
-          <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
+          <div className="boldfy-service-glow group flex flex-col rounded-3xl bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_48px_rgba(94,42,103,0.16)] md:p-8">
             {/* Tag */}
-            <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-              <Rocket className="h-3 w-3" />
+            <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-[#5E2A67]/25 bg-[#5E2A67]/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#5E2A67]">
+              <Mic className="h-3 w-3" />
               {t.home.solCaasTag}
             </span>
 
@@ -300,14 +300,14 @@ export function SolutionsBentoSection() {
 
             {/* Sub-verticals: Design on Demand + Content Full-Service */}
             <div className="mt-auto grid grid-cols-2 gap-2.5 border-t border-border pt-5">
-              <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-primary/30">
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-[#5E2A67]/30">
                 <div>
                   <p className="font-headline text-[13px] font-black leading-tight text-accent-foreground">
                     {t.home.solCaasSub1Title}
                   </p>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     a partir de{' '}
-                    <strong className="font-extrabold text-primary">
+                    <strong className="font-extrabold text-[#5E2A67]">
                       {t.home.solCaasSub1Price}
                     </strong>
                     /mês
@@ -315,20 +315,20 @@ export function SolutionsBentoSection() {
                 </div>
                 <Link
                   href="/solucoes/content-as-a-service"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(205,80,241,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_6px_16px_rgba(205,80,241,0.38)]"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5E2A67] px-3 py-2 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(94,42,103,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#6f3479] hover:shadow-[0_6px_16px_rgba(94,42,103,0.4)]"
                 >
                   {t.home.solCaasCta}
                   <ArrowRight className="h-2.5 w-2.5" />
                 </Link>
               </div>
-              <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-primary/30">
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-[#5E2A67]/30">
                 <div>
                   <p className="font-headline text-[13px] font-black leading-tight text-accent-foreground">
                     {t.home.solCaasSub2Title}
                   </p>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     a partir de{' '}
-                    <strong className="font-extrabold text-primary">
+                    <strong className="font-extrabold text-[#5E2A67]">
                       {t.home.solCaasSub2Price}
                     </strong>
                     /mês
@@ -336,7 +336,7 @@ export function SolutionsBentoSection() {
                 </div>
                 <Link
                   href="/solucoes/content-as-a-service"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(205,80,241,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_6px_16px_rgba(205,80,241,0.38)]"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5E2A67] px-3 py-2 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(94,42,103,0.3)] transition-all hover:-translate-y-0.5 hover:bg-[#6f3479] hover:shadow-[0_6px_16px_rgba(94,42,103,0.4)]"
                 >
                   {t.home.solCaasCta}
                   <ArrowRight className="h-2.5 w-2.5" />

@@ -147,9 +147,9 @@ const ptBR = {
     solCaasStep3: 'Publica e opera tudo dentro da plataforma Boldfy',
     solCaasStep4: 'Relatório mensal com impacto e equivalente em mídia paga',
     solCaasStep5: 'Jornadas de lead magnets e aumento de audiência qualificada',
-    solCaasSub1Title: 'Design on Demand',
+    solCaasSub1Title: 'Modo Design',
     solCaasSub1Price: 'R$ 1.600',
-    solCaasSub2Title: 'Content Full-Service',
+    solCaasSub2Title: 'Modo Executivo',
     solCaasSub2Price: 'R$ 5.500',
     // Compare trigger (below subtitle)
     solutionsCompareLabel: 'Compare as duas soluções',

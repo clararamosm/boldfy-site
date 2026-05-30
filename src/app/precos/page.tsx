@@ -2,10 +2,10 @@
 
 import { useT } from '@/lib/i18n/context';
 import { useProposalBuilder } from '@/components/proposal-builder';
+import { BattleCardTrigger } from '@/components/battle-card';
 import {
   ArrowRight,
-  Monitor,
-  Rocket,
+  Sparkles,
   Clock,
   Palette,
   MessageSquare,
@@ -275,9 +275,14 @@ export default function PrecosPage() {
             </span>
           </h1>
           <p className="mx-auto max-w-[720px] text-base leading-relaxed text-muted-foreground">
-            Escolha o caminho — ou combine os dois. Preços transparentes, sem reunião pra saber
+            Escolha o caminho, ou combine os dois. Preços transparentes, sem reunião pra saber
             quanto custa.
           </p>
+          <div className="mt-6 flex justify-center">
+            <BattleCardTrigger source="precos:solutions" variant="pill">
+              {t.home.solutionsCompareLabel}
+            </BattleCardTrigger>
+          </div>
         </div>
 
         {/* 2-card grid — Plataforma + Produção com preços dentro */}
@@ -288,7 +293,7 @@ export default function PrecosPage() {
           <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
             {/* Tag */}
             <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-              <Monitor className="h-3 w-3" />
+              <Sparkles className="h-3 w-3" />
               {t.home.solSaasTag}
             </span>
 
@@ -344,10 +349,10 @@ export default function PrecosPage() {
           {/* ═══════════════════════════════════════════════════
               Card 2: Produção (CaaS) — com pricing dos 2 modos
              ═══════════════════════════════════════════════════ */}
-          <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
+          <div className="boldfy-service-glow group flex flex-col rounded-3xl bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_48px_rgba(94,42,103,0.16)] md:p-8">
             {/* Tag */}
-            <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-              <Rocket className="h-3 w-3" />
+            <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-[#5E2A67]/25 bg-[#5E2A67]/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#5E2A67]">
+              <Mic className="h-3 w-3" />
               {t.home.solCaasTag}
             </span>
 
@@ -387,7 +392,8 @@ export default function PrecosPage() {
             <button
               type="button"
               onClick={() => openBuilder('precos:caas')}
-              className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-3 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(205,80,241,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_10px_24px_rgba(205,80,241,0.38)]"
+              className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-5 py-3 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(94,42,103,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(94,42,103,0.4)]"
+              style={{ backgroundImage: 'linear-gradient(135deg, #5E2A67, #9840AD)' }}
             >
               Montar proposta personalizada
               <ArrowRight className="h-3.5 w-3.5" />
