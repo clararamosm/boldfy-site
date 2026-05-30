@@ -32,6 +32,7 @@ import {
   Compass,
   PenTool,
   FileSpreadsheet,
+  Lightbulb,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -741,30 +742,98 @@ export function CaasClient() {
             <div className="relative z-[2] grid grid-cols-2 items-stretch gap-3 md:grid-cols-[repeat(4,1fr)_0.9fr] md:gap-4">
               {/* Linha conectora horizontal entre os 4 cards (não chega nos avatares) */}
               <div
-                className="pointer-events-none absolute left-[48px] top-[34px] hidden h-[2px] md:block"
+                className="pointer-events-none absolute left-[48px] top-1/2 hidden h-[2px] -translate-y-1/2 md:block"
                 style={{
                   width: 'calc((100% - 0.9 * ((100% - 16px * 4) / 4.9)) - 96px - 16px)',
                   backgroundImage: `linear-gradient(90deg, transparent, rgba(94,42,103,0.3) 5%, rgba(94,42,103,0.3) 95%, transparent)`,
                 }}
               />
 
-              {/* Cards 1 a 4 */}
+              {/* PASSO 1 — duas portas de entrada (briefing via plataforma OU
+                  ideia do próprio estrategista) que convergem 2→1 no fluxo */}
+              <div className="relative z-[1] col-span-2 md:col-span-1">
+                <div className="relative flex h-full flex-col justify-center gap-4">
+                  {[
+                    { icon: FileText, label: c.designStep1, n: 1 },
+                    { icon: Lightbulb, label: c.designStep1b, n: 2 },
+                  ].map((step) => (
+                    <div
+                      key={step.n}
+                      className="relative rounded-[14px] border bg-card p-3 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+                      style={{ borderColor: 'rgba(94,42,103,0.2)' }}
+                    >
+                      <div
+                        className="absolute -top-2.5 -left-2.5 flex h-6 w-6 items-center justify-center rounded-full font-headline text-[10px] font-black text-white shadow-md"
+                        style={{ backgroundColor: CAAS_ACCENT }}
+                      >
+                        {step.n}
+                      </div>
+                      <div
+                        className="mb-2 flex h-8 w-8 items-center justify-center rounded-[9px]"
+                        style={{ backgroundColor: 'rgba(94,42,103,0.12)', color: CAAS_ACCENT }}
+                      >
+                        <step.icon className="h-4 w-4" />
+                      </div>
+                      <p className="text-[12px] font-semibold leading-[1.35] text-accent-foreground">
+                        {step.label}
+                      </p>
+                    </div>
+                  ))}
+
+                  {/* "ou" entre as duas portas de entrada */}
+                  <span
+                    className="pointer-events-none absolute left-1/2 top-1/2 z-[4] -translate-x-1/2 -translate-y-1/2 rounded-full border bg-card px-2 py-[3px] text-[9px] font-bold uppercase tracking-[0.1em] shadow-sm"
+                    style={{ borderColor: 'rgba(94,42,103,0.25)', color: CAAS_ACCENT }}
+                  >
+                    ou
+                  </span>
+                </div>
+
+                {/* Conector convergente 2→1 (espelho do leque de avatares), desktop */}
+                <svg
+                  className="pointer-events-none absolute right-[-10px] top-0 hidden h-full w-[32px] md:block"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  {[{ y: 27 }, { y: 73 }].map((p, i) => (
+                    <path
+                      key={i}
+                      d={`M 0 ${p.y} C 55 ${p.y}, 45 50, 100 50`}
+                      stroke={CAAS_ACCENT}
+                      strokeOpacity="0.4"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                      strokeLinecap="round"
+                      fill="none"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                </svg>
+
+                {/* Ponto de convergência — bolinha na borda direita, centro vertical */}
+                <div
+                  className="absolute right-[-12px] top-1/2 z-10 hidden h-3 w-3 -translate-y-1/2 rounded-full border-2 border-white shadow-md md:block"
+                  style={{ backgroundColor: CAAS_ACCENT }}
+                />
+              </div>
+
+              {/* Passos 2 a 4 — cards lineares (numerados 3, 4, 5) */}
               {[
-                { icon: FileText, label: c.designStep1 },
                 { icon: PenTool, label: c.designStep2 },
                 { icon: FileStack, label: c.designStep3 },
                 { icon: Users, label: c.designStep4 },
               ].map((step, i) => (
                 <div
                   key={step.label}
-                  className="relative z-[1] rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
+                  className="relative z-[1] flex flex-col justify-center rounded-[16px] border bg-card p-4 shadow-[0_8px_20px_rgba(94,42,103,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_28px_rgba(94,42,103,0.14)]"
                   style={{ borderColor: 'rgba(94,42,103,0.2)' }}
                 >
                   <div
                     className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full font-headline text-[11px] font-black text-white shadow-md"
                     style={{ backgroundColor: CAAS_ACCENT }}
                   >
-                    {i + 1}
+                    {i + 3}
                   </div>
                   <div
                     className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px]"

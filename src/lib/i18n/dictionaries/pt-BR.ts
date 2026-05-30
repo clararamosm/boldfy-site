@@ -950,8 +950,9 @@ const ptBR = {
     designItem5Desc: 'Feed, stories, LinkedIn, Instagram, uma ideia, vários canais',
     designItem6Title: 'Biblioteca viva',
     designItem6Desc: 'Todas as peças ficam arquivadas pro time consultar e reutilizar',
-    // Como funciona (4 passos do modo 1)
+    // Como funciona (modo 1) — duas portas de entrada convergem no fluxo
     designStep1: 'Briefing chega via plataforma',
+    designStep1b: 'Estrategista propõe a ideia',
     designStep2: 'Estrategista produz dentro do Brand Context',
     designStep3: 'Peça sobe pra Biblioteca da empresa',
     designStep4: 'Time usa nos posts autorais',
