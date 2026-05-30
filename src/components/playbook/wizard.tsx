@@ -1071,11 +1071,11 @@ function PorteCompromissoView({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <Button size="lg" className="flex-1" onClick={() => onAnswer(true)}>
+      <div className="flex flex-col gap-2 sm:gap-3">
+        <Button size="lg" className="w-full" onClick={() => onAnswer(true)}>
           Sim, consigo comprometer 5
         </Button>
-        <Button size="lg" variant="outline" className="flex-1" onClick={() => onAnswer(false)}>
+        <Button size="lg" variant="outline" className="w-full" onClick={() => onAnswer(false)}>
           Não, é muito pro nosso porte
         </Button>
       </div>
