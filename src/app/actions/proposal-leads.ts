@@ -105,8 +105,8 @@ function buildProposalSummary(input: ProposalLeadData): string {
   if (input.designPlan) {
     const planLabels: Record<string, string> = {
       starter: 'Starter (4 peças)',
-      growth: 'Growth (8 peças)',
-      scale: 'Scale (12 peças)',
+      growth: 'Growth (7 peças)',
+      scale: 'Scale (10 peças)',
     };
     lines.push(`Design on Demand: ${planLabels[input.designPlan] ?? input.designPlan} = R$ ${fmt(input.designPrice)}/mês`);
   }

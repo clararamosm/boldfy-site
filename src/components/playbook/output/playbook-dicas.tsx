@@ -17,9 +17,6 @@
  *
  * Features (palavras-chave da plataforma Boldfy) nos bullets aparecem em
  * `[[...]]` no JSON e são renderizadas como pills rosa com ✦ pelo parser.
- *
- * Callouts no `boldfy.callout` ganharam `style: 'gift'` na 3ª curadoria pra
- * o pacote de design grátis — renderiza com AnimatedGiftBox em vez de pill.
  */
 
 import {
