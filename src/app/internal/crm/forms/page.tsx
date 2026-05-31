@@ -390,17 +390,22 @@ async function getEventChips(): Promise<Array<{ value: string; label: string; co
 }
 
 /**
- * Pessoas de um evento/campanha — todas com o slug em campaign_memberships.
- * Parte de `people` (não activities), então inclui quem entrou só por import
- * manual (sem form_submit). Left join em activities pra montar os chips de form.
+ * Pessoas a partir de `people` (não de activities). Quando eventoSlug é
+ * informado, filtra por campaign_memberships (chip de evento). Quando é null,
+ * retorna TODAS as pessoas ativas — usado pela visão "Todos", que precisa
+ * incluir quem entrou sem form (inserção manual via import, extensão, etc).
+ * Left join em activities só pra montar os chips de form de cada pessoa.
  */
-async function getEventPeople(params: Params, eventoSlug: string): Promise<{ rows: PersonRow[]; totalPeople: number }> {
-  const filters: SQL[] = [sql`${eventoSlug} = ANY(${people.campaignMemberships})`];
+async function getEventPeople(params: Params, eventoSlug: string | null): Promise<{ rows: PersonRow[]; totalPeople: number }> {
+  const filters: SQL[] = [eq(people.archived, false)];
+  if (eventoSlug) filters.push(sql`${eventoSlug} = ANY(${people.campaignMemberships})`);
   if (params.unsubscribed === 'hide') filters.push(eq(people.unsubscribed, false));
   if (params.unsubscribed === 'only') filters.push(eq(people.unsubscribed, true));
   if (params.segmento === 'newsletter') filters.push(eq(people.newsletterOptIn, true));
   else if (params.segmento !== 'all') filters.push(eq(people.segment, params.segmento));
   if (params.statusId) filters.push(eq(people.statusId, params.statusId));
+  if (params.canal) filters.push(eq(people.sourceChannel, params.canal as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown'));
+  if (params.pagina) filters.push(eq(people.sourcePage, params.pagina));
 
   const rawRows = await db
     .select({
@@ -530,6 +535,12 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
       const unsub = await getUnsubscribedPeople(params);
       rows = unsub.rows;
       totalPeople = unsub.totalPeople;
+    } else if (params.formType === 'all') {
+      // "Todos" parte de `people` (não de activities) pra incluir quem entrou
+      // sem form: inserção manual via import, captura de extensão, etc.
+      const all = await getEventPeople(params, null);
+      rows = all.rows;
+      totalPeople = all.totalPeople;
     } else {
       rows = result.rows;
       totalPeople = result.totalPeople;
