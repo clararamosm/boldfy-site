@@ -31,9 +31,9 @@ import { trackEvent } from '@/lib/track';
 
 const PLATFORM_TIERS = [
   { min: 5, max: 10, full: 499, beta: 349 },
-  { min: 11, max: 20, full: 449, beta: 315 },
+  { min: 11, max: 20, full: 449, beta: 314 },
   { min: 21, max: 40, full: 399, beta: 279 },
-  { min: 41, max: 70, full: 349, beta: 245 },
+  { min: 41, max: 70, full: 349, beta: 244 },
 ];
 
 const DESIGN_PACKS = {
