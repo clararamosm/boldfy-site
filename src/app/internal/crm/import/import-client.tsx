@@ -13,11 +13,13 @@ const TARGET_FIELDS: { key: ImportTargetKey; label: string }[] = [
   { key: 'phone', label: 'Telefone' },
   { key: 'jobTitle', label: 'Cargo' },
   { key: 'companyName', label: 'Empresa' },
+  { key: 'companySize', label: 'Colaboradores' },
   { key: 'linkedinUrl', label: 'LinkedIn' },
 ];
 
 const SEGMENT_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: '— Sem segmento —' },
+  { value: 'auto_by_company', label: 'Automático (empresa + >10 colab = Líder B2B)' },
   { value: 'lider_b2b', label: 'Líder B2B' },
   { value: 'parceiro', label: 'Parceiro estratégico' },
   { value: 'profissional_individual', label: 'Profissional individual' },
@@ -29,6 +31,7 @@ const SYNONYMS: Record<ImportTargetKey, string[]> = {
   phone: ['phone', 'telefone', 'tel', 'celular', 'whatsapp', 'fone', 'mobile'],
   jobTitle: ['cargo', 'title', 'jobtitle', 'position', 'funcao', 'role', 'cargotitulo'],
   companyName: ['empresa', 'company', 'organizacao', 'organization', 'account', 'companhia'],
+  companySize: ['colaboradores', 'funcionarios', 'employees', 'headcount', 'tamanho', 'size', 'companysize', 'numerofuncionarios'],
   linkedinUrl: ['linkedin', 'linkedinurl', 'perfillinkedin', 'linkedinprofile'],
 };
 
@@ -248,6 +251,12 @@ export function ImportClient({ campaigns }: Props) {
                   </option>
                 ))}
               </select>
+              {segment === 'auto_by_company' && (
+                <p className="mt-1 text-xs text-gray-400">
+                  Sem empresa = Profissional. Com empresa e mais de 10
+                  colaboradores (ou sem o dado) = Líder B2B.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Tags (vírgula)</label>
