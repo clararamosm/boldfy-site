@@ -50,10 +50,13 @@ export type PersonRow = {
     jobTitle: string | null;
     metadata: Record<string, unknown> | null;
     segment: string | null;
+    sourceMethod: string | null;
     newsletterOptIn: boolean;
     unsubscribed: boolean;
     unsubscribedAt: Date | null;
     formsSubmitted: string[];
+    /** Slugs de campanha/evento (espelho da tag "Evento: X"). Chip de evento. */
+    campaignMemberships: string[];
   };
   company: { id: string; name: string } | null;
   forms: FormType[];

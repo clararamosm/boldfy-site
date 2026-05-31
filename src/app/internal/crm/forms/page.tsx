@@ -16,7 +16,7 @@
 
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { db, activities, people, companies, statuses } from '@/db';
+import { db, activities, people, companies, statuses, campaigns } from '@/db';
 import { eq, desc, asc, and, like, gte, sql, type SQL } from 'drizzle-orm';
 import { FormsList } from './forms-list';
 import { FormsFilters } from './forms-filters';
@@ -39,6 +39,8 @@ type Params = {
   // 'unsubscribed' é uma visão especial (não um form): lista TODOS os
   // descadastrados, mesmo quem nunca preencheu form. Lista de "não contatar".
   formType: 'all' | FormType | 'unsubscribed';
+  /** Slug de campanha/evento (chip de evento). Filtra por campaign_memberships. */
+  evento: string | null;
   statusId: string | null;
   canal: string | null;
   pagina: string | null;
@@ -55,6 +57,7 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
   const segmento = sp.segmento as Params['segmento'] | undefined;
   const formType = sp.formType as Params['formType'] | undefined;
   const statusId = typeof sp.statusId === 'string' && sp.statusId.length > 0 ? sp.statusId : null;
+  const evento = typeof sp.evento === 'string' && sp.evento.length > 0 ? sp.evento : null;
   const canal = typeof sp.canal === 'string' && sp.canal.length > 0 ? sp.canal : null;
   const pagina = typeof sp.pagina === 'string' && sp.pagina.length > 0 ? sp.pagina : null;
   const unsubscribedRaw = sp.unsubscribed as string | undefined;
@@ -70,7 +73,7 @@ function parseParams(sp: Record<string, string | string[] | undefined>): Params 
     segmento: ['all', 'lider_b2b', 'parceiro', 'profissional_individual', 'newsletter'].includes(segmento as string)
       ? (segmento as Params['segmento']) : 'all',
     formType: validFormTypes.includes(formType as Params['formType']) ? (formType as Params['formType']) : 'all',
-    statusId, canal, pagina, unsubscribed, sortBy, sortDir, page, pageSize,
+    evento, statusId, canal, pagina, unsubscribed, sortBy, sortDir, page, pageSize,
   };
 }
 
@@ -130,6 +133,8 @@ async function getPeopleWithForms(params: Params): Promise<{
       personSourcePage: people.sourcePage,
       personAcTags: people.acTags,
       personSegment: people.segment,
+      personSourceMethod: people.sourceMethod,
+      personCampaignMemberships: people.campaignMemberships,
       personOptIn: people.newsletterOptIn,
       personUnsubscribed: people.unsubscribed,
       personUnsubscribedAt: people.unsubscribedAt,
@@ -173,10 +178,12 @@ async function getPeopleWithForms(params: Params): Promise<{
           statusColor: row.personStatusColor ?? null,
           metadata: row.personMetadata as Record<string, unknown> | null,
           segment: row.personSegment ?? null,
+          sourceMethod: row.personSourceMethod ?? null,
           newsletterOptIn: row.personOptIn ?? false,
           unsubscribed: row.personUnsubscribed ?? false,
           unsubscribedAt: row.personUnsubscribedAt ?? null,
           formsSubmitted: (row.personFormsSubmitted as string[] | null) ?? [],
+          campaignMemberships: (row.personCampaignMemberships as string[] | null) ?? [],
         },
         company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
         forms: [ft],
@@ -268,6 +275,8 @@ async function getUnsubscribedPeople(params: Params): Promise<{ rows: PersonRow[
       personSourcePage: people.sourcePage,
       personAcTags: people.acTags,
       personSegment: people.segment,
+      personSourceMethod: people.sourceMethod,
+      personCampaignMemberships: people.campaignMemberships,
       personOptIn: people.newsletterOptIn,
       personUnsubscribed: people.unsubscribed,
       personUnsubscribedAt: people.unsubscribedAt,
@@ -313,10 +322,12 @@ async function getUnsubscribedPeople(params: Params): Promise<{ rows: PersonRow[
           statusColor: row.personStatusColor ?? null,
           metadata: row.personMetadata as Record<string, unknown> | null,
           segment: row.personSegment ?? null,
+          sourceMethod: row.personSourceMethod ?? null,
           newsletterOptIn: row.personOptIn ?? false,
           unsubscribed: row.personUnsubscribed ?? true,
           unsubscribedAt: row.personUnsubscribedAt ?? null,
           formsSubmitted: (row.personFormsSubmitted as string[] | null) ?? [],
+          campaignMemberships: (row.personCampaignMemberships as string[] | null) ?? [],
         },
         company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
         forms: ft ? [ft] : [],
@@ -349,6 +360,134 @@ async function getUnsubscribedCount(): Promise<number> {
   return res[0]?.c ?? 0;
 }
 
+/** Total de pessoas no CRM (badge do chip "Todos"). */
+async function getTotalPeopleCount(): Promise<number> {
+  const res = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(people)
+    .where(eq(people.archived, false));
+  return res[0]?.c ?? 0;
+}
+
+/**
+ * Chips de evento/campanha: cada campanha cadastrada com pelo menos 1 pessoa
+ * marcada em campaign_memberships. Conta a partir de `people` (não activities)
+ * pra pegar também leads importados manualmente (sem form_submit).
+ */
+async function getEventChips(): Promise<Array<{ value: string; label: string; count: number }>> {
+  const camps = await db.select({ slug: campaigns.slug, name: campaigns.name }).from(campaigns);
+  if (camps.length === 0) return [];
+  const counts = await db
+    .select({ slug: sql<string>`unnest(${people.campaignMemberships})`, c: sql<number>`count(*)::int` })
+    .from(people)
+    .where(eq(people.archived, false))
+    .groupBy(sql`unnest(${people.campaignMemberships})`);
+  const countBySlug = new Map<string, number>();
+  for (const r of counts) countBySlug.set(r.slug, Number(r.c));
+  return camps
+    .map((c) => ({ value: c.slug, label: c.name, count: countBySlug.get(c.slug) ?? 0 }))
+    .filter((c) => c.count > 0);
+}
+
+/**
+ * Pessoas de um evento/campanha — todas com o slug em campaign_memberships.
+ * Parte de `people` (não activities), então inclui quem entrou só por import
+ * manual (sem form_submit). Left join em activities pra montar os chips de form.
+ */
+async function getEventPeople(params: Params, eventoSlug: string): Promise<{ rows: PersonRow[]; totalPeople: number }> {
+  const filters: SQL[] = [sql`${eventoSlug} = ANY(${people.campaignMemberships})`];
+  if (params.unsubscribed === 'hide') filters.push(eq(people.unsubscribed, false));
+  if (params.unsubscribed === 'only') filters.push(eq(people.unsubscribed, true));
+  if (params.segmento === 'newsletter') filters.push(eq(people.newsletterOptIn, true));
+  else if (params.segmento !== 'all') filters.push(eq(people.segment, params.segmento));
+  if (params.statusId) filters.push(eq(people.statusId, params.statusId));
+
+  const rawRows = await db
+    .select({
+      personId: people.id,
+      personName: people.name,
+      personEmail: people.email,
+      personJobTitle: people.jobTitle,
+      personMetadata: people.metadata,
+      personPhone: people.phone,
+      personSourceChannel: people.sourceChannel,
+      personSourcePage: people.sourcePage,
+      personAcTags: people.acTags,
+      personSegment: people.segment,
+      personSourceMethod: people.sourceMethod,
+      personCampaignMemberships: people.campaignMemberships,
+      personOptIn: people.newsletterOptIn,
+      personUnsubscribed: people.unsubscribed,
+      personUnsubscribedAt: people.unsubscribedAt,
+      personFormsSubmitted: people.formsSubmitted,
+      personCreatedAt: people.createdAt,
+      personStatusLabel: statuses.label,
+      personStatusColor: statuses.color,
+      companyId: companies.id,
+      companyName: companies.name,
+      activityType: activities.type,
+      activityCreatedAt: activities.createdAt,
+    })
+    .from(people)
+    .leftJoin(activities, and(eq(activities.personId, people.id), like(activities.type, 'form_submit_%')))
+    .leftJoin(companies, eq(people.companyId, companies.id))
+    .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .where(and(...filters))
+    .limit(10000);
+
+  const byPersonId = new Map<string, PersonRow>();
+  for (const row of rawRows) {
+    const existing = byPersonId.get(row.personId);
+    const ft = row.activityType as FormType | null;
+    if (existing) {
+      if (ft && !existing.forms.includes(ft)) existing.forms.push(ft);
+      if (row.activityCreatedAt && row.activityCreatedAt > existing.lastFormAt) existing.lastFormAt = row.activityCreatedAt;
+      if (row.activityCreatedAt && row.activityCreatedAt < existing.firstFormAt) existing.firstFormAt = row.activityCreatedAt;
+    } else {
+      const fallbackDate = row.personCreatedAt ?? new Date(0);
+      byPersonId.set(row.personId, {
+        person: {
+          id: row.personId,
+          name: row.personName ?? '',
+          email: row.personEmail,
+          jobTitle: row.personJobTitle ?? null,
+          phone: row.personPhone ?? null,
+          sourceChannel: row.personSourceChannel,
+          sourcePage: row.personSourcePage,
+          acTags: row.personAcTags as string[] | null,
+          statusLabel: row.personStatusLabel ?? null,
+          statusColor: row.personStatusColor ?? null,
+          metadata: row.personMetadata as Record<string, unknown> | null,
+          segment: row.personSegment ?? null,
+          sourceMethod: row.personSourceMethod ?? null,
+          newsletterOptIn: row.personOptIn ?? false,
+          unsubscribed: row.personUnsubscribed ?? false,
+          unsubscribedAt: row.personUnsubscribedAt ?? null,
+          formsSubmitted: (row.personFormsSubmitted as string[] | null) ?? [],
+          campaignMemberships: (row.personCampaignMemberships as string[] | null) ?? [],
+        },
+        company: row.companyId ? { id: row.companyId, name: row.companyName ?? '' } : null,
+        forms: ft ? [ft] : [],
+        lastFormAt: row.activityCreatedAt ?? fallbackDate,
+        firstFormAt: row.activityCreatedAt ?? fallbackDate,
+      });
+    }
+  }
+
+  const list = Array.from(byPersonId.values());
+  list.sort((a, b) => {
+    let cmp = 0;
+    if (params.sortBy === 'name') cmp = a.person.name.localeCompare(b.person.name);
+    else if (params.sortBy === 'email') cmp = (a.person.email ?? '').localeCompare(b.person.email ?? '');
+    else cmp = a.lastFormAt.getTime() - b.lastFormAt.getTime();
+    return params.sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const totalPeople = list.length;
+  const offset = (params.page - 1) * params.pageSize;
+  return { rows: list.slice(offset, offset + params.pageSize), totalPeople };
+}
+
 export default async function CrmFormsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
   const params = parseParams(sp);
@@ -359,25 +498,35 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
   };
   let totalPeople = 0;
   let unsubscribedCount = 0;
+  let totalPeopleAll = 0;
+  let eventChips: Array<{ value: string; label: string; count: number }> = [];
   let dbError: string | null = null;
   let personStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   let filterOptions: { channels: string[]; pages: string[] } = { channels: [], pages: [] };
 
   try {
     // getPeopleWithForms roda sempre — fornece os counts dos chips de form.
-    // A visão "Descadastrados" troca só as ROWS exibidas (counts seguem reais).
-    const [result, statusesData, options, unsubCount] = await Promise.all([
+    // A visão "Descadastrados"/"Evento" troca só as ROWS exibidas (counts reais).
+    const [result, statusesData, options, unsubCount, totalAll, events] = await Promise.all([
       getPeopleWithForms(params),
       getStatuses('person'),
       getFilterOptions(),
       getUnsubscribedCount(),
+      getTotalPeopleCount(),
+      getEventChips(),
     ]);
     countsByForm = result.countsByForm;
     personStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
     filterOptions = options;
     unsubscribedCount = unsubCount;
+    totalPeopleAll = totalAll;
+    eventChips = events;
 
-    if (params.formType === 'unsubscribed') {
+    if (params.evento) {
+      const ev = await getEventPeople(params, params.evento);
+      rows = ev.rows;
+      totalPeople = ev.totalPeople;
+    } else if (params.formType === 'unsubscribed') {
       const unsub = await getUnsubscribedPeople(params);
       rows = unsub.rows;
       totalPeople = unsub.totalPeople;
@@ -409,6 +558,8 @@ export default async function CrmFormsPage({ searchParams }: { searchParams: Pro
           pages={filterOptions.pages}
           countsByForm={countsByForm}
           unsubscribedCount={unsubscribedCount}
+          totalPeopleAll={totalPeopleAll}
+          eventChips={eventChips}
         />
       </Suspense>
 

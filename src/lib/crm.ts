@@ -23,6 +23,7 @@ import { syncCompanyFromPeople } from './crm-sync';
 import { syncContact } from './activecampaign';
 import type { ClassifiedLead } from './form-adapters/types';
 import { formSlugToActivityType, FORM_DEFS_SEED, type FormSlug } from './form-definitions';
+import { getCampaignAttributionBySlug } from './events';
 
 /* -------------------------------------------------------------------------- */
 /*  Pesos pré-definidos por tipo de activity                                  */
@@ -115,6 +116,12 @@ export type UpsertPersonInput = {
    * people.forms_submitted (dedup atômico via SQL).
    */
   formsSubmittedAppend?: string;
+  /**
+   * Slugs de campanha/evento a adicionar em people.campaign_memberships
+   * (append-only, dedup atômico via SQL). Web Summit etc. Vem da UTM no
+   * submit ou do import de CSV. Espelho local da tag "Evento: X" do AC.
+   */
+  campaignMembershipsAppend?: string[];
   /**
    * Senioridade do cargo (introduzida no form Playbook ELG, mai/2026).
    * Sobrescreve em cada submit que carregue essa info — última resposta vence.
@@ -458,6 +465,13 @@ export async function upsertPerson(
         const slug = input.formsSubmittedAppend;
         setObj.formsSubmitted = sql`ARRAY(SELECT DISTINCT unnest(COALESCE(${people.formsSubmitted}, '{}'::text[]) || ARRAY[${slug}]::text[]))`;
       }
+      // campaign_memberships: append atômico + dedup. É o que põe o lead ANTIGO
+      // no evento ao reentrar por UTM/import (membership por toque, não por
+      // first-touch). Só toca a coluna quando vier algo.
+      if (input.campaignMembershipsAppend && input.campaignMembershipsAppend.length > 0) {
+        const slugs = input.campaignMembershipsAppend;
+        setObj.campaignMemberships = sql`ARRAY(SELECT DISTINCT unnest(COALESCE(${people.campaignMemberships}, '{}'::text[]) || ${slugs}::text[]))`;
+      }
 
       // metadata patch via jsonb || — preserva chaves não-coincidentes.
       if (input.metadataPatch && Object.keys(input.metadataPatch).length > 0) {
@@ -507,6 +521,7 @@ export async function upsertPerson(
         segment: input.segment ?? null,
         newsletterOptIn: input.newsletterOptIn ?? false,
         formsSubmitted: input.formsSubmittedAppend ? [input.formsSubmittedAppend] : [],
+        campaignMemberships: input.campaignMembershipsAppend ?? [],
         proposalUrl: input.proposalUrl,
         acTags: input.acTagsSet ?? null,
         metadata: input.metadataPatch ?? null,
@@ -711,6 +726,16 @@ function buildAcListNames(lead: ClassifiedLead): string[] {
 export async function recordLeadFromForm(
   lead: ClassifiedLead,
 ): Promise<CrmResult<{ personId: string; companyId?: string }>> {
+  /* ---------- 0. Atribuição de evento/campanha por TOQUE ---------- */
+  // Se a UTM desse toque casa com uma campanha cadastrada (slug == utm_campaign),
+  // aplica a tag "Evento: X" no AC e marca a membership local. Vale também pra
+  // lead que já existia (membership é append-only, independente do first-touch).
+  // O dashboard de Campanhas continua contando só por firstTouchCampaign (UTM).
+  const touchCampaign = lead.lastTouchCampaign ?? lead.firstTouchCampaign ?? null;
+  const attribution = await getCampaignAttributionBySlug(touchCampaign);
+  const acTags = attribution ? [...lead.acTags, attribution.eventTag] : lead.acTags;
+  const campaignMembershipsAppend = attribution ? [attribution.slug] : undefined;
+
   /* ---------- 1. Empresa ---------- */
   let companyId: string | undefined;
   if (lead.companyName) {
@@ -746,7 +771,8 @@ export async function recordLeadFromForm(
       newsletterOptIn: lead.newsletterOptIn,
       proposalUrl: lead.proposalUrl,
       formsSubmittedAppend: lead.formSlug,
-      acTagsSet: lead.acTags,
+      campaignMembershipsAppend,
+      acTagsSet: acTags,
       metadataPatch: lead.personMetadataPatch,
       // Playbook ELG (mai/2026): forms que coletam cargo passam aqui.
       jobSeniority: lead.jobSeniority,
@@ -829,7 +855,7 @@ export async function recordLeadFromForm(
         firstName: lead.acFirstName ?? lead.name.split(/\s+/)[0],
         lastName: lead.acLastName ?? lead.name.split(/\s+/).slice(1).join(' '),
         phone: lead.phone,
-        tags: lead.acTags,
+        tags: acTags,
         fields: lead.acFields,
         listNames,
       });

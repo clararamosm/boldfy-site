@@ -236,6 +236,13 @@ export const people = pgTable(
      * Substitui derivação por activities form_submit_* na UI da aba Forms.
      */
     formsSubmitted: text('forms_submitted').array().notNull().default(sql`'{}'::text[]`),
+    /**
+     * Slugs de campanhas/eventos que a pessoa entrou (append-only, dedup).
+     * Espelho local da tag "Evento: X" do AC — alimenta o chip de evento na
+     * aba Formulários. Recebe tanto captura online (UTM no submit) quanto
+     * import manual de CSV. Web Summit Rio 2026 e diante.
+     */
+    campaignMemberships: text('campaign_memberships').array().notNull().default(sql`'{}'::text[]`),
     /** URL da proposta HTML gerada (form Proposta). Botão destacado no perfil. */
     proposalUrl: text('proposal_url'),
     /**
@@ -458,6 +465,10 @@ export const campaigns = pgTable('campaigns', {
   slug: text('slug').notNull().unique(), // ex: 'web-summit-rio-2026' (= utm_campaign)
   name: text('name').notNull(),           // ex: 'Web Summit Rio 2026'
   objective: text('objective').notNull(),
+  // Tag de evento aplicada no AC quando um lead entra por essa campanha
+  // (via UTM no submit ou via import de CSV). Override opcional — fallback no
+  // código é "Evento: {name}". Ver lib/events.ts.
+  acTag: text('ac_tag'),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
   endDate: timestamp('end_date', { withTimezone: true }),
   alwaysOn: boolean('always_on').notNull().default(false),

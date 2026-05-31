@@ -184,6 +184,20 @@ export function buildLegibleACTags(params: {
 }
 
 /**
+ * Tag de tipo de lead (1 das 3 famílias) a partir do segment do CRM. Mesmo
+ * naming do buildLegibleACTags. Usado no import de CSV pra aplicar a tag de
+ * segmento quando a operadora escolhe um segmento pro lote.
+ */
+export function segmentToTag(
+  segment: 'lider_b2b' | 'parceiro' | 'profissional_individual' | string | null,
+): string | null {
+  if (segment === 'lider_b2b') return 'Líder B2B';
+  if (segment === 'parceiro') return 'Parceiro estratégico';
+  if (segment === 'profissional_individual') return 'Profissional individual';
+  return null;
+}
+
+/**
  * Helper inverso pra retro-compat — converte LeadSegment do CRM em label
  * legível pra exibir em UI (badge no header do perfil, etc).
  */

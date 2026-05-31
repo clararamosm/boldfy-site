@@ -24,6 +24,7 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
   const isEmpresas = pathname.startsWith('/internal/crm/empresas');
   const isFeed = pathname.startsWith('/internal/crm/feed');
   const isForms = pathname.startsWith('/internal/crm/forms');
+  const isImport = pathname.startsWith('/internal/crm/import');
   const isSettings = pathname.startsWith('/internal/crm/settings');
 
   return (
@@ -57,6 +58,13 @@ export function CrmSubNav({ totalPeople, totalCompanies }: Props) {
         aria-current={isForms ? 'page' : undefined}
       >
         Formulários
+      </Link>
+      <Link
+        href="/internal/crm/import"
+        className={`crm-subnav-link ${isImport ? 'active' : ''}`}
+        aria-current={isImport ? 'page' : undefined}
+      >
+        Inserir leads
       </Link>
       <Link
         href="/internal/crm/settings/statuses"

@@ -22,6 +22,10 @@ type Props = {
   countsByForm: Record<FormType, number>;
   /** Total de leads descadastrados (badge do chip Descadastrados). */
   unsubscribedCount: number;
+  /** Total de pessoas no CRM (badge do chip "Todos"). */
+  totalPeopleAll: number;
+  /** Chips de evento/campanha (Web Summit etc), na mesma linha dos gerais. */
+  eventChips: Array<{ value: string; label: string; count: number }>;
 };
 
 const PERIODS = [
@@ -61,7 +65,7 @@ const MATERIAL_CHIPS: FormChip[] = [
   { value: 'form_submit_playbook_employee_led_growth', icon: 'ferramenta', label: 'Playbook' },
 ];
 
-export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscribedCount }: Props) {
+export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscribedCount, totalPeopleAll, eventChips }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -75,6 +79,24 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
     startTransition(() => router.push(`${pathname}?${params.toString()}`));
   }, [searchParams, pathname, router]);
 
+  // Form e evento são mutuamente exclusivos: selecionar um limpa o outro.
+  const selectForm = useCallback((value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('evento');
+    if (value === 'all') params.delete('formType');
+    else params.set('formType', value);
+    params.delete('page');
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
+  }, [searchParams, pathname, router]);
+
+  const selectEvento = useCallback((value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('formType');
+    params.set('evento', value);
+    params.delete('page');
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
+  }, [searchParams, pathname, router]);
+
   const clearAll = useCallback(() => {
     startTransition(() => router.push(pathname));
   }, [pathname, router]);
@@ -82,6 +104,7 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
   const currentPeriod = searchParams.get('period') ?? 'all';
   const currentSegmento = searchParams.get('segmento') ?? 'all';
   const currentFormType = searchParams.get('formType') ?? 'all';
+  const currentEvento = searchParams.get('evento') ?? '';
   const currentStatusId = searchParams.get('statusId') ?? '';
   const currentCanal = searchParams.get('canal') ?? '';
   const currentPagina = searchParams.get('pagina') ?? '';
@@ -89,7 +112,7 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
   // Task 1: 'hide' (default) | 'show' | 'only'
   const currentUnsub = searchParams.get('unsubscribed') ?? 'hide';
 
-  const hasFilters = currentPeriod !== 'all' || currentSegmento !== 'all' || currentFormType !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentUnsub !== 'hide';
+  const hasFilters = currentPeriod !== 'all' || currentSegmento !== 'all' || currentFormType !== 'all' || currentEvento !== '' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentUnsub !== 'hide';
 
   const selectStyle: React.CSSProperties = {
     padding: '8px 10px',
@@ -113,9 +136,11 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
   };
 
   const renderChip = (chip: FormChip) => {
-    const isActive = currentFormType === chip.value;
+    const isActive = chip.value === 'all'
+      ? currentFormType === 'all' && !currentEvento
+      : currentFormType === chip.value && !currentEvento;
     const count = chip.value === 'all'
-      ? Object.values(countsByForm).reduce((s, n) => s + n, 0) // não bate exato com totalPeople (pessoa em N forms conta N), só pra dar ordem de grandeza
+      ? totalPeopleAll
       : chip.value === 'unsubscribed'
         ? unsubscribedCount
         : countsByForm[chip.value as FormType];
@@ -123,7 +148,7 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
       <button
         key={chip.value}
         type="button"
-        onClick={() => updateParam('formType', chip.value)}
+        onClick={() => selectForm(chip.value)}
         disabled={pending}
         style={{
           display: 'inline-flex',
@@ -143,11 +168,43 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
       >
         <FormTagIcon name={chip.icon} />
         <span>{chip.label}</span>
-        {chip.value !== 'all' ? (
-          <span style={{ padding: '1px 6px', background: isActive ? '#CD50F1' : '#FAF7FF', color: isActive ? '#FFFFFF' : '#9D85B3', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>
-            {count}
-          </span>
-        ) : null}
+        <span style={{ padding: '1px 6px', background: isActive ? '#CD50F1' : '#FAF7FF', color: isActive ? '#FFFFFF' : '#9D85B3', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>
+          {count}
+        </span>
+      </button>
+    );
+  };
+
+  // Chip de evento/campanha — mesma fileira dos gerais (decisão da Clara).
+  const renderEventChip = (chip: { value: string; label: string; count: number }) => {
+    const isActive = currentEvento === chip.value;
+    return (
+      <button
+        key={chip.value}
+        type="button"
+        onClick={() => selectEvento(chip.value)}
+        disabled={pending}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '6px 12px',
+          borderRadius: 999,
+          border: isActive ? '1px solid #CD50F1' : '1px solid #E4D8ED',
+          background: isActive ? 'rgba(205, 80, 241, 0.12)' : '#FFFFFF',
+          color: isActive ? '#CD50F1' : '#45336B',
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: pending ? 'progress' : 'pointer',
+          fontFamily: 'inherit',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        <FormTagIcon name="all" />
+        <span>{chip.label}</span>
+        <span style={{ padding: '1px 6px', background: isActive ? '#CD50F1' : '#FAF7FF', color: isActive ? '#FFFFFF' : '#9D85B3', borderRadius: 999, fontSize: 10, fontWeight: 700 }}>
+          {chip.count}
+        </span>
       </button>
     );
   };
@@ -170,6 +227,7 @@ export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscr
           <span style={groupLabelStyle}>Formulários gerais</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {GENERAL_CHIPS.map(renderChip)}
+            {eventChips.map(renderEventChip)}
           </div>
         </div>
         <div>

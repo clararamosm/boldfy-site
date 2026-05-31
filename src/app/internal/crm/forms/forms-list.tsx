@@ -339,6 +339,11 @@ export function FormsList({ rows, totalPeople, totalPages, currentPage }: Props)
                             {FORM_LABELS[f]}
                           </span>
                         ))}
+                        {row.forms.length === 0 && row.person.sourceMethod === 'manual' ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'rgba(157, 133, 179, 0.12)', color: '#6B5B8A', borderRadius: 999, fontSize: 11, fontWeight: 700 }}>
+                            Inserção manual
+                          </span>
+                        ) : null}
                       </div>
                     </td>
                   ) : null}
