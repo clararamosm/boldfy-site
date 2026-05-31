@@ -303,8 +303,6 @@ export const TIPS_LIBRARY: Tip[] = [
         '[[Brand Context]] garante consistência mesmo com auto-serviço',
         'Tracking de qual peça circulou mais e quem usou',
       ],
-      // Callout dinâmico (style: 'gift') injetado em render.ts quando
-      // calcColabAtivos(porte) ≥ 40 (Starter/Growth/Scale grátis).
     },
     selectors: { universal: true },
   },

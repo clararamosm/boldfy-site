@@ -294,74 +294,11 @@ export function selectTipsForPlaybook(quiz: PlaybookQuizData): Tip[] {
     pushUnique(findById('L_FULL_CONTENT'));
   }
 
-  // Post-process: injeta callout dinâmico na dica U7 (biblioteca de assets)
-  // quando o porte cruza os thresholds de Modo Design grátis (40/60/70).
-  // Mantém paridade com `DESIGN_FREE_THRESHOLDS` em components/proposal-builder.tsx
-  // (single source of truth do bundle de design grátis pra plataforma).
-  injectBibliotecaCallout(selected, quiz.porteColaboradores);
-
   // Renumera "Dica 01" ... "Dica N" conforme ordem final
   return selected.map((tip, i) => ({
     ...tip,
     numero: `Dica ${String(i + 1).padStart(2, '0')}`,
   }));
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Modo Design grátis — thresholds por colaboradores ATIVOS estimados         */
-/* -------------------------------------------------------------------------- */
-/**
- * Tabela de pacotes inclusos no Modo Design. Avaliada contra o número de
- * **colaboradores ativos estimados** (via `calcColabAtivos`), não o porte
- * total — mesma base que a pessoa vai usar no proposal-builder pra não dar
- * info conflitante (lá ela mesma coloca a estimativa de ativos).
- *
- * - 40+ ativos estimados → Starter (4 peças/mês)
- * - 60+ ativos estimados → Growth (7 peças/mês)
- * - 70+ ativos estimados → Scale (10 peças/mês)
- *
- * Empresas abaixo de 40 ativos estimados não ganham bundle — a dica da
- * biblioteca renderiza sem callout (sem criar expectativa).
- *
- * Exemplos:
- *   porte 200 (curva 22%) → 44 ativos → Starter
- *   porte 273 (curva 22%) → 60 ativos → Growth
- *   porte 318 (curva 22%) → 70 ativos → Scale
- *   porte 100 (curva 30%) → 30 ativos → nenhum
- */
-type DesignBundle = { pack: string; pieces: number; thresholdSeats: number };
-
-function bundleFromAtivos(ativosEstimados: number): DesignBundle | null {
-  if (ativosEstimados >= 70) return { pack: 'Scale', pieces: 10, thresholdSeats: 70 };
-  if (ativosEstimados >= 60) return { pack: 'Growth', pieces: 7, thresholdSeats: 60 };
-  if (ativosEstimados >= 40) return { pack: 'Starter', pieces: 4, thresholdSeats: 40 };
-  return null;
-}
-
-function injectBibliotecaCallout(tips: Tip[], porte: number): void {
-  const ativos = calcColabAtivos(porte);
-  const bundle = bundleFromAtivos(ativos);
-  if (!bundle) return; // ativos < 40: nenhum pacote grátis aplicável
-
-  const tip = tips.find((t) => t.id === 'U7');
-  if (!tip) return;
-
-  // Imutabilidade: clona o tip antes de injetar callout. Caller ainda enxerga
-  // o callout no array `tips` porque sobrescreve a referência in-place.
-  const index = tips.indexOf(tip);
-  tips[index] = {
-    ...tip,
-    boldfy: {
-      ...tip.boldfy,
-      callout: {
-        // Style 'gift' faz o componente DicaCard renderizar com o
-        // AnimatedGiftBox (caixinha animada extraída do MiniGift em
-        // product-motion.tsx) em vez do pill default.
-        label: `Sua empresa com mais de ${bundle.thresholdSeats} colaboradores ativos já ganharia o pacote ${bundle.pack} de design, com ${bundle.pieces} peças por mês prontas pra circular pela biblioteca`,
-        style: 'gift',
-      },
-    },
-  };
 }
 
 /* -------------------------------------------------------------------------- */

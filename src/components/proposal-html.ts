@@ -63,8 +63,8 @@ function fmtBRL(n: number): string {
 
 const DESIGN_LABELS: Record<string, { label: string; pieces: number; listPrice: number }> = {
   starter: { label: 'Starter', pieces: 4, listPrice: 1600 },
-  growth: { label: 'Growth', pieces: 7, listPrice: 2800 },
-  scale: { label: 'Scale', pieces: 10, listPrice: 3600 },
+  growth: { label: 'Growth', pieces: 8, listPrice: 2800 },
+  scale: { label: 'Scale', pieces: 12, listPrice: 3600 },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -199,22 +199,16 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       ` : ''}
 
       <!-- Design -->
-      ${data.design.enabled ? (() => {
-        const isFree = data.design.price === 0 && designMeta.listPrice > 0;
-        return `
+      ${data.design.enabled ? `
       <div class="section">
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td style="vertical-align:middle;">
               <span style="font-size:14px;font-weight:700;color:${C.text};">🎨 Biblioteca de Peças</span>
-              ${isFree
-                ? `<span class="badge" style="background:${C.emeraldBg};color:${C.emerald};margin-left:6px;">Incluso</span>`
-                : `<span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Design on Demand</span>`}
+              <span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Design on Demand</span>
             </td>
             <td align="right" style="vertical-align:middle;">
-              ${isFree
-                ? `<span style="font-size:12px;color:${C.textLight};text-decoration:line-through;">${fmtBRL(designMeta.listPrice)}</span><br><span style="font-size:16px;font-weight:800;color:${C.emerald};">Gratuito</span>`
-                : `<span style="font-size:16px;font-weight:800;color:${C.text};">${fmtBRL(data.design.price)}</span><span style="font-size:11px;color:${C.textMuted};">/mês</span>`}
+              <span style="font-size:16px;font-weight:800;color:${C.text};">${fmtBRL(data.design.price)}</span><span style="font-size:11px;color:${C.textMuted};">/mês</span>
             </td>
           </tr>
         </table>
@@ -231,8 +225,7 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
           <a href="https://boldfy.com.br/case-semrush" style="color:${C.primary};font-weight:600;">Veja o case da Semrush →</a>
         </p>
       </div>
-      `;
-      })() : ''}
+      ` : ''}
 
       <!-- Full-Service -->
       ${data.fullService.enabled ? `

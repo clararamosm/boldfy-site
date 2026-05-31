@@ -38,26 +38,11 @@ const PLATFORM_TIERS = [
 
 const DESIGN_PACKS = {
   starter: { label: 'Starter', pieces: 4, price: 1600 },
-  growth: { label: 'Growth', pieces: 7, price: 2800 },
-  scale: { label: 'Scale', pieces: 10, price: 3600 },
+  growth: { label: 'Growth', pieces: 8, price: 2800 },
+  scale: { label: 'Scale', pieces: 12, price: 3600 },
 } as const;
 
 type DesignPackKey = keyof typeof DESIGN_PACKS;
-
-// Thresholds que liberam o DoD gratuito por seats da plataforma.
-// Cada threshold também dispara auto-marcação do plano no toggle.
-const DESIGN_FREE_THRESHOLDS: { seats: number; pack: DesignPackKey }[] = [
-  { seats: 70, pack: 'scale' },
-  { seats: 60, pack: 'growth' },
-  { seats: 40, pack: 'starter' },
-];
-
-function getDesignAutoPack(seats: number): DesignPackKey | null {
-  for (const t of DESIGN_FREE_THRESHOLDS) {
-    if (seats >= t.seats) return t.pack;
-  }
-  return null;
-}
 
 // Full-service pricing matrix: [TLs][freq per week]
 const FULLSERVICE_MATRIX: Record<number, Record<number, number>> = {
@@ -162,24 +147,11 @@ function ProposalBuilderModal({
   const platformTotalFull = seats * platformPerSeatFull;
   const platformTotal = seats * platformPerSeat;
 
-  // Tier 2: Design on Demand
+  // Tier 2: Design on Demand (add-on sempre pago)
   const [designEnabled, setDesignEnabled] = useState(false);
   const [designPack, setDesignPack] = useState<DesignPackKey>('starter');
 
-  // Auto-bundle quando seats da plataforma cruzam os thresholds (40/60/70).
-  // Liga o toggle e troca o pack pra refletir o threshold. Se a pessoa quiser
-  // upgrade pra um plano pago acima do gratuito, ainda pode clicar manualmente.
-  const designAutoPack = platformEnabled ? getDesignAutoPack(seats) : null;
-  React.useEffect(() => {
-    if (designAutoPack) {
-      setDesignEnabled(true);
-      setDesignPack(designAutoPack);
-    }
-  }, [designAutoPack]);
-
-  const designListPrice = designEnabled ? DESIGN_PACKS[designPack].price : 0;
-  const designIsFree = designEnabled && designAutoPack === designPack;
-  const designPrice = designIsFree ? 0 : designListPrice;
+  const designPrice = designEnabled ? DESIGN_PACKS[designPack].price : 0;
 
   // Tier 3: Content Full-Service
   const [fsEnabled, setFsEnabled] = useState(false);
@@ -511,7 +483,6 @@ function ProposalBuilderModal({
                         <div className="grid grid-cols-3 gap-2 rounded-[10px] bg-secondary p-1">
                           {(Object.entries(DESIGN_PACKS) as [DesignPackKey, (typeof DESIGN_PACKS)[DesignPackKey]][]).map(
                             ([key, pack]) => {
-                              const isAuto = designAutoPack === key;
                               return (
                                 <button
                                   key={key}
@@ -524,11 +495,6 @@ function ProposalBuilderModal({
                                       : 'text-muted-foreground hover:text-foreground',
                                   )}
                                 >
-                                  {isAuto && (
-                                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
-                                      Grátis
-                                    </span>
-                                  )}
                                   <span className="block font-bold text-xs">{pack.label}</span>
                                   <span className="block text-[10px] font-medium opacity-80 mt-0.5">
                                     {pack.pieces} peças/mês
@@ -562,23 +528,11 @@ function ProposalBuilderModal({
                             Total Biblioteca
                           </span>
                           <div className="text-right">
-                            {designIsFree && (
-                              <span className="block text-xs text-muted-foreground line-through">
-                                {formatBRL(designListPrice)}/mês
-                              </span>
-                            )}
-                            <span className={cn('text-lg font-extrabold', designIsFree ? 'text-emerald-600' : 'text-foreground')}>
-                              {designIsFree ? 'Gratuito' : `${formatBRL(designPrice)}/mês`}
+                            <span className="text-lg font-extrabold text-foreground">
+                              {formatBRL(designPrice)}/mês
                             </span>
                           </div>
                         </div>
-                        {designIsFree && (
-                          <p className="text-[10px] text-emerald-700 leading-relaxed -mt-2">
-                            <strong>Só o Modo 1 · Design</strong> (plano {DESIGN_PACKS[designPack].label}) entra
-                            grátis pra empresas com {DESIGN_FREE_THRESHOLDS.find((t) => t.pack === designPack)?.seats}+ colaboradores na plataforma.
-                            O Modo Executivo é contratado à parte.
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -763,15 +717,10 @@ function ProposalBuilderModal({
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
                             Modo 1 · Design ({DESIGN_PACKS[designPack].label})
-                            {designIsFree && (
-                              <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
-                                Grátis
-                              </span>
-                            )}
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
-                              {designIsFree ? 'Gratuito' : formatBRL(designPrice)}
+                              {formatBRL(designPrice)}
                             </span>
                             <Lock className="h-3 w-3 text-muted-foreground" />
                           </div>
@@ -918,8 +867,6 @@ function ProposalBuilderModal({
                 designEnabled={designEnabled}
                 designPack={designPack}
                 designPrice={designPrice}
-                designListPrice={designListPrice}
-                designIsFree={designIsFree}
                 fsEnabled={fsEnabled}
                 fsTls={fsTls}
                 fsFreq={fsFreq}
@@ -956,8 +903,6 @@ function ResultStep({
   designEnabled,
   designPack,
   designPrice,
-  designListPrice,
-  designIsFree,
   fsEnabled,
   fsTls,
   fsFreq,
@@ -981,8 +926,6 @@ function ResultStep({
   designEnabled: boolean;
   designPack: DesignPackKey;
   designPrice: number;
-  designListPrice: number;
-  designIsFree: boolean;
   fsEnabled: boolean;
   fsTls: number;
   fsFreq: number;
@@ -1108,11 +1051,6 @@ function ResultStep({
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4" style={{ color: '#9840AD' }} />
               <span className="text-sm font-semibold text-foreground">Modo 1 · Design</span>
-              {designIsFree && (
-                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
-                  Incluso
-                </span>
-              )}
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
@@ -1123,13 +1061,8 @@ function ResultStep({
                   </span>
                 </span>
                 <div className="text-right">
-                  {designIsFree && (
-                    <span className="block text-[10px] text-muted-foreground/60 line-through">
-                      {formatBRL(designListPrice)}
-                    </span>
-                  )}
-                  <span className={cn('font-medium', designIsFree ? 'text-emerald-600' : '')}>
-                    {designIsFree ? 'Gratuito' : `${formatBRL(designPrice)}/mês`}
+                  <span className="font-medium">
+                    {formatBRL(designPrice)}/mês
                   </span>
                 </div>
               </div>
