@@ -161,17 +161,11 @@ export type Tip = {
     items: string[];
     /**
      * Callout opcional renderizado abaixo dos items, em destaque.
-     *
-     * - `style: 'default'` (omitido): pill simples, ou link clicável se tem
-     *   `href` (ex: case Semrush na Dica 05).
-     * - `style: 'gift'`: usa AnimatedGiftBox (caixinha animada do site,
-     *   reusada do MiniGift em product-motion.tsx) — usado no callout do
-     *   pacote de design grátis na Dica 04.
+     * Pill simples, ou link clicável quando tem `href` (ex: case Semrush na Dica 05).
      */
     callout?: {
       label: string;
       href?: string;
-      style?: 'default' | 'gift';
     };
   };
   selectors: TipSelectors;

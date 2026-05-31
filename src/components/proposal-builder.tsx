@@ -38,8 +38,8 @@ const PLATFORM_TIERS = [
 
 const DESIGN_PACKS = {
   starter: { label: 'Starter', pieces: 4, price: 1600 },
-  growth: { label: 'Growth', pieces: 8, price: 2800 },
-  scale: { label: 'Scale', pieces: 12, price: 3600 },
+  growth: { label: 'Growth', pieces: 7, price: 2800 },
+  scale: { label: 'Scale', pieces: 10, price: 3600 },
 } as const;
 
 type DesignPackKey = keyof typeof DESIGN_PACKS;

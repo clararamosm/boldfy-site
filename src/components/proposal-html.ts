@@ -63,8 +63,8 @@ function fmtBRL(n: number): string {
 
 const DESIGN_LABELS: Record<string, { label: string; pieces: number; listPrice: number }> = {
   starter: { label: 'Starter', pieces: 4, listPrice: 1600 },
-  growth: { label: 'Growth', pieces: 8, listPrice: 2800 },
-  scale: { label: 'Scale', pieces: 12, listPrice: 3600 },
+  growth: { label: 'Growth', pieces: 7, listPrice: 2800 },
+  scale: { label: 'Scale', pieces: 10, listPrice: 3600 },
 };
 
 /* -------------------------------------------------------------------------- */

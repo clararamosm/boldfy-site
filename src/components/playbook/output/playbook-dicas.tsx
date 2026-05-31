@@ -52,7 +52,6 @@ import {
 } from 'lucide-react';
 import type { Tip } from '@/lib/playbook/templates/types';
 import { trackEvent } from '@/lib/track';
-import { AnimatedGiftBox } from '@/components/ui/animated-gift-box';
 import { FaiAvatar } from '@/components/ui/fai-avatar';
 import { SectionTag } from './playbook-snapshot';
 
@@ -222,7 +221,6 @@ function DicaCard({ tip, slug }: { tip: Tip; slug: string }) {
             <DicaCallout
               label={tip.boldfy.callout.label}
               href={tip.boldfy.callout.href}
-              style={tip.boldfy.callout.style}
               tipId={tip.id}
               slug={slug}
             />
@@ -295,35 +293,19 @@ function DicaCardDestaque({ tip }: { tip: Tip }) {
  * Callout do accordion da dica — destaque embaixo dos bullets.
  *
  * Quando tem `href` (ex: dica U6 → /case-semrush), renderiza como link clicável
- * com gradient bg e seta. Quando não tem (ex: dica U7 com pacote grátis
- * injetado em runtime), renderiza como pill destacada (sem link).
+ * com gradient bg e seta. Sem `href`, renderiza como pill destacada (sem link).
  */
 function DicaCallout({
   label,
   href,
-  style,
   tipId,
   slug,
 }: {
   label: string;
   href?: string;
-  style?: 'default' | 'gift';
   tipId: string;
   slug: string;
 }) {
-  // Style 'gift' usa o AnimatedGiftBox (caixinha animada da home) — usado
-  // pro pacote de design grátis na Dica 04.
-  if (style === 'gift') {
-    return (
-      <div className="mt-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-gradient-to-r from-[#CD50F1]/10 to-[#E875FF]/10 p-3">
-        <div className="flex-shrink-0">
-          <AnimatedGiftBox size="sm" animateOnMount />
-        </div>
-        <div className="text-[12px] leading-relaxed text-foreground">{label}</div>
-      </div>
-    );
-  }
-
   const className =
     'mt-3 inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-gradient-to-r from-[#CD50F1]/10 to-[#E875FF]/10 px-3 py-2 text-[11.5px] font-semibold leading-snug text-primary';
 
