@@ -375,7 +375,12 @@ async function getTotalPeopleCount(): Promise<number> {
  * pra pegar também leads importados manualmente (sem form_submit).
  */
 async function getEventChips(): Promise<Array<{ value: string; label: string; count: number }>> {
-  const camps = await db.select({ slug: campaigns.slug, name: campaigns.name }).from(campaigns);
+  // Só campanhas marcadas como evento (is_event) viram chip — materiais (Case,
+  // Report) já têm chip próprio e não devem duplicar aqui.
+  const camps = await db
+    .select({ slug: campaigns.slug, name: campaigns.name })
+    .from(campaigns)
+    .where(eq(campaigns.isEvent, true));
   if (camps.length === 0) return [];
   const counts = await db
     .select({ slug: sql<string>`unnest(${people.campaignMemberships})`, c: sql<number>`count(*)::int` })

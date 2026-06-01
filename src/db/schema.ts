@@ -469,6 +469,11 @@ export const campaigns = pgTable('campaigns', {
   // (via UTM no submit ou via import de CSV). Override opcional — fallback no
   // código é "Evento: {name}". Ver lib/events.ts.
   acTag: text('ac_tag'),
+  // Marca a campanha como EVENTO. Só quando true ela vira chip de evento na aba
+  // Formulários, aplica tag "Evento: X" por toque de UTM, e aparece no dropdown
+  // do import de CSV. Campanhas de material (Case, Report) ficam false — já têm
+  // o próprio chip de material e não devem duplicar como evento.
+  isEvent: boolean('is_event').notNull().default(false),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
   endDate: timestamp('end_date', { withTimezone: true }),
   alwaysOn: boolean('always_on').notNull().default(false),

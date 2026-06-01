@@ -28,8 +28,9 @@ export type CampaignAttribution = {
 };
 
 // Resolve a campanha a partir do utm_campaign (== slug). Retorna null quando
-// não há campanha cadastrada com aquele slug — nesse caso o lead segue o fluxo
-// normal sem tag de evento.
+// não há campanha cadastrada com aquele slug OU quando ela não está marcada
+// como evento (`is_event`). Campanha de material (Case, Report) não é evento,
+// então não gera tag nem membership — segue o fluxo normal só com a tag de form.
 export async function getCampaignAttributionBySlug(
   slug: string | null | undefined,
 ): Promise<CampaignAttribution | null> {
@@ -37,12 +38,13 @@ export async function getCampaignAttributionBySlug(
   if (!s) return null;
   try {
     const rows = await db
-      .select({ slug: campaigns.slug, name: campaigns.name, acTag: campaigns.acTag })
+      .select({ slug: campaigns.slug, name: campaigns.name, acTag: campaigns.acTag, isEvent: campaigns.isEvent })
       .from(campaigns)
       .where(eq(campaigns.slug, s))
       .limit(1);
     if (rows.length === 0) return null;
     const c = rows[0];
+    if (!c.isEvent) return null;
     return { slug: c.slug, name: c.name, eventTag: eventTagForCampaign(c) };
   } catch (err) {
     console.error('[events] getCampaignAttributionBySlug failed:', err);

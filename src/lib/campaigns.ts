@@ -22,6 +22,8 @@ export type Campaign = {
   startDate: string;    // YYYY-MM-DD
   endDate: string | null;  // null = always-on
   alwaysOn: boolean;
+  /** Marca como evento: gera chip de evento + tag "Evento: X" + entra no import. */
+  isEvent: boolean;
   channels: ChannelEntry[];
   notes?: string;
 };
@@ -36,6 +38,7 @@ function rowToCampaign(r: CampaignRow): Campaign {
     startDate: new Date(r.startDate).toISOString().split('T')[0],
     endDate: r.endDate ? new Date(r.endDate).toISOString().split('T')[0] : null,
     alwaysOn: r.alwaysOn,
+    isEvent: r.isEvent ?? false,
     channels: (r.channels ?? []) as ChannelEntry[],
     notes: r.notes ?? undefined,
   };
@@ -117,6 +120,7 @@ export type CampaignInput = {
   startDate: string;       // YYYY-MM-DD
   endDate: string | null;  // null se alwaysOn
   alwaysOn: boolean;
+  isEvent?: boolean;
   channels: ChannelEntry[];
   notes?: string;
 };
@@ -165,6 +169,7 @@ export async function createCampaign(input: CampaignInput): Promise<{ ok: true; 
       startDate: new Date(`${input.startDate}T00:00:00-03:00`),
       endDate: input.alwaysOn || !input.endDate ? null : new Date(`${input.endDate}T23:59:59-03:00`),
       alwaysOn: input.alwaysOn,
+      isEvent: input.isEvent ?? false,
       channels: sanitizeChannels(input.channels),
       notes: input.notes?.trim() || null,
     }).returning({ id: campaigns.id });
@@ -196,6 +201,7 @@ export async function updateCampaign(id: string, input: CampaignInput): Promise<
       startDate: new Date(`${input.startDate}T00:00:00-03:00`),
       endDate: input.alwaysOn || !input.endDate ? null : new Date(`${input.endDate}T23:59:59-03:00`),
       alwaysOn: input.alwaysOn,
+      isEvent: input.isEvent ?? false,
       channels: sanitizeChannels(input.channels),
       notes: input.notes?.trim() || null,
       updatedAt: new Date(),

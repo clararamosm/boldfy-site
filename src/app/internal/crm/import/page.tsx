@@ -1,15 +1,18 @@
 import 'server-only';
 import { db } from '@/db';
 import { campaigns } from '@/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { ImportClient } from './import-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ImportPage() {
+  // Só campanhas de evento aparecem no dropdown do import — importar lead com
+  // campanha de material não faz sentido (material é form, não evento).
   const camps = await db
     .select({ slug: campaigns.slug, name: campaigns.name })
     .from(campaigns)
+    .where(eq(campaigns.isEvent, true))
     .orderBy(desc(campaigns.createdAt));
 
   return (

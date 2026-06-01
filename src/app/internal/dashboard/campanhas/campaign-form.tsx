@@ -42,6 +42,7 @@ export function CampaignFormModal({
   const [startDate, setStartDate] = useState(initial?.startDate ?? '');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
   const [alwaysOn, setAlwaysOn] = useState(initial?.alwaysOn ?? false);
+  const [isEvent, setIsEvent] = useState(initial?.isEvent ?? false);
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   function autoSlug(value: string) {
@@ -65,6 +66,7 @@ export function CampaignFormModal({
       startDate,
       endDate: alwaysOn ? null : (endDate || null),
       alwaysOn,
+      isEvent,
       // channels é coluna legada — daqui pra frente sempre [] (canais vêm
       // dos utm_links automaticamente na visualização da campanha).
       channels: [],
@@ -151,6 +153,16 @@ export function CampaignFormModal({
           <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <input type="checkbox" checked={alwaysOn} onChange={(e) => setAlwaysOn(e.target.checked)} style={{ width: 'auto' }} />
             <span style={{ fontSize: 13, fontWeight: 600, color: '#45336B' }}>Always-on (sem data de fim)</span>
+          </label>
+
+          <label style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+            <input type="checkbox" checked={isEvent} onChange={(e) => setIsEvent(e.target.checked)} style={{ width: 'auto', marginTop: 3 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#45336B' }}>
+              Rastrear como evento
+              <span style={{ display: 'block', fontSize: 11, fontWeight: 400, color: '#9D85B3', marginTop: 2 }}>
+                Cria chip de evento no CRM, aplica a tag &quot;Evento: ...&quot; em quem entra por essa UTM e habilita a campanha no import de leads. Use só pra eventos (Web Summit etc), não pra materiais.
+              </span>
+            </span>
           </label>
 
           {/* Canais e touchpoints removidos (mai/2026 — Clara): agora vêm
