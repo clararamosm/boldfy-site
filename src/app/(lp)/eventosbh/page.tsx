@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { LpHeader } from '@/components/layout/lp-header';
 import { LpFooter } from '@/components/layout/lp-footer';
+import { HeroSkyline } from './hero-skyline';
 import { submitEventosbhLead } from '@/app/actions/eventosbh-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
 import { captureSubmissionMeta } from '@/lib/source-detection';
@@ -133,6 +134,8 @@ export default function EventosBhPage() {
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-6 py-11 sm:px-12 sm:py-14">
             <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
             <div className="absolute -bottom-24 -left-12 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+
+            <HeroSkyline />
 
             <div className="relative">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[.14em] text-primary">
