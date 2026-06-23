@@ -91,10 +91,6 @@ export default function EventosBhPage() {
   const canSubmit =
     nome.trim().length > 0 && email.trim().length > 0 && empresa.trim().length > 0;
 
-  const scrollToForm = () => {
-    document.getElementById(FORM_SECTION_ID)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
@@ -133,99 +129,44 @@ export default function EventosBhPage() {
 
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-6xl px-6 py-8 sm:py-12">
-          {/* ───────────────── Hero ───────────────── */}
-          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-6 py-12 sm:px-12 sm:py-16">
+          {/* ───────────────── Hero (título + contexto + qualificação) ───────────────── */}
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-6 py-11 sm:px-12 sm:py-14">
             <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
             <div className="absolute -bottom-24 -left-12 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
-            <div className="relative max-w-2xl">
+            <div className="relative">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[.14em] text-primary">
                 <MapPin className="h-3 w-3" />
                 Eventos B2B · Belo Horizonte
               </span>
 
-              <h1 className="mt-5 font-headline text-3xl font-black leading-[1.07] text-white sm:text-4xl lg:text-5xl">
+              <h1 className="mt-5 font-headline text-2xl font-black leading-[1.1] text-white sm:text-4xl lg:whitespace-nowrap">
                 Vamos movimentar a{' '}
                 <span className="bg-gradient-to-r from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
                   cena B2B de BH
                 </span>
               </h1>
 
-              <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/70">
-                SP e RJ têm roda de conversa, palestra e evento de networking o ano
-                inteiro. BH, quase nada, mesmo sendo casa de empresas B2B que viraram
-                referência nacional e global. A Boldfy está abrindo um espaço pra
-                mudar isso: conversas de alto nível sobre o futuro do marketing, com
-                quem realmente faz acontecer.
+              <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/70">
+                SP e RJ têm evento o ano inteiro. BH, quase nada, mesmo sendo casa de
+                empresas B2B referência nacional e global. A Boldfy está abrindo um
+                espaço pra mudar isso, com conversas de alto nível sobre o futuro do
+                marketing.
               </p>
 
-              <div className="mt-7">
-                <Button
-                  onClick={scrollToForm}
-                  size="lg"
-                  className="font-bold shadow-[0_8px_24px_rgba(205,80,241,.28)]"
-                >
-                  Quero participar
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <p className="mt-3 text-xs text-white/40">
-                  Sem data nem local ainda, é daqui que a gente começa a construir.
-                </p>
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-2.5">
+                {QUALIFICA.map((q) => (
+                  <div key={q} className="flex items-center gap-2 text-sm text-white/85">
+                    <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" strokeWidth={2} />
+                    {q}
+                  </div>
+                ))}
               </div>
             </div>
           </section>
 
-          {/* ───────────────── Temas ───────────────── */}
-          <section className="mt-12">
-            <div className="text-center sm:text-left">
-              <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">
-                O que vamos discutir
-              </span>
-              <h2 className="mt-3 font-headline text-2xl font-black text-foreground sm:text-3xl">
-                Conversas que importam pra quem lidera
-              </h2>
-            </div>
-
-            <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              {TEMAS.map((t) => {
-                const Icon = t.icon;
-                return (
-                  <div
-                    key={t.title}
-                    className="rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition-all hover:-translate-y-1 hover:border-primary/35"
-                  >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" strokeWidth={2} />
-                    </div>
-                    <h3 className="mt-4 font-headline text-lg font-black text-foreground">
-                      {t.title}
-                    </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                      {t.desc}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* ───────────────── Qualificação ───────────────── */}
-          <section className="mt-12 rounded-2xl border border-primary/20 bg-secondary/60 p-6 sm:p-8">
-            <h2 className="font-headline text-xl font-black text-foreground sm:text-2xl">
-              É pra você se
-            </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {QUALIFICA.map((q) => (
-                <div key={q} className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" strokeWidth={2} />
-                  <span className="text-sm text-foreground">{q}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ───────────────── Form ───────────────── */}
-          <section id={FORM_SECTION_ID} className="mt-12 scroll-mt-24">
+          {/* ───────────────── Form (logo abaixo do hero) ───────────────── */}
+          <section id={FORM_SECTION_ID} className="mt-10 scroll-mt-24">
             <div className="text-center sm:text-left">
               <h2 className="font-headline text-2xl font-black text-foreground sm:text-3xl">
                 Garante seu lugar na lista
@@ -357,6 +298,40 @@ export default function EventosBhPage() {
                   </form>
                 )}
               </div>
+          </section>
+
+          {/* ───────────────── Temas (abaixo do form, conteúdo de apoio) ───────────────── */}
+          <section className="mt-14">
+            <div className="text-center sm:text-left">
+              <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-primary">
+                O que vamos discutir
+              </span>
+              <h2 className="mt-3 font-headline text-2xl font-black text-foreground sm:text-3xl">
+                Conversas que importam pra quem lidera
+              </h2>
+            </div>
+
+            <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {TEMAS.map((t) => {
+                const Icon = t.icon;
+                return (
+                  <div
+                    key={t.title}
+                    className="rounded-2xl border border-border bg-card p-5 shadow-[0_8px_32px_rgba(93,42,103,.06)] transition-all hover:-translate-y-1 hover:border-primary/35"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" strokeWidth={2} />
+                    </div>
+                    <h3 className="mt-4 font-headline text-lg font-black text-foreground">
+                      {t.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      {t.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </section>
         </div>
       </main>
