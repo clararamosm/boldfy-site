@@ -54,6 +54,7 @@ const GENERAL_CHIPS: FormChip[] = [
   { value: 'form_submit_demo', icon: 'demo', label: 'Demo' },
   { value: 'form_submit_beta', icon: 'beta', label: 'Beta' },
   { value: 'form_submit_proposta', icon: 'proposta', label: 'Proposta' },
+  { value: 'form_submit_eventosbh', icon: 'evento', label: 'Eventos BH' },
   { value: 'unsubscribed', icon: 'unsubscribed', label: 'Descadastrados' },
 ];
 

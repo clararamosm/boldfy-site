@@ -26,6 +26,8 @@ const LP_ROUTES = [
   // standalone (sem chrome global). Cada uma traz seu próprio logo no header.
   '/ferramentas/playbook-employee-led-growth',
   '/playbook',
+  // Eventos BH (jun/2026): LP de pré-inscrição standalone, traz seu próprio logo.
+  '/eventosbh',
 ];
 
 /**

@@ -142,6 +142,23 @@ export const DemoLeadSchema = z
   })
   .extend(UtmFieldsSchema.shape);
 
+/**
+ * Pré-inscrição Eventos BH (jun/2026). Lista de demonstração de interesse pros
+ * eventos B2B presenciais em BH. Só `nome`, `email` e `empresa` são obrigatórios.
+ * `empresa` obrigatória = gate de Líder B2B (quem lidera mkt numa empresa B2B).
+ * `telefone` (zap) e `cargo` são opcionais — atrito mínimo pra topo de funil.
+ */
+export const EventosbhLeadSchema = z
+  .object({
+    nome: NameSchema,
+    email: EmailSchema,
+    empresa: CompanyNameSchema,
+    telefone: PhoneOptionalSchema,
+    cargo: optionalText(120),
+    origem: optionalText(200),
+  })
+  .extend(UtmFieldsSchema.shape);
+
 export const ProposalLeadSchema = z
   .object({
     nome: NameSchema,

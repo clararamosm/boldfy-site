@@ -43,7 +43,8 @@ export type FormSlug =
   | 'proposta'
   | 'linkedin_extension'
   | 'case-semrush'
-  | 'playbook-employee-led-growth';
+  | 'playbook-employee-led-growth'
+  | 'eventosbh';
 export type FormKind = 'topo_funil' | 'lider_b2b_only';
 
 export type LeadSegment = 'lider_b2b' | 'parceiro' | 'profissional_individual';
@@ -134,6 +135,20 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     // documentada em docs/cadencia-playbook-elg.md.
     acListName: '[Cadência] Playbook ELG',
   },
+  // Eventos BH (jun/2026): lista de pré-inscrição/demonstração de interesse pros
+  // eventos B2B presenciais em BH. Sempre Líder B2B — campo `empresa` obrigatório
+  // no form serve de gate (quem lidera mkt numa empresa B2B). acListName=null por
+  // enquanto: não há cadência de email montada ainda (eventos sem data/local
+  // definidos). O contato fica acessível via tag 'Form: Pré-inscrição Eventos BH'
+  // + lista de segmento 'Líderes B2B'. Quando os eventos tiverem data, criar a
+  // lista/cadência no AC e preencher acListName aqui.
+  eventosbh: {
+    slug: 'eventosbh',
+    name: 'Pré-inscrição Eventos BH',
+    kind: 'lider_b2b_only',
+    acTag: 'Form: Pré-inscrição Eventos BH',
+    acListName: null,
+  },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -216,6 +231,8 @@ const SLUG_TO_SOURCE_METHOD: Record<FormSlug, SourceMethod> = {
   'case-semrush': 'form_case_semrush',
   // Playbook ELG (mai/2026): migration 0004 adicionou o valor ao enum.
   'playbook-employee-led-growth': 'form_playbook_employee_led_growth',
+  // Eventos BH (jun/2026): migration adiciona 'form_eventosbh' ao enum.
+  eventosbh: 'form_eventosbh',
 };
 
 export function formSlugToSourceMethod(slug: FormSlug): SourceMethod {
@@ -243,5 +260,6 @@ export function formSlugToActivityType(slug: FormSlug): string {
     case 'linkedin_extension': return 'form_submit_extension_linkedin';
     case 'case-semrush': return 'form_submit_case_semrush';
     case 'playbook-employee-led-growth': return 'form_submit_playbook_employee_led_growth';
+    case 'eventosbh': return 'form_submit_eventosbh';
   }
 }

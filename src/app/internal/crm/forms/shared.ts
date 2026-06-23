@@ -13,7 +13,8 @@ export type FormType =
   | 'form_submit_algoritmo_linkedin'
   | 'form_submit_case_semrush'
   | 'form_submit_proposta'
-  | 'form_submit_playbook_employee_led_growth';
+  | 'form_submit_playbook_employee_led_growth'
+  | 'form_submit_eventosbh';
 
 export const FORM_LABELS: Record<FormType, string> = {
   form_submit_demo: 'Demo',
@@ -22,6 +23,7 @@ export const FORM_LABELS: Record<FormType, string> = {
   form_submit_case_semrush: 'Case Semrush',
   form_submit_proposta: 'Proposta',
   form_submit_playbook_employee_led_growth: 'Playbook',
+  form_submit_eventosbh: 'Eventos BH',
 };
 
 /**

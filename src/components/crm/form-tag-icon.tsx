@@ -29,6 +29,7 @@ import {
   Link2,
   File,
   BellOff,
+  CalendarPlus,
 } from 'lucide-react';
 
 /** Chave semântica de ícone — agrupa por TIPO, não por form individual. */
@@ -39,6 +40,7 @@ export type FormTagIconKey =
   | 'proposta'
   | 'material'
   | 'ferramenta'
+  | 'evento'
   | 'linkedin'
   | 'unsubscribed'
   | 'fallback';
@@ -50,6 +52,7 @@ const ICONS: Record<FormTagIconKey, typeof Users> = {
   proposta: Briefcase,
   material: FileText,
   ferramenta: Wrench,
+  evento: CalendarPlus,
   linkedin: Link2,
   unsubscribed: BellOff,
   fallback: File,
@@ -65,6 +68,7 @@ export function iconKeyForFormType(formType: string): FormTagIconKey {
     case 'form_submit_demo': return 'demo';
     case 'form_submit_beta': return 'beta';
     case 'form_submit_proposta': return 'proposta';
+    case 'form_submit_eventosbh': return 'evento';
     case 'form_submit_algoritmo_linkedin':
     case 'form_submit_case_semrush':
       return 'material';
@@ -83,6 +87,7 @@ export function iconKeyForFormSlug(slug: string): FormTagIconKey {
     case 'demo': return 'demo';
     case 'beta': return 'beta';
     case 'proposta': return 'proposta';
+    case 'eventosbh': return 'evento';
     case 'algoritmo-linkedin':
     case 'case-semrush':
       return 'material';

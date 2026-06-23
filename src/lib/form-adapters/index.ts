@@ -20,3 +20,4 @@ export {
   type AdaptedLinkedInCompany,
 } from './linkedin-company-extension';
 export { adaptPlaybookEmployeeLedGrowth } from './playbook-employee-led-growth';
+export { adaptEventosbh } from './eventosbh';

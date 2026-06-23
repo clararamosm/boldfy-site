@@ -40,7 +40,7 @@ const LINKEDIN_CONVERSION_IDS: Record<string, number> = {
   playbook_quiz_submitted: 28351809,
 };
 
-type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-employee-led-growth';
+type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-employee-led-growth' | 'eventosbh';
 
 type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_download' | 'case_semrush_download' | 'schedule_meeting';
 
