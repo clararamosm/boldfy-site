@@ -69,8 +69,8 @@ const TEMAS = [
 
 const QUALIFICA = [
   'É de BH ou região',
-  'Lidera marketing em uma empresa B2B',
-  'Se anima com a ideia de construir isso junto',
+  'Lidera marketing B2B',
+  'Quer construir isso junto',
 ];
 
 export default function EventosBhPage() {
@@ -132,7 +132,7 @@ export default function EventosBhPage() {
       <LpHeader ctaTargetId={FORM_SECTION_ID} ctaLabel="Quero participar" />
 
       <main className="flex-1 w-full">
-        <div className="mx-auto max-w-5xl px-5 sm:px-6 py-8 sm:py-12">
+        <div className="mx-auto max-w-6xl px-6 py-8 sm:py-12">
           {/* ───────────────── Hero ───────────────── */}
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F0A18] via-[#1A0E2E] to-[#2D1445] px-6 py-12 sm:px-12 sm:py-16">
             <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
@@ -186,7 +186,7 @@ export default function EventosBhPage() {
               </h2>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {TEMAS.map((t) => {
                 const Icon = t.icon;
                 return (
@@ -216,53 +216,54 @@ export default function EventosBhPage() {
             </h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {QUALIFICA.map((q) => (
-                <div key={q} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" strokeWidth={2} />
-                  <span className="text-sm leading-snug text-foreground">{q}</span>
+                <div key={q} className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" strokeWidth={2} />
+                  <span className="text-sm text-foreground">{q}</span>
                 </div>
               ))}
             </div>
           </section>
 
           {/* ───────────────── Form ───────────────── */}
-          <section id={FORM_SECTION_ID} className="mt-12 scroll-mt-20">
-            <div className="mx-auto max-w-xl">
-              <div className="text-center">
-                <h2 className="font-headline text-2xl font-black text-foreground sm:text-3xl">
-                  Garante seu lugar na lista
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Deixa seu interesse e você fica sabendo dos eventos em primeira mão.
-                </p>
-              </div>
+          <section id={FORM_SECTION_ID} className="mt-12 scroll-mt-24">
+            <div className="text-center sm:text-left">
+              <h2 className="font-headline text-2xl font-black text-foreground sm:text-3xl">
+                Garante seu lugar na lista
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Deixa seu interesse e você fica sabendo dos eventos em primeira mão.
+              </p>
+            </div>
 
-              <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8">
-                {sent ? (
-                  <div className="flex flex-col items-center gap-3 py-6 text-center">
-                    <CheckCircle2 className="h-12 w-12 text-primary" strokeWidth={2} />
-                    <h3 className="font-headline text-xl font-black text-foreground">
-                      Interesse registrado 💜
-                    </h3>
-                    <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                      Você está na lista. Enquanto a gente desenha os primeiros
-                      eventos de BH, dá uma olhada nos nossos materiais, são de graça
-                      e direto ao ponto.
-                    </p>
-                    <Button onClick={() => router.push(REDIRECT_TO)} size="lg" className="mt-2 font-bold">
-                      Ver materiais agora
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground/70">
-                      Te levando pros materiais em instantes…
-                    </p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <p className="rounded-lg bg-secondary/70 px-3 py-2.5 text-xs leading-relaxed text-secondary-foreground">
-                      Esses eventos são pensados pra líderes B2B. Por isso o nome da
-                      empresa é obrigatório.
-                    </p>
+            <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-[0_8px_32px_rgba(93,42,103,.06)] sm:p-8">
+              {sent ? (
+                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                  <CheckCircle2 className="h-12 w-12 text-primary" strokeWidth={2} />
+                  <h3 className="font-headline text-xl font-black text-foreground">
+                    Interesse registrado 💜
+                  </h3>
+                  <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+                    Você está na lista. Enquanto a gente desenha os primeiros
+                    eventos de BH, dá uma olhada nos nossos materiais, são de graça
+                    e direto ao ponto.
+                  </p>
+                  <Button onClick={() => router.push(REDIRECT_TO)} size="lg" className="mt-2 font-bold">
+                    Ver materiais agora
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <p className="text-xs text-muted-foreground/70">
+                    Te levando pros materiais em instantes…
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <p className="rounded-lg bg-secondary/70 px-3 py-2.5 text-xs leading-relaxed text-secondary-foreground">
+                    Esses eventos são pensados pra líderes B2B. Por isso o nome da
+                    empresa é obrigatório.
+                  </p>
 
+                  {/* Linha 1: nome + e-mail (colapsa pra 1 coluna no mobile) */}
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="nome">Nome *</Label>
                       <Input
@@ -274,7 +275,6 @@ export default function EventosBhPage() {
                         required
                       />
                     </div>
-
                     <div className="space-y-1.5">
                       <Label htmlFor="email">E-mail *</Label>
                       <Input
@@ -287,55 +287,56 @@ export default function EventosBhPage() {
                         required
                       />
                     </div>
+                  </div>
 
+                  {/* Linha 2: empresa + WhatsApp + cargo */}
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="empresa">Empresa *</Label>
                       <Input
                         id="empresa"
                         value={empresa}
                         onChange={(e) => setEmpresa(e.target.value)}
-                        placeholder="Onde você lidera marketing"
+                        placeholder="Onde você lidera"
                         autoComplete="organization"
                         required
                       />
                     </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="telefone">WhatsApp</Label>
-                        <Input
-                          id="telefone"
-                          type="tel"
-                          value={telefone}
-                          onChange={(e) => setTelefone(e.target.value)}
-                          placeholder="(31) 9 0000-0000"
-                          autoComplete="tel"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="cargo">Cargo</Label>
-                        <Input
-                          id="cargo"
-                          value={cargo}
-                          onChange={(e) => setCargo(e.target.value)}
-                          placeholder="Ex: Head de Marketing"
-                          autoComplete="organization-title"
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="telefone">WhatsApp</Label>
+                      <Input
+                        id="telefone"
+                        type="tel"
+                        value={telefone}
+                        onChange={(e) => setTelefone(e.target.value)}
+                        placeholder="(31) 9 0000-0000"
+                        autoComplete="tel"
+                      />
                     </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cargo">Cargo</Label>
+                      <Input
+                        id="cargo"
+                        value={cargo}
+                        onChange={(e) => setCargo(e.target.value)}
+                        placeholder="Ex: Head de Marketing"
+                        autoComplete="organization-title"
+                      />
+                    </div>
+                  </div>
 
-                    {error && (
-                      <p className="text-sm text-destructive" role="alert">
-                        {error}
-                      </p>
-                    )}
+                  {error && (
+                    <p className="text-sm text-destructive" role="alert">
+                      {error}
+                    </p>
+                  )}
 
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full font-bold"
-                      disabled={sending || !canSubmit}
-                    >
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full font-bold"
+                    disabled={sending || !canSubmit}
+                  >
                       {sending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -356,7 +357,6 @@ export default function EventosBhPage() {
                   </form>
                 )}
               </div>
-            </div>
           </section>
         </div>
       </main>
