@@ -19,5 +19,5 @@ export {
   type LinkedInCompanyExtensionInput,
   type AdaptedLinkedInCompany,
 } from './linkedin-company-extension';
-export { adaptPlaybookEmployeeLedGrowth } from './playbook-employee-led-growth';
+export { adaptPlaybookTeamLedGrowth } from './playbook-team-led-growth';
 export { adaptEventosbh } from './eventosbh';

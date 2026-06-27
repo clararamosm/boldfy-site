@@ -1,7 +1,7 @@
 /**
  * Dashboard · State of Employee-Led Growth.
  *
- * Painel interno que consome a view `state_elg_aggregates` + joins com
+ * Painel interno que consome a view `state_tlg_aggregates` + joins com
  * playbook_outputs. Foco em dados AGREGADOS NÃO-SENSÍVEIS (mai/2026 ciclo 4):
  *   - KPI top: total + threshold meter (X de 100 respostas pra publicar)
  *   - 8 cards de agregados (área, senioridade, setor, porte, dor, tentativas,
@@ -13,7 +13,7 @@
  * identificáveis (nome, email, empresa) que são sinal comercial e não cabem
  * no dashboard agregado que vai virar relatório público.
  *
- * Quando passar de 100 respostas, planejamos publicar /state-of-employee-led-growth
+ * Quando passar de 100 respostas, planejamos publicar /state-of-team-led-growth
  * (rota pública) reaproveitando os mesmos componentes. O agregado já é
  * publishable hoje.
  */
@@ -21,22 +21,22 @@
 import type { Metadata } from 'next';
 import { BarChart3, Briefcase, Compass, FileText, Heart, Map, Sparkles, Users } from 'lucide-react';
 import {
-  STATE_ELG_PUBLISH_THRESHOLD,
+  STATE_TLG_PUBLISH_THRESHOLD,
   getAggregateByDimension,
   getPlaybooksPorSemana,
-  getStateElgSnapshot,
+  getStateTlgSnapshot,
   type AggregateBucket,
-} from '@/lib/playbook/state-elg-queries';
+} from '@/lib/playbook/state-tlg-queries';
 import { Sparkline } from '@/components/dashboard/charts';
 
 export const metadata: Metadata = {
-  title: 'State of ELG · Dashboard',
+  title: 'State of TLG · Dashboard',
   robots: { index: false, follow: false },
 };
 
 export const dynamic = 'force-dynamic';
 
-export default async function StateElgPage() {
+export default async function StateTlgPage() {
   const [
     snapshot,
     porArea,
@@ -49,7 +49,7 @@ export default async function StateElgPage() {
     porSponsorship,
     porSemana,
   ] = await Promise.all([
-    getStateElgSnapshot().catch(() => ({ total: 0, thresholdRemaining: STATE_ELG_PUBLISH_THRESHOLD, progressPercent: 0 })),
+    getStateTlgSnapshot().catch(() => ({ total: 0, thresholdRemaining: STATE_TLG_PUBLISH_THRESHOLD, progressPercent: 0 })),
     getAggregateByDimension('area').catch(() => []),
     getAggregateByDimension('seniority').catch(() => []),
     getAggregateByDimension('industry').catch(() => []),
@@ -68,47 +68,47 @@ export default async function StateElgPage() {
           <h1 className="dash-page-title">State of Employee-Led Growth</h1>
           <p className="dash-page-subtitle">
             Agregados anônimos das respostas do quiz em{' '}
-            <code>/ferramentas/playbook-employee-led-growth</code>. Quando passarmos de{' '}
-            {STATE_ELG_PUBLISH_THRESHOLD} respostas, publicamos o relatório em{' '}
-            <code>/state-of-employee-led-growth</code>.
+            <code>/ferramentas/playbook-team-led-growth</code>. Quando passarmos de{' '}
+            {STATE_TLG_PUBLISH_THRESHOLD} respostas, publicamos o relatório em{' '}
+            <code>/state-of-team-led-growth</code>.
           </p>
         </div>
       </header>
 
       {/* Top KPI — total + threshold meter */}
-      <div className="state-elg-hero">
-        <div className="state-elg-hero-num">
-          <div className="state-elg-hero-label">Total de respostas</div>
-          <div className="state-elg-hero-value">{snapshot.total}</div>
+      <div className="state-tlg-hero">
+        <div className="state-tlg-hero-num">
+          <div className="state-tlg-hero-label">Total de respostas</div>
+          <div className="state-tlg-hero-value">{snapshot.total}</div>
           {porSemana.length > 0 && (
-            <div className="state-elg-hero-sparkline">
+            <div className="state-tlg-hero-sparkline">
               <Sparkline data={porSemana.map((w) => w.count)} height={32} />
-              <div className="state-elg-hero-sparkline-label">Últimas 12 semanas</div>
+              <div className="state-tlg-hero-sparkline-label">Últimas 12 semanas</div>
             </div>
           )}
         </div>
-        <div className="state-elg-hero-threshold">
-          <div className="state-elg-hero-label">
+        <div className="state-tlg-hero-threshold">
+          <div className="state-tlg-hero-label">
             {snapshot.thresholdRemaining > 0
               ? `Faltam ${snapshot.thresholdRemaining} pra publicar`
               : 'Threshold atingido — pode publicar'}
           </div>
-          <div className="state-elg-hero-progress-track">
+          <div className="state-tlg-hero-progress-track">
             <div
-              className="state-elg-hero-progress-fill"
+              className="state-tlg-hero-progress-fill"
               style={{ width: `${snapshot.progressPercent}%` }}
             />
           </div>
-          <div className="state-elg-hero-progress-meta">
+          <div className="state-tlg-hero-progress-meta">
             <span>{snapshot.total}</span>
             <span>{snapshot.progressPercent}%</span>
-            <span>{STATE_ELG_PUBLISH_THRESHOLD}</span>
+            <span>{STATE_TLG_PUBLISH_THRESHOLD}</span>
           </div>
         </div>
       </div>
 
       {/* Grid de agregados */}
-      <div className="state-elg-grid">
+      <div className="state-tlg-grid">
         <AggregateCard icon={<Briefcase className="h-4 w-4" />} title="Por área funcional" buckets={porArea} />
         <AggregateCard icon={<Users className="h-4 w-4" />} title="Por senioridade" buckets={porSeniority} />
         <AggregateCard icon={<BarChart3 className="h-4 w-4" />} title="Por setor" buckets={porSetor} />
@@ -143,26 +143,26 @@ function AggregateCard({
   buckets: AggregateBucket[];
 }) {
   return (
-    <div className="state-elg-card">
-      <div className="state-elg-card-header">
-        <span className="state-elg-card-icon">{icon}</span>
-        <h3 className="state-elg-card-title">{title}</h3>
+    <div className="state-tlg-card">
+      <div className="state-tlg-card-header">
+        <span className="state-tlg-card-icon">{icon}</span>
+        <h3 className="state-tlg-card-title">{title}</h3>
       </div>
       {buckets.length === 0 ? (
-        <p className="state-elg-card-empty">Sem dados.</p>
+        <p className="state-tlg-card-empty">Sem dados.</p>
       ) : (
-        <div className="state-elg-card-body">
+        <div className="state-tlg-card-body">
           {buckets.map((b) => (
-            <div className="state-elg-bar" key={b.value}>
-              <div className="state-elg-bar-header">
-                <span className="state-elg-bar-label">{b.label}</span>
-                <span className="state-elg-bar-value">
+            <div className="state-tlg-bar" key={b.value}>
+              <div className="state-tlg-bar-header">
+                <span className="state-tlg-bar-label">{b.label}</span>
+                <span className="state-tlg-bar-value">
                   <strong>{b.count}</strong>
                   <span>{b.percent}%</span>
                 </span>
               </div>
-              <div className="state-elg-bar-track">
-                <div className="state-elg-bar-fill" style={{ width: `${b.percent}%` }} />
+              <div className="state-tlg-bar-track">
+                <div className="state-tlg-bar-fill" style={{ width: `${b.percent}%` }} />
               </div>
             </div>
           ))}

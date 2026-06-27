@@ -43,7 +43,7 @@ export type FormSlug =
   | 'proposta'
   | 'linkedin_extension'
   | 'case-semrush'
-  | 'playbook-employee-led-growth'
+  | 'playbook-team-led-growth'
   | 'eventosbh';
 export type FormKind = 'topo_funil' | 'lider_b2b_only';
 
@@ -110,30 +110,30 @@ export const FORM_DEFS_SEED: Record<FormSlug, {
     acTag: 'Form: LinkedIn',
     acListName: null, // captura interna, sem cadência associada
   },
-  // Case de meio-funil (Semrush ELG). Mesma natureza topo_funil do algoritmo-
+  // Case de meio-funil (Semrush TLG). Mesma natureza topo_funil do algoritmo-
   // linkedin — pergunta intencao_uso, gera 3 segments (lider_b2b/parceiro/
   // profissional). Pede mais campos (cargo + tamanho da empresa) só pra quem
   // marca 'marca-empresa', porque audiência de case é mais qualificada e
   // aguenta atrito extra de fundo de funil.
   'case-semrush': {
     slug: 'case-semrush',
-    name: 'Case Semrush ELG',
+    name: 'Case Semrush TLG',
     kind: 'topo_funil',
-    acTag: 'Form: Case Semrush ELG',
+    acTag: 'Form: Case Semrush TLG',
     acListName: '[Cadência] Case Semrush',
   },
-  // Playbook ELG (mai/2026): quiz interativo de 11 perguntas em
-  // /ferramentas/playbook-employee-led-growth. Gera página pessoal /playbook/[slug]
+  // Playbook TLG (mai/2026): quiz interativo de 11 perguntas em
+  // /ferramentas/playbook-team-led-growth. Gera página pessoal /playbook/[slug]
   // com estratégia personalizada. Sempre Líder B2B — gate de elegibilidade
   // (≥5 colab) na 1ª pergunta filtra autônomos/profissionais individuais.
-  'playbook-employee-led-growth': {
-    slug: 'playbook-employee-led-growth',
+  'playbook-team-led-growth': {
+    slug: 'playbook-team-led-growth',
     name: 'Playbook de Employee-Led Growth',
     kind: 'lider_b2b_only',
-    acTag: 'Form: Playbook Employee-Led Growth',
+    acTag: 'Form: Playbook Team-Led Growth',
     // Lista criada manualmente no AC em 2026-05-29. Cadência de 4 emails
     // documentada em docs/cadencia-playbook-elg.md.
-    acListName: '[Cadência] Playbook ELG',
+    acListName: '[Cadência] Playbook TLG',
   },
   // Eventos BH (jun/2026): lista de pré-inscrição/demonstração de interesse pros
   // eventos B2B presenciais em BH. Sempre Líder B2B — campo `empresa` obrigatório
@@ -229,8 +229,8 @@ const SLUG_TO_SOURCE_METHOD: Record<FormSlug, SourceMethod> = {
   // do CRM. Migration 0002_form_case_semrush.sql adicionou 'form_case_semrush'
   // ao enum. Migration 0003a renomeou 'form_report' → 'form_algoritmo_linkedin'.
   'case-semrush': 'form_case_semrush',
-  // Playbook ELG (mai/2026): migration 0004 adicionou o valor ao enum.
-  'playbook-employee-led-growth': 'form_playbook_employee_led_growth',
+  // Playbook TLG (mai/2026): migration 0004 adicionou o valor ao enum.
+  'playbook-team-led-growth': 'form_playbook_team_led_growth',
   // Eventos BH (jun/2026): migration adiciona 'form_eventosbh' ao enum.
   eventosbh: 'form_eventosbh',
 };
@@ -259,7 +259,7 @@ export function formSlugToActivityType(slug: FormSlug): string {
     case 'proposta': return 'form_submit_proposta';
     case 'linkedin_extension': return 'form_submit_extension_linkedin';
     case 'case-semrush': return 'form_submit_case_semrush';
-    case 'playbook-employee-led-growth': return 'form_submit_playbook_employee_led_growth';
+    case 'playbook-team-led-growth': return 'form_submit_playbook_team_led_growth';
     case 'eventosbh': return 'form_submit_eventosbh';
   }
 }

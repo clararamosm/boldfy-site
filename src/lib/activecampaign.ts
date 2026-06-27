@@ -122,28 +122,28 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
   newsletter_opt_in: { title: 'Newsletter opt-in', type: 'text' },
   observacoes: { title: 'Observações', type: 'textarea' },
   /**
-   * State of ELG — consent pra uso anonimizado das respostas no relatório
+   * State of TLG — consent pra uso anonimizado das respostas no relatório
    * "Panorama Employee-Led Growth no Brasil" (default ON, opt-out).
    * Valores: "SIM" | "NAO". Populado pelo adapter do Playbook.
    *
-   * Perstag derivado do título: "State ELG Consent" → STATE_ELG_CONSENT
-   * (precisa bater com `state_elg_consent` que o adapter envia).
+   * Perstag derivado do título: "State TLG Consent" → STATE_TLG_CONSENT
+   * (precisa bater com `state_tlg_consent` que o adapter envia).
    */
-  state_elg_consent: { title: 'State ELG Consent', type: 'text' },
+  state_tlg_consent: { title: 'State TLG Consent', type: 'text' },
   /**
-   * State of ELG — opt-in pra receber o relatório em primeira mão (default
+   * State of TLG — opt-in pra receber o relatório em primeira mão (default
    * OFF). Quando SIM, o adapter também adiciona o contato em
-   * `[Lista] Report: Panorama ELG no Brasil` via `extraAcListNames`.
+   * `[Lista] Report: Panorama TLG no Brasil` via `extraAcListNames`.
    * Valores: "SIM" | "NAO".
    *
-   * Perstag derivado do título: "State ELG Report Subscribe"
-   * → STATE_ELG_REPORT_SUBSCRIBE.
+   * Perstag derivado do título: "State TLG Report Subscribe"
+   * → STATE_TLG_REPORT_SUBSCRIBE.
    */
-  state_elg_report_subscribe: { title: 'State ELG Report Subscribe', type: 'text' },
+  state_tlg_report_subscribe: { title: 'State TLG Report Subscribe', type: 'text' },
   /**
-   * Campos do quiz Playbook ELG (mai/2026). Valores enviados como LABELS
+   * Campos do quiz Playbook TLG (mai/2026). Valores enviados como LABELS
    * LEGÍVEIS em português (não enum cru) pra Clara filtrar fácil no AC.
-   * Conversão de enum → label vive no adapter (form-adapters/playbook-employee-led-growth.ts).
+   * Conversão de enum → label vive no adapter (form-adapters/playbook-team-led-growth.ts).
    *
    * Naming dos custom fields no AC casa com snake_case do perstag:
    *   - Title "Cargo Senioridade" → perstag CARGO_SENIORIDADE → key cargo_senioridade

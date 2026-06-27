@@ -2,7 +2,7 @@
 
 /**
  * Server action pro form do Playbook de Employee-Led Growth
- * (LP `/ferramentas/playbook-employee-led-growth`).
+ * (LP `/ferramentas/playbook-team-led-growth`).
  *
  * Pipeline (spec §8.2):
  *   1. Zod validate — bloqueia inputs malformados ANTES de qualquer call.
@@ -19,23 +19,23 @@
  *
  * Naming: arquivo + função espelham o slug da URL pública. Ver AGENTS.md.
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md
  */
 
 import { headers } from 'next/headers';
 import { addNoteToContact, findContactByEmail } from '@/lib/activecampaign';
 import { recordLeadFromForm } from '@/lib/crm';
-import { adaptPlaybookEmployeeLedGrowth } from '@/lib/form-adapters/playbook-employee-led-growth';
+import { adaptPlaybookTeamLedGrowth } from '@/lib/form-adapters/playbook-team-led-growth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { generatePlaybookSlug } from '@/lib/playbook/slug';
 import { resolveTemplateKey, renderPlaybookData } from '@/lib/playbook/render';
 import type { PlaybookQuizData } from '@/lib/playbook/render';
 import { db, playbookOutputs } from '@/db';
-import { PlaybookEmployeeLedGrowthLeadSchema, parseInput } from './_schemas';
+import { PlaybookTeamLedGrowthLeadSchema, parseInput } from './_schemas';
 import type { z } from 'zod';
 
-export type PlaybookEmployeeLedGrowthLeadInput =
-  z.input<typeof PlaybookEmployeeLedGrowthLeadSchema>;
+export type PlaybookTeamLedGrowthLeadInput =
+  z.input<typeof PlaybookTeamLedGrowthLeadSchema>;
 
 export type SubmitPlaybookResult =
   | { success: true; playbookUrl: string }
@@ -90,14 +90,14 @@ async function createPlaybookOutput(params: {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  submitPlaybookEmployeeLedGrowthLead                                        */
+/*  submitPlaybookTeamLedGrowthLead                                        */
 /* -------------------------------------------------------------------------- */
 
-export async function submitPlaybookEmployeeLedGrowthLead(
-  rawInput: PlaybookEmployeeLedGrowthLeadInput,
+export async function submitPlaybookTeamLedGrowthLead(
+  rawInput: PlaybookTeamLedGrowthLeadInput,
 ): Promise<SubmitPlaybookResult> {
   /* ---------- 1. Validação Zod ---------- */
-  const parsed = parseInput(PlaybookEmployeeLedGrowthLeadSchema, rawInput);
+  const parsed = parseInput(PlaybookTeamLedGrowthLeadSchema, rawInput);
   if (!parsed.ok) {
     return { success: false, error: 'Dados inválidos. Verifique o formulário.' };
   }
@@ -136,7 +136,7 @@ export async function submitPlaybookEmployeeLedGrowthLead(
 
   try {
     /* ---------- 4. Adapter ---------- */
-    const lead = adaptPlaybookEmployeeLedGrowth(input);
+    const lead = adaptPlaybookTeamLedGrowth(input);
 
     /* ---------- 5. recordLeadFromForm (CRM completo) ---------- */
     const result = await recordLeadFromForm(lead);
@@ -159,7 +159,7 @@ export async function submitPlaybookEmployeeLedGrowthLead(
       doresPrincipais: input.doresPrincipais,
       budgetStatus: input.budgetStatus,
       sponsorshipLideranca: input.sponsorshipLideranca,
-      // Gasto em ads (jun/2026, opcional): alimenta o gráfico Ads vs ELG.
+      // Gasto em ads (jun/2026, opcional): alimenta o gráfico Ads vs TLG.
       gastoMensalAds: input.gastoMensalAds,
       observacoesLivres: input.observacoesLivres,
     };
@@ -211,7 +211,7 @@ export async function submitPlaybookEmployeeLedGrowthLead(
           input.observacoesLivres ? `\n💬 ${input.observacoesLivres}` : '',
           ``,
           `— Tracking —`,
-          `Origem: ${input.origem || 'LP Playbook ELG'}`,
+          `Origem: ${input.origem || 'LP Playbook TLG'}`,
           input.utm_source ? `utm_source: ${input.utm_source}` : '',
           input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
           input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',
@@ -241,7 +241,7 @@ export async function submitPlaybookEmployeeLedGrowthLead(
 /*  Pretty labels (replica do adapter — não exportar pra fora)                */
 /* -------------------------------------------------------------------------- */
 
-function labelSeniority(s: PlaybookEmployeeLedGrowthLeadInput['cargoSenioridade']): string {
+function labelSeniority(s: PlaybookTeamLedGrowthLeadInput['cargoSenioridade']): string {
   return ({
     analista: 'Analista',
     coordenador: 'Coordenador',
@@ -251,7 +251,7 @@ function labelSeniority(s: PlaybookEmployeeLedGrowthLeadInput['cargoSenioridade'
   } as const)[s];
 }
 
-function labelArea(a: PlaybookEmployeeLedGrowthLeadInput['cargoArea']): string {
+function labelArea(a: PlaybookTeamLedGrowthLeadInput['cargoArea']): string {
   return ({
     marketing: 'Marketing',
     growth: 'Growth',

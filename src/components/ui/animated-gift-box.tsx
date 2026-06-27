@@ -4,7 +4,7 @@
  * Caixinha de presente animada com confetti, extraída do `MiniGift` em
  * `src/components/sections/product-motion.tsx` (seção "Tese Boldfy → gamificação
  * vira hábito" da home). Reutilizada aqui pra:
- *   1. Callout do pacote de design grátis na Dica 04 do Playbook ELG.
+ *   1. Callout do pacote de design grátis na Dica 04 do Playbook TLG.
  *   2. Banner SEM_BUDGET acima da calculadora.
  *
  * Animações vivem em globals.css (.mini-gift-wrap / .gift-box / .gift-lid /

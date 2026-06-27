@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Landing client — gerencia o layout responsivo do quiz Playbook ELG.
+ * Landing client — gerencia o layout responsivo do quiz Playbook TLG.
  *
  * Desktop ≥960px:
  *   Grid 2 colunas (pitch + wizard embed). Quiz sempre visível na direita,

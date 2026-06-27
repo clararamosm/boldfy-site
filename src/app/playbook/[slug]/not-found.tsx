@@ -26,7 +26,7 @@ export default function PlaybookNotFound() {
           deletado. Cria o seu agora em 5 minutos.
         </p>
         <Button asChild size="lg">
-          <Link href="/ferramentas/playbook-employee-led-growth">
+          <Link href="/ferramentas/playbook-team-led-growth">
             Fazer meu playbook
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>

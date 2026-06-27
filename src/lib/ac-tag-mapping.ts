@@ -23,7 +23,7 @@
  * Helper: `cadenceFromCompletedTag(tag)` extrai o nome legível.
  *
  * Exemplos:
- *   tag "Cadência: Playbook ELG concluída"      → cadence_name = "Cadência Playbook ELG"
+ *   tag "Cadência: Playbook TLG concluída"      → cadence_name = "Cadência Playbook TLG"
  *   tag "Cadência: Case Semrush concluída"      → cadence_name = "Cadência Case Semrush"
  *   tag "Cadência: Report Algoritmo concluída"  → cadence_name = "Cadência Report Algoritmo"
  *
@@ -46,8 +46,8 @@
 export const AC_TAG_TO_AUTOMATION: Record<string, string> = {
   // Form: X → "Entrou na cadência <nome legível>"
   'Form: Algoritmo LinkedIn 2026': 'Cadência Report Algoritmo LinkedIn',
-  'Form: Case Semrush ELG': 'Cadência Case Semrush',
-  'Form: Playbook Employee-Led Growth': 'Cadência Playbook ELG',
+  'Form: Case Semrush TLG': 'Cadência Case Semrush',
+  'Form: Playbook Team-Led Growth': 'Cadência Playbook TLG',
 };
 
 /**
@@ -68,7 +68,7 @@ export function automationForTag(tag: string): string | null {
  * Algoritmo LinkedIn (`Cadência: Report Algoritmo concluída`).
  *
  * Capturas:
- *   - Grupo 1: nome curto da cadência (`Report Algoritmo`, `Playbook ELG`, etc).
+ *   - Grupo 1: nome curto da cadência (`Report Algoritmo`, `Playbook TLG`, etc).
  *
  * Case-insensitive em "concluída/concluida" (com ou sem acento) pra robustez.
  */
@@ -78,7 +78,7 @@ const COMPLETED_TAG_PATTERN = /^Cadência:\s+(.+?)\s+conclu[íi]da\s*$/;
  * Detecta se a tag é de "cadência concluída" e extrai o nome legível.
  *
  * Padrão: `Cadência: <Nome curto> concluída`.
- * Ex: `Cadência: Playbook ELG concluída` → retorna "Cadência Playbook ELG".
+ * Ex: `Cadência: Playbook TLG concluída` → retorna "Cadência Playbook TLG".
  *     `Cadência: Report Algoritmo concluída` → retorna "Cadência Report Algoritmo".
  *
  * Retorna null se a tag não bate com o padrão (= não é evento de conclusão).

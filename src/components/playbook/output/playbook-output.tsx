@@ -7,7 +7,7 @@
  * `useProposalBuilder` no CTA (botão "Montar meu pacote") e do
  * `navigator.clipboard` no botão "Compartilhar link".
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth-copy-final.md §1.
+ * Spec: source-of-truth/specs/playbook-team-led-growth-copy-final.md §1.
  */
 
 import { useEffect } from 'react';

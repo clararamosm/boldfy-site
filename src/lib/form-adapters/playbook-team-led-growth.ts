@@ -1,6 +1,6 @@
 /**
  * Adapter pro form Playbook de Employee-Led Growth
- * (mai/2026, LP `/ferramentas/playbook-employee-led-growth`).
+ * (mai/2026, LP `/ferramentas/playbook-team-led-growth`).
  *
  * Naming: slug interno SEMPRE espelha o slug da URL pública. Termos genéricos
  * tipo 'playbook' são proibidos — quando o segundo playbook chegar, 'playbook'
@@ -15,19 +15,19 @@
  *  - Quiz tem 11 respostas fechadas + 1 aberta opcional. Tudo vai pro
  *    `form_data.playbook` em metadata + activity_data (timeline rica).
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md §8.
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md §8.
  */
 
 import type { z } from 'zod';
-import type { PlaybookEmployeeLedGrowthLeadSchema } from '@/app/actions/_schemas';
+import type { PlaybookTeamLedGrowthLeadSchema } from '@/app/actions/_schemas';
 import { buildLegibleACTags } from '../ac-tags';
 import { getFormDefinitionSync } from '../form-definitions';
 import { getChannelHint, combineSourcePage } from '../source-detection';
 import type { ClassifiedLead } from './types';
 
-type PlaybookInput = z.infer<typeof PlaybookEmployeeLedGrowthLeadSchema>;
+type PlaybookInput = z.infer<typeof PlaybookTeamLedGrowthLeadSchema>;
 
-const FORM_SLUG = 'playbook-employee-led-growth' as const;
+const FORM_SLUG = 'playbook-team-led-growth' as const;
 const def = getFormDefinitionSync(FORM_SLUG);
 
 /**
@@ -36,41 +36,41 @@ const def = getFormDefinitionSync(FORM_SLUG);
  */
 const TIPO_LEAD_LABEL = 'Líder B2B';
 
-export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): ClassifiedLead {
+export function adaptPlaybookTeamLedGrowth(input: PlaybookInput): ClassifiedLead {
   // Segment é sempre 'lider_b2b' nesse form (gate ≥5 colab no UI). Mesma
   // garantia do Beta/Demo/Proposta.
   const segment = 'lider_b2b' as const;
   const newsletterOptIn = input.newsletterOptIn === true;
 
   /**
-   * State of ELG — opt-OUT por default (Zod default true). A pessoa precisa
+   * State of TLG — opt-OUT por default (Zod default true). A pessoa precisa
    * desmarcar o toggle pra negar. Rastreado em acFields, activityData e
-   * personMetadataPatch pra auditoria + futuras queries em state_elg_aggregates.
+   * personMetadataPatch pra auditoria + futuras queries em state_tlg_aggregates.
    *
    * Ver SPEC-playbook-state-of-elg-consent.md §4.
    */
-  const stateElgConsent = input.stateElgConsent !== false;
+  const stateTlgConsent = input.stateTlgConsent !== false;
 
   /**
-   * State of ELG — opt-IN pra receber relatório. Só dispara inscrição na
-   * lista AC `[Lista] Report: Panorama ELG no Brasil` se a pessoa marcou
+   * State of TLG — opt-IN pra receber relatório. Só dispara inscrição na
+   * lista AC `[Lista] Report: Panorama TLG no Brasil` se a pessoa marcou
    * explicitamente. UI bloqueia esse checkbox quando consent off.
    */
-  const stateElgReportSubscribe = input.stateElgReportSubscribe === true;
+  const stateTlgReportSubscribe = input.stateTlgReportSubscribe === true;
 
   // Listas extras condicionais (resolvidas em buildAcListNames de crm.ts).
   const extraAcListNames: string[] = [];
-  if (stateElgReportSubscribe) {
-    extraAcListNames.push('[Lista] Report: Panorama ELG no Brasil');
+  if (stateTlgReportSubscribe) {
+    extraAcListNames.push('[Lista] Report: Panorama TLG no Brasil');
   }
 
   // Canal: utm_source explícito > inferência via referrer > 'direct'/'unknown'.
   const channel = getChannelHint({ utmSource: input.utm_source, referrer: input.referrer });
 
-  // Tags AC (4 famílias): Líder B2B + Form: Playbook ELG + Newsletter (opcional).
+  // Tags AC (4 famílias): Líder B2B + Form: Playbook TLG + Newsletter (opcional).
   const acTags = buildLegibleACTags({
     segment,
-    formAcTag: def.acTag, // 'Form: Playbook Employee-Led Growth'
+    formAcTag: def.acTag, // 'Form: Playbook Team-Led Growth'
     newsletterOptIn,
   });
 
@@ -112,9 +112,9 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     ...(input.gastoMensalAds
       ? { gasto_mensal_ads: labelGastoMensalAds(input.gastoMensalAds) }
       : {}),
-    // State of ELG — campos de auditoria pra segmentação no AC.
-    state_elg_consent: stateElgConsent ? 'SIM' : 'NAO',
-    state_elg_report_subscribe: stateElgReportSubscribe ? 'SIM' : 'NAO',
+    // State of TLG — campos de auditoria pra segmentação no AC.
+    state_tlg_consent: stateTlgConsent ? 'SIM' : 'NAO',
+    state_tlg_report_subscribe: stateTlgReportSubscribe ? 'SIM' : 'NAO',
     ...(input.utm_source ? { utm_source_first: input.utm_source } : {}),
     ...(input.utm_medium ? { utm_medium_first: input.utm_medium } : {}),
     ...(input.utm_campaign ? { utm_campaign_first: input.utm_campaign } : {}),
@@ -155,10 +155,10 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     // Consent + tracking
     lgpd_consent: input.lgpdConsent,
     newsletter_opt_in: newsletterOptIn,
-    // State of ELG — fica em metadata.form_data pra histórico (Opção A
+    // State of TLG — fica em metadata.form_data pra histórico (Opção A
     // da SPEC §3.3 — sem colunas dedicadas em people por enquanto).
-    state_elg_consent: stateElgConsent,
-    state_elg_report_subscribe: stateElgReportSubscribe,
+    state_tlg_consent: stateTlgConsent,
+    state_tlg_report_subscribe: stateTlgReportSubscribe,
     origem: input.origem ?? null,
     utm_source: input.utm_source ?? null,
     utm_medium: input.utm_medium ?? null,
@@ -195,10 +195,10 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     newsletterOptIn,
     formSlug: FORM_SLUG,
 
-    // State of ELG — consent + opt-in pra report (rastreável no CRM,
+    // State of TLG — consent + opt-in pra report (rastreável no CRM,
     // resolvido em listas no buildAcListNames via extraAcListNames).
-    stateElgConsent,
-    stateElgReportSubscribe,
+    stateTlgConsent,
+    stateTlgReportSubscribe,
     extraAcListNames,
 
     // Cargo — colunas dedicadas em people (enums novos da migration 0004)
@@ -212,8 +212,8 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     // Tracking
     sourceChannel: channel,
     // Quiz tem URL canônica fixa, mas combineSourcePage tolera (path repetido vai pro mesmo lugar)
-    sourcePage: combineSourcePage('Quiz Playbook ELG', input.landing_pathname ?? '/ferramentas/playbook-employee-led-growth'),
-    sourceMethod: 'form_playbook_employee_led_growth',
+    sourcePage: combineSourcePage('Quiz Playbook TLG', input.landing_pathname ?? '/ferramentas/playbook-team-led-growth'),
+    sourceMethod: 'form_playbook_team_led_growth',
     firstTouchSource: input.utm_source ?? input.origem ?? channel,
     firstTouchCampaign: input.utm_campaign ?? undefined,
     lastTouchSource: input.utm_source ?? channel,
@@ -227,7 +227,7 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     // (estrutura agrupada por form pra evitar colisão com outros).
     personMetadataPatch: {
       form_data: {
-        playbook_employee_led_growth: activityData,
+        playbook_team_led_growth: activityData,
       },
     },
   };

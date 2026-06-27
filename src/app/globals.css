@@ -607,3 +607,67 @@ html {
   .resultados-rede-tag { animation: none !important; }
 }
 
+/* ============================================================ */
+/*  LP /link (link-in-bio) — botao heroi (Playbook)             */
+/*  Borda com gradiente conico girando lentamente ao redor +    */
+/*  anel externo pulsando. Casa o "radial girando" com o pulse. */
+/* ============================================================ */
+
+@property --link-hero-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.link-hero-frame {
+  position: relative;
+  border-radius: 16px;
+  padding: 2.5px;
+  background: conic-gradient(
+    from var(--link-hero-angle),
+    #5E2A67,
+    #9840AD,
+    #CD50F1,
+    #E875FF,
+    #F5B8FF,
+    #E875FF,
+    #CD50F1,
+    #9840AD,
+    #5E2A67
+  );
+  animation: link-hero-rotate 6s linear infinite;
+}
+
+@keyframes link-hero-rotate {
+  to { --link-hero-angle: 360deg; }
+}
+
+.link-hero-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: 0 0 0 0 rgba(205, 80, 241, 0.45);
+  animation: link-hero-ring 2.3s infinite;
+  pointer-events: none;
+}
+
+@keyframes link-hero-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(205, 80, 241, 0.45); }
+  70%  { box-shadow: 0 0 0 14px rgba(205, 80, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(205, 80, 241, 0); }
+}
+
+.link-confetti {
+  position: fixed;
+  width: 9px;
+  height: 14px;
+  z-index: 50;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-hero-frame,
+  .link-hero-pulse { animation: none !important; }
+}
+

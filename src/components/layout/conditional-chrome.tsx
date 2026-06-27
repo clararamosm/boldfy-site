@@ -22,12 +22,14 @@ const LP_ROUTES = [
   '/algoritmo-linkedin',
   '/agendar-demo',
   '/case-semrush',
-  // Playbook ELG (mai/2026): LP + página de output personalizada — ambas
+  // Playbook TLG (mai/2026): LP + página de output personalizada — ambas
   // standalone (sem chrome global). Cada uma traz seu próprio logo no header.
-  '/ferramentas/playbook-employee-led-growth',
+  '/ferramentas/playbook-team-led-growth',
   '/playbook',
   // Eventos BH (jun/2026): LP de pré-inscrição standalone, traz seu próprio logo.
   '/eventosbh',
+  // Link-in-bio (jun/2026): hub de links pra bio das redes, standalone.
+  '/link',
 ];
 
 /**

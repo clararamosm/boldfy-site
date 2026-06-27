@@ -1,5 +1,5 @@
 /**
- * Adapter pro form Case Semrush ELG ("Bastidores de uma estratégia que virou
+ * Adapter pro form Case Semrush TLG ("Bastidores de uma estratégia que virou
  * referência global"). Meio-funil — pede mais qualificação que o algoritmo-
  * linkedin (report de topo).
  *
@@ -13,7 +13,7 @@
  *  - Quando intencao_uso='marca-empresa': captura cargo + porte (tamanho da
  *    empresa) também — campos que o algoritmo-linkedin não pega. Pros outros
  *    casos (agência, criador), só nome+email+intenção+newsletter.
- *  - Tags AC: 'Form: Case Semrush ELG' (cadência criada depois) + segment +
+ *  - Tags AC: 'Form: Case Semrush TLG' (cadência criada depois) + segment +
  *    newsletter conforme opt-in. Mesmo helper buildLegibleACTags.
  *  - source_method dedicado 'form_case_semrush' (migration 0002) pra
  *    diferenciar do algoritmo-linkedin nos analytics do CRM.
@@ -144,7 +144,7 @@ export function adaptCaseSemrush(input: CaseSemrushInput): ClassifiedLead {
     acTags,
     acFields,
     sourceChannel: channel,
-    sourcePage: combineSourcePage(input.origem || 'LP Case Semrush ELG', input.landing_pathname),
+    sourcePage: combineSourcePage(input.origem || 'LP Case Semrush TLG', input.landing_pathname),
     sourceMethod: 'form_case_semrush',
     firstTouchSource: input.utm_source ?? channel,
     firstTouchCampaign: input.utm_campaign,

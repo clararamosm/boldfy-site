@@ -17,8 +17,8 @@ import { incrementPlaybookView } from './track-action';
  * - Headers `noindex, nofollow` — link compartilhável mas não indexável (§11.1).
  * - Tracking de view via `incrementPlaybookView` (best-effort, fire-and-forget).
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md +
- *       source-of-truth/specs/playbook-employee-led-growth-copy-final.md
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md +
+ *       source-of-truth/specs/playbook-team-led-growth-copy-final.md
  */
 
 type PageProps = {

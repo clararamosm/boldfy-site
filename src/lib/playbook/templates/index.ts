@@ -1,7 +1,7 @@
 /**
  * Catálogo de copy do Playbook de Employee-Led Growth.
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth-copy-final.md
+ * Spec: source-of-truth/specs/playbook-team-led-growth-copy-final.md
  *
  * Estrutura (pós curadoria mai/2026):
  *   - SNAPSHOT_FECHAMENTO: 10 strings, 1 por template-key (Bloco 2)

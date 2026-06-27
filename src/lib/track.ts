@@ -40,7 +40,7 @@ const LINKEDIN_CONVERSION_IDS: Record<string, number> = {
   playbook_quiz_submitted: 28351809,
 };
 
-type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-employee-led-growth' | 'eventosbh';
+type FormType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo-linkedin' | 'case-semrush' | 'playbook-team-led-growth' | 'eventosbh';
 
 type CtaType = 'demo' | 'proposal' | 'contact' | 'beta' | 'algoritmo_linkedin_download' | 'case_semrush_download' | 'schedule_meeting';
 
@@ -100,7 +100,7 @@ type TrackedEvent =
         error_message: string;
       };
     }
-  /* ---------------- Playbook ELG (mai/2026) ---------------- */
+  /* ---------------- Playbook TLG (mai/2026) ---------------- */
   | {
       /** Quando a 1ª pergunta do quiz aparece pra pessoa. */
       name: 'playbook_quiz_started';

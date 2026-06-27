@@ -11,7 +11,7 @@ import { PlaybookLandingClient } from './playbook-landing-client';
  * Esse padrão evita a fricção de uma tela "welcome" separada que duplica
  * o conteúdo da LP, e otimiza pra mobile (Web Summit é o primeiro caso de uso).
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md §2 (URLs), §3.1 (UX).
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md §2 (URLs), §3.1 (UX).
  */
 export const metadata: Metadata = {
   title: 'Playbook de Team-Led Growth',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: 'Playbook de Team-Led Growth · Boldfy',
     description:
       'Diagnóstico + plano em 3 fases + checklist + calculadora de earned media. Tudo gerado em 5 minutos a partir do seu cenário.',
-    url: 'https://boldfy.com.br/ferramentas/playbook-employee-led-growth',
+    url: 'https://boldfy.com.br/ferramentas/playbook-team-led-growth',
     images: [
       {
         url: '/images/og-default.jpg',
@@ -38,10 +38,10 @@ export const metadata: Metadata = {
     images: ['/images/og-default.jpg'],
   },
   alternates: {
-    canonical: 'https://boldfy.com.br/ferramentas/playbook-employee-led-growth',
+    canonical: 'https://boldfy.com.br/ferramentas/playbook-team-led-growth',
   },
 };
 
-export default function PlaybookEmployeeLedGrowthPage() {
+export default function PlaybookTeamLedGrowthPage() {
   return <PlaybookLandingClient />;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Box State of ELG — opt-in editorial no fim do quiz do Playbook.
+ * Box State of TLG — opt-in editorial no fim do quiz do Playbook.
  *
  * Renderiza dentro do step de identificação do wizard, depois do checkbox
  * de newsletter e antes do botão "Gerar Playbook". Oferta dupla:
@@ -11,7 +11,7 @@
  *      pra receber o relatório em primeira mão quando ele for publicado.
  *
  * Visual: borda fixa roxa com ponto de brilho viajando ao redor (efeito
- * shimmer). CSS em globals.css (`.state-elg-box-wrapper` + companhia).
+ * shimmer). CSS em globals.css (`.state-tlg-box-wrapper` + companhia).
  *
  * Acessibilidade:
  *   - Toggle usa `role="switch"` e responde a Space/Enter.
@@ -22,7 +22,7 @@
 
 import { Sparkles } from 'lucide-react';
 
-export function StateElgOptinBox({
+export function StateTlgOptinBox({
   consent,
   onConsentChange,
   subscribe,
@@ -44,14 +44,14 @@ export function StateElgOptinBox({
   const subscribeChecked = consent && subscribe;
 
   return (
-    <div className="state-elg-box-wrapper">
-      <div className="state-elg-box-inner">
+    <div className="state-tlg-box-wrapper">
+      <div className="state-tlg-box-inner">
         <div className="mb-2.5 flex items-center gap-2">
           <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-primary/10 text-primary">
             <Sparkles className="h-3 w-3" />
           </span>
           <span className="font-bold uppercase tracking-[0.08em] text-[11.5px] text-primary">
-            Panorama ELG no Brasil
+            Panorama TLG no Brasil
           </span>
         </div>
 
@@ -81,10 +81,10 @@ export function StateElgOptinBox({
             role="switch"
             checked={consent}
             onChange={(e) => onConsentChange(e.target.checked)}
-            className="state-elg-toggle-input hidden"
+            className="state-tlg-toggle-input hidden"
           />
-          <span className="state-elg-toggle-track">
-            <span className="state-elg-toggle-thumb" />
+          <span className="state-tlg-toggle-track">
+            <span className="state-tlg-toggle-thumb" />
           </span>
           <span>Permito o uso anônimo das minhas respostas no panorama</span>
         </label>

@@ -1,7 +1,7 @@
 /**
- * Configuração das perguntas do quiz do Playbook ELG.
+ * Configuração das perguntas do quiz do Playbook TLG.
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md §3.2.
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md §3.2.
  *       Curadoria pós-teste (mai/2026):
  *       - P5 e P9 removidas (redundantes/sem uso no output).
  *       - P3 consolidada de 7 → 4 opções (valores canônicos preservados).
@@ -37,7 +37,7 @@ export type BudgetValue = 'aprovado' | 'planejando' | 'precisa_justificar' | 'se
 /**
  * P11.5 — gasto mensal em ads (jun/2026).
  *
- * Pergunta opcional adicionada pra alimentar o gráfico "Ads vs ELG" no Bloco 2
+ * Pergunta opcional adicionada pra alimentar o gráfico "Ads vs TLG" no Bloco 2
  * do output. Faixas conservadoras pro perfil B2B brasileiro (foco em empresas
  * que já investem em mídia paga). Pessoa pode pular — quando pula, o gráfico
  * cai no modo conceitual.

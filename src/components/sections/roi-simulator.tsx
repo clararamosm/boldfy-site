@@ -11,7 +11,7 @@
  * — aquele calcula "qual o pacote Boldfy ideal pra sua empresa?". Este aqui
  * é "quanto de mídia equivalente sua empresa ganha?".
  *
- * Aceita defaults opcionais via props (mai/2026) — usado pelo Playbook ELG
+ * Aceita defaults opcionais via props (mai/2026) — usado pelo Playbook TLG
  * pra pré-preencher os sliders com o porte da empresa do respondente. Sem
  * props mantém comportamento antigo (defaults internos), preservando os
  * usos atuais em home / beta-test / case-semrush / materiais.
@@ -39,7 +39,7 @@ const DEFAULT_IMPRESSIONS = 10_000;
 const MIN_COLLABORATORS = 3;
 /**
  * Teto padrão do slider de colaboradores (70). É o limite usado em TODO o
- * site (home, beta-test, case-semrush). Só o Playbook ELG passa
+ * site (home, beta-test, case-semrush). Só o Playbook TLG passa
  * `maxCollaborators={200}` pra alcançar as faixas grandes 71-100 e enterprise
  * 101-200 — decisão de mai/2026: mudar a lógica do simulador SÓ no playbook.
  */
@@ -68,13 +68,13 @@ export type RoiSimulatorProps = {
   initialImpressions?: number;
   /**
    * Teto do slider de colaboradores. Default 70 (limite do site inteiro). O
-   * Playbook ELG passa 200 pra refletir empresas grandes e exibir as faixas
+   * Playbook TLG passa 200 pra refletir empresas grandes e exibir as faixas
    * 71-100 (R$ 300/seat) e enterprise 101-200 (R$ 150-200/seat em range).
    */
   maxCollaborators?: number;
   /**
    * Esconde o card "Mesmo alcance via Ads" e ajusta o grid de 4 → 3 cards
-   * (mai/2026 — usado no Playbook ELG, onde a comparação com Ads não casa
+   * (mai/2026 — usado no Playbook TLG, onde a comparação com Ads não casa
    * com o framing editorial da página). Default: false (mostra como sempre).
    */
   hideAdsComparison?: boolean;
@@ -214,7 +214,7 @@ export function RoiSimulator({
         {/*
           Cards de resultado.
           Sem hideAdsComparison: 4 cards (md:grid-cols-4)
-          Com hideAdsComparison: 3 cards (md:grid-cols-3) — usado no Playbook ELG.
+          Com hideAdsComparison: 3 cards (md:grid-cols-3) — usado no Playbook TLG.
         */}
         <div
           className={`grid grid-cols-2 gap-3 mb-5 ${hideAdsComparison ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}
@@ -240,7 +240,7 @@ export function RoiSimulator({
             <p className="text-[8px] text-muted-foreground">{t.betaTest.perImpression}</p>
           </div>
 
-          {/* Custo equivalente em Ads — escondido no Playbook ELG (mai/2026). */}
+          {/* Custo equivalente em Ads — escondido no Playbook TLG (mai/2026). */}
           {!hideAdsComparison && (
             <div className="bg-secondary rounded-xl p-4 text-center">
               <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">

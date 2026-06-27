@@ -46,8 +46,8 @@ type FerramentaCard = {
 
 const FERRAMENTAS: FerramentaCard[] = [
   {
-    slug: 'playbook-employee-led-growth',
-    href: '/ferramentas/playbook-employee-led-growth',
+    slug: 'playbook-team-led-growth',
+    href: '/ferramentas/playbook-team-led-growth',
     pretitle: 'Diagnóstico interativo',
     title: 'Playbook de Team-Led Growth',
     description:

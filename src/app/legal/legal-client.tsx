@@ -258,9 +258,9 @@ export default function LegalClient() {
                 invulnerável, mas fazemos o possível para manter seus dados protegidos.
               </P>
 
-              <H3>1.7 Playbook de Employee-Led Growth (ferramenta gratuita)</H3>
+              <H3>1.7 Playbook de Team-Led Growth (ferramenta gratuita)</H3>
               <P>
-                A ferramenta em <strong>boldfy.com.br/ferramentas/playbook-employee-led-growth</strong>{' '}
+                A ferramenta em <strong>boldfy.com.br/ferramentas/playbook-team-led-growth</strong>{' '}
                 gera uma página personalizada (Playbook) a partir das suas respostas. Como tratamos
                 esses dados:
               </P>
@@ -285,10 +285,10 @@ export default function LegalClient() {
                   com sal secreto), sem possibilidade de reverter pra IP original.
                 </li>
                 <li id="state-of-elg">
-                  <strong>Uso anônimo no Panorama ELG no Brasil</strong> — você pode optar (no fim
+                  <strong>Uso anônimo no Panorama TLG no Brasil</strong> — você pode optar (no fim
                   do quiz, via toggle opt-out já ativado por default) por permitir que suas
                   respostas sejam usadas de forma <strong>anônima e agregada</strong> pra construir
-                  o primeiro panorama de Employee-Led Growth do Brasil.{' '}
+                  o primeiro panorama de Team-Led Growth do Brasil.{' '}
                   <strong>Nesses agregados não há nome, e-mail nem empresa identificáveis</strong>:
                   só contagens (ex.: &quot;42% das empresas de marketing relatam CAC subindo&quot;).
                   Você pode optar separadamente, no mesmo box do form, por receber o relatório em
@@ -297,7 +297,7 @@ export default function LegalClient() {
                 </li>
                 <li>
                   <strong>Active Campaign</strong> — seu contato é registrado no nosso provedor de
-                  e-mail (ActiveCampaign) com a tag &quot;Form: Playbook Employee-Led Growth&quot; e
+                  e-mail (ActiveCampaign) com a tag &quot;Form: Playbook Team-Led Growth&quot; e
                   alguns campos do quiz (cargo, dores, budget) para que possamos enviar conteúdos
                   relevantes. Você pode descadastrar a qualquer momento via link no e-mail.
                 </li>

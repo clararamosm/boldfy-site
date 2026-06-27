@@ -228,7 +228,7 @@ export async function getStatusByLabel(
  */
 export type SourceMethodForClassify =
   | 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta'
-  | 'form_playbook_employee_led_growth' | 'form_eventosbh'
+  | 'form_playbook_team_led_growth' | 'form_eventosbh'
   | 'extension_linkedin' | 'imported_folk' | 'manual';
 
 const METHOD_TO_LADDER: Record<SourceMethodForClassify, string[]> = {
@@ -242,11 +242,11 @@ const METHOD_TO_LADDER: Record<SourceMethodForClassify, string[]> = {
   // não pediu reunião nem proposta. Cai em 'Ativo' acumulando score; lead score
   // promove pra 'Em andamento' quando passa o threshold.
   form_eventosbh: ['Ativo'],
-  // Playbook ELG (mai/2026): quem completa quiz de 11 perguntas + LGPD + email
+  // Playbook TLG (mai/2026): quem completa quiz de 11 perguntas + LGPD + email
   // corporativo é lead qualificado. Comportamento similar ao beta — entra
   // direto em Quente; auto-promoção pra Em andamento via score quando passa
   // o threshold (sponsorship+budget+C-level somam até ~110 pts).
-  form_playbook_employee_led_growth: ['Quente', 'Em andamento'],
+  form_playbook_team_led_growth: ['Quente', 'Em andamento'],
   form_beta: ['Quente', 'Em andamento'],
   form_demo: [],
   form_proposta: ['Quente', 'Em andamento'],

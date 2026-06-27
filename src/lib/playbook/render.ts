@@ -1,8 +1,8 @@
 /**
- * Render engine do Playbook de Employee-Led Growth.
+ * Render engine do Playbook de Team-Led Growth.
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md +
- *       source-of-truth/specs/playbook-employee-led-growth-copy-final.md
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md +
+ *       source-of-truth/specs/playbook-team-led-growth-copy-final.md
  *
  * Responsabilidades:
  *   1. `resolveTemplateKey(quizData)` — escolhe `template_key` (mantido pra
@@ -47,7 +47,7 @@ import type {
 } from './templates/types';
 
 /* -------------------------------------------------------------------------- */
-/*  Input shape (mirror do PlaybookEmployeeLedGrowthLeadSchema sem identidade) */
+/*  Input shape (mirror do PlaybookTeamLedGrowthLeadSchema sem identidade) */
 /* -------------------------------------------------------------------------- */
 
 export type PlaybookQuizData = {
@@ -355,7 +355,7 @@ export const MINIMO_ATIVOS_PROGRAMA = 3;
 export const MAXIMO_ATIVOS_PROGRAMA = 100;
 
 /* -------------------------------------------------------------------------- */
-/*  Gráfico Ads vs ELG (Bloco 2 — jun/2026)                                    */
+/*  Gráfico Ads vs TLG (Bloco 2 — jun/2026)                                    */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -595,7 +595,7 @@ export function renderPlaybookData(
     base === 'vendas'    ? 'Marketing' :
     /* base === 'rh' */    'Marketing';
   const parceiroExplicacao =
-    base === 'marketing' ? 'Employee-Led Growth é canal de mídia, não comunicação interna nem cultura. Sem esse acordo prévio, Vendas trata como concorrência ao SDR e RH como tarefa de engajamento.' :
+    base === 'marketing' ? 'Team-Led Growth é canal de mídia, não comunicação interna nem cultura. Sem esse acordo prévio, Vendas trata como concorrência ao SDR e RH como tarefa de engajamento.' :
     base === 'vendas'    ? 'Sem esse alinhamento, vira "vendedor postando solto" e o conteúdo conflita com a estratégia editorial da empresa. Marketing precisa entrar pra cuidar dos pilares.' :
     /* rh */               'Sem Marketing, RH herda o projeto como cultura/comunicação interna. Com Marketing junto, vira canal de mídia que também atrai talento.';
   checklistAntes.push(
@@ -675,7 +675,7 @@ export function renderPlaybookData(
     ]),
   );
 
-  // === Bloco 2 — Gráfico Ads vs ELG (jun/2026) ===
+  // === Bloco 2 — Gráfico Ads vs TLG (jun/2026) ===
   // Dados pro componente AdsVsElgChart. Reusa preços do RoiSimulator (paridade
   // com a calculadora embaixo) + earned media do calcEarnedMediaMensal.
   const adsVsElgChart = resolveAdsVsElgChart(quiz, colabAtivos);
@@ -757,7 +757,7 @@ function opcaoDestacadaParaCLevel(
 }
 
 /**
- * Resolve os dados pro gráfico Ads vs ELG do Bloco 2 (jun/2026).
+ * Resolve os dados pro gráfico Ads vs TLG do Bloco 2 (jun/2026).
  *
  * Retorna sempre o objeto — o componente decide entre modo personalizado e
  * conceitual pela presença de `gastoMensalAdsMidpoint`. Custo Boldfy usa

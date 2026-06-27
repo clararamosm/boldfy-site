@@ -209,7 +209,7 @@ export const AlgoritmoLinkedinLeadSchema = z
   .extend(UtmFieldsSchema.shape);
 
 /**
- * Schema do form do Case Semrush ELG (LP /case-semrush).
+ * Schema do form do Case Semrush TLG (LP /case-semrush).
  *
  * Mesma base do Algoritmo LinkedIn (nome+email+intencao+newsletter) MAIS três
  * campos extras de qualificação B2B (empresa, cargo, tamanho_empresa) que só
@@ -273,7 +273,7 @@ export const CaseSemrushLeadSchema = z
 /* -------------------------------------------------------------------------- */
 
 /**
- * Schema do quiz /ferramentas/playbook-employee-led-growth.
+ * Schema do quiz /ferramentas/playbook-team-led-growth.
  *
  * 11 perguntas obrigatórias + 1 aberta opcional + 4 campos de identificação.
  * Sempre Líder B2B — o gate de elegibilidade (porteColaboradores ≥ 3) na 1ª
@@ -320,7 +320,7 @@ const BudgetStatusSchema = z.enum([
 /**
  * P11.5 — gasto mensal em ads (jun/2026, opcional).
  *
- * Faixas que alimentam o gráfico "Ads vs ELG" no Bloco 2 do output. Midpoint
+ * Faixas que alimentam o gráfico "Ads vs TLG" no Bloco 2 do output. Midpoint
  * é calculado em lib/playbook/render.ts. Pergunta pode ser pulada → undefined.
  */
 const GastoMensalAdsSchema = z.enum([
@@ -347,7 +347,7 @@ const ColaboradoresPostandoSchema = z.enum([
   'nenhum', '1_3', '4_10', 'mais_10', 'nao_sei',
 ]);
 
-export const PlaybookEmployeeLedGrowthLeadSchema = z
+export const PlaybookTeamLedGrowthLeadSchema = z
   .object({
     // Identificação (fim do quiz)
     nome: NameSchema,
@@ -360,25 +360,25 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     }),
 
     /**
-     * State of ELG — consent pra uso anonimizado das respostas no relatório
+     * State of TLG — consent pra uso anonimizado das respostas no relatório
      * "Panorama Employee-Led Growth no Brasil". Default `true` (opt-out style):
      * a pessoa precisa DESmarcar pra não consentir. Diferente do `lgpdConsent`,
      * não é obrigatório — false é válido, só registra a escolha.
      *
      * Ver docs/SPEC-playbook-state-of-elg-consent.md §3.1.
      */
-    stateElgConsent: z.boolean().default(true),
+    stateTlgConsent: z.boolean().default(true),
 
     /**
-     * State of ELG — opt-in pra receber o relatório em primeira mão quando
+     * State of TLG — opt-in pra receber o relatório em primeira mão quando
      * ele for publicado. Default `false`: só entra na lista AC
-     * `[Lista] Report: Panorama ELG no Brasil` se a pessoa marcar. Só faz
-     * sentido se `stateElgConsent === true`; a UI bloqueia o checkbox quando
+     * `[Lista] Report: Panorama TLG no Brasil` se a pessoa marcar. Só faz
+     * sentido se `stateTlgConsent === true`; a UI bloqueia o checkbox quando
      * o toggle de consent tá off.
      *
      * Ver docs/SPEC-playbook-state-of-elg-consent.md §3.1.
      */
-    stateElgReportSubscribe: z.boolean().default(false),
+    stateTlgReportSubscribe: z.boolean().default(false),
 
     // P1 — porte (gate validado client-side; server aceita ≥1 só pra defesa
     // em profundidade; gate real é UI). Aceita 1..100000.
@@ -429,7 +429,7 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     /**
      * P11.5 — gasto mensal em ads (jun/2026, opcional).
      *
-     * Alimenta o gráfico "Ads vs ELG" no Bloco 2 do output. Quando undefined,
+     * Alimenta o gráfico "Ads vs TLG" no Bloco 2 do output. Quando undefined,
      * o gráfico cai no modo conceitual (sem números personalizados). Vai pro
      * AC como custom field `Gasto Mensal Ads` (label legível pra vendas).
      */

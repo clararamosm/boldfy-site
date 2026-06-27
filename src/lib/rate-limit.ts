@@ -1,7 +1,7 @@
 /**
  * Utility de rate limit por chave (IP, user-agent hash, etc), usando Vercel KV.
  *
- * Introduzido com o form do Playbook ELG (mai/2026, spec §11.4). Padrão
+ * Introduzido com o form do Playbook TLG (mai/2026, spec §11.4). Padrão
  * reusável pra outros forms — chamar `checkRateLimit(key, max, windowSec)`
  * antes de qualquer operação cara, descartar submit silenciosamente se
  * limite estourar.

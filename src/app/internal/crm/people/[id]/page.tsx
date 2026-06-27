@@ -84,7 +84,7 @@ export default async function LeadDetailPage({ params }: Props) {
       ? getGa4TimelineEntriesForPerson(id, 180).catch(() => [])
       : Promise.resolve([]),
     // Playbooks gerados pela pessoa (jun/2026 — substitui o JSON cru de
-    // metadata.form_data.playbook_employee_led_growth no Contexto da sidebar).
+    // metadata.form_data.playbook_team_led_growth no Contexto da sidebar).
     // Lista mais recentes primeiro; sidebar mostra link clicável pra
     // página /playbook/[slug] em vez do dump completo do quiz.
     db
@@ -751,9 +751,9 @@ export default async function LeadDetailPage({ params }: Props) {
             const knownKeys = new Set([...orderedKeys, ...Object.keys(FIELD_LABELS)]);
             // Chaves que NÃO devem aparecer como dump genérico aqui — têm
             // renderização própria fora do loop (jun/2026):
-            //   - playbook_employee_led_growth: vira card com link pro slug
+            //   - playbook_team_led_growth: vira card com link pro slug
             //     gerado, listado mais abaixo na sidebar.
-            const CONTEXTO_SKIP_KEYS = new Set(['playbook_employee_led_growth']);
+            const CONTEXTO_SKIP_KEYS = new Set(['playbook_team_led_growth']);
             const extraKeys = Object.keys(formData)
               .filter((k) => !knownKeys.has(k) && !CONTEXTO_SKIP_KEYS.has(k));
             const allKeys = [...orderedKeys, ...extraKeys];

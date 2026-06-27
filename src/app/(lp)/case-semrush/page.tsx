@@ -3,7 +3,7 @@
 /**
  * /case-semrush — Landing page de captura para o case
  * "Bastidores de uma estratégia que virou referência global"
- * (Case Semrush ELG, mai/2026).
+ * (Case Semrush TLG, mai/2026).
  *
  * Decisões (espelha a /algoritmo-linkedin):
  *  - Mora dentro do route group `(lp)` pra ficar isolada do header/footer
@@ -13,7 +13,7 @@
  *    (qualificação meio-funil). Mesma lógica condicional, com campos extras
  *    pra audiência mais qualificada do case.
  *  - Server action submitCaseSemrushLead sincroniza CRM-first → AC, tag
- *    'Form: Case Semrush ELG' aplicada (cadência será criada depois pela Clara).
+ *    'Form: Case Semrush TLG' aplicada (cadência será criada depois pela Clara).
  *  - Entrega na tela de sucesso: botão de download direto do PDF
  *    (/public/reports/Case-Semrush-Employee-Led-Growth-Boldfy.pdf).
  *  - CTA secundário "agendar conversa" no fim, depois do form.
@@ -201,7 +201,7 @@ export default function CaseSemrushPage() {
       cargo: intencaoUso === 'marca-empresa' ? cargo : undefined,
       tamanhoEmpresa:
         intencaoUso === 'marca-empresa' && tamanhoEmpresa ? tamanhoEmpresa : undefined,
-      origem: 'LP Case Semrush ELG',
+      origem: 'LP Case Semrush TLG',
       newsletterOptIn,
       ...utms,
       ...captureSubmissionMeta(),
@@ -668,7 +668,7 @@ export default function CaseSemrushPage() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { tag: 'B2B', desc: 'Marcas brasileiras que vivem de autoridade' },
-                  { tag: 'ELG', desc: 'A estrutura completa, virou plataforma' },
+                  { tag: 'TLG', desc: 'A estrutura completa, virou plataforma' },
                   { tag: 'EGC', desc: 'Voz própria de cada pessoa' },
                 ].map((b) => (
                   <span

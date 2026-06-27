@@ -121,7 +121,7 @@ export function ArticleFormModal({
             <span>utm_campaign <span style={{ color: '#9D85B3', fontWeight: 400 }}>(do link que você passou pro jornalista)</span></span>
             <input
               value={utmCampaign} onChange={(e) => setUtmCampaign(e.target.value)}
-              placeholder="ex: artigo-employee-led-growth-mai26"
+              placeholder="ex: artigo-team-led-growth-mai26"
               pattern="[a-z0-9\-]*"
             />
             <small style={{ color: '#9D85B3', fontSize: 11, marginTop: 4, display: 'block' }}>

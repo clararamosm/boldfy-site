@@ -5,7 +5,7 @@
  *   - KPI top com totais por form
  *   - Tabela de CVR por form (CRM submits ÷ GA4 page views)
  *   - Heatmap dia × hora
- *   - **Respondentes do Playbook ELG** (substituiu "Leads recentes" — sinal
+ *   - **Respondentes do Playbook TLG** (substituiu "Leads recentes" — sinal
  *     comercial enriquecido com sessões/usuários únicos vindos do GA4 +
  *     gráfico expandable de acessos por dia)
  *
@@ -20,7 +20,7 @@ import { eq, and, isNull, count, gte } from 'drizzle-orm';
 import { getConversionHeatmap, getFormConversionRate } from '@/lib/dashboard-queries';
 import { HeatmapChart } from '@/components/dashboard/charts';
 import { daysAgo } from '@/lib/now';
-import { getLastPlaybookOutputs } from '@/lib/playbook/state-elg-queries';
+import { getLastPlaybookOutputs } from '@/lib/playbook/state-tlg-queries';
 import {
   analyticsForPlaybook,
   getPlaybookAnalyticsBatch,
@@ -55,7 +55,7 @@ const FORM_META: Record<string, { label: string; Icon: React.ComponentType<{ siz
   form_algoritmo_linkedin: { label: 'Algoritmo LinkedIn', Icon: Download },
   form_case_semrush: { label: 'Case Semrush', Icon: Download },
   form_proposta: { label: 'Proposta', Icon: BriefcaseIcon },
-  form_playbook_employee_led_growth: { label: 'Playbook ELG', Icon: Sparkles },
+  form_playbook_team_led_growth: { label: 'Playbook TLG', Icon: Sparkles },
 };
 
 export default async function FormsPage() {
@@ -168,7 +168,7 @@ export default async function FormsPage() {
       </div>
 
       {/*
-        Respondentes do Playbook ELG.
+        Respondentes do Playbook TLG.
         Substituiu "Leads recentes" — sinal comercial enriquecido com:
         - Sessões + usuários únicos do GA4 por slug (intenção e compartilhamento)
         - Gráfico expandable de acessos por dia (saber se houve revisita)
@@ -176,7 +176,7 @@ export default async function FormsPage() {
       */}
       <div className="dash-card">
         <div className="dash-card-title">
-          <Sparkles /> Respondentes do Playbook ELG
+          <Sparkles /> Respondentes do Playbook TLG
         </div>
         <div className="dash-card-subtitle">
           Últimos {PLAYBOOK_LIMIT} playbooks gerados com sessões e usuários únicos

@@ -12,7 +12,7 @@ import { Building2, ChevronDown, Factory, Info, RotateCcw, Wifi } from 'lucide-r
 import type { RenderedData } from '@/lib/playbook/templates/types';
 import { MAXIMO_ATIVOS_PROGRAMA, MINIMO_ATIVOS_PROGRAMA, ativacaoTypicaPercent } from '@/lib/playbook/render';
 import { trackEvent } from '@/lib/track';
-import { AdsVsElgChart } from '@/components/sections/ads-vs-elg-chart';
+import { AdsVsElgChart } from '@/components/sections/ads-vs-tlg-chart';
 
 
 export function PlaybookSnapshot({
@@ -25,7 +25,7 @@ export function PlaybookSnapshot({
   snapshot: RenderedData['snapshot'];
   curvaAtivacao: RenderedData['curvaAtivacao'];
   /**
-   * Dados do gráfico Ads vs ELG (jun/2026). Opcional: playbooks gerados antes
+   * Dados do gráfico Ads vs TLG (jun/2026). Opcional: playbooks gerados antes
    * desse bloco existir não têm o campo no snapshot, nesse caso o gráfico
    * fica oculto.
    */
@@ -93,7 +93,7 @@ export function PlaybookSnapshot({
           </div>
         </details>
 
-        {/* Gráfico Ads vs ELG (jun/2026) — fecha o bloco de Diagnóstico
+        {/* Gráfico Ads vs TLG (jun/2026) — fecha o bloco de Diagnóstico
             mostrando como o budget de mídia se comporta nos 2 cenários.
             Só renderiza pra playbooks que têm o campo (geração nova). */}
         {adsVsElgChart && (
@@ -142,7 +142,7 @@ function Mini({
  *    compromisso (porte 4-20 + confirmou que topa comprometer 3). Explica
  *    por que mesmo numa empresa de 4-20 colab, o número exibido é 3 (piso
  *    operacional do programa) e contextualiza por que empresas com menos
- *    de 5 não rodam ELG sustentável.
+ *    de 5 não rodam TLG sustentável.
  *  - Caso contrário: texto normal da curva por porte. Não menciona piso —
  *    pra empresas maiores o piso de 3 é trivial e mencioná-lo só polui o
  *    contexto.

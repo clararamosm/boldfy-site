@@ -37,12 +37,12 @@ export type InfograficoEntry = {
  * importa o componente e adiciona aqui.
  *
  * Exemplo (quando houver):
- *   import JornadaELG from '@/components/embed/graficos/jornada-elg';
+ *   import JornadaTLG from '@/components/embed/graficos/jornada-elg';
  *
  *   export const INFOGRAFICOS: Record<string, InfograficoEntry> = {
  *     'jornada-elg': {
  *       meta: { slug: 'jornada-elg', title: 'Jornada do Employee-Led Growth' },
- *       Component: JornadaELG,
+ *       Component: JornadaTLG,
  *     },
  *   };
  */

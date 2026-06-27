@@ -636,7 +636,7 @@ export default function AlgoritmoLinkedinPage() {
                 {[
                   { tag: 'B2B', desc: 'Especialistas em founders' },
                   { tag: '360Brew', desc: 'Workflows atualizados' },
-                  { tag: 'ELG', desc: 'Crescimento liderado por funcionários' },
+                  { tag: 'TLG', desc: 'Crescimento liderado por funcionários' },
                 ].map((b) => (
                   <span
                     key={b.tag}

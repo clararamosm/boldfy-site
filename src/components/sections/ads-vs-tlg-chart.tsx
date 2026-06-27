@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Gráfico Ads vs ELG — Bloco 2 (Diagnóstico) do Playbook ELG.
+ * Gráfico Ads vs TLG — Bloco 2 (Diagnóstico) do Playbook TLG.
  *
  * História visual:
  *   1. Mês 1 ao Mês 3 (inflexão): linha única roxa-escura semitransparente
@@ -9,10 +9,10 @@
  *   2. Mês 3 marcado com tracejada vertical = "Boldfy entrou".
  *   3. Mês 3 ao Mês 6: bifurca em 2 linhas.
  *      - Cinza ("Só ads"): continua linear, cenário hipotético se nada mudasse.
- *      - Rosa ("ELG com Boldfy"): mesmo gasto em ads + ELG adicional via
+ *      - Rosa ("TLG com Boldfy"): mesmo gasto em ads + TLG adicional via
  *        colaboradores ativos. Sobe mais rápido.
  *
- * Premissa do gráfico: mesmo gasto em ads nos dois cenários. ELG é EXTRA,
+ * Premissa do gráfico: mesmo gasto em ads nos dois cenários. TLG é EXTRA,
  * não realocação. Card "Boldfy custaria" mostra o custo como % do ads atual
  * pra contextualizar que é fração pequena do que já se gasta.
  *
@@ -23,7 +23,7 @@
  *   - `custoBoldfyMensal`: vem de calcCustoBoldfyMensal (price * seats).
  *   - `earnedMediaMensal`: vem de calcEarnedMediaMensal (impressões * CPM).
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth-copy-final.md §2.2b.
+ * Spec: source-of-truth/specs/playbook-team-led-growth-copy-final.md §2.2b.
  */
 
 import { useId } from 'react';
@@ -41,7 +41,7 @@ export type AdsVsElgChartProps = {
   /** Custo Boldfy/mês (já calculado pelo render — vem do mesmo getBetaPricePerSeat
    *  do RoiSimulator pra garantir paridade com a calculadora). */
   custoBoldfyMensal: number;
-  /** Earned media em R$/mês via ELG (impressões * CPM). */
+  /** Earned media em R$/mês via TLG (impressões * CPM). */
   earnedMediaMensal: number;
   /** Nº de colaboradores ativos (label dos cards). */
   colabAtivos: number;
@@ -53,7 +53,7 @@ export type AdsVsElgChartProps = {
 
 /**
  * Polish 3 (jun/2026): padR reduzido de 105 → 30 porque os labels finais
- * "ELG com Boldfy" / "Só ads" saíram do SVG (informação fica só na legenda
+ * "TLG com Boldfy" / "Só ads" saíram do SVG (informação fica só na legenda
  * fixa no topo). Sobra mais largura útil pra curva e pra animação da bolinha.
  */
 const CHART = {
@@ -130,8 +130,8 @@ export function AdsVsElgChart({
 
   // Linha "Só ads": linear ao longo dos 6 meses (continuação hipotética).
   const adsData = [1, 2, 3, 4, 5, 6].map((m) => impressoesAdsMes * m);
-  // Linha "ELG com Boldfy": idêntica até a inflexão, depois ganha ELG adicional
-  // por mês. inflexaoIdx=2 = Mês 3; ELG entra a partir do Mês 4 (i >= 3).
+  // Linha "TLG com Boldfy": idêntica até a inflexão, depois ganha TLG adicional
+  // por mês. inflexaoIdx=2 = Mês 3; TLG entra a partir do Mês 4 (i >= 3).
   const elgData = [1, 2, 3, 4, 5, 6].map((m, i) => {
     const adsAcum = impressoesAdsMes * m;
     const mesesElg = Math.max(0, i - CHART.inflexaoIdx); // 0, 0, 0, 1, 2, 3
@@ -184,7 +184,7 @@ export function AdsVsElgChart({
             />
           </div>
           <MiniCard
-            label="Earned media via ELG"
+            label="Earned media via TLG"
             valor={formatBRL(earnedMediaMensal)}
             nota={
               <>
@@ -228,7 +228,7 @@ function HeaderTitulo() {
       <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
         diversifica o budget
       </span>{' '}
-      em ELG
+      em TLG
     </h3>
   );
 }
@@ -254,13 +254,13 @@ function HeaderSubtitulo({
         <>Você pulou a pergunta sobre ads. Olha o cenário típico pra empresas do seu porte.</>
       ) : semAds ? (
         <>
-          Você marcou que <strong>não investe em ads</strong>. ELG vira o canal pra começar a gerar
+          Você marcou que <strong>não investe em ads</strong>. TLG vira o canal pra começar a gerar
           earned media sem precisar abrir budget de mídia paga.
         </>
       ) : (
         <>
           Você marcou que <strong>investe {faixaLabel}</strong> em ads. Olha o que muda no alcance
-          acumulado quando parte do orçamento vira programa de ELG.
+          acumulado quando parte do orçamento vira programa de TLG.
         </>
       )}
     </p>
@@ -282,7 +282,7 @@ function Legend() {
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="block h-[3px] w-[12px] rounded-sm bg-primary" />
-        ELG com Boldfy
+        TLG com Boldfy
       </span>
     </div>
   );
@@ -292,7 +292,7 @@ function Legend() {
  * Wrapper do gráfico — flex container que estica vertical (`h-full`) pra
  * ocupar a mesma altura da coluna de cards à esquerda quando o grid é
  * `lg:items-stretch`. Mais padding lateral pro SVG ter espaço pros labels
- * "ELG com Boldfy" e "Só ads" no fim das linhas.
+ * "TLG com Boldfy" e "Só ads" no fim das linhas.
  */
 function ChartWrapper({
   conceitual,
@@ -399,14 +399,14 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
   const finalElgY = elgPoints[5][1];
 
   /* ---------- Animação (jun/2026 polish 3) ----------
-     Bolinha que percorre a curva combinada (compartilhada M1-M3 + ELG M3-M6),
+     Bolinha que percorre a curva combinada (compartilhada M1-M3 + TLG M3-M6),
      em loop. Implementação via SMIL <animateMotion> seguindo o path do
      `combinedPath` (sharedPoints + elgPoints[inflex..5]).
 
      Sequência (dur=5.5s):
        0–2s    bolinha percorre o trecho compartilhado (M1 → M3) — fica
                cinza-escura (cor do trecho), sem brilho ainda.
-       2–4s    bolinha sobe pela curva ELG (M3 → M6) — fica rosa primary,
+       2–4s    bolinha sobe pela curva TLG (M3 → M6) — fica rosa primary,
                com glow sutil acompanhando.
        4–5.5s  pausa rápida no ponto final + reset.
      Usa repeatCount="indefinite" pra loopar enquanto a página estiver aberta.
@@ -417,7 +417,7 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
   const combinedPath = buildPathFromPoints(combinedPoints);
   const animationDurationS = 5.5;
   const animationKeyTimes = '0;0.36;0.73;1';
-  // 36% = chegou no M3 (inflexão); 73% = chegou no M6 (final ELG); 100% = pausa
+  // 36% = chegou no M3 (inflexão); 73% = chegou no M6 (final TLG); 100% = pausa
 
   return (
     <svg
@@ -434,7 +434,7 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
 
       {yGrid}
 
-      {/* Área sob a curva ELG */}
+      {/* Área sob a curva TLG */}
       <path d={elgAreaPath} fill={`url(#${gradId})`} stroke="none" />
 
       {/* Trecho compartilhado (M1 ao M3 inclusive) — cor neutra */}
@@ -443,7 +443,7 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
       {/* Trecho "Só ads" (do M3 ao M6) */}
       <path d={adsTrechoPath} fill="none" stroke="#B8A4CC" strokeWidth={2.5} strokeLinecap="round" />
 
-      {/* Trecho "ELG com Boldfy" (do M3 ao M6) */}
+      {/* Trecho "TLG com Boldfy" (do M3 ao M6) */}
       <path d={elgTrechoPath} fill="none" stroke="#CD50F1" strokeWidth={3.2} strokeLinecap="round" />
 
       {/* Linha vertical "Boldfy entrou" */}
@@ -478,7 +478,7 @@ function ChartSvg({ adsData, elgData }: { adsData: number[]; elgData: number[] }
       {/* Bolinha animada (jun/2026 polish 3) — percorre a curva combinada
           em loop. Glow rosa puxa o olhar. Path animado vai do M1 ao M6
           atravessando a inflexão; a cor da bolinha interpola pra dar o
-          efeito "cinza no shared → rosa na curva ELG" sem precisar de 2
+          efeito "cinza no shared → rosa na curva TLG" sem precisar de 2
           círculos separados. */}
       <circle r={6} fill="#CD50F1" opacity={0.95}>
         <animateMotion

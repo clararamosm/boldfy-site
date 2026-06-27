@@ -38,7 +38,7 @@ const ACTIVITY_WEIGHTS: Record<string, number> = {
   form_submit_algoritmo_linkedin: 10,
   form_submit_case_semrush: 15,  // Case é meio-funil — mais qualificado que algoritmo-linkedin, menos que beta
   form_submit_eventosbh: 20,  // Pré-inscrição em eventos BH — líder B2B demonstrando interesse, entre case e beta
-  form_submit_playbook_employee_led_growth: 25,  // Quem termina quiz de 11 perguntas é lead bem qualificado — peso igual ao beta
+  form_submit_playbook_team_led_growth: 25,  // Quem termina quiz de 11 perguntas é lead bem qualificado — peso igual ao beta
   form_submit_beta: 25,
   form_submit_demo: 50,
   form_submit_proposta: 50,
@@ -71,7 +71,7 @@ export function weightForActivity(type: string, subtype?: string): number {
 /* -------------------------------------------------------------------------- */
 
 export type SourceChannel = 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown';
-export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'form_playbook_employee_led_growth' | 'form_eventosbh' | 'extension_linkedin' | 'manual' | 'imported_folk';
+export type SourceMethod = 'form_demo' | 'form_beta' | 'form_algoritmo_linkedin' | 'form_case_semrush' | 'form_proposta' | 'form_playbook_team_led_growth' | 'form_eventosbh' | 'extension_linkedin' | 'manual' | 'imported_folk';
 
 export type UpsertPersonInput = {
   name: string;
@@ -124,7 +124,7 @@ export type UpsertPersonInput = {
    */
   campaignMembershipsAppend?: string[];
   /**
-   * Senioridade do cargo (introduzida no form Playbook ELG, mai/2026).
+   * Senioridade do cargo (introduzida no form Playbook TLG, mai/2026).
    * Sobrescreve em cada submit que carregue essa info — última resposta vence.
    * Enums vão pra colunas dedicadas em people (não JSONB) — virou padrão
    * recorrente. Forms que NÃO coletam cargo (Algoritmo LinkedIn, etc) podem
@@ -132,7 +132,7 @@ export type UpsertPersonInput = {
    */
   jobSeniority?: 'analista' | 'coordenador' | 'gerente' | 'diretor' | 'c_level' | null;
   /**
-   * Área funcional (introduzida no form Playbook ELG, mai/2026).
+   * Área funcional (introduzida no form Playbook TLG, mai/2026).
    * Mesma regra do jobSeniority — overwrite por submit, nullable.
    */
   jobArea?:
@@ -526,7 +526,7 @@ export async function upsertPerson(
         proposalUrl: input.proposalUrl,
         acTags: input.acTagsSet ?? null,
         metadata: input.metadataPatch ?? null,
-        // Playbook ELG (mai/2026) — enums novos. Nullable em INSERT.
+        // Playbook TLG (mai/2026) — enums novos. Nullable em INSERT.
         jobSeniority: input.jobSeniority ?? null,
         jobArea: input.jobArea ?? null,
       })
@@ -697,9 +697,9 @@ function buildAcListNames(lead: ClassifiedLead): string[] {
   }
 
   // 4. Listas extras decididas pelo adapter (opt-ins editoriais decididos
-  // dentro do form, fora das 3 famílias acima). Exemplo: o Playbook ELG
-  // adiciona `[Lista] Report: Panorama ELG no Brasil` quando a pessoa marca
-  // o checkbox de "receber em primeira mão" no box de State of ELG.
+  // dentro do form, fora das 3 famílias acima). Exemplo: o Playbook TLG
+  // adiciona `[Lista] Report: Panorama TLG no Brasil` quando a pessoa marca
+  // o checkbox de "receber em primeira mão" no box de State of TLG.
   // Ver docs/SPEC-playbook-state-of-elg-consent.md §5.
   if (lead.extraAcListNames && lead.extraAcListNames.length > 0) {
     names.push(...lead.extraAcListNames);
@@ -775,7 +775,7 @@ export async function recordLeadFromForm(
       campaignMembershipsAppend,
       acTagsSet: acTags,
       metadataPatch: lead.personMetadataPatch,
-      // Playbook ELG (mai/2026): forms que coletam cargo passam aqui.
+      // Playbook TLG (mai/2026): forms que coletam cargo passam aqui.
       jobSeniority: lead.jobSeniority,
       jobArea: lead.jobArea,
     },

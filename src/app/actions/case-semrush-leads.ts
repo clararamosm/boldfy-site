@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Server action para capturar leads da LP do Case Semrush ELG
+ * Server action para capturar leads da LP do Case Semrush TLG
  * (/case-semrush).
  *
  * Naming: arquivo + função espelham o slug da URL pública. Não usar termos
@@ -15,7 +15,7 @@
  *    emite activity ac_sync_failed).
  *  - Nota descritiva no AC pra equipe ver contexto rápido (best-effort, não
  *    bloqueia em caso de falha).
- *  - Cadência do AC pra tag 'Form: Case Semrush ELG' ainda NÃO está
+ *  - Cadência do AC pra tag 'Form: Case Semrush TLG' ainda NÃO está
  *    configurada (Clara cria depois). Por enquanto, o lead só recebe o PDF
  *    pelo botão de download na tela de sucesso da LP.
  */
@@ -76,7 +76,7 @@ export async function submitCaseSemrushLead(
           `Opt-in newsletter: ${input.newsletterOptIn ? 'SIM' : 'não'}`,
           ``,
           `— Tracking —`,
-          `Origem: ${input.origem || 'LP Case Semrush ELG'}`,
+          `Origem: ${input.origem || 'LP Case Semrush TLG'}`,
           input.utm_source ? `utm_source: ${input.utm_source}` : '',
           input.utm_medium ? `utm_medium: ${input.utm_medium}` : '',
           input.utm_campaign ? `utm_campaign: ${input.utm_campaign}` : '',

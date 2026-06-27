@@ -63,7 +63,7 @@ const GENERAL_CHIPS: FormChip[] = [
 const MATERIAL_CHIPS: FormChip[] = [
   { value: 'form_submit_algoritmo_linkedin', icon: 'material', label: 'Algoritmo LinkedIn' },
   { value: 'form_submit_case_semrush', icon: 'material', label: 'Case Semrush' },
-  { value: 'form_submit_playbook_employee_led_growth', icon: 'ferramenta', label: 'Playbook' },
+  { value: 'form_submit_playbook_team_led_growth', icon: 'ferramenta', label: 'Playbook' },
 ];
 
 export function FormsFilters({ statuses, channels, pages, countsByForm, unsubscribedCount, totalPeopleAll, eventChips }: Props) {

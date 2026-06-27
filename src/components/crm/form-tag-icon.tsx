@@ -11,7 +11,7 @@
  *  - Materiais ricos (Algoritmo LinkedIn report + Case Semrush) → MESMO ícone
  *    de material (FileText). O label diz qual é — o ícone identifica que é
  *    material rico.
- *  - Ferramentas (Playbook ELG) → ícone de ferramenta (Wrench).
+ *  - Ferramentas (Playbook TLG) → ícone de ferramenta (Wrench).
  *  - linkedin_extension → ícone de link (captura interna, não é form do site).
  *
  * Ícones Lucide outline (padrão da identidade Boldfy — nunca solid).
@@ -72,7 +72,7 @@ export function iconKeyForFormType(formType: string): FormTagIconKey {
     case 'form_submit_algoritmo_linkedin':
     case 'form_submit_case_semrush':
       return 'material';
-    case 'form_submit_playbook_employee_led_growth':
+    case 'form_submit_playbook_team_led_growth':
       return 'ferramenta';
     default: return 'fallback';
   }
@@ -91,7 +91,7 @@ export function iconKeyForFormSlug(slug: string): FormTagIconKey {
     case 'algoritmo-linkedin':
     case 'case-semrush':
       return 'material';
-    case 'playbook-employee-led-growth':
+    case 'playbook-team-led-growth':
       return 'ferramenta';
     case 'linkedin_extension': return 'linkedin';
     default: return 'fallback';

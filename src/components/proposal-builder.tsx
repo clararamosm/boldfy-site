@@ -1073,7 +1073,7 @@ function ResultStep({
                   </span>
                 ))}
               </div>
-              {/* Link pro case Semrush — explica o "por que peças importam pra ELG" */}
+              {/* Link pro case Semrush — explica o "por que peças importam pra TLG" */}
               <a
                 href="/case-semrush"
                 target="_blank"

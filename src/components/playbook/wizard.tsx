@@ -12,10 +12,10 @@
  * Fai narradora: cada pergunta tem um balão da Fai contendo título + sub.
  * A pretitle (Pergunta X de 11) e os inputs ficam FORA do balão.
  *
- * Persistência: sessionStorage por slug fixo (`playbook-elg-quiz-state`).
+ * Persistência: sessionStorage por slug fixo (`playbook-tlg-quiz-state`).
  * Carrega no mount, salva a cada mudança, limpa ao concluir.
  *
- * Submit: chama server action submitPlaybookEmployeeLedGrowthLead, recebe
+ * Submit: chama server action submitPlaybookTeamLedGrowthLead, recebe
  * URL do playbook gerado, faz router.push pra /playbook/[slug].
  */
 
@@ -26,13 +26,13 @@ import { ArrowRight, Check, ChevronLeft, ListChecks, Minus, Plus, X } from 'luci
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { submitPlaybookEmployeeLedGrowthLead } from '@/app/actions/playbook-employee-led-growth-leads';
+import { submitPlaybookTeamLedGrowthLead } from '@/app/actions/playbook-team-led-growth-leads';
 import { useUtmParams } from '@/hooks/use-utm-params';
 import { captureSubmissionMeta } from '@/lib/source-detection';
 import { trackEvent } from '@/lib/track';
 import { QUESTIONS, STEP_ORDER } from './wizard-config';
 import type { StepKey, ChoiceOption } from './wizard-config';
-import { StateElgOptinBox } from './state-elg-optin-box';
+import { StateTlgOptinBox } from './state-tlg-optin-box';
 
 /* -------------------------------------------------------------------------- */
 /*  Tipos do estado                                                            */
@@ -56,7 +56,7 @@ type Answers = {
   /**
    * P11.5 — gasto mensal em ads (jun/2026, opcional).
    *
-   * Alimenta o gráfico "Ads vs ELG" no Bloco 2 do output. Faixas em vez de
+   * Alimenta o gráfico "Ads vs TLG" no Bloco 2 do output. Faixas em vez de
    * número exato pra reduzir fricção. Quando undefined, o componente do
    * gráfico cai no modo conceitual (sem números personalizados).
    */
@@ -69,17 +69,17 @@ type Answers = {
   newsletterOptIn?: boolean;
   lgpdConsent?: boolean;
   /**
-   * State of ELG — consent pra uso anonimizado das respostas no relatório
+   * State of TLG — consent pra uso anonimizado das respostas no relatório
    * "Panorama Employee-Led Growth no Brasil". Default `true` (opt-out).
    * Ver SPEC-playbook-state-of-elg-consent.md.
    */
-  stateElgConsent?: boolean;
+  stateTlgConsent?: boolean;
   /**
-   * State of ELG — opt-in pra receber o relatório em primeira mão.
+   * State of TLG — opt-in pra receber o relatório em primeira mão.
    * Default `false` (opt-in). Subordinado ao consent (UI bloqueia se
    * consent off; adapter trata como false nesse caso).
    */
-  stateElgReportSubscribe?: boolean;
+  stateTlgReportSubscribe?: boolean;
   /**
    * Confirmação que o respondente consegue comprometer 3 colaboradores ativos.
    *
@@ -104,7 +104,7 @@ type WizardState = {
   history: Array<StepKey | 'porte-compromisso'>;
 };
 
-const STORAGE_KEY = 'playbook-elg-quiz-state-v1';
+const STORAGE_KEY = 'playbook-tlg-quiz-state-v1';
 const TOTAL_QUESTIONS = 9;
 
 /** Limites coerentes com Zod no server. */
@@ -175,12 +175,12 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
     }
     return {
       currentStep: 'porte',
-      // State of ELG default ON (opt-out) e report subscribe default OFF.
+      // State of TLG default ON (opt-out) e report subscribe default OFF.
       // Ver SPEC-playbook-state-of-elg-consent.md §3.1.
       answers: {
         porte: QUESTIONS.porte.initial,
-        stateElgConsent: true,
-        stateElgReportSubscribe: false,
+        stateTlgConsent: true,
+        stateTlgReportSubscribe: false,
       },
       history: [],
     };
@@ -353,16 +353,16 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
     setState((prev) => ({ ...prev, currentStep: 'loading' }));
 
     try {
-      const result = await submitPlaybookEmployeeLedGrowthLead({
+      const result = await submitPlaybookTeamLedGrowthLead({
         nome: a.nome,
         email: a.email,
         empresa: a.empresa,
         telefone: a.telefone || undefined,
         newsletterOptIn: a.newsletterOptIn ?? false,
         lgpdConsent: a.lgpdConsent,
-        // State of ELG — defaults coerentes com Zod (consent ON, subscribe OFF).
-        stateElgConsent: a.stateElgConsent ?? true,
-        stateElgReportSubscribe: a.stateElgReportSubscribe ?? false,
+        // State of TLG — defaults coerentes com Zod (consent ON, subscribe OFF).
+        stateTlgConsent: a.stateTlgConsent ?? true,
+        stateTlgReportSubscribe: a.stateTlgReportSubscribe ?? false,
         porteColaboradores: a.porte ?? 0,
         // Só presente quando porte ≤ 20 (pergunta foi feita). Quando
         // ausente, server entende como "pergunta não aplicável".
@@ -379,7 +379,7 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
         gastoMensalAds: (a.gastoMensalAds as never) || undefined,
         observacoesLivres: a.observacoesLivres || undefined,
         website: honeypotValue, // honeypot — vazio em humanos, preenchido em bots
-        origem: '/ferramentas/playbook-employee-led-growth',
+        origem: '/ferramentas/playbook-team-led-growth',
         ...utms,
         ...captureSubmissionMeta(),
       });
@@ -938,20 +938,20 @@ function IdentificationView({
           </span>
         </label>
 
-        {/* Box State of ELG (opt-out consent + opt-in report subscription).
+        {/* Box State of TLG (opt-out consent + opt-in report subscription).
             Ver docs/SPEC-playbook-state-of-elg-consent.md. */}
         <div className="pt-1">
-          <StateElgOptinBox
-            consent={answers.stateElgConsent ?? true}
+          <StateTlgOptinBox
+            consent={answers.stateTlgConsent ?? true}
             onConsentChange={(v) => {
-              onAnswer('stateElgConsent', v);
+              onAnswer('stateTlgConsent', v);
               // Se desliga consent, força subscribe off (defensivo).
-              if (!v && answers.stateElgReportSubscribe) {
-                onAnswer('stateElgReportSubscribe', false);
+              if (!v && answers.stateTlgReportSubscribe) {
+                onAnswer('stateTlgReportSubscribe', false);
               }
             }}
-            subscribe={answers.stateElgReportSubscribe ?? false}
-            onSubscribeChange={(v) => onAnswer('stateElgReportSubscribe', v)}
+            subscribe={answers.stateTlgReportSubscribe ?? false}
+            onSubscribeChange={(v) => onAnswer('stateTlgReportSubscribe', v)}
           />
         </div>
       </div>

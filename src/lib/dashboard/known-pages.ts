@@ -47,7 +47,7 @@ const STATIC_PAGES: KnownPage[] = [
 
   // Ferramentas
   { path: '/ferramentas', category: 'Ferramenta' },
-  { path: '/ferramentas/playbook-employee-led-growth', category: 'Ferramenta' },
+  { path: '/ferramentas/playbook-team-led-growth', category: 'Ferramenta' },
 
   // Recursos
   { path: '/blog', category: 'Recurso' },

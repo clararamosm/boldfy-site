@@ -1,20 +1,20 @@
 /**
- * Queries do dashboard /internal/dashboard/state-elg.
+ * Queries do dashboard /internal/dashboard/state-tlg.
  *
- * Consome a view `state_elg_aggregates` (criada na migration 0005) +
+ * Consome a view `state_tlg_aggregates` (criada na migration 0005) +
  * joins com playbook_outputs/people/companies pra agregados ricos.
  *
  * Threshold de publicação pública do State of Employee-Led Growth:
  * 100 respostas (decisão de spec — abaixo disso vira anedota estatística).
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md §10.
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md §10.
  */
 
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 
-/** Threshold pra publicação do State of ELG Report. */
-export const STATE_ELG_PUBLISH_THRESHOLD = 100;
+/** Threshold pra publicação do State of TLG Report. */
+export const STATE_TLG_PUBLISH_THRESHOLD = 100;
 
 /* -------------------------------------------------------------------------- */
 /*  Tipos                                                                      */
@@ -26,7 +26,7 @@ export type AggregateRow = {
   count: number;
 };
 
-export type StateElgSnapshot = {
+export type StateTlgSnapshot = {
   total: number;
   thresholdRemaining: number;
   progressPercent: number;
@@ -127,14 +127,14 @@ export function labelForDimension(dimension: string, value: string): string {
 /**
  * Snapshot top-line: total de respostas, distância pro threshold, % de progresso.
  */
-export async function getStateElgSnapshot(): Promise<StateElgSnapshot> {
+export async function getStateTlgSnapshot(): Promise<StateTlgSnapshot> {
   const result = await db.execute<AggregateRow>(sql`
-    SELECT dimension, value, count FROM state_elg_aggregates WHERE dimension = 'total' LIMIT 1
+    SELECT dimension, value, count FROM state_tlg_aggregates WHERE dimension = 'total' LIMIT 1
   `);
   const row = result.rows[0];
   const total = row ? Number(row.count) : 0;
-  const thresholdRemaining = Math.max(0, STATE_ELG_PUBLISH_THRESHOLD - total);
-  const progressPercent = Math.min(100, Math.round((total / STATE_ELG_PUBLISH_THRESHOLD) * 100));
+  const thresholdRemaining = Math.max(0, STATE_TLG_PUBLISH_THRESHOLD - total);
+  const progressPercent = Math.min(100, Math.round((total / STATE_TLG_PUBLISH_THRESHOLD) * 100));
   return { total, thresholdRemaining, progressPercent };
 }
 
@@ -146,7 +146,7 @@ export async function getStateElgSnapshot(): Promise<StateElgSnapshot> {
  */
 export async function getAggregateByDimension(dimension: string): Promise<AggregateBucket[]> {
   const result = await db.execute<AggregateRow>(sql`
-    SELECT dimension, value, count FROM state_elg_aggregates
+    SELECT dimension, value, count FROM state_tlg_aggregates
     WHERE dimension = ${dimension}
     ORDER BY count DESC
   `);

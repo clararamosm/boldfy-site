@@ -135,18 +135,18 @@ export function describeActivity(
     case 'form_submit_case_semrush':
     case 'form_submit_proposta':
     case 'form_submit_eventosbh':
-    case 'form_submit_playbook_employee_led_growth': {
+    case 'form_submit_playbook_team_led_growth': {
       const labelMap: Record<string, { icon: string; label: string }> = {
         form_submit_demo: { icon: '🎯', label: 'Demo' },
         form_submit_beta: { icon: '🧪', label: 'Beta' },
         form_submit_algoritmo_linkedin: { icon: '📥', label: 'Report Algoritmo LinkedIn 2026' },
-        form_submit_case_semrush: { icon: '📑', label: 'Case Semrush ELG' },
+        form_submit_case_semrush: { icon: '📑', label: 'Case Semrush TLG' },
         form_submit_proposta: { icon: '💼', label: 'Simulador de Proposta' },
         form_submit_eventosbh: { icon: '📍', label: 'Pré-inscrição Eventos BH' },
-        // jun/2026: playbook ELG faltava no map, caia no default e
-        // mostrava o slug bruto ('form_submit_playbook_employee_led_growth')
+        // jun/2026: playbook TLG faltava no map, caia no default e
+        // mostrava o slug bruto ('form_submit_playbook_team_led_growth')
         // na timeline. Agora vira 'Solicitou Playbook de Employee-Led Growth'.
-        form_submit_playbook_employee_led_growth: {
+        form_submit_playbook_team_led_growth: {
           icon: '📖',
           label: 'Playbook de Employee-Led Growth',
         },
@@ -458,7 +458,7 @@ export function activityIconName(type: string): LucideIconName {
     case 'form_submit_case_semrush': return 'FileSearch';
     case 'form_submit_proposta': return 'Briefcase';
     case 'form_submit_eventosbh': return 'CalendarPlus';
-    case 'form_submit_playbook_employee_led_growth': return 'BookOpen';
+    case 'form_submit_playbook_team_led_growth': return 'BookOpen';
     case 'cal_scheduled': return 'Calendar';
     case 'cal_attended': return 'CalendarCheck';
     case 'cal_noshow': return 'CalendarX';

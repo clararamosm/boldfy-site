@@ -65,7 +65,7 @@ export const PRICING_TIERS = [
 
 /**
  * Faixa 71-100 — usada só onde o slider passa de 70 (simulador do playbook +
- * gráfico Ads vs ELG). NÃO aparece nos tiles públicos.
+ * gráfico Ads vs TLG). NÃO aparece nos tiles públicos.
  *
  * - 71-100 seats → R$ 300/seat cheio (valor fechado). A 100 seats a empresa
  *   paga no máximo R$ 30k/mês cheio (R$ 21k beta), o que ainda fecha conta.

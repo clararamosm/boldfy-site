@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Linha da tabela "Respondentes do Playbook ELG" no dashboard de Forms.
+ * Linha da tabela "Respondentes do Playbook TLG" no dashboard de Forms.
  *
  * Mostra: pessoa, empresa, setor, template, sessões e usuários únicos da
  * página `/playbook/[slug]` no GA4. Tem chevron pra expandir e ver o

@@ -1,5 +1,5 @@
 /**
- * GA4 — analytics detalhados por slug do Playbook ELG (batched query).
+ * GA4 — analytics detalhados por slug do Playbook TLG (batched query).
  *
  * Faz UMA query GA4 que pega TODAS as páginas `/playbook/...` com tráfego no
  * período, dimensionado por dia. Cliente filtra/agrupa por slug individual.

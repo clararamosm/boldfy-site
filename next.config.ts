@@ -171,6 +171,14 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       // ────────────────────────────────────────────────────────────
+      // PLAYBOOK ELG → TLG (jun/2026): rota renomeada de
+      // /ferramentas/playbook-employee-led-growth para
+      // /ferramentas/playbook-team-led-growth. 301 pra preservar links
+      // antigos (Report, emails, LPs) que apontavam pro slug antigo.
+      // ────────────────────────────────────────────────────────────
+      { source: '/ferramentas/playbook-employee-led-growth', destination: '/ferramentas/playbook-team-led-growth', permanent: true },
+
+      // ────────────────────────────────────────────────────────────
       // ARTIGOS MIGRADOS — redirect /post/slug-antigo → /blog/slug-novo
       // Estes são permanentes (301) para transferência máxima de autoridade SEO
       // ────────────────────────────────────────────────────────────

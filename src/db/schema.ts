@@ -52,7 +52,7 @@ export const sourceMethodEnum = pgEnum('source_method', [
   'form_algoritmo_linkedin',
   'form_case_semrush',
   'form_proposta',
-  'form_playbook_employee_led_growth',
+  'form_playbook_team_led_growth',
   'form_eventosbh',
   'extension_linkedin',
   'manual',
@@ -247,14 +247,14 @@ export const people = pgTable(
     /** URL da proposta HTML gerada (form Proposta). Botão destacado no perfil. */
     proposalUrl: text('proposal_url'),
     /**
-     * Senioridade do cargo (introduzida no form Playbook ELG, mai/2026).
+     * Senioridade do cargo (introduzida no form Playbook TLG, mai/2026).
      * Nullable — pessoas vindas de forms antigos não têm. Forms novos
      * devem popular. Padrão recorrente: usar nos próximos forms que
      * coletarem cargo.
      */
     jobSeniority: jobSeniorityEnum('job_seniority'),
     /**
-     * Área funcional (introduzida no form Playbook ELG, mai/2026).
+     * Área funcional (introduzida no form Playbook TLG, mai/2026).
      * Define template do Playbook + segmentação de leads no kanban.
      */
     jobArea: jobAreaEnum('job_area'),
@@ -278,7 +278,7 @@ export const people = pgTable(
     // pra drizzle-kit não tentar dropar caso a Clara rode push no futuro.
     index('idx_people_segment').on(t.segment),
     index('idx_people_forms_gin').using('gin', t.formsSubmitted),
-    // Índices do Playbook ELG (mai/2026) — segmentação no kanban e State of ELG.
+    // Índices do Playbook TLG (mai/2026) — segmentação no kanban e State of TLG.
     index('idx_people_seniority').on(t.jobSeniority),
     index('idx_people_area').on(t.jobArea),
   ],
@@ -367,9 +367,9 @@ export const proposals = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
-/*  playbook_outputs (storage dos playbooks gerados pela ferramenta ELG)       */
+/*  playbook_outputs (storage dos playbooks gerados pela ferramenta TLG)       */
 /*                                                                              */
-/*  Cada submit do quiz /ferramentas/playbook-employee-led-growth gera uma row */
+/*  Cada submit do quiz /ferramentas/playbook-team-led-growth gera uma row */
 /*  aqui + uma página acessível em /playbook/[slug] (noindex/nofollow).        */
 /*  Pessoa pode revisitar a página dela / compartilhar com C-level, e a equipe */
 /*  Boldfy vê quem voltou a abrir (view_count + last_viewed_at) como sinal     */
@@ -406,7 +406,7 @@ export const playbookOutputs = pgTable(
     /**
      * Variáveis injetadas no template (hero number, paragrafo conector,
      * checklist items condicionais, calculadora defaults, etc).
-     * Estrutura definida em /source-of-truth/specs/playbook-employee-led-growth.md §6.2.
+     * Estrutura definida em /source-of-truth/specs/playbook-team-led-growth.md §6.2.
      */
     renderedData: jsonb('rendered_data').notNull(),
 
@@ -440,7 +440,7 @@ export const prArticles = pgTable('pr_articles', {
   articleUrl: text('article_url'), // URL externo da notícia no veículo (https://infomoney.com.br/...)
   outlet: text('outlet'), // veículo (InfoMoney, Exame, etc) — opcional
   shortlinkCode: text('shortlink_code'), // ex: pr-elg-mai26 (corresponde a /l/[code])
-  utmCampaign: text('utm_campaign'), // ex: 'artigo-employee-led-growth-mai26'
+  utmCampaign: text('utm_campaign'), // ex: 'artigo-team-led-growth-mai26'
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

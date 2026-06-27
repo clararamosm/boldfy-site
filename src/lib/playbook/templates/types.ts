@@ -1,8 +1,8 @@
 /**
  * Tipos do render engine do Playbook de Employee-Led Growth.
  *
- * Spec: source-of-truth/specs/playbook-employee-led-growth.md +
- *       source-of-truth/specs/playbook-employee-led-growth-copy-final.md
+ * Spec: source-of-truth/specs/playbook-team-led-growth.md +
+ *       source-of-truth/specs/playbook-team-led-growth-copy-final.md
  *
  * `RenderedData` é o JSON injetado na página /playbook/[slug]. Cada bloco da
  * página (Hero, Snapshot, Tese, Dicas, Checklist, Calculadora, Battle card,
@@ -335,7 +335,7 @@ export type RenderedData = {
   curvaAtivacao: CurvaAtivacao;
 
   /**
-   * Dados do gráfico "Ads vs ELG" (Bloco 2, abaixo do accordion da curva).
+   * Dados do gráfico "Ads vs TLG" (Bloco 2, abaixo do accordion da curva).
    * Introduzido em jun/2026. Opcional pra retrocompat com playbooks gerados
    * antes desse bloco existir (componente esconde quando ausente).
    *

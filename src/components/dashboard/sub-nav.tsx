@@ -18,7 +18,7 @@ const TABS = [
   { href: '/internal/dashboard/forms', label: 'Forms', match: 'prefix' },
   { href: '/internal/dashboard/acoes', label: 'Ações no site', match: 'prefix' },
   { href: '/internal/dashboard/campanhas', label: 'Campanhas', match: 'prefix' },
-  { href: '/internal/dashboard/state-elg', label: 'State of ELG', match: 'prefix' },
+  { href: '/internal/dashboard/state-tlg', label: 'State of TLG', match: 'prefix' },
 ] as const;
 
 export function DashboardSubNav() {

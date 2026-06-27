@@ -35,7 +35,7 @@ type Props = {
 const SLUG_LABELS: Record<string, string> = {
   'algoritmo-linkedin': 'Algoritmo LinkedIn',
   'case-semrush': 'Case Semrush',
-  'playbook-employee-led-growth': 'Playbook',
+  'playbook-team-led-growth': 'Playbook',
   beta: 'Beta',
   demo: 'Demo',
   proposta: 'Proposta',
