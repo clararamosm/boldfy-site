@@ -666,8 +666,21 @@ html {
   border-radius: 2px;
 }
 
+/* Pontinho laranja "novo" pulsando no card do case. */
+.link-newdot {
+  box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6);
+  animation: link-newdot-pulse 2s infinite;
+}
+
+@keyframes link-newdot-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
+  70%  { box-shadow: 0 0 0 7px rgba(249, 115, 22, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .link-hero-frame,
-  .link-hero-pulse { animation: none !important; }
+  .link-hero-pulse,
+  .link-newdot { animation: none !important; }
 }
 
