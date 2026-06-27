@@ -42,7 +42,7 @@ Atração de talentos via Employee-Generated Content, cultura real visível, red
 ## Páginas Principais
 
 - Home: /
-- Módulo Colaboradores · SaaS (self-service): /solucoes/software-as-a-service
+- Conteúdo feito pelo time · SaaS (self-service): /solucoes/software-as-a-service
 - Conteúdo feito pela Boldfy · CaaS (full-service): /solucoes/content-as-a-service
 - Preços: /precos
 - Blog: /blog

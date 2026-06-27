@@ -640,7 +640,7 @@ function QuestionView({
           onChange={(v) => onAnswer('porte', v)}
         />
         <p className="mt-4 border-t border-dashed border-border pt-3 text-center text-[11px] text-muted-foreground">
-          Employee-Led Growth precisa de pelo menos 3 colaboradores pra dar tração.
+          Team-Led Growth precisa de pelo menos 3 colaboradores pra dar tração.
         </p>
       </FaiQuestion>
     );

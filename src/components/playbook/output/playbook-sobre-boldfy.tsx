@@ -55,7 +55,7 @@ export function PlaybookSobreBoldfy({
         </h2>
         <p className="mb-10 max-w-[720px] text-base leading-relaxed text-muted-foreground">
           {hasCaas
-            ? 'Pelo seu cenário, vocês têm 2 caminhos com a gente: a plataforma pros líderes que topam postar sozinhos, e o Full Content pros que topam aparecer mas não têm tempo de escrever.'
+            ? 'Pelo seu cenário, vocês têm 2 caminhos com a gente: o self-service pros líderes que topam postar sozinhos, e o Conteúdo feito pela Boldfy pros que topam aparecer mas não têm tempo de escrever.'
             : 'A plataforma Boldfy é o jeito mais rápido de subir Employee-Led Growth no time, sem montar máquina interna.'}
         </p>
 
@@ -96,7 +96,7 @@ function Card({
     ? { src: '/images/caas-section-banner.jpg', alt: 'Estrategista Boldfy operando conteúdo para executivo' }
     : { src: '/images/saas-section-banner.jpg', alt: 'Time usando a Plataforma Boldfy em self-service' };
   const TagIcon = isService ? Mic : Sparkles;
-  const tagLabel = isService ? 'Serviço (CaaS)' : 'Plataforma (SaaS)';
+  const tagLabel = isService ? 'Content as a Service' : 'Software as a Service';
   const tagClass = isService
     ? 'text-white'
     : 'border border-primary/25 bg-primary/[0.08] text-primary';

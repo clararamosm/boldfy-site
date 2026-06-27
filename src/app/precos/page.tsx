@@ -15,7 +15,7 @@ import {
 import Image from 'next/image';
 
 /* ================================================================== */
-/*  Visual 1 — Plataforma (SaaS): avatars + stats                      */
+/*  Visual 1 — Time (SaaS): avatars + stats                      */
 /*  (mesmo visual da home)                                             */
 /* ================================================================== */
 
@@ -288,7 +288,7 @@ export default function PrecosPage() {
         {/* 2-card grid — Plataforma + Produção com preços dentro */}
         <div className="grid grid-cols-1 gap-7 md:grid-cols-2">
           {/* ═══════════════════════════════════════════════════
-              Card 1: Plataforma (SaaS) — com pricing por faixas
+              Card 1: Conteúdo feito pelo time (SaaS) — com pricing por faixas
              ═══════════════════════════════════════════════════ */}
           <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
             {/* Tag */}

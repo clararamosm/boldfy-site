@@ -219,11 +219,11 @@ export function FaqSection() {
             onToggle={() => toggle(3, t.home.faq4Q)}
           >
             <p>
-              {t.home.faq4A.split('Content Full-Service')[0]}
+              {t.home.faq4A.split('Modo Executivo')[0]}
               <strong className="font-bold text-accent-foreground">
-                Content Full-Service
+                Modo Executivo
               </strong>
-              {t.home.faq4A.split('Content Full-Service')[1]}
+              {t.home.faq4A.split('Modo Executivo')[1]}
             </p>
           </FaqItem>
 

@@ -112,7 +112,7 @@ function buildProposalSummary(input: ProposalLeadData): string {
   }
 
   if (input.fsTls > 0 && input.fsFreq > 0) {
-    lines.push(`Content Full-Service: ${input.fsTls} executivo(s) × ${input.fsFreq}x/semana = R$ ${fmt(input.fsPrice)}/mês`);
+    lines.push(`Modo Executivo: ${input.fsTls} executivo(s) × ${input.fsFreq}x/semana = R$ ${fmt(input.fsPrice)}/mês`);
   }
 
   lines.push(`Total mensal: R$ ${fmt(input.totalCurrent)}${input.savings > 0 ? ` (economia beta: R$ ${fmt(input.savings)}/mês)` : ''}`);

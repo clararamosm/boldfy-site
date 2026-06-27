@@ -293,7 +293,7 @@ function ProposalBuilderModal({
                 {/* Beta toggle */}
                 <div className="flex items-center justify-center gap-3 rounded-full border border-border bg-card px-5 py-2.5 shadow-sm mx-auto w-fit">
                   <span className="text-[12px] font-semibold text-foreground">
-                    Preço <span className="text-primary font-bold">Beta Tester</span> (30% off na Plataforma)
+                    Preço <span className="text-primary font-bold">Beta Tester</span> (30% off no self-service)
                   </span>
                   <button
                     type="button"
@@ -331,7 +331,7 @@ function ProposalBuilderModal({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-accent-foreground">Software as a Service</p>
-                      <p className="text-[11px] text-muted-foreground">Plataforma de Content Intelligence</p>
+                      <p className="text-[11px] text-muted-foreground">Conteúdo feito pelo time · self-service</p>
                     </div>
                     <div
                       className={cn(
@@ -398,7 +398,7 @@ function ProposalBuilderModal({
 
                         <div className="flex items-center justify-between text-sm pt-3 border-t border-dashed border-border">
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Total Plataforma
+                            Total · Modo Time
                           </span>
                           <div className="text-right">
                             {betaActive && (
@@ -703,7 +703,7 @@ function ProposalBuilderModal({
                       {platformEnabled && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Plataforma ({seats} seats)
+                            Modo Time ({seats} seats)
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
@@ -1018,7 +1018,7 @@ function ResultStep({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">Plataforma</span>
+              <span className="text-sm font-semibold text-foreground">Modo Time</span>
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
@@ -1221,8 +1221,8 @@ function ResultStep({
       </div>
 
       <p className="text-[10px] text-muted-foreground text-center mt-3">
-        Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente à Plataforma.
-        Contrato mínimo de 6 meses. Executivos do Modo 2 (Ativação executiva completa) não consomem seats da Plataforma.
+        Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente ao self-service.
+        Contrato mínimo de 6 meses. Executivos do Modo Executivo não consomem seats do self-service.
       </p>
     </div>
   );

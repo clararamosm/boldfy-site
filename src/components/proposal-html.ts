@@ -176,7 +176,7 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td style="vertical-align:middle;">
-              <span style="font-size:14px;font-weight:700;color:${C.text};">🖥 Plataforma</span>
+              <span style="font-size:14px;font-weight:700;color:${C.text};">🖥 Conteúdo feito pelo time</span>
               <span style="font-size:11px;color:${C.textMuted};margin-left:6px;">Software as a Service</span>
               ${data.betaActive ? `<span class="badge" style="background:${C.emeraldBg};color:${C.emerald};margin-left:8px;">✦ Beta · 30% off</span>` : ''}
             </td>
@@ -233,7 +233,7 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td style="vertical-align:middle;">
-              <span style="font-size:14px;font-weight:700;color:${C.text};">🎙 Content Full-Service</span>
+              <span style="font-size:14px;font-weight:700;color:${C.text};">🎙 Conteúdo feito pela Boldfy</span>
             </td>
             <td align="right" style="vertical-align:middle;">
               <span style="font-size:16px;font-weight:800;color:${C.text};">${fmtBRL(data.fullService.price)}</span>
@@ -289,8 +289,8 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       </p>
       <p style="margin:0;font-size:10px;color:${C.textLight};line-height:1.6;">
         Proposta válida por ${VALIDITY_DAYS} dias a partir de ${dateStr}. Pricing vigente Boldfy (2026).<br>
-        Desconto Beta Tester (30% off) aplica-se somente à Plataforma. Contrato mínimo de 6 meses.<br>
-        Executivos do Content Full-Service não consomem seats da Plataforma.<br><br>
+        Desconto Beta Tester (30% off) aplica-se somente ao self-service. Contrato mínimo de 6 meses.<br>
+        Executivos do Modo Executivo não consomem seats do self-service.<br><br>
         <a href="https://boldfy.com.br" style="color:${C.primary};font-weight:600;">boldfy.com.br</a>
       </p>
     </div>

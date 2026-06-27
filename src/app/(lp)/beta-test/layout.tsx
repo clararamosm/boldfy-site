@@ -71,7 +71,7 @@ const howToJsonLd = {
   tool: [
     {
       '@type': 'HowToTool',
-      name: 'Plataforma Boldfy (SaaS)',
+      name: 'Boldfy · Conteúdo feito pelo time (SaaS)',
     },
     {
       '@type': 'HowToTool',

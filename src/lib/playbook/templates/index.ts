@@ -481,9 +481,9 @@ export const TIPS_LIBRARY: Tip[] = [
           'Você participa da [[gamificação]] dentro da plataforma, com missões semanais e [[IA assistente]] sugerindo ângulos. Vai no seu ritmo, mas vira parte do programa visivelmente.',
       },
       {
-        titulo: 'Boldfy faz por você (Full Content)',
+        titulo: 'Boldfy faz por você (Modo Executivo)',
         desc:
-          'Modalidade [[Full Content (CaaS)]]: estrategista entrevista você, equipe Boldfy produz no seu tom, você só aprova em minutos. Sai conteúdo autoral sem custo de tempo seu.',
+          'Modalidade [[Modo Executivo (CaaS)]]: estrategista entrevista você, equipe Boldfy produz no seu tom, você só aprova em minutos. Sai conteúdo autoral sem custo de tempo seu.',
       },
     ],
     boldfy: { titulo: '', items: [] }, // não renderizado em modo destaque
@@ -530,14 +530,14 @@ export const TIPS_LIBRARY: Tip[] = [
     id: 'L_FULL_CONTENT',
     numero: '',
     titulo: 'Terceirize a produção, mantenha a autoria do líder',
-    tagEspecifica: 'Full Content',
+    tagEspecifica: 'Modo Executivo',
     descricao:
       'Líder topa postar mas não tem tempo de produzir? A Boldfy entrevista, escreve no tom da pessoa, líder só aprova.',
     icon: 'Feather',
     boldfy: {
-      titulo: 'Modalidade Full Content dentro da plataforma',
+      titulo: 'Conteúdo feito pela Boldfy, dentro da plataforma',
       items: [
-        '[[Full Content]] mora dentro da mesma plataforma, com tipo de conta diferente',
+        '[[Modo Executivo]] mora dentro da mesma plataforma, com tipo de conta diferente',
         'Estrategista entrevista o líder e produz no tom da pessoa',
         'Líder aprova em minutos, sem escrever',
         'Admin vê métricas iguais às dos colaboradores SaaS',
@@ -838,8 +838,8 @@ export const CHECKLIST_TENTOU_MORREU_ITEM: ChecklistItem = {
  * respondente sinaliza que líderes topam postar mas precisam de quem produza.
  */
 export const SOBRE_BOLDFY_SAAS: SobreBoldfyCard = {
-  badge: 'Plataforma',
-  titulo: 'Plataforma Boldfy',
+  badge: 'Software as a Service',
+  titulo: 'Conteúdo feito pelo time',
   subtitulo:
     'O software que destrava Team-Led Growth no dia a dia, sem montar máquina interna.',
   bullets: [
@@ -849,12 +849,12 @@ export const SOBRE_BOLDFY_SAAS: SobreBoldfyCard = {
     'Trilhas LXP, missões semanais e gamificação rodando sem cobrança manual',
     'Dashboard de earned media e alcance pronto pra board',
   ],
-  ctaLabel: 'Quero conhecer a plataforma',
+  ctaLabel: 'Quero conhecer o Modo Time',
 };
 
 export const SOBRE_BOLDFY_CAAS: SobreBoldfyCard = {
-  badge: 'Full Content',
-  titulo: 'Boldfy Full Content',
+  badge: 'Content as a Service',
+  titulo: 'Conteúdo feito pela Boldfy',
   subtitulo:
     'Pra líderes que topam aparecer, mas não têm tempo de escrever: nossa equipe produz, o líder aprova.',
   bullets: [
@@ -864,5 +864,5 @@ export const SOBRE_BOLDFY_CAAS: SobreBoldfyCard = {
     'Mantém autoria e voz, sem custo de tempo do líder',
     'Aproximadamente 1/4 do custo de uma agência B2B equivalente, com dados dentro da sua empresa',
   ],
-  ctaLabel: 'Quero entender o Full Content',
+  ctaLabel: 'Quero conhecer o Modo Executivo',
 };
