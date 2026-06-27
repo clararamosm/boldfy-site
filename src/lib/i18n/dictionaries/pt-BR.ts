@@ -124,12 +124,12 @@ const ptBR = {
     solutionsTag: 'Como você entra',
     solutionsTitle: 'Dois caminhos.',
     solutionsTitleHighlight: 'Um sistema.',
-    solutionsSubtitle: 'A plataforma Boldfy é o núcleo de tudo. Você decide se entra sozinho com o time, ou com a gente operando do seu lado.',
+    solutionsSubtitle: 'A plataforma Boldfy é o núcleo de tudo. Dois módulos rodam dentro dela: o seu time no self-service, ou a Boldfy produzindo do seu lado.',
     // Card 1 — Plataforma (SaaS)
     solSaasTag: 'Software as a Service',
-    solSaasTitle: 'Plataforma Boldfy',
-    solSaasDesc: 'O sistema completo pro seu time criar conteúdo autoral em escala. IA contextual, gamificação, trilhas e dashboard, tudo self-serve.',
-    solSaasCta: 'Conhecer a plataforma',
+    solSaasTitle: 'Módulo Colaboradores',
+    solSaasDesc: 'O modo self-service (SaaS): seu time cria conteúdo autoral em escala dentro da plataforma. IA contextual, gamificação, trilhas e dashboard.',
+    solSaasCta: 'Conhecer o módulo',
     solSaasStep1: 'Preencha o Brand Context da sua empresa e convide o time',
     solSaasStep2: 'Configure trilhas de aprendizagem e missões personalizadas',
     solSaasStep3: 'O time cria conteúdo com IA contextual e ganha pontos',
@@ -139,8 +139,8 @@ const ptBR = {
     solSaasPriceUnit: '/seat/mês · preço beta',
     // Card 2 — Produção (CaaS)
     solCaasTag: 'Content as a Service',
-    solCaasTitle: 'Produção de Conteúdo',
-    solCaasDesc: 'A gente opera do seu lado. Estratégia, produção e publicação artesanal, com a Boldfy por baixo organizando tudo.',
+    solCaasTitle: 'Conteúdo feito pela Boldfy',
+    solCaasDesc: 'O modo full-service (CaaS): a Boldfy opera do seu lado. Estratégia, produção e publicação artesanal, tudo dentro da plataforma.',
     solCaasCta: 'Conhecer serviço',
     solCaasStep1: 'Imersão estratégica com seu time e definição de narrativa',
     solCaasStep2: 'A gente produz peças, posts e lidera a operação editorial',
@@ -153,6 +153,9 @@ const ptBR = {
     solCaasSub2Price: 'R$ 5.500',
     // Compare trigger (below subtitle)
     solutionsCompareLabel: 'Compare as duas soluções',
+    // Platform call-out band — os dois módulos rodam na mesma plataforma
+    solPlatformBandLabel: 'Uma plataforma · Um admin · Dois modos',
+    solPlatformBandBody: 'O Módulo Colaboradores e o Conteúdo feito pela Boldfy rodam dentro da mesma plataforma, com roles diferentes. O admin enxerga o programa inteiro num lugar só.',
     // Account manager card (replaces the old "mesma plataforma" hint)
     solutionsAmTitle: 'Os dois caminhos ganham um',
     solutionsAmHighlight: 'estrategista de conta',

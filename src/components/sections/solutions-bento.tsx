@@ -212,7 +212,7 @@ export function SolutionsBentoSection() {
 
         {/* 2-card grid */}
         <div className="grid grid-cols-1 gap-7 md:grid-cols-2">
-          {/* ── Card 1: Plataforma (SaaS) ── */}
+          {/* ── Card 1: Módulo Colaboradores (SaaS) ── */}
           <div className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(93,42,103,0.14)] md:p-8">
             {/* Tag */}
             <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
@@ -268,7 +268,7 @@ export function SolutionsBentoSection() {
             </div>
           </div>
 
-          {/* ── Card 2: Produção (CaaS) ── */}
+          {/* ── Card 2: Conteúdo feito pela Boldfy (CaaS) ── */}
           <div className="boldfy-service-glow group flex flex-col rounded-3xl bg-card p-7 shadow-[0_8px_32px_rgba(93,42,103,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_48px_rgba(94,42,103,0.16)] md:p-8">
             {/* Tag */}
             <span className="mb-4 inline-flex items-center gap-2 self-start rounded-full border border-[#5E2A67]/25 bg-[#5E2A67]/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#5E2A67]">
@@ -344,6 +344,16 @@ export function SolutionsBentoSection() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Platform call-out band — os dois módulos rodam na mesma plataforma */}
+        <div className="mx-auto mt-10 max-w-[860px] rounded-[18px] border border-primary/20 bg-primary/[0.04] p-5 text-center md:p-6">
+          <p className="font-headline text-[12px] font-black uppercase tracking-[0.14em] text-primary">
+            {t.home.solPlatformBandLabel}
+          </p>
+          <p className="mx-auto mt-2 max-w-[640px] text-[13px] leading-[1.6] text-muted-foreground md:text-sm">
+            {t.home.solPlatformBandBody}
+          </p>
         </div>
 
         {/* Account manager card — shared by both paths */}

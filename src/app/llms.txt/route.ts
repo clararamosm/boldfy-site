@@ -5,7 +5,7 @@ export function GET() {
 
 ## Sobre a Boldfy
 
-A Boldfy é uma empresa brasileira de Content Intelligence que ajuda empresas B2B a ativar seus colaboradores como criadores de conteúdo no LinkedIn. A abordagem combina tecnologia (plataforma SaaS) com serviço especializado (Content as a Service) para gerar awareness orgânico, reduzir CAC e construir autoridade de marca de forma descentralizada.
+A Boldfy é uma empresa brasileira de Content Intelligence que ajuda empresas B2B a ativar seus colaboradores como criadores de conteúdo no LinkedIn. Tudo roda dentro de uma única plataforma Boldfy, que opera em dois modos: self-service (SaaS), em que o time da empresa cria, e Content as a Service (CaaS), em que a equipe Boldfy produz. O objetivo é gerar awareness orgânico, reduzir CAC e construir autoridade de marca de forma descentralizada.
 
 O conceito central é Employee-Led Growth (ELG): crescimento liderado por colaboradores que publicam conteúdo autoral, autêntico e alinhado à marca — sem parecer propaganda corporativa.
 
@@ -42,8 +42,8 @@ Atração de talentos via Employee-Generated Content, cultura real visível, red
 ## Páginas Principais
 
 - Home: /
-- Solução SaaS (plataforma): /solucoes/software-as-a-service
-- Solução CaaS (serviço): /solucoes/content-as-a-service
+- Módulo Colaboradores · SaaS (self-service): /solucoes/software-as-a-service
+- Conteúdo feito pela Boldfy · CaaS (full-service): /solucoes/content-as-a-service
 - Preços: /precos
 - Blog: /blog
 - Materiais e recursos: /materiais
