@@ -55,7 +55,7 @@ export const MATERIAIS: Record<string, Material> = {
   'case-semrush': {
     slug: 'case-semrush',
     tag: 'Case gratuito',
-    title: 'O case ELG da Semrush',
+    title: 'O case TLG da Semrush',
     description:
       'Como uma gigante global ativou ~30 colaboradores no LinkedIn e gerou +500k de alcance em 2 meses — com R$ 360 mil em earned media.',
     cover: '/images/case-semrush-cover.jpeg',

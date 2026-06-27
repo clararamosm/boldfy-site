@@ -29,7 +29,7 @@ const ptBR = {
   home: {
     // Section 1 — Hero
     heroBadge: 'Programa Beta aberto, 5 vagas',
-    heroTag: 'Content Intelligence para Employee-Led Growth',
+    heroTag: 'Content Intelligence para Team-Led Growth',
     heroTitle: 'O maior canal de aquisição da sua empresa',
     heroTitleHighlight: 'já bate ponto todo dia',
     heroSubtitle: 'A Boldfy é o sistema de inteligência de conteúdo que transforma o time das empresas B2B nos principais criadores de conteúdo da marca no LinkedIn.',
@@ -234,7 +234,7 @@ const ptBR = {
   // Plataforma page
   plataforma: {
     heroTag: 'A PLATAFORMA',
-    heroTitle: 'Tudo que você precisa pra escalar Employee-Led Growth.',
+    heroTitle: 'Tudo que você precisa pra escalar Team-Led Growth.',
     heroSubtitle: 'IA contextual, trilhas de aprendizagem, missões, gamificação, calendário de conteúdo e analytics, tudo integrado em uma plataforma que seu time vai querer usar.',
     heroCta: 'Agendar demo',
 
@@ -549,7 +549,7 @@ const ptBR = {
 
   // Footer
   footer: {
-    description: 'Content Intelligence para Employee-Led Growth',
+    description: 'Content Intelligence para Team-Led Growth',
     solucoesTitle: 'Soluções',
     casosDeUsoTitle: 'Casos de Uso',
     recursosTitle: 'Recursos',
@@ -599,20 +599,20 @@ const ptBR = {
     pitchSheet: 'Pitch Sheet',
     betaTesterButton: 'Quero ser beta tester',
     enter: 'Entrar',
-    heroTag: 'Content Intelligence para Employee-Led Growth',
+    heroTag: 'Content Intelligence para Team-Led Growth',
     heroTitle: 'O maior canal de aquisição da sua empresa',
     heroTitleHighlight: 'já bate ponto todo dia.',
     heroSubtitle: 'Plataforma gamificada que transforma colaboradores em influenciadores corporativos. IA contextual + trilhas de aprendizagem + recompensas. A gente constrói o programa com você, estratégia primeiro, execução pela plataforma.',
     twoJourneysTitle: 'Duas jornadas. Dois destinos.',
     withoutBoldfy: 'Sem Boldfy',
     withBoldfy: 'Com Boldfy',
-    chartTitle: 'Ads estagna. Employee-Led Growth acumula.',
+    chartTitle: 'Ads estagna. Team-Led Growth acumula.',
     chartSubtitle: 'Ads só funciona enquanto você paga. EGC acumula ao longo do tempo, e nunca para.',
     chartMonthLabel: 'Mês',
     adsStoppedLabel: 'ads parou',
     noReachLabel: 'Sem budget, alcance cai.',
     simulatorTitle: 'Simulador de ROI',
-    simulatorSubtitle: 'Veja quanto sua empresa economizaria em mídia paga com Employee-Led Growth.',
+    simulatorSubtitle: 'Veja quanto sua empresa economizaria em mídia paga com Team-Led Growth.',
     collaboratorsInProgram: 'Colaboradores no programa',
     impressionsPerMonth: 'Impressões/mês por colaborador',
     totalImpressionsMonth: 'Total impressões/mês',

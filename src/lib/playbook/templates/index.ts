@@ -81,7 +81,7 @@ export const SNAPSHOT_FECHAMENTO: Record<TemplateKey, string> = {
     'Marketing apertado pelo CAC e uma tentativa anterior que não vingou: é o cenário que mais chega aqui. Costuma significar que faltou um dos 3 motores (porquê, como, ferramenta), não vontade do time.',
 
   'marketing-cac-nunca':
-    'Marketing pressionado pelo CAC e Employee-Led Growth ainda no radar: sem trauma de tentativa anterior, é o cenário mais limpo pra começar cobrindo os 3 motores desde o primeiro mês.',
+    'Marketing pressionado pelo CAC e Team-Led Growth ainda no radar: sem trauma de tentativa anterior, é o cenário mais limpo pra começar cobrindo os 3 motores desde o primeiro mês.',
 
   'marketing-companypage-morreu':
     'Company Page com pouco engajamento técnico e uma tentativa de mudar isso que não foi adiante. Acontece com 9 em cada 10 marcas B2B: o LinkedIn redistribuiu os papéis (page pra cultura e marca empregadora, perfis pra autoridade técnica e demanda), e o primeiro grupo provavelmente morreu por falta de motivo claro pros participantes ocuparem esse espaço técnico.',
@@ -147,7 +147,7 @@ export const CTA_TITULO_POR_DOR: Record<DorPrincipalValue, string> = {
   marca_uma_pessoa:
     'Pronto pra distribuir a voz da {empresa} sem perder identidade?',
   outra:
-    'Pronto pra destravar Employee-Led Growth na {empresa}?',
+    'Pronto pra destravar Team-Led Growth na {empresa}?',
 };
 
 /* -------------------------------------------------------------------------- */
@@ -841,7 +841,7 @@ export const SOBRE_BOLDFY_SAAS: SobreBoldfyCard = {
   badge: 'Plataforma',
   titulo: 'Plataforma Boldfy',
   subtitulo:
-    'O software que destrava Employee-Led Growth no dia a dia, sem montar máquina interna.',
+    'O software que destrava Team-Led Growth no dia a dia, sem montar máquina interna.',
   bullets: [
     'IA contextual pra ideação, refino e calendário de cada colaborador',
     'Brand Context: tom, pilares e territórios em um setup único',

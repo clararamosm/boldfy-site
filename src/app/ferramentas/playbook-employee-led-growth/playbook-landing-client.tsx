@@ -67,7 +67,7 @@ export function PlaybookLandingClient() {
           <h1 className="mb-6 font-headline text-[clamp(2.25rem,4.4vw,3.5rem)] font-black leading-[1.04] tracking-[-0.035em] text-foreground">
             Tenha sua estratégia de{' '}
             <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
-              Employee-Led Growth
+              Team-Led Growth
             </span>{' '}
             em 5 minutos
           </h1>
@@ -122,7 +122,7 @@ export function PlaybookLandingClient() {
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Quiz Playbook de Employee-Led Growth"
+        aria-label="Quiz Playbook de Team-Led Growth"
       >
         {isMobileModalOpen && (
           <PlaybookWizard

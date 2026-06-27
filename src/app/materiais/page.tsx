@@ -13,11 +13,11 @@ import {
 export const metadata: Metadata = {
   title: 'Materiais',
   description:
-    'Reports, guias e templates gratuitos sobre Employee-Led Growth e Content Intelligence. Direto ao ponto, com dados reais de quem opera o jogo do LinkedIn no Brasil.',
+    'Reports, guias e templates gratuitos sobre Team-Led Growth e Content Intelligence. Direto ao ponto, com dados reais de quem opera o jogo do LinkedIn no Brasil.',
   openGraph: {
     title: 'Materiais · Boldfy',
     description:
-      'Reports, guias e templates gratuitos sobre Employee-Led Growth e Content Intelligence.',
+      'Reports, guias e templates gratuitos sobre Team-Led Growth e Content Intelligence.',
     url: 'https://boldfy.com.br/materiais',
     images: [
       {
@@ -78,7 +78,7 @@ const MATERIAIS: Material[] = [
     slug: 'case-semrush',
     status: 'live',
     tag: 'Case',
-    title: 'O Case ELG da Semrush',
+    title: 'O Case TLG da Semrush',
     description:
       'Como uma gigante global ativou ~30 colaboradores no LinkedIn e gerou +500k de alcance em 2 meses, R$ 360 mil em earned media e um método que virou produto. Leitura de bastidores de quem viveu por dentro.',
     href: '/case-semrush',
@@ -127,7 +127,7 @@ export default function MateriaisPage() {
             usa pra crescer
           </h1>
           <p className="text-base md:text-[17px] text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            Reports, guias e templates de Employee-Led Growth. Direto ao ponto,
+            Reports, guias e templates de Team-Led Growth. Direto ao ponto,
             com dados reais de quem opera o jogo do LinkedIn no Brasil.
           </p>
         </div>

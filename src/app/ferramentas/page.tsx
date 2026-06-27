@@ -5,11 +5,11 @@ import { ArrowRight, Clock, Lock, Map, Sparkles, Wrench } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Ferramentas',
   description:
-    'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Employee-Led Growth: quizzes, calculadoras e playbooks personalizados.',
+    'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Team-Led Growth: quizzes, calculadoras e playbooks personalizados.',
   openGraph: {
     title: 'Boldfy · Ferramentas',
     description:
-      'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Employee-Led Growth.',
+      'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Team-Led Growth.',
     url: 'https://boldfy.com.br/ferramentas',
     images: [
       {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Boldfy · Ferramentas',
     description:
-      'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Employee-Led Growth.',
+      'Ferramentas gratuitas da Boldfy pra diagnosticar e planejar Team-Led Growth.',
     images: ['/images/og-default.jpg'],
   },
   alternates: {
@@ -49,7 +49,7 @@ const FERRAMENTAS: FerramentaCard[] = [
     slug: 'playbook-employee-led-growth',
     href: '/ferramentas/playbook-employee-led-growth',
     pretitle: 'Diagnóstico interativo',
-    title: 'Playbook de Employee-Led Growth',
+    title: 'Playbook de Team-Led Growth',
     description:
       'Conta o cenário da sua empresa pra Fai (nossa estrategista) e ela gera um playbook acionável personalizado: diagnóstico, plano em 3 fases, dicas com a Boldfy embutida, checklist pra começar e cálculo de earned media. Pessoa preenche em 5 min e leva o link pra reunião com o time.',
     icon: 'map',
@@ -89,7 +89,7 @@ export default function FerramentasPage() {
           <h1 className="mb-4 font-headline text-[clamp(2rem,4.4vw,3.25rem)] font-black leading-[1.05] tracking-[-0.035em] text-foreground">
             Ferramentas pra{' '}
             <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
-              destravar Employee-Led Growth
+              destravar Team-Led Growth
             </span>{' '}
             na sua empresa
           </h1>

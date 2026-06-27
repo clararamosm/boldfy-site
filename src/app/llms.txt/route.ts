@@ -1,5 +1,5 @@
 export function GET() {
-  const content = `# Boldfy — Content Intelligence para Employee-Led Growth
+  const content = `# Boldfy — Content Intelligence para Team-Led Growth
 
 > A Boldfy transforma colaboradores em criadores de conteúdo autoral no LinkedIn, com estratégia, produção, IA contextual e gamificação.
 
@@ -7,7 +7,7 @@ export function GET() {
 
 A Boldfy é uma empresa brasileira de Content Intelligence que ajuda empresas B2B a ativar seus colaboradores como criadores de conteúdo no LinkedIn. Tudo roda dentro de uma única plataforma Boldfy, que opera em dois modos: self-service (SaaS), em que o time da empresa cria, e Content as a Service (CaaS), em que a equipe Boldfy produz. O objetivo é gerar awareness orgânico, reduzir CAC e construir autoridade de marca de forma descentralizada.
 
-O conceito central é Employee-Led Growth (ELG): crescimento liderado por colaboradores que publicam conteúdo autoral, autêntico e alinhado à marca — sem parecer propaganda corporativa.
+O conceito central é Team-Led Growth (TLG), também chamado Employee-Led Growth (ELG): crescimento liderado por colaboradores que publicam conteúdo autoral, autêntico e alinhado à marca — sem parecer propaganda corporativa.
 
 ## Fundadora
 
