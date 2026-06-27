@@ -390,7 +390,7 @@ const ptBR = {
     heroTitle: 'Monte o pacote que faz sentido pro seu time.',
     heroSubtitle: 'Modular. Sem contrato anual. Sem letra miúda.',
 
-    tier1Range: '5 – 10 seats',
+    tier1Range: '3 – 10 seats',
     tier1Price: 'R$ 499',
     tier1Beta: 'R$ 349',
     tier2Range: '11 – 20 seats',
@@ -417,7 +417,7 @@ const ptBR = {
 
     betaBannerTitle: '5 vagas beta.',
     betaBannerTitleSuffix: 'Zero risco.',
-    betaBannerSubtitle: 'Contrato de 6 meses · até 5 colaboradores · setup assistido · estratégia incluída · sem compromisso',
+    betaBannerSubtitle: 'Contrato de 6 meses · até 3 colaboradores · setup assistido · estratégia incluída · sem compromisso',
     betaContractTerms: '2 meses grátis · 4 meses com 30% off · renovação a preço cheio',
     freeSetup: 'Setup grátis',
     strategyIncluded: 'Estratégia incluída',
@@ -436,8 +436,8 @@ const ptBR = {
     faq3A: 'A Boldfy não é um scheduler. É um sistema de Content Intelligence com IA contextual, trilhas de aprendizagem, gamificação e recompensas. O foco é fazer pessoas criarem conteúdo autoral, não agendar posts de marca.',
     faq4Q: 'Preciso de um time dedicado pra operar?',
     faq4A: 'Não. O admin da empresa configura uma vez (com nosso suporte) e o programa roda com missões, trilhas e gamificação. O time de marketing só precisa acompanhar os dashboards.',
-    faq5Q: 'E se eu tiver menos de 5 colaboradores?',
-    faq5A: 'O mínimo é 5 seats. O programa precisa de massa crítica pra gerar efeito composto. Com menos de 5, recomendamos nosso Content as a Service.',
+    faq5Q: 'E se eu tiver menos de 3 colaboradores?',
+    faq5A: 'O mínimo é 3 seats. O programa precisa de massa crítica pra gerar efeito composto. Com menos de 3, recomendamos nosso Content as a Service.',
     faq6Q: 'Vocês fazem integração com CRM ou outras ferramentas?',
     faq6A: 'Na versão atual, a integração é via LinkedIn OAuth. Integrações com CRM (HubSpot, Salesforce) e outras ferramentas estão no roadmap.',
 

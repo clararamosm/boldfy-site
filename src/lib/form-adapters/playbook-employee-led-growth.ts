@@ -7,7 +7,7 @@
  * deixaria de identificar de qual estamos falando. Ver AGENTS.md.
  *
  * Particularidades:
- *  - Sempre `segment='lider_b2b'` — o gate de elegibilidade (porte ≥ 5 +
+ *  - Sempre `segment='lider_b2b'` — o gate de elegibilidade (porte ≥ 3 +
  *    cargo válido) já filtrou autônomos/parceiros na UI antes do submit.
  *  - Coleta cargo (seniority + area) — primeiro form a usar os enums
  *    `job_seniority` e `job_area` da migration 0004. Esses enums viram
@@ -99,7 +99,7 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     sponsorship_lideranca: labelSponsorship(input.sponsorshipLideranca),
     tentativas_anteriores: labelTentativas(input.tentativasAnteriores),
     newsletter_opt_in: newsletterOptIn ? 'SIM' : 'NAO',
-    // Compromisso 5 ativos (jun/2026): só vem populado quando a pessoa
+    // Compromisso 3 ativos (jun/2026): só vem populado quando a pessoa
     // passou pela tela intermediária (porte 5-20). Se respondeu NÃO o lead
     // nem chega aqui (cai em not-eligible), então o valor relevante é 'SIM'
     // ou ausência. Omitindo quando undefined pra não poluir leads grandes.
@@ -133,7 +133,7 @@ export function adaptPlaybookEmployeeLedGrowth(input: PlaybookInput): Classified
     // Respostas do quiz
     porte_colaboradores: input.porteColaboradores,
     // Só inclui quando a pergunta foi feita (porte 5-20). Undefined
-    // significa que a empresa tem >20 e o piso de 5 ativos é trivial.
+    // significa que a empresa tem >20 e o piso de 3 ativos é trivial.
     ...(input.porteCompromisso5Ativos !== undefined
       ? { porte_compromisso_5_ativos: input.porteCompromisso5Ativos }
       : {}),

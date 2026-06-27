@@ -36,7 +36,7 @@ import {
 // Defaults idênticos aos da página /beta-test atual
 const DEFAULT_COLLABORATORS = 5;
 const DEFAULT_IMPRESSIONS = 10_000;
-const MIN_COLLABORATORS = 5;
+const MIN_COLLABORATORS = 3;
 /**
  * Teto padrão do slider de colaboradores (70). É o limite usado em TODO o
  * site (home, beta-test, case-semrush). Só o Playbook ELG passa
@@ -93,7 +93,7 @@ export function RoiSimulator({
 
   // Clamp pros bounds do slider — protege contra props inválidas vindas de
   // outras pages (Playbook gera baseado em quiz.porteColaboradores, que pode
-  // ser fora de faixa em casos raros — gate de elegibilidade já filtra <5 mas
+  // ser fora de faixa em casos raros — gate de elegibilidade já filtra <3 mas
   // o clamp aqui é defesa em profundidade).
   const clampedCollab = Math.max(MIN_COLLABORATORS, Math.min(maxCollab, initialCollaborators));
   const clampedImp = Math.max(MIN_IMPRESSIONS, Math.min(MAX_IMPRESSIONS, initialImpressions));

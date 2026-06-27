@@ -81,18 +81,18 @@ type Answers = {
    */
   stateElgReportSubscribe?: boolean;
   /**
-   * Confirmação que o respondente consegue comprometer 5 colaboradores ativos.
+   * Confirmação que o respondente consegue comprometer 3 colaboradores ativos.
    *
-   * Quando aparece (jun/2026): empresa com porte entre 6 e 20 inclusive.
+   * Quando aparece (jun/2026): empresa com porte entre 4 e 20 inclusive.
    * Decisões da Clara:
-   *   - porte = 5: empresa já tem exatamente o mínimo, compromisso é trivial,
+   *   - porte = 3: empresa já tem exatamente o mínimo, compromisso é trivial,
    *     a pergunta nem aparece (goNext direto).
-   *   - 6-20: 5 ativos representa parte relevante do time, vale confirmar.
-   *   - porte > 20: 5 é trivial, pergunta nem aparece.
+   *   - 4-20: 3 ativos representa parte relevante do time, vale confirmar.
+   *   - porte > 20: 3 é trivial, pergunta nem aparece.
    *
    * Vai pro AC como custom field pra time de vendas saber se o lead se
    * comprometeu. Não muda o resto do quiz. No playbook, controla se o
-   * texto explicativo sobre o "piso de 5 ativos" aparece no accordion de
+   * texto explicativo sobre o "piso de 3 ativos" aparece no accordion de
    * diagnóstico (só pra quem passou por essa tela).
    */
   porteCompromisso5Ativos?: boolean;
@@ -108,18 +108,18 @@ const STORAGE_KEY = 'playbook-elg-quiz-state-v1';
 const TOTAL_QUESTIONS = 9;
 
 /** Limites coerentes com Zod no server. */
-const PORTE_MIN_VIAVEL = 5;
+const PORTE_MIN_VIAVEL = 3;
 /**
- * Faixa em que pedimos confirmação de compromisso com 5 colaboradores ativos.
+ * Faixa em que pedimos confirmação de compromisso com 3 colaboradores ativos.
  *
- * Aplicado entre PORTE_COMPROMISSO_INICIO (6) e PORTE_LIMITE_DUVIDA (20)
+ * Aplicado entre PORTE_COMPROMISSO_INICIO (4) e PORTE_LIMITE_DUVIDA (20)
  * inclusive. Decisões:
- *   - porte = 5 não recebe a pergunta (a empresa TEM exatamente o mínimo;
+ *   - porte = 3 não recebe a pergunta (a empresa TEM exatamente o mínimo;
  *     o compromisso é trivial: a equipe toda precisaria estar ativa).
- *   - porte > 20: 5 ativos é número pequeno em relação ao time; trivial.
- *   - 6-20: 5 ativos representa 25-83% do time, vale confirmar.
+ *   - porte > 20: 3 ativos é número pequeno em relação ao time; trivial.
+ *   - 4-20: 3 ativos representa uma fração relevante do time, vale confirmar.
  */
-const PORTE_COMPROMISSO_INICIO = 6;
+const PORTE_COMPROMISSO_INICIO = 4;
 const PORTE_LIMITE_DUVIDA = 20;
 
 /* -------------------------------------------------------------------------- */
@@ -260,11 +260,11 @@ export function PlaybookWizard({ onClose, isMobileModal = false }: PlaybookWizar
 
   /**
    * Gates após P1 (porte):
-   *   - porte < 5  → 'not-eligible' direto (hard block, sem programa viável)
-   *   - porte = 5  → goNext() direto (já tem o mínimo, compromisso é trivial)
-   *   - 6 ≤ porte ≤ 20 → 'porte-compromisso' (5 ativos representa parte
+   *   - porte < 3  → 'not-eligible' direto (hard block, sem programa viável)
+   *   - porte = 3  → goNext() direto (já tem o mínimo, compromisso é trivial)
+   *   - 4 ≤ porte ≤ 20 → 'porte-compromisso' (3 ativos representa parte
    *     relevante do time, vale confirmar antes de continuar)
-   *   - porte > 20 → goNext() (5 ativos é trivial nesse porte)
+   *   - porte > 20 → goNext() (3 ativos é trivial nesse porte)
    */
   const submitPorte = useCallback(() => {
     const porte = state.answers.porte ?? 0;
@@ -640,7 +640,7 @@ function QuestionView({
           onChange={(v) => onAnswer('porte', v)}
         />
         <p className="mt-4 border-t border-dashed border-border pt-3 text-center text-[11px] text-muted-foreground">
-          Employee-Led Growth precisa de pelo menos 5 colaboradores pra dar tração.
+          Employee-Led Growth precisa de pelo menos 3 colaboradores pra dar tração.
         </p>
       </FaiQuestion>
     );
@@ -972,9 +972,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 /**
  * Recebe o porte preenchido pra decidir entre dois copies:
- *   - porte < 5: empresa abaixo do piso operacional do programa.
- *   - porte ≥ 5: chegou via 'porte-compromisso' respondendo "não consigo
- *     comprometer 5". Mesmo destino, mas a explicação muda.
+ *   - porte < 3: empresa abaixo do piso operacional do programa.
+ *   - porte ≥ 3: chegou via 'porte-compromisso' respondendo "não consigo
+ *     comprometer 3". Mesmo destino, mas a explicação muda.
  */
 function NotEligibleView({ porte }: { porte: number }) {
   const fromCompromisso = porte >= PORTE_MIN_VIAVEL;
@@ -991,7 +991,7 @@ function NotEligibleView({ porte }: { porte: number }) {
       </h3>
       {fromCompromisso ? (
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Sem 5 colaboradores comprometidos em postar com regularidade, a estratégia não
+          Sem 3 colaboradores comprometidos em postar com regularidade, a estratégia não
           gera o earned media e a consistência necessária pra valer o esforço. Com porte
           enxuto como o seu, faz mais sentido começar por founder-led growth (founder/CEO
           puxando o conteúdo solo) e só montar o programa quando esse compromisso
@@ -1002,7 +1002,7 @@ function NotEligibleView({ porte }: { porte: number }) {
         </p>
       ) : (
         <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-          O programa precisa de pelo menos 5 colaboradores ativos pra rodar de forma
+          O programa precisa de pelo menos 3 colaboradores ativos pra rodar de forma
           sustentável. Com menos que isso, founder-led growth (founder/CEO postando
           solo) tende a render mais que tentar montar um programa.
           <br />
@@ -1026,7 +1026,7 @@ function NotEligibleView({ porte }: { porte: number }) {
 
 /**
  * Tela intermediária pra empresas com porte 5–20: confirma que a pessoa
- * consegue comprometer 5 colaboradores ativos antes de seguir o quiz.
+ * consegue comprometer 3 colaboradores ativos antes de seguir o quiz.
  *
  * "Sim" → próximo step (cargoSenioridade), grava `porteCompromisso5Ativos=true`.
  * "Não" → 'not-eligible' (copy condicional), grava `porteCompromisso5Ativos=false`.
@@ -1059,12 +1059,12 @@ function PorteCompromissoView({
           <h2 className="font-headline text-xl font-black leading-tight tracking-tight text-foreground">
             Vocês conseguem comprometer{' '}
             <span className="bg-gradient-to-br from-[#CD50F1] to-[#E875FF] bg-clip-text text-transparent">
-              ao menos 5 colaboradores
+              ao menos 3 colaboradores
             </span>{' '}
             ativos no programa?
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Com {porte} colaboradores no time, 5 ativos já representa parte relevante da
+            Com {porte} colaboradores no time, 3 ativos já representa parte relevante da
             empresa. O programa precisa desse piso pra gerar earned media consistente.
             Sem isso, founder-led growth costuma render mais que tentar montar o programa.
           </p>
@@ -1073,7 +1073,7 @@ function PorteCompromissoView({
 
       <div className="flex flex-col gap-2 sm:gap-3">
         <Button size="lg" className="w-full" onClick={() => onAnswer(true)}>
-          Sim, consigo comprometer 5
+          Sim, consigo comprometer 3
         </Button>
         <Button size="lg" variant="outline" className="w-full" onClick={() => onAnswer(false)}>
           Não, é muito pro nosso porte

@@ -139,12 +139,12 @@ function Mini({
  *
  * Renderiza 1 de 2 variações:
  *  - `mostrarPisoOperacional = true`: o respondente passou pela tela de
- *    compromisso (porte 6-20 + confirmou que topa comprometer 5). Explica
- *    por que mesmo numa empresa de 6-20 colab, o número exibido é 5 (piso
+ *    compromisso (porte 4-20 + confirmou que topa comprometer 3). Explica
+ *    por que mesmo numa empresa de 4-20 colab, o número exibido é 3 (piso
  *    operacional do programa) e contextualiza por que empresas com menos
  *    de 5 não rodam ELG sustentável.
  *  - Caso contrário: texto normal da curva por porte. Não menciona piso —
- *    pra empresas maiores o piso de 5 é trivial e mencioná-lo só polui o
+ *    pra empresas maiores o piso de 3 é trivial e mencioná-lo só polui o
  *    contexto.
  *
  * O cálculo (calcColabAtivos com Math.max(5, curva)) é o mesmo nos dois

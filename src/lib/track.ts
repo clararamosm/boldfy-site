@@ -50,9 +50,9 @@ type PlaybookCtaType = 'demo' | 'pacote' | 'compartilhar';
 /**
  * Razão do gate de não-elegibilidade no quiz do playbook.
  *
- * - `porte_baixo`: P1 < 5 colaboradores (hard block na própria P1).
- * - `compromisso_negado`: P1 entre 5 e 20, mas respondeu "não" na tela
- *   intermediária de compromisso com 5 ativos (jun/2026).
+ * - `porte_baixo`: P1 < 3 colaboradores (hard block na própria P1).
+ * - `compromisso_negado`: P1 entre 4 e 20, mas respondeu "não" na tela
+ *   intermediária de compromisso com 3 ativos (jun/2026).
  */
 type PlaybookGateReason = 'porte_baixo' | 'compromisso_negado';
 
@@ -112,7 +112,7 @@ type TrackedEvent =
       params: { step: string; step_number: number };
     }
   | {
-      /** Gate de não-elegibilidade disparou (porte < 5). */
+      /** Gate de não-elegibilidade disparou (porte < 3). */
       name: 'playbook_quiz_gate_triggered';
       params: { reason: PlaybookGateReason; porte?: number };
     }

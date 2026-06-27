@@ -310,10 +310,10 @@ export type RenderedData = {
     paragrafoConector: string;    // SNAPSHOT_FECHAMENTO[templateKey]
     /**
      * Sinaliza se o accordion "Por que estimamos N colaboradores ativos?"
-     * deve mostrar a explicação extra sobre o piso operacional de 5 ativos.
+     * deve mostrar a explicação extra sobre o piso operacional de 3 ativos.
      *
      * `true` quando o respondente passou pela tela de compromisso (porte
-     * 6-20 + confirmou). Justifica pra ele por que mesmo com 6 colab a
+     * 4-20 + confirmou). Justifica pra ele por que mesmo com 4 colab a
      * estimativa exibida é 5 (não 2 pela curva teórica).
      *
      * `false`/`undefined` em outros casos (porte=5, porte>20, playbooks

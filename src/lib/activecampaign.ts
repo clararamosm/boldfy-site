@@ -170,7 +170,7 @@ const CUSTOM_FIELDS: Record<string, { title: string; type: ACFieldDefinition['ty
    */
   gasto_mensal_ads: { title: 'Gasto Mensal Ads', type: 'text' },
   /**
-   * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+   * Confirmação de compromisso com 3 colaboradores ativos (jun/2026).
    * Só vem populado quando o respondente passou pela tela intermediária
    * `porte-compromisso` (porte 5–20). Valores possíveis no AC:
    *   - "SIM" — confirmou e seguiu o quiz

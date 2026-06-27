@@ -276,7 +276,7 @@ export const CaseSemrushLeadSchema = z
  * Schema do quiz /ferramentas/playbook-employee-led-growth.
  *
  * 11 perguntas obrigatórias + 1 aberta opcional + 4 campos de identificação.
- * Sempre Líder B2B — o gate de elegibilidade (porteColaboradores ≥ 5) na 1ª
+ * Sempre Líder B2B — o gate de elegibilidade (porteColaboradores ≥ 3) na 1ª
  * pergunta filtra autônomos antes do submit chegar aqui, então a validação
  * só rejeita inputs malformados (não filtra de novo).
  *
@@ -385,10 +385,10 @@ export const PlaybookEmployeeLedGrowthLeadSchema = z
     porteColaboradores: z.number().int().min(1).max(100_000),
 
     /**
-     * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+     * Confirmação de compromisso com 3 colaboradores ativos (jun/2026).
      *
      * Pergunta intermediária entre P1 (porte) e P2 (cargo) que só aparece pra
-     * empresas com porte entre 5 e 20 inclusive. Respostas "não" caem em
+     * empresas com porte entre 4 e 20 inclusive. Respostas "não" caem em
      * `not-eligible` e nunca chegam aqui — server só vê `true`/`undefined`.
      *
      * Opcional pra retrocompat com playbooks antigos no banco e pra os casos

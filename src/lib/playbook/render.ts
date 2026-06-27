@@ -97,10 +97,10 @@ export type PlaybookQuizData = {
   gastoMensalAds?:
     | 'zero' | 'ate_10k' | '11_a_50k' | '51_a_100k' | '101_a_300k' | 'acima_300k';
   /**
-   * Confirmação de compromisso com 5 colaboradores ativos (jun/2026).
+   * Confirmação de compromisso com 3 colaboradores ativos (jun/2026).
    * Só populado quando o respondente passou pela tela intermediária
-   * (porte 6-20). Usado pra decidir se o texto explicativo sobre o
-   * piso de 5 ativos aparece no accordion de diagnóstico — mantém a
+   * (porte 4-20). Usado pra decidir se o texto explicativo sobre o
+   * piso de 3 ativos aparece no accordion de diagnóstico — mantém a
    * explicação relevante só pra quem viu a pergunta.
    */
   porteCompromisso5Ativos?: boolean;
@@ -317,21 +317,21 @@ export function ativacaoTypicaPercent(porte: number): number {
 }
 
 /**
- * Estimativa de colaboradores ativos com PISO DE 5 (jun/2026).
+ * Estimativa de colaboradores ativos com PISO DE 3 (jun/2026).
  *
- * 5 é o número mínimo operacional pra o programa funcionar (sponsor + 4
+ * 3 é o número mínimo operacional pra o programa funcionar (sponsor + 2
  * colaboradores postando com regularidade). Empresas com porte abaixo de
- * 14-15 ficariam abaixo desse piso pela curva teórica (porte * percentual),
- * então o piso vence: a estimativa exibida é 5, não 1-4.
+ * 8-9 ficariam abaixo desse piso pela curva teórica (porte * percentual),
+ * então o piso vence: a estimativa exibida é 3, não 1-2.
  *
- * Quem chega aqui com porte < 5 foi bloqueado pelo gate do wizard antes,
+ * Quem chega aqui com porte < 3 foi bloqueado pelo gate do wizard antes,
  * mas a função aceita defensivamente — se algum playbook antigo no banco
- * tinha porte<5 (gate adicionado depois), o número exibido continua 5
+ * tinha porte<3 (gate adicionado depois), o número exibido continua 3
  * (consistente com o piso).
  */
 export function calcColabAtivos(porte: number): number {
   const teorico = Math.round(porte * ativacaoTypicaPercent(porte));
-  // Clamp [5, 100]: piso operacional (5) vence empresas minúsculas; teto do
+  // Clamp [3, 100]: piso operacional (3) vence empresas minúsculas; teto do
   // programa (100) vence empresas gigantes — a curva daria mais (ex: 170 numa
   // empresa de 1000), mas 100 é o máximo que rodamos. Acima de 100 vira
   // enterprise sob consulta, fora do cálculo (mai/2026).
@@ -343,7 +343,7 @@ export function calcColabAtivos(porte: number): number {
  * componente PlaybookSnapshot mostrar a explicação correta quando o piso
  * vence a curva.
  */
-export const MINIMO_ATIVOS_PROGRAMA = 5;
+export const MINIMO_ATIVOS_PROGRAMA = 3;
 
 /**
  * Teto operacional do programa (mai/2026). Acima de 100 ativos a Boldfy não
@@ -540,9 +540,9 @@ export function renderPlaybookData(
   // capturada implicitamente pelo template-key (e fica no `areaPretty`
   // pra compat retroativa de playbooks antigos).
   // mostrarPisoOperacional: só quando a pessoa viu a tela de compromisso
-  // (porte entre 6 e 20 + respondeu sim). Mantém a explicação sobre o piso
+  // (porte entre 4 e 20 + respondeu sim). Mantém a explicação sobre o piso
   // restrita ao público pra quem ela faz diferença — empresas maiores não
-  // precisam ler que existe um mínimo de 5 (pra elas é trivial).
+  // precisam ler que existe um mínimo de 3 (pra elas é trivial).
   const mostrarPisoOperacional =
     quiz.porteCompromisso5Ativos === true &&
     quiz.porteColaboradores >= 6 &&
@@ -639,12 +639,12 @@ export function renderPlaybookData(
   // colaboradores ativos"). Antes abria com o porte total e dava incoerência:
   // header dizia 18 ativos, slider abria em 60.
   //
-  // colabAtivos já vem clampado em [5, 100] por calcColabAtivos (teto do
+  // colabAtivos já vem clampado em [3, 100] por calcColabAtivos (teto do
   // programa = 100, mai/2026), então o slider do playbook (max=100) abre no
   // mesmo número que o header mostra. O Math.min(100,...) aqui é só defesa em
   // profundidade pros bounds do slider.
   const calculadora = {
-    initialCollaborators: Math.max(5, Math.min(100, colabAtivos)),
+    initialCollaborators: Math.max(3, Math.min(100, colabAtivos)),
     initialImpressions: IMPRESSIONS_PER_COLAB_DEFAULT,
     colabAtivosEstimados: colabAtivos,
   };

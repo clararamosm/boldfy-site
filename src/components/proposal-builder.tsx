@@ -30,7 +30,7 @@ import { trackEvent } from '@/lib/track';
 /* -------------------------------------------------------------------------- */
 
 const PLATFORM_TIERS = [
-  { min: 5, max: 10, full: 499, beta: 349 },
+  { min: 3, max: 10, full: 499, beta: 349 },
   { min: 11, max: 20, full: 449, beta: 314 },
   { min: 21, max: 40, full: 399, beta: 279 },
   { min: 41, max: 70, full: 349, beta: 244 },
@@ -365,17 +365,17 @@ function ProposalBuilderModal({
                           </div>
                         </div>
                         <Slider
-                          min={5}
+                          min={3}
                           max={70}
                           step={1}
                           value={[seats]}
                           onValueChange={(v) => setSeats(v[0])}
                         />
-                        {/* Ticks posicionados no % real do range (5–70) — não com justify-between */}
+                        {/* Ticks posicionados no % real do range (3–70) — não com justify-between */}
                         <div className="relative h-4 mb-1">
-                          {[5, 20, 40, 70].map((tick) => {
-                            const pct = ((tick - 5) / (70 - 5)) * 100;
-                            const translate = tick === 5 ? '0%' : tick === 70 ? '-100%' : '-50%';
+                          {[3, 20, 40, 70].map((tick) => {
+                            const pct = ((tick - 3) / (70 - 3)) * 100;
+                            const translate = tick === 3 ? '0%' : tick === 70 ? '-100%' : '-50%';
                             return (
                               <span
                                 key={tick}
