@@ -124,7 +124,7 @@ const ptBR = {
     solutionsTag: 'Como você entra',
     solutionsTitle: 'Dois caminhos.',
     solutionsTitleHighlight: 'Um sistema.',
-    solutionsSubtitle: 'Uma plataforma, dois modos. O conteúdo é feito pelo seu time no self-service, ou pela Boldfy no full-service, sempre dentro da mesma plataforma.',
+    solutionsSubtitle: 'Uma plataforma, dois modos: o conteúdo é feito pelo seu time ou pela Boldfy.',
     // Card 1 — Conteúdo feito pelo time (SaaS · self-service · Modo Time)
     solSaasTag: 'Software as a Service',
     solSaasTitle: 'Conteúdo feito pelo time',
@@ -1456,7 +1456,7 @@ const ptBR = {
     subtitle: 'Mesma plataforma, dois jeitos de operar. Você pode contratar um, o outro ou combinar os dois.',
     // Column headers
     colSaasTag: 'Software as a Service',
-    colSaasSub: 'Self-service pro time inteiro',
+    colSaasSub: 'Modo Time · self-service pro time inteiro',
     colCaasTag: 'Content as a Service',
     colCaasSub: 'A gente opera dentro da plataforma',
     // Row labels
@@ -1484,8 +1484,8 @@ const ptBR = {
     // CTAs
     ctaPrimary: 'Montar meu pacote',
     ctaSecondary: 'Agendar conversa',
-    ctaLearnSaas: 'Ver página da Plataforma',
-    ctaLearnCaas: 'Ver página do Serviço',
+    ctaLearnSaas: 'Ver o Modo Time',
+    ctaLearnCaas: 'Ver o Conteúdo feito pela Boldfy',
   },
 
   // Common

@@ -310,9 +310,14 @@ export default function PrecosPage() {
 
             {/* Pricing tiers — 4 faixas de colaboradores */}
             <div className="mb-4">
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                Preço por colaborador/mês
-              </p>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="inline-block rounded-full bg-[#F7EEFC] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-primary">
+                  Modo Time
+                </span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                  Preço por colaborador/mês
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                 {tiers.map((tier) => (
                   <TierCard key={tier.range} {...tier} />
@@ -377,13 +382,13 @@ export default function PrecosPage() {
                   icon={Palette}
                   title="Modo Design"
                   subtitle="Peças pra biblioteca"
-                  price={`R$ ${t.home.solCaasSub1Price}`}
+                  price={t.home.solCaasSub1Price}
                 />
                 <CaasModeCard
                   icon={Mic}
                   title="Modo Executivo"
                   subtitle="Ativação completa"
-                  price={`R$ ${t.home.solCaasSub2Price}`}
+                  price={t.home.solCaasSub2Price}
                 />
               </div>
             </div>

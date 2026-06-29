@@ -148,7 +148,6 @@ function BattleCardModal({
           aria-describedby={undefined}
         >
           {/* Top bar with gradient */}
-          <div className="h-1 w-full bg-gradient-to-r from-primary via-[#9840AD] to-[#5E2A67]" />
 
           {/* Header */}
           <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5 md:px-8">

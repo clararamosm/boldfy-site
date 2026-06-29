@@ -313,6 +313,11 @@ function ProposalBuilderModal({
                 </div>
 
                 {/* ── Tier 1: Software as a Service ── */}
+                <div className="mb-2 mt-1 flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
+                    Software as a Service
+                  </span>
+                </div>
                 <div
                   className={cn(
                     'rounded-xl border transition-all duration-200',
@@ -330,7 +335,7 @@ function ProposalBuilderModal({
                       <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-accent-foreground">Software as a Service</p>
+                      <p className="text-sm font-bold text-accent-foreground">Modo Time</p>
                       <p className="text-[11px] text-muted-foreground">Conteúdo feito pelo time · self-service</p>
                     </div>
                     <div
@@ -427,7 +432,7 @@ function ProposalBuilderModal({
                   <span className="text-[10px] text-muted-foreground">· ative um ou os dois modos</span>
                 </div>
 
-                {/* ── CaaS · Modo 1: Design sob demanda ── */}
+                {/* ── CaaS · Modo Design: Peças sob demanda ── */}
                 <div
                   className={cn(
                     'rounded-xl border transition-all duration-200',
@@ -450,9 +455,9 @@ function ProposalBuilderModal({
                           className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
                           style={{ backgroundColor: '#9840AD' }}
                         >
-                          Modo 1
+                          Modo Design
                         </span>
-                        <p className="text-sm font-bold text-accent-foreground">Design sob demanda</p>
+                        <p className="text-sm font-bold text-accent-foreground">Peças sob demanda</p>
                       </div>
                       <p className="text-[11px] text-muted-foreground">Peças gráficas pra biblioteca do time</p>
                     </div>
@@ -538,7 +543,7 @@ function ProposalBuilderModal({
                   </div>
                 </div>
 
-                {/* ── CaaS · Modo 2: Ativação executiva completa ── */}
+                {/* ── CaaS · Modo Executivo: Ativação executiva completa ── */}
                 <div
                   className={cn(
                     'rounded-xl border transition-all duration-200',
@@ -561,7 +566,7 @@ function ProposalBuilderModal({
                           className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
                           style={{ backgroundColor: '#5E2A67' }}
                         >
-                          Modo 2
+                          Modo Executivo
                         </span>
                         <p className="text-sm font-bold text-accent-foreground">Ativação executiva completa</p>
                       </div>
@@ -716,7 +721,7 @@ function ProposalBuilderModal({
                       {designEnabled && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Modo 1 · Design ({DESIGN_PACKS[designPack].label})
+                            Modo Design ({DESIGN_PACKS[designPack].label})
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
@@ -729,7 +734,7 @@ function ProposalBuilderModal({
                       {fsEnabled && (
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Modo 2 · Executivo ({fsTls} exec × {fsFreq}x/sem)
+                            Modo Executivo ({fsTls} exec × {fsFreq}x/sem)
                           </span>
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium blur-[4px] select-none" aria-hidden="true">
@@ -1050,7 +1055,7 @@ function ResultStep({
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
               <Palette className="h-4 w-4" style={{ color: '#9840AD' }} />
-              <span className="text-sm font-semibold text-foreground">Modo 1 · Design</span>
+              <span className="text-sm font-semibold text-foreground">Modo Design</span>
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
@@ -1092,7 +1097,7 @@ function ResultStep({
           <div className="space-y-2 pt-3 border-t border-border/50">
             <div className="flex items-center gap-2">
               <Mic className="h-4 w-4" style={{ color: '#5E2A67' }} />
-              <span className="text-sm font-semibold text-foreground">Modo 2 · Ativação executiva completa</span>
+              <span className="text-sm font-semibold text-foreground">Modo Executivo</span>
             </div>
             <div className="ml-6">
               <div className="flex justify-between text-sm">
