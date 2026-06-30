@@ -86,10 +86,10 @@ export default async function LinkPage() {
             <Image
               src="/images/boldfy-logo.svg"
               alt="Boldfy"
-              width={119}
-              height={46}
+              width={145}
+              height={56}
               priority
-              className="boldfy-float h-[46px] w-auto transition-transform duration-200 hover:-translate-y-0.5"
+              className="boldfy-float h-[56px] w-auto transition-transform duration-200 hover:-translate-y-0.5"
             />
           </Link>
         </div>
@@ -124,45 +124,10 @@ export default async function LinkPage() {
           <HeroButton href={withUtm('/ferramentas/playbook-team-led-growth', 'playbook')} />
         </div>
 
-        {/* SECUNDÁRIO */}
-        <Link
-          href={withUtm('/', 'site')}
-          className="group flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-border bg-card px-[22px] py-[15px] text-[14.5px] font-bold text-[#5E2A67] shadow-[0_6px_20px_rgba(93,42,103,0.05)] transition-transform duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-        >
-          Conhecer a Boldfy
-          <ArrowIcon className="text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary" />
-        </Link>
-
         {/* MATERIAIS GRATUITOS (inclui a newsletter como asset gratuito) */}
         <h2 className="mt-[18px] w-full pl-1 text-left text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
           Materiais gratuitos
         </h2>
-
-        {/* Report */}
-        <Link
-          href={withUtm('/algoritmo-linkedin', 'report-algoritmo')}
-          className="group flex w-full items-center gap-[13px] rounded-[16px] border border-border bg-card p-3 shadow-[0_8px_32px_rgba(93,42,103,0.06)] transition-transform duration-200 hover:translate-x-1 hover:border-primary/45"
-        >
-          <Image
-            src="/images/algoritmo-linkedin-cover.jpeg"
-            alt=""
-            width={54}
-            height={54}
-            className="h-[54px] w-[54px] shrink-0 rounded-[11px] object-cover"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
-              Report
-            </div>
-            <div className="text-[14px] font-bold leading-tight text-[#5E2A67]">
-              O algoritmo do LinkedIn mudou tudo
-            </div>
-            <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-              Análise da atualização 360Brew · 2026
-            </div>
-          </div>
-          <ArrowIcon className="shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
-        </Link>
 
         {/* Case (destaque) */}
         <Link
@@ -186,6 +151,32 @@ export default async function LinkPage() {
             </div>
             <div className="mt-0.5 text-[11.5px] text-muted-foreground">
               Bastidores de uma estratégia global
+            </div>
+          </div>
+          <ArrowIcon className="shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
+        </Link>
+
+        {/* Report */}
+        <Link
+          href={withUtm('/algoritmo-linkedin', 'report-algoritmo')}
+          className="group flex w-full items-center gap-[13px] rounded-[16px] border border-border bg-card p-3 shadow-[0_8px_32px_rgba(93,42,103,0.06)] transition-transform duration-200 hover:translate-x-1 hover:border-primary/45"
+        >
+          <Image
+            src="/images/algoritmo-linkedin-cover.jpeg"
+            alt=""
+            width={54}
+            height={54}
+            className="h-[54px] w-[54px] shrink-0 rounded-[11px] object-cover"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
+              Report
+            </div>
+            <div className="text-[14px] font-bold leading-tight text-[#5E2A67]">
+              O algoritmo do LinkedIn mudou tudo
+            </div>
+            <div className="mt-0.5 text-[11.5px] text-muted-foreground">
+              Análise da atualização 360Brew · 2026
             </div>
           </div>
           <ArrowIcon className="shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
@@ -253,6 +244,15 @@ export default async function LinkPage() {
             </Link>
           ))}
         </div>
+
+        {/* Conhecer a Boldfy (depois dos casos de uso) */}
+        <Link
+          href={withUtm('/', 'site')}
+          className="group flex w-full items-center justify-center gap-2.5 rounded-[14px] border border-border bg-card px-[22px] py-[15px] text-[14.5px] font-bold text-[#5E2A67] shadow-[0_6px_20px_rgba(93,42,103,0.05)] transition-transform duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+        >
+          Conhecer a Boldfy
+          <ArrowIcon className="text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary" />
+        </Link>
 
         {/* SOLUÇÕES (cards de ícone, na marca) */}
         <h2 className="mt-[18px] w-full pl-1 text-left text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground">

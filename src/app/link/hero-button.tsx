@@ -76,12 +76,11 @@ export function HeroButton({ href }: { href: string }) {
         ref={ref}
         href={href}
         onClick={handleClick}
-        className="relative z-[1] flex w-full items-center justify-center gap-2.5 rounded-[13.5px] bg-gradient-to-br from-primary to-[#9840AD] px-6 py-[19px] text-base font-bold text-white shadow-[0_10px_30px_rgba(205,80,241,0.32)] transition-transform duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_16px_40px_rgba(205,80,241,0.45)]"
+        className="relative z-[1] flex w-full items-center justify-center gap-2 rounded-[13.5px] bg-gradient-to-br from-primary to-[#9840AD] px-6 py-[16px] text-[15px] font-bold text-white shadow-[0_10px_30px_rgba(205,80,241,0.32)] transition-transform duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-[0_16px_40px_rgba(205,80,241,0.45)]"
       >
         <Sparkles className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
-        Criar meu Playbook de Team-Led Growth
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-[0.08em]">
-          grátis
+        <span className="text-balance text-center leading-tight">
+          Gerar meu playbook personalizado de Team-Led Growth
         </span>
         <ArrowRight className="h-[18px] w-[18px] shrink-0" strokeWidth={2.5} />
       </a>
