@@ -293,7 +293,7 @@ function ProposalBuilderModal({
                 {/* Beta toggle */}
                 <div className="flex items-center justify-center gap-3 rounded-full border border-border bg-card px-5 py-2.5 shadow-sm mx-auto w-fit">
                   <span className="text-[12px] font-semibold text-foreground">
-                    Preço <span className="text-primary font-bold">Beta Tester</span> (30% off no self-service)
+                    Preço <span className="text-primary font-bold">Beta Tester</span> (30% off no Modo Time)
                   </span>
                   <button
                     type="button"
@@ -335,8 +335,16 @@ function ProposalBuilderModal({
                       <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-accent-foreground">Modo Time</p>
-                      <p className="text-[11px] text-muted-foreground">Conteúdo feito pelo time · self-service</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
+                          style={{ backgroundColor: '#CD50F1' }}
+                        >
+                          Modo Time
+                        </span>
+                        <p className="text-sm font-bold text-accent-foreground">Conteúdo feito pelo time</p>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Gamificação, trilhas e IA contextual, em self-service</p>
                     </div>
                     <div
                       className={cn(
@@ -1226,8 +1234,8 @@ function ResultStep({
       </div>
 
       <p className="text-[10px] text-muted-foreground text-center mt-3">
-        Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente ao self-service.
-        Contrato mínimo de 6 meses. Executivos do Modo Executivo não consomem seats do self-service.
+        Pricing vigente Boldfy (2026). Desconto Beta Tester (30% off) aplica-se somente ao Modo Time.
+        Contrato mínimo de 6 meses. Executivos do Modo Executivo não consomem seats do Modo Time.
       </p>
     </div>
   );

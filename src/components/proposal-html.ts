@@ -289,8 +289,8 @@ export function generateProposalHTML(data: ProposalData, proposalUrl?: string): 
       </p>
       <p style="margin:0;font-size:10px;color:${C.textLight};line-height:1.6;">
         Proposta válida por ${VALIDITY_DAYS} dias a partir de ${dateStr}. Pricing vigente Boldfy (2026).<br>
-        Desconto Beta Tester (30% off) aplica-se somente ao self-service. Contrato mínimo de 6 meses.<br>
-        Executivos do Modo Executivo não consomem seats do self-service.<br><br>
+        Desconto Beta Tester (30% off) aplica-se somente ao Modo Time. Contrato mínimo de 6 meses.<br>
+        Executivos do Modo Executivo não consomem seats do Modo Time.<br><br>
         <a href="https://boldfy.com.br" style="color:${C.primary};font-weight:600;">boldfy.com.br</a>
       </p>
     </div>
