@@ -29,7 +29,7 @@ function VisualTime() {
         {avatars.map((a, i) => (
           <div
             key={a.src}
-            className="-ml-2 h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 border-card shadow-sm"
+            className="-ml-2 h-7 w-7 shrink-0 overflow-hidden rounded-full border-2 border-card shadow-sm transition-transform duration-200 hover:scale-125 hover:z-10"
             style={{ zIndex: i }}
           >
             <Image
@@ -69,24 +69,23 @@ function VisualTime() {
 
 function VisualBoldfy() {
   const items = [
-    { icon: Clock, title: 'Estratégia', sub: 'Narrativa e pilares', iconBg: 'bg-primary/10 text-primary' },
-    { icon: Palette, title: 'Design', sub: 'Peças sob demanda', iconBg: 'bg-[#9840AD]/12 text-[#9840AD]' },
-    { icon: MessageSquare, title: 'Operação', sub: 'Publica e mede', iconBg: 'bg-emerald-500/10 text-emerald-500' },
+    { icon: Clock, title: 'Estratégia', iconBg: 'bg-primary/10 text-primary' },
+    { icon: Palette, title: 'Design', iconBg: 'bg-[#9840AD]/12 text-[#9840AD]' },
+    { icon: MessageSquare, title: 'Operação', iconBg: 'bg-emerald-500/10 text-emerald-500' },
   ];
   return (
     <div className="mb-4 grid grid-cols-3 gap-2 rounded-[14px] border border-border bg-background p-2.5">
       {items.map((item) => (
         <div
           key={item.title}
-          className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-2.5 text-center shadow-sm"
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card py-2 shadow-sm"
         >
-          <div className={`flex h-7 w-7 items-center justify-center rounded-[9px] ${item.iconBg}`}>
-            <item.icon className="h-[15px] w-[15px]" />
+          <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] ${item.iconBg}`}>
+            <item.icon className="h-[14px] w-[14px]" />
           </div>
           <p className="font-headline text-[11px] font-black leading-tight text-accent-foreground">
             {item.title}
           </p>
-          <p className="text-[9px] text-muted-foreground">{item.sub}</p>
         </div>
       ))}
     </div>
@@ -212,28 +211,27 @@ export function SolutionsBentoSection() {
 
             <AdminCallout text={t.home.solSaasAdmin} />
 
-            {/* Footer: Modo Time + price + CTA */}
-            <div className="mt-auto flex flex-wrap items-end justify-between gap-4 border-t border-border pt-5">
-              <div>
-                <span className="mb-2 inline-block rounded-full bg-[#F7EEFC] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-primary">
-                  {t.home.solSaasModo}
-                </span>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  A partir de
-                </p>
-                <p className="font-headline text-[22px] font-black leading-[1.1] tracking-[-0.02em] text-accent-foreground">
-                  <span className="text-sm font-bold text-muted-foreground">R$</span>
-                  {t.home.solSaasPrice}
-                </p>
-                <p className="text-[11px] text-muted-foreground">{t.home.solSaasPriceUnit}</p>
+            {/* Footer: Modo Time em box (mesmo padrão dos modos do CaaS) */}
+            <div className="mt-auto border-t border-border pt-5">
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-background p-3.5">
+                <div>
+                  <p className="font-headline text-[13px] font-black leading-tight text-accent-foreground">
+                    {t.home.solSaasModo}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    a partir de{' '}
+                    <strong className="font-extrabold text-primary">R$ {t.home.solSaasPrice}</strong>
+                    {t.home.solSaasPriceUnit}
+                  </p>
+                </div>
+                <Link
+                  href="/solucoes/software-as-a-service"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(205,80,241,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#d966f5]"
+                >
+                  {t.home.solSaasCta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <Link
-                href="/solucoes/software-as-a-service"
-                className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-5 py-3 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(205,80,241,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#d966f5] hover:shadow-[0_10px_24px_rgba(205,80,241,0.38)]"
-              >
-                {t.home.solSaasCta}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
             </div>
           </div>
 
