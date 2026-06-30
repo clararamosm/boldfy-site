@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getPublishedPosts } from '@/lib/notion';
 import { HeroButton } from './hero-button';
+import { ProposalLinkButton } from './proposal-button';
 
 export const revalidate = 300; // ISR: revalida o mini-feed do blog a cada 5 min
 
@@ -81,14 +82,16 @@ export default async function LinkPage() {
             Content Intelligence para Team-Led Growth
           </span>
           <div className="absolute top-0 h-[200px] w-[200px] rounded-full bg-primary opacity-[0.14] blur-[70px]" />
-          <Image
-            src="/images/boldfy-logo.svg"
-            alt="Boldfy"
-            width={119}
-            height={46}
-            priority
-            className="boldfy-float relative z-10 h-[46px] w-auto"
-          />
+          <Link href="/" aria-label="Ir para a home da Boldfy" className="relative z-10">
+            <Image
+              src="/images/boldfy-logo.svg"
+              alt="Boldfy"
+              width={119}
+              height={46}
+              priority
+              className="boldfy-float h-[46px] w-auto transition-transform duration-200 hover:-translate-y-0.5"
+            />
+          </Link>
         </div>
 
         {/* PROVA SOCIAL */}
@@ -97,7 +100,7 @@ export default async function LinkPage() {
             {AVATARS.map((n) => (
               <div
                 key={n}
-                className="-ml-[11px] h-[30px] w-[30px] overflow-hidden rounded-full border-2 border-card transition-transform duration-200 hover:-translate-y-1 hover:z-10"
+                className="relative -ml-[11px] h-[30px] w-[30px] overflow-hidden rounded-full border-2 border-card transition-transform duration-200 hover:-translate-y-1 hover:z-10"
               >
                 <Image
                   src={`/images/avatar-${n}.jpeg`}
@@ -164,7 +167,7 @@ export default async function LinkPage() {
         {/* Case (destaque) */}
         <Link
           href={withUtm('/case-semrush', 'case-semrush')}
-          className="group flex w-full items-center gap-[13px] rounded-[16px] border border-[#F97316]/45 bg-card p-3 shadow-[0_12px_36px_rgba(249,115,22,0.14)] transition-transform duration-200 hover:translate-x-1"
+          className="group flex w-full items-center gap-[13px] rounded-[16px] border border-primary/45 bg-card p-3 shadow-[0_12px_36px_rgba(205,80,241,0.14)] transition-transform duration-200 hover:translate-x-1"
         >
           <Image
             src="/images/case-semrush-cover.jpeg"
@@ -174,8 +177,8 @@ export default async function LinkPage() {
             className="h-[54px] w-[54px] shrink-0 rounded-[11px] object-cover"
           />
           <div className="min-w-0 flex-1">
-            <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#F97316]">
-              <span className="link-newdot inline-block h-[7px] w-[7px] rounded-full bg-[#F97316]" />
+            <div className="mb-0.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-primary">
+              <span className="link-newdot inline-block h-[7px] w-[7px] rounded-full bg-primary" />
               Case · destaque
             </div>
             <div className="text-[14px] font-bold leading-tight text-[#5E2A67]">
@@ -223,7 +226,7 @@ export default async function LinkPage() {
             <Link
               key={c.href}
               href={withUtm(c.href, c.utm)}
-              className="group relative block aspect-[3/4] overflow-hidden rounded-[14px] border border-border shadow-[0_8px_32px_rgba(93,42,103,0.06)] transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-[0_18px_44px_rgba(205,80,241,0.18)]"
+              className="group relative block aspect-[3/4] overflow-hidden rounded-[14px] shadow-[0_8px_32px_rgba(93,42,103,0.06)] transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-[0_18px_44px_rgba(205,80,241,0.18)]"
             >
               <Image
                 src={c.photo}
@@ -262,17 +265,15 @@ export default async function LinkPage() {
           >
             <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px] bg-white/20">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0Z" />
+                <path d="M20 3v4M22 5h-4M4 17v2M5 18H3" />
               </svg>
             </div>
             <div>
               <div className="text-[9px] font-extrabold uppercase tracking-[0.12em] opacity-85">
-                Plataforma
+                Software as a Service
               </div>
-              <div className="font-headline text-[19px] font-black leading-none">SaaS</div>
+              <div className="font-headline text-[15px] font-black leading-tight">Conteúdo feito pelo time</div>
             </div>
             <p className="text-[11px] leading-snug opacity-90">
               O software que põe o time pra criar e mede o alcance.
@@ -280,27 +281,29 @@ export default async function LinkPage() {
           </Link>
           <Link
             href={withUtm('/solucoes/content-as-a-service', 'solucao-caas')}
-            className="flex flex-col gap-2.5 rounded-[16px] bg-gradient-to-br from-[#F97316] to-[#C2410C] p-4 text-white shadow-[0_10px_30px_rgba(93,42,103,0.12)] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(249,115,22,0.4)]"
+            className="flex flex-col gap-2.5 rounded-[16px] bg-gradient-to-br from-[#5E2A67] to-[#3C1A45] p-4 text-white shadow-[0_10px_30px_rgba(93,42,103,0.12)] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(94,42,103,0.4)]"
           >
             <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px] bg-white/20">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                <path d="M2 2l7.586 7.586" />
-                <circle cx="11" cy="11" r="2" />
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
               </svg>
             </div>
             <div>
               <div className="text-[9px] font-extrabold uppercase tracking-[0.12em] opacity-85">
-                Conteúdo
+                Content as a Service
               </div>
-              <div className="font-headline text-[19px] font-black leading-none">CaaS</div>
+              <div className="font-headline text-[15px] font-black leading-tight">Conteúdo feito pela Boldfy</div>
             </div>
             <p className="text-[11px] leading-snug opacity-90">
               A Boldfy produz o conteúdo pelo seu time, ponta a ponta.
             </p>
           </Link>
         </div>
+
+        {/* Proposta personalizada → abre o pop-up "Monte sua proposta" */}
+        <ProposalLinkButton />
 
         {/* BLOG */}
         {posts.length > 0 && (
