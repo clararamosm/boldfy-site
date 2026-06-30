@@ -105,7 +105,7 @@ export function ManifestoSection() {
                   {t.home.founderYears}
                 </span>
                 <span className="mt-[3px] text-[9px] font-semibold uppercase tracking-[0.06em] text-white/50">
-                  anos no B2B
+                  anos em conteúdo
                 </span>
               </div>
               <Link

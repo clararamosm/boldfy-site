@@ -177,8 +177,8 @@ const ptBR = {
     manifestoBody3: 'A Boldfy existe pra fazer isso acontecer em escala, sem perder a alma.',
     founderName: 'Clara Ramos',
     founderRole: 'Founder da Boldfy',
-    founderBio: 'Brand & Content Strategy Lead na ContentPath. Mais de uma década construindo marca via conteúdo autoral pra empresas B2B no LinkedIn.',
-    founderFollowers: '33k+',
+    founderBio: 'Estrategista de marca e especialista em conteúdo há mais de 10 anos. Já trabalhou com marcas como Semrush, Cold IQ, Primelis, Brevo e Omie. Top Voice e criadora de conteúdo no LinkedIn há mais de 3 anos.',
+    founderFollowers: '35k+',
     founderYears: '10+',
 
     // Section 8 — Social Proof
