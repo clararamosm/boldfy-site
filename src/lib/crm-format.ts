@@ -581,6 +581,34 @@ export function sourceLabel(source: string | null | undefined): string {
   return source.charAt(0).toUpperCase() + source.slice(1);
 }
 
+/**
+ * Fotos do LinkedIn (media.licdn.com) são hotlink-bloqueadas e assinadas com
+ * expiração — renderizam quebradas no CRM. Decisão (jul/2026): não usar essas
+ * URLs, cair pras iniciais coloridas. Este helper filtra qualquer URL que não
+ * dê pra confiar que carrega. Fotos de forms/manuais (nosso domínio) passam.
+ */
+export function isUsablePhoto(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const u = url.toLowerCase();
+  if (u.includes('licdn.com')) return false; // CDN do LinkedIn — bloqueia hotlink
+  return true;
+}
+
+/**
+ * Detecta lead que veio/foi enriquecido pelo LinkedIn (extensão), pra card
+ * mostrar "LinkedIn extract" em vez da URL crua do perfil.
+ */
+export function isLinkedinExtract(p: {
+  sourceMethod?: string | null;
+  sourcePage?: string | null;
+  formsSubmitted?: string[] | null;
+}): boolean {
+  if (p.sourceMethod === 'extension_linkedin') return true;
+  if (p.sourcePage && /linkedin\.com\/in\//i.test(p.sourcePage)) return true;
+  if (p.formsSubmitted?.includes('linkedin_extension')) return true;
+  return false;
+}
+
 export function methodVia(method: string | null | undefined): { label: string; classKey: 'linkedin' | 'form' | 'manual' | 'imported' } | null {
   switch (method) {
     case 'extension_linkedin': return { label: 'via LinkedIn', classKey: 'linkedin' };

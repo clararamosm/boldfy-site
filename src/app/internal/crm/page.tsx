@@ -13,6 +13,8 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { getPeopleByStatus, getInactivePeople, type PeopleByStatus, type PersonWithDetails, type CrmFilters } from '@/lib/crm-queries';
+import { getCrmUsers } from '@/lib/crm-users';
+import type { OwnerOption } from '@/components/crm/owner-badge';
 import { getStatuses } from '@/lib/statuses';
 import { db, people } from '@/db';
 import { PersonKanban } from '@/components/crm/person-kanban';
@@ -77,17 +79,20 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
   let dbError: string | null = null;
   let personStatuses: Array<{ id: string; label: string; color: string | null }> = [];
   let filterOptions: { channels: string[]; pages: string[] } = { channels: [], pages: [] };
+  let crmUsers: OwnerOption[] = [];
   try {
-    const [d, inactive, statusesData, opts] = await Promise.all([
+    const [d, inactive, statusesData, opts, usersData] = await Promise.all([
       getPeopleByStatus(view === 'table' ? 1000 : 100, filters),
       getInactivePeople(view === 'table' ? 1000 : 100),
       getStatuses('person'),
       getFilterOptions(),
+      getCrmUsers(),
     ]);
     data = d;
     inactivePeople = inactive;
     personStatuses = statusesData.map((s) => ({ id: s.id, label: s.label, color: s.color }));
     filterOptions = opts;
+    crmUsers = usersData.map((u) => ({ id: u.id, name: u.name, photoUrl: u.photoUrl }));
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }
@@ -132,7 +137,7 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
       ) : view === 'table' ? (
         <PersonTable data={data} inactivePeople={inactivePeople} />
       ) : (
-        <PersonKanban data={data} inactivePeople={inactivePeople} />
+        <PersonKanban data={data} inactivePeople={inactivePeople} users={crmUsers} />
       )}
     </div>
   );

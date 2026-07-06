@@ -25,6 +25,7 @@ import {
   activityKind,
   activityIconName,
   channelLabel,
+  isUsablePhoto,
   type LucideIconName,
 } from '@/lib/crm-format';
 import {
@@ -206,9 +207,9 @@ export default async function LeadDetailPage({ params }: Props) {
           <div className="crm-detail-card">
             <div className="crm-detail-header">
               <div className={`crm-detail-avatar hue-${hue}`}>
-                {person.photoUrl ? (
+                {isUsablePhoto(person.photoUrl) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={person.photoUrl} alt="" />
+                  <img src={person.photoUrl!} alt="" />
                 ) : (
                   initials(person.name)
                 )}

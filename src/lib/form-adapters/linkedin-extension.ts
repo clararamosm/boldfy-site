@@ -85,7 +85,9 @@ export function adaptLinkedInExtension(input: LinkedInExtensionInput): Classifie
     jobTitle: input.jobTitle,
     linkedinUrl: input.linkedinUrl,
     headline: input.headline,
-    photoUrl: input.photoUrl,
+    // photoUrl do LinkedIn (media.licdn.com) é hotlink-bloqueado e expira —
+    // não guardamos mais (jul/2026). CRM cai pras iniciais coloridas. A URL
+    // original fica em metadata.linkedin_profile.source_url se precisar.
     location: input.location,
     companyName: input.companyName,
     segment: 'lider_b2b',
@@ -111,5 +113,8 @@ export function adaptLinkedInExtension(input: LinkedInExtensionInput): Classifie
     },
     // Extensão NÃO sincroniza pro AC (spec §8).
     syncToAC: false,
+    // Captura LinkedIn = enriquecimento: nunca sobrescreve cargo/segmento de
+    // um lead que já veio de form. Só preenche o que estiver vazio.
+    enrichOnly: true,
   };
 }

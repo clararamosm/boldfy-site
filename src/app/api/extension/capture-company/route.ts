@@ -66,16 +66,28 @@ export async function POST(req: Request) {
 
   // Linka pessoa pendente (fluxo pessoa → empresa em sequência).
   // Best-effort: erro aqui não bloqueia o sucesso da captura.
+  //
+  // Enriquecimento NÃO sobrescreve (jul/2026): só linka se a pessoa ainda não
+  // tem empresa. Se já tinha (ex: empresa veio de um form), preserva — a Clara
+  // troca manualmente no CRM se precisar. Retorna already_linked pra extensão
+  // poder avisar que a empresa não foi trocada.
   let linkedPersonId: string | undefined;
+  let alreadyLinked = false;
   if (parsed.data.link_person_id) {
     try {
       const { db, people } = await import('@/db');
-      const { eq } = await import('drizzle-orm');
-      await db
+      const { eq, and, isNull } = await import('drizzle-orm');
+      const updated = await db
         .update(people)
         .set({ companyId: result.data.companyId, updatedAt: new Date() })
-        .where(eq(people.id, parsed.data.link_person_id));
-      linkedPersonId = parsed.data.link_person_id;
+        .where(and(eq(people.id, parsed.data.link_person_id), isNull(people.companyId)))
+        .returning({ id: people.id });
+      if (updated.length > 0) {
+        linkedPersonId = parsed.data.link_person_id;
+      } else {
+        // Nenhuma linha atualizada = pessoa já tinha empresa (ou não existe).
+        alreadyLinked = true;
+      }
     } catch (err) {
       console.error('[capture-company] failed to link pending person:', err);
     }
@@ -87,6 +99,7 @@ export async function POST(req: Request) {
     promoted: result.data.promoted,
     created: result.data.created,
     linked_person_id: linkedPersonId,
+    already_linked: alreadyLinked,
     url_to_view: `/internal/crm/companies/${result.data.companyId}`,
   });
 }

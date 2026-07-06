@@ -9,7 +9,8 @@
 
 import Link from 'next/link';
 import type { PersonWithDetails } from '@/lib/crm-queries';
-import { avatarHue, initials, timeAgo, formatDateTime, methodVia, channelLabel } from '@/lib/crm-format';
+import { avatarHue, initials, timeAgo, formatDateTime, methodVia, channelLabel, isUsablePhoto, isLinkedinExtract } from '@/lib/crm-format';
+import { OwnerBadge, type OwnerOption } from './owner-badge';
 
 type Props = {
   person: PersonWithDetails;
@@ -17,13 +18,16 @@ type Props = {
   selected?: boolean;
   anySelected?: boolean;
   onToggleSelect?: (id: string) => void;
+  /** Membros do time pra trocar responsável no card. Omitido = badge estático. */
+  users?: OwnerOption[];
 };
 
-export function PersonCard({ person, lastActionText, selected, anySelected, onToggleSelect }: Props) {
+export function PersonCard({ person, lastActionText, selected, anySelected, onToggleSelect, users }: Props) {
   const via = methodVia(person.sourceMethod);
   // Fallback determinístico pra LinkedIn Leads sem email (mai/2026).
   const hue = avatarHue(person.email ?? person.linkedinUrl ?? person.id);
   const channel = channelLabel(person.sourceChannel);
+  const linkedinExtract = isLinkedinExtract(person);
 
   const statusColor = person.status?.color ?? 'neutral';
   const scoreClass = statusColor === 'amber' || statusColor === 'orange'
@@ -69,9 +73,9 @@ export function PersonCard({ person, lastActionText, selected, anySelected, onTo
 
         <div className="crm-card-top">
           <div className={`crm-avatar hue-${hue}`}>
-            {person.photoUrl ? (
+            {isUsablePhoto(person.photoUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={person.photoUrl} alt="" />
+              <img src={person.photoUrl!} alt="" />
             ) : (
               initials(person.name)
             )}
@@ -109,25 +113,38 @@ export function PersonCard({ person, lastActionText, selected, anySelected, onTo
               {channel}
             </span>
           ) : null}
-          {person.sourcePage ? (
+          {/* Origem "como o lead apareceu": LinkedIn extract quando veio/foi
+              enriquecido pela extensão (não mostra a URL crua do perfil).
+              Senão, a página/LP de origem. */}
+          {linkedinExtract ? (
+            <span className="crm-origin-tag linkedin-extract">LinkedIn extract</span>
+          ) : person.sourcePage ? (
             <span className="crm-origin-tag page">{person.sourcePage}</span>
-          ) : null}
-          {person.owner ? (
-            <span
-              className="crm-owner-badge"
-              title={`Responsável: ${person.owner.name}`}
-              aria-label={`Responsável: ${person.owner.name}`}
-            >
-              {person.owner.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={person.owner.photoUrl} alt="" />
-              ) : (
-                initials(person.owner.name)
-              )}
-            </span>
           ) : null}
         </div>
       </Link>
+
+      {/* Responsável — fora do <Link> pra ser clicável sem navegar. */}
+      {users && users.length > 0 ? (
+        <div className="crm-card-owner">
+          <OwnerBadge personId={person.id} currentOwnerId={person.ownerId} users={users} />
+        </div>
+      ) : person.owner ? (
+        <div className="crm-card-owner">
+          <span
+            className="crm-owner-badge"
+            title={`Responsável: ${person.owner.name}`}
+            aria-label={`Responsável: ${person.owner.name}`}
+          >
+            {isUsablePhoto(person.owner.photoUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={person.owner.photoUrl!} alt="" />
+            ) : (
+              initials(person.owner.name)
+            )}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

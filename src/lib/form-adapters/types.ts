@@ -124,4 +124,13 @@ export type ClassifiedLead = {
   /* ---------------- Controle de sync ---------------- */
   /** Default true. False = pula syncContact (uso em backfill, import). */
   syncToAC?: boolean;
+
+  /**
+   * Modo enriquecimento (jul/2026 — captura via extensão LinkedIn). Quando
+   * true, o upsert NUNCA sobrescreve campos já preenchidos na pessoa existente
+   * — só preenche lacunas. Vale pra jobTitle e segment (que no fluxo de form
+   * seguem "última resposta vence"). Assim um lead que veio de form mantém o
+   * cargo/segmento do form quando é enriquecido pelo LinkedIn.
+   */
+  enrichOnly?: boolean;
 };

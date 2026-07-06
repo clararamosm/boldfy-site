@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_users_active ON users (active);
 /* -------------------------------------------------------------------------- */
 INSERT INTO users (name, email, photo_url, sort_order) VALUES
   ('Clara Ramos', 'clara@boldfy.com.br', '/images/founder.jpeg', 0),
-  ('José Lucas',  'jose@boldfy.com.br',  '/images/ze.png',       1)
+  ('José Lucas',  'joselucas@boldfy.com.br',  '/images/ze.png',   1)
 ON CONFLICT DO NOTHING;
 
 /* -------------------------------------------------------------------------- */

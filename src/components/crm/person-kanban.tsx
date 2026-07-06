@@ -14,14 +14,16 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PeopleByStatus, PersonWithDetails } from '@/lib/crm-queries';
 import { PersonCard } from './person-card';
+import type { OwnerOption } from './owner-badge';
 import { movePerson, mergePeople, deletePeople } from '@/app/internal/crm/actions';
 
 type Props = {
   data: PeopleByStatus;
   inactivePeople?: PersonWithDetails[];
+  users?: OwnerOption[];
 };
 
-export function PersonKanban({ data, inactivePeople = [] }: Props) {
+export function PersonKanban({ data, inactivePeople = [], users = [] }: Props) {
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -173,6 +175,7 @@ export function PersonKanban({ data, inactivePeople = [] }: Props) {
                           selected={selected.has(person.id)}
                           anySelected={anySelected}
                           onToggleSelect={toggleSelect}
+                          users={users}
                         />
                       </div>
                     ))
@@ -205,6 +208,7 @@ export function PersonKanban({ data, inactivePeople = [] }: Props) {
                         selected={selected.has(person.id)}
                         anySelected={anySelected}
                         onToggleSelect={toggleSelect}
+                        users={users}
                       />
                     </div>
                   ))}

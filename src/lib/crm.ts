@@ -163,6 +163,12 @@ export type UpsertPersonInput = {
    * reatribuição é sempre manual pelo kanban (setPersonOwner).
    */
   ownerId?: string | null;
+  /**
+   * Modo enriquecimento (extensão LinkedIn). Quando true, jobTitle e segment
+   * viram "preenche se vazio" em vez de "última resposta vence" — não clobbera
+   * dados que já vieram de um form. Ver ClassifiedLead.enrichOnly.
+   */
+  enrichOnly?: boolean;
 };
 
 /**
@@ -397,8 +403,12 @@ export async function upsertPerson(
       if (input.acContactId && !prev.acContactId) updates.acContactId = input.acContactId;
       if (companyId && !prev.companyId) updates.companyId = companyId;
 
-      // jobTitle especial — sobrescreve E emite field_changed quando muda
-      if (input.jobTitle && input.jobTitle !== prev.jobTitle) {
+      // jobTitle: normalmente "última resposta vence" (sobrescreve + emite
+      // field_changed). Mas em enriquecimento (extensão LinkedIn) só preenche
+      // se vazio — não clobbera o cargo que veio do form.
+      if (input.enrichOnly) {
+        if (input.jobTitle && !prev.jobTitle) updates.jobTitle = input.jobTitle;
+      } else if (input.jobTitle && input.jobTitle !== prev.jobTitle) {
         updates.jobTitle = input.jobTitle;
         fieldChanges.push({
           field: 'jobTitle',
@@ -409,13 +419,19 @@ export async function upsertPerson(
 
       // Task 1: segment é última-resposta (sobrescreve sempre que informado).
       // Emite field_changed quando muda pra ter trilha de mudança de intenção.
+      // Enriquecimento (extensão) NÃO sobrescreve segment existente — a
+      // extensão sempre manda 'lider_b2b' e isso apagaria um segment melhor
+      // (ex: profissional_individual) que o form já tinha classificado.
       if (input.segment !== undefined && input.segment !== prev.segment) {
-        updates.segment = input.segment;
-        fieldChanges.push({
-          field: 'segment',
-          oldValue: prev.segment,
-          newValue: input.segment,
-        });
+        const skipSegment = input.enrichOnly && prev.segment;
+        if (!skipSegment) {
+          updates.segment = input.segment;
+          fieldChanges.push({
+            field: 'segment',
+            oldValue: prev.segment,
+            newValue: input.segment,
+          });
+        }
       }
 
       // newsletter_opt_in: também sobrescreve. Sem field_changed pra evitar
@@ -791,6 +807,8 @@ export async function recordLeadFromForm(
       // Playbook TLG (mai/2026): forms que coletam cargo passam aqui.
       jobSeniority: lead.jobSeniority,
       jobArea: lead.jobArea,
+      // Enriquecimento (extensão LinkedIn) não sobrescreve cargo/segmento.
+      enrichOnly: lead.enrichOnly,
     },
     companyId,
   );
