@@ -309,6 +309,17 @@ export function describeActivity(
       }
       return { icon: '→', text: `Status alterado${reasonText}`, category: 'system' };
     }
+    case 'owner_changed': {
+      const fromName = (data?.fromName as string) ?? null;
+      const toName = (data?.toName as string) ?? null;
+      if (toName && fromName) {
+        return { icon: '→', text: `Responsável: ${fromName} → ${toName}`, category: 'manual' };
+      }
+      if (toName) {
+        return { icon: '→', text: `Responsável definido: ${toName}`, category: 'manual' };
+      }
+      return { icon: '→', text: 'Responsável removido', category: 'manual' };
+    }
     case 'classification_skipped': {
       const reason = data?.reason as string | undefined;
       const sourceMethod = data?.sourceMethod as string | undefined;

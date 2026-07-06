@@ -51,6 +51,8 @@ const LUCIDE_ICONS: Record<LucideIconName, typeof Target> = {
 import { segmentLabel } from '@/lib/ac-tags';
 import { LogInteractionForm } from '@/components/crm/log-interaction-form';
 import { TagManager } from '@/components/crm/tag-manager';
+import { OwnerSelect } from '@/components/crm/owner-select';
+import { getCrmUsers } from '@/lib/crm-users';
 import { FormsSubmittedChipList } from '@/components/crm/forms-submitted-chip-list';
 import { EngagementSection } from '@/components/crm/engagement-section';
 import { getGa4TimelineEntriesForPerson } from '@/lib/ga4-person';
@@ -73,7 +75,7 @@ export default async function LeadDetailPage({ params }: Props) {
   const person = await getPersonById(id);
   if (!person) notFound();
 
-  const [realActivities, meetings, ga4Entries, playbooks] = await Promise.all([
+  const [realActivities, meetings, ga4Entries, playbooks, crmUsers] = await Promise.all([
     getActivitiesForPerson(id, 200),
     getUpcomingMeetingsForPerson(id),
     // Activities virtuais do GA4 (sessões + eventos) — mergidas com as
@@ -105,6 +107,7 @@ export default async function LeadDetailPage({ params }: Props) {
         viewCount: number;
         lastViewedAt: Date | null;
       }>),
+    getCrmUsers(),
   ]);
 
   /**
@@ -898,6 +901,17 @@ export default async function LeadDetailPage({ params }: Props) {
               </div>
             );
           })()}
+
+          {crmUsers.length > 0 ? (
+            <div className="crm-side-card">
+              <div className="crm-side-title">👤 Responsável</div>
+              <OwnerSelect
+                personId={person.id}
+                currentOwnerId={person.ownerId}
+                users={crmUsers.map((u) => ({ id: u.id, name: u.name, photoUrl: u.photoUrl }))}
+              />
+            </div>
+          ) : null}
 
           <div className="crm-side-card">
             <div className="crm-side-title">📅 Próximas reuniões</div>

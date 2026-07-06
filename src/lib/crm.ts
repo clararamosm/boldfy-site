@@ -24,6 +24,7 @@ import { syncContact } from './activecampaign';
 import type { ClassifiedLead } from './form-adapters/types';
 import { formSlugToActivityType, FORM_DEFS_SEED, type FormSlug } from './form-definitions';
 import { getCampaignAttributionBySlug } from './events';
+import { getDefaultOwnerId } from './crm-users';
 
 /* -------------------------------------------------------------------------- */
 /*  Pesos pré-definidos por tipo de activity                                  */
@@ -155,6 +156,13 @@ export type UpsertPersonInput = {
    * mantém metadata atual.
    */
   metadataPatch?: Record<string, unknown>;
+  /**
+   * Dono/responsável do lead. Só aplica em INSERT (pessoa nova). Quando
+   * undefined, o INSERT cai no owner default (Clara) via getDefaultOwnerId.
+   * Pessoa que já existe NUNCA tem o owner sobrescrito por form/import —
+   * reatribuição é sempre manual pelo kanban (setPersonOwner).
+   */
+  ownerId?: string | null;
 };
 
 /**
@@ -492,6 +500,10 @@ export async function upsertPerson(
     /* ------------------------------------------------------------------ */
     const defaultStatus = await getDefaultStatus('person');
     const firstTouch = input.firstTouchAt ?? new Date();
+    // Owner do lead novo: usa o informado ou cai no default (Clara). Nunca
+    // bloqueia o INSERT — getDefaultOwnerId retorna null se a tabela users
+    // ainda não existe (pré-migration) e o backfill cobre depois.
+    const ownerId = input.ownerId !== undefined ? input.ownerId : await getDefaultOwnerId();
     const [created] = await db
       .insert(people)
       .values({
@@ -504,6 +516,7 @@ export async function upsertPerson(
         headline: input.headline,
         location: input.location,
         companyId,
+        ownerId,
         statusId: defaultStatus?.id ?? null,
         leadScore: 0,
         sourceChannel: input.sourceChannel ?? 'unknown',

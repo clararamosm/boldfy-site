@@ -112,6 +112,20 @@ export function PersonCard({ person, lastActionText, selected, anySelected, onTo
           {person.sourcePage ? (
             <span className="crm-origin-tag page">{person.sourcePage}</span>
           ) : null}
+          {person.owner ? (
+            <span
+              className="crm-owner-badge"
+              title={`Responsável: ${person.owner.name}`}
+              aria-label={`Responsável: ${person.owner.name}`}
+            >
+              {person.owner.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={person.owner.photoUrl} alt="" />
+              ) : (
+                initials(person.owner.name)
+              )}
+            </span>
+          ) : null}
         </div>
       </Link>
     </div>

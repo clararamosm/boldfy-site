@@ -130,6 +130,38 @@ export const statuses = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/*  users — membros do time Boldfy que operam o CRM (owners de lead)          */
+/* -------------------------------------------------------------------------- */
+/**
+ * Não é auth: o login do /internal continua sendo senha compartilhada única
+ * (lib/auth.ts). Esta tabela só cataloga QUEM pode ser "dono" de um lead —
+ * pra atribuir responsabilidade no kanban. Hoje: Clara Ramos e José Lucas.
+ *
+ * Seed + criação via Neon SQL editor (migration 0009). Novo membro: INSERT
+ * aqui e a foto vai em public/images. `active=false` esconde do seletor sem
+ * perder o histórico de leads que a pessoa já tinha.
+ */
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    /** Caminho da foto em public/ (ex: /images/founder.jpeg). */
+    photoUrl: text('photo_url'),
+    active: boolean('active').notNull().default(true),
+    /** Ordem no seletor de dono. */
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('idx_users_email').on(sql`LOWER(${t.email})`),
+    index('idx_users_active').on(t.active),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
 /*  companies                                                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -186,6 +218,12 @@ export const people = pgTable(
     location: text('location'),
     companyId: uuid('company_id').references(() => companies.id),
     statusId: uuid('status_id').references(() => statuses.id, { onDelete: 'set null' }),
+    /**
+     * Dono/responsável pelo lead (membro do time Boldfy). Novo lead de form
+     * cai no owner default (Clara) até alguém reatribuir pro José no kanban.
+     * onDelete:set null — desativar um user não apaga os leads dele.
+     */
+    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
     leadScore: integer('lead_score').notNull().default(0),
     sourceChannel: sourceChannelEnum('source_channel').default('unknown'),
     sourcePage: text('source_page'),
@@ -272,6 +310,7 @@ export const people = pgTable(
     uniqueIndex('idx_people_linkedin').on(t.linkedinUrl),
     index('idx_people_status').on(t.statusId),
     index('idx_people_company').on(t.companyId),
+    index('idx_people_owner').on(t.ownerId),
     index('idx_people_score').on(t.leadScore),
     index('idx_people_source').on(t.sourceChannel, t.sourcePage),
     // Índices da Task 1 — criados via Neon SQL editor; declarados aqui
@@ -597,6 +636,10 @@ export const statusesRelations = relations(statuses, ({ many }) => ({
   companies: many(companies),
 }));
 
+export const usersRelations = relations(users, ({ many }) => ({
+  ownedPeople: many(people),
+}));
+
 export const peopleRelations = relations(people, ({ one, many }) => ({
   company: one(companies, {
     fields: [people.companyId],
@@ -605,6 +648,10 @@ export const peopleRelations = relations(people, ({ one, many }) => ({
   status: one(statuses, {
     fields: [people.statusId],
     references: [statuses.id],
+  }),
+  owner: one(users, {
+    fields: [people.ownerId],
+    references: [users.id],
   }),
   activities: many(activities),
   meetings: many(meetings),
@@ -648,6 +695,8 @@ export const meetingsRelations = relations(meetings, ({ one }) => ({
 
 export type Status = typeof statuses.$inferSelect;
 export type NewStatus = typeof statuses.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 export type Person = typeof people.$inferSelect;
 export type NewPerson = typeof people.$inferInsert;
 export type Company = typeof companies.$inferSelect;

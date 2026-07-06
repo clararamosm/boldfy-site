@@ -11,7 +11,7 @@
 
 'use server';
 
-import { db, people, companies, statuses } from '@/db';
+import { db, people, companies, statuses, users } from '@/db';
 import { logActivity } from '@/lib/crm';
 import { invalidateStatusCache } from '@/lib/statuses';
 import { syncPersonStatusToAC, syncCompanyStatusToAC } from '@/lib/ac-sync';
@@ -541,6 +541,73 @@ export async function mergePeople(keepId: string, mergeIds: string[]): Promise<A
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Owner do lead — reatribuir responsável (Clara ↔ José)                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Reatribui o dono de um lead. `newOwnerId` null desvincula (fica sem dono).
+ * Registra activity 'owner_changed' com os nomes pra trilha na timeline.
+ *
+ * Não mexe em auth — só troca a etiqueta de responsabilidade. Todo mundo que
+ * acessa o /internal (senha compartilhada) pode reatribuir.
+ */
+export async function setPersonOwner(personId: string, newOwnerId: string | null): Promise<ActionResult> {
+  if (!UuidSchema.safeParse(personId).success) return { ok: false, error: 'ID inválido.' };
+  if (newOwnerId !== null && !UuidSchema.safeParse(newOwnerId).success) {
+    return { ok: false, error: 'Responsável inválido.' };
+  }
+
+  try {
+    const [prev] = await db
+      .select({ ownerId: people.ownerId })
+      .from(people)
+      .where(eq(people.id, personId))
+      .limit(1);
+    if (!prev) return { ok: false, error: 'Pessoa não encontrada.' };
+    if (prev.ownerId === newOwnerId) return { ok: true }; // no-op
+
+    // Valida que o novo owner existe e está ativo (quando não for desvincular)
+    let toName: string | null = null;
+    if (newOwnerId) {
+      const [u] = await db
+        .select({ name: users.name, active: users.active })
+        .from(users)
+        .where(eq(users.id, newOwnerId))
+        .limit(1);
+      if (!u) return { ok: false, error: 'Responsável não encontrado.' };
+      toName = u.name;
+    }
+
+    let fromName: string | null = null;
+    if (prev.ownerId) {
+      const [u] = await db.select({ name: users.name }).from(users).where(eq(users.id, prev.ownerId)).limit(1);
+      fromName = u?.name ?? null;
+    }
+
+    await db
+      .update(people)
+      .set({ ownerId: newOwnerId, updatedAt: new Date() })
+      .where(eq(people.id, personId));
+
+    await logActivity({
+      personId,
+      type: 'owner_changed',
+      weight: 0,
+      source: 'manual',
+      data: { fromId: prev.ownerId, toId: newOwnerId, fromName, toName },
+    });
+
+    revalidatePath('/internal/crm');
+    revalidatePath(`/internal/crm/people/${personId}`);
+    return { ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[setPersonOwner] failed:', msg);
+    return { ok: false, error: msg };
   }
 }
 

@@ -5,8 +5,8 @@
  * pra trazer label + color + sort_order.
  */
 
-import { db, people, companies, activities, meetings, statuses } from '@/db';
-import type { Person, Company, Activity, Meeting, Status } from '@/db';
+import { db, people, companies, activities, meetings, statuses, users } from '@/db';
+import type { Person, Company, Activity, Meeting, Status, User } from '@/db';
 import { and, eq, isNull, desc, asc, sql, count, gte, type SQL } from 'drizzle-orm';
 import { getStatuses } from './statuses';
 
@@ -84,6 +84,7 @@ function resolveCompanySort(sort: string | null | undefined): SQL[] {
 export type PersonWithDetails = Person & {
   company: Company | null;
   status: Status | null;
+  owner: User | null;
 };
 
 export type PeopleByStatus = {
@@ -138,6 +139,7 @@ export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {
       .from(people)
       .leftJoin(companies, eq(people.companyId, companies.id))
       .leftJoin(statuses, eq(people.statusId, statuses.id))
+      .leftJoin(users, eq(people.ownerId, users.id))
       .where(and(...filterClauses))
       .orderBy(...resolvePersonSort(filters.sort)),
   ]);
@@ -155,6 +157,7 @@ export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {
       ...row.people,
       company: row.companies,
       status: row.statuses,
+      owner: row.users,
     };
     const targetCol = row.people.statusId
       ? byId.get(row.people.statusId)
@@ -173,6 +176,7 @@ export async function getPersonById(id: string): Promise<PersonWithDetails | nul
     .from(people)
     .leftJoin(companies, eq(people.companyId, companies.id))
     .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .leftJoin(users, eq(people.ownerId, users.id))
     .where(eq(people.id, id))
     .limit(1);
   if (!rows[0]) return null;
@@ -180,6 +184,7 @@ export async function getPersonById(id: string): Promise<PersonWithDetails | nul
     ...rows[0].people,
     company: rows[0].companies,
     status: rows[0].statuses,
+    owner: rows[0].users,
   };
 }
 
@@ -603,6 +608,7 @@ export async function getInactivePeople(perColumn = 100): Promise<PersonWithDeta
     .from(people)
     .leftJoin(companies, eq(people.companyId, companies.id))
     .leftJoin(statuses, eq(people.statusId, statuses.id))
+    .leftJoin(users, eq(people.ownerId, users.id))
     .where(and(
       eq(people.archived, false),
       isNull(people.mergedIntoId),
@@ -616,5 +622,6 @@ export async function getInactivePeople(perColumn = 100): Promise<PersonWithDeta
     ...r.people,
     company: r.companies,
     status: r.statuses,
+    owner: r.users,
   }));
 }
