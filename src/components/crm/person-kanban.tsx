@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import type { PeopleByStatus, PersonWithDetails } from '@/lib/crm-queries';
 import { PersonCard } from './person-card';
 import type { OwnerOption } from './owner-badge';
+import { LOSS_REASONS, isLostStatusLabel } from '@/lib/crm-format';
 import { movePerson, mergePeople, deletePeople } from '@/app/internal/crm/actions';
 
 type Props = {
@@ -32,6 +33,10 @@ export function PersonKanban({ data, inactivePeople = [], users = [] }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [merging, setMerging] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Modal de motivo da perda — aberto ao mover pra coluna "Perdido".
+  const [lossPrompt, setLossPrompt] = useState<{ personId: string; colId: string; colLabel: string } | null>(null);
+  const [lossChoice, setLossChoice] = useState<string>('');
+  const [lossOther, setLossOther] = useState<string>('');
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -68,6 +73,14 @@ export function PersonKanban({ data, inactivePeople = [], users = [] }: Props) {
     if (payload.kind !== 'person') return;
     if (payload.statusId === colId) return;
 
+    // Coluna "Perdido" → abre modal de motivo (não move ainda).
+    if (isTerminal && isLostStatusLabel(colLabel)) {
+      setLossChoice('');
+      setLossOther('');
+      setLossPrompt({ personId: payload.id, colId, colLabel });
+      return;
+    }
+
     if (isTerminal) {
       const ok = confirm(`Mover esse lead pra "${colLabel}"? Status terminais não auto-promovem mais por score.`);
       if (!ok) return;
@@ -76,6 +89,20 @@ export function PersonKanban({ data, inactivePeople = [], users = [] }: Props) {
     setMovingId(payload.id);
     startTransition(async () => {
       const res = await movePerson(payload.id, colId);
+      if (!res.ok) alert(`Erro ao mover: ${res.error}`);
+      setMovingId(null);
+      router.refresh();
+    });
+  }
+
+  function confirmLoss() {
+    if (!lossPrompt) return;
+    const reason = lossChoice === '__other__' ? lossOther.trim() : lossChoice;
+    const { personId, colId } = lossPrompt;
+    setLossPrompt(null);
+    setMovingId(personId);
+    startTransition(async () => {
+      const res = await movePerson(personId, colId, reason || undefined);
       if (!res.ok) alert(`Erro ao mover: ${res.error}`);
       setMovingId(null);
       router.refresh();
@@ -272,6 +299,61 @@ export function PersonKanban({ data, inactivePeople = [], users = [] }: Props) {
               {deleting ? 'Excluindo…' : `🗑 Excluir ${selected.size}`}
             </button>
             <button onClick={clearSelection} className="crm-btn">Cancelar</button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Modal de motivo da perda — ao mover pra "Perdido". */}
+      {lossPrompt ? (
+        <div className="crm-loss-overlay" onClick={() => setLossPrompt(null)}>
+          <div className="crm-loss-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="crm-loss-title">Motivo da perda</div>
+            <div className="crm-loss-sub">Por que esse lead foi pra &ldquo;{lossPrompt.colLabel}&rdquo;?</div>
+
+            <div className="crm-loss-options">
+              {LOSS_REASONS.map((r) => (
+                <label key={r} className={`crm-loss-option ${lossChoice === r ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="loss-reason"
+                    checked={lossChoice === r}
+                    onChange={() => setLossChoice(r)}
+                  />
+                  <span>{r}</span>
+                </label>
+              ))}
+              <label className={`crm-loss-option ${lossChoice === '__other__' ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="loss-reason"
+                  checked={lossChoice === '__other__'}
+                  onChange={() => setLossChoice('__other__')}
+                />
+                <span>Outro</span>
+              </label>
+              {lossChoice === '__other__' ? (
+                <input
+                  type="text"
+                  className="crm-loss-input"
+                  placeholder="Descreve o motivo…"
+                  value={lossOther}
+                  onChange={(e) => setLossOther(e.target.value)}
+                  autoFocus
+                />
+              ) : null}
+            </div>
+
+            <div className="crm-loss-actions">
+              <button type="button" className="crm-btn" onClick={() => setLossPrompt(null)}>Cancelar</button>
+              <button
+                type="button"
+                className="crm-btn crm-btn-primary"
+                disabled={!lossChoice || (lossChoice === '__other__' && lossOther.trim() === '')}
+                onClick={confirmLoss}
+              >
+                Marcar como perdido
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

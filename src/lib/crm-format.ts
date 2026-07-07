@@ -301,13 +301,14 @@ export function describeActivity(
         : reasonRaw === 'sync_from_people' ? ' (sync pessoa)'
         : reasonRaw === 'propagated_from_company_terminal' ? ' (sync empresa)'
         : '';
+      const lossText = data?.loss_reason ? ` · motivo: ${data.loss_reason as string}` : '';
       if (toLabel && fromLabel) {
-        return { icon: '→', text: `Status: ${fromLabel} → ${toLabel}${reasonText}`, category: 'system' };
+        return { icon: '→', text: `Status: ${fromLabel} → ${toLabel}${reasonText}${lossText}`, category: 'system' };
       }
       if (toLabel) {
-        return { icon: '→', text: `Status alterado pra: ${toLabel}${reasonText}`, category: 'system' };
+        return { icon: '→', text: `Status alterado pra: ${toLabel}${reasonText}${lossText}`, category: 'system' };
       }
-      return { icon: '→', text: `Status alterado${reasonText}`, category: 'system' };
+      return { icon: '→', text: `Status alterado${reasonText}${lossText}`, category: 'system' };
     }
     case 'owner_changed': {
       const fromName = (data?.fromName as string) ?? null;
@@ -579,6 +580,29 @@ export function sourceLabel(source: string | null | undefined): string {
   if (known !== '—') return known;
   // Capitaliza primeira letra do source bruto: 'material' → 'Material'
   return source.charAt(0).toUpperCase() + source.slice(1);
+}
+
+/**
+ * Motivos de perda pré-definidos (jul/2026). Aparecem quando um lead vai pra
+ * coluna "Perdido". Lista aberta — adicionar item aqui conforme a necessidade
+ * (Clara: "a gente vai aumentando"). "Outro" abre campo de texto livre.
+ */
+export const LOSS_REASONS: string[] = [
+  'Sem orçamento',
+  'Não retornou contato',
+  'Escolheu concorrente',
+  'Fora do ICP / sem fit',
+  'Timing errado',
+  'Sem interesse',
+];
+
+/**
+ * Detecta a coluna terminal de PERDA pelo label (ex: "Perdido"). Statuses são
+ * configuráveis e não têm flag isLost dedicada — casamos por "perd" pra
+ * disparar o prompt de motivo só na perda (não em "Fechado"/ganho).
+ */
+export function isLostStatusLabel(label: string | null | undefined): boolean {
+  return !!label && /perd/i.test(label);
 }
 
 /**

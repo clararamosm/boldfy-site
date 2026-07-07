@@ -24,6 +24,7 @@ type Props = {
   statuses: Array<{ id: string; label: string; color: string | null }>;
   channels?: string[];
   pages?: string[];
+  owners?: Array<{ id: string; name: string }>;
 };
 
 const PERIODS = [
@@ -53,7 +54,7 @@ const COMPANY_SORTS = [
   { value: 'topScore-desc',    label: 'Top score ↓' },
 ] as const;
 
-export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props) {
+export function CrmFilters({ kind, statuses, channels = [], pages = [], owners = [] }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -79,12 +80,13 @@ export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props)
   const currentStatusId = searchParams.get('statusId') ?? '';
   const currentCanal = searchParams.get('canal') ?? '';
   const currentPagina = searchParams.get('pagina') ?? '';
+  const currentOwner = searchParams.get('owner') ?? '';
   // Sort = "{key}-{dir}" no URL pra ser 1 select. Default por kind.
   const sortDefault = kind === 'person' ? 'lastTouchAt-desc' : 'updatedAt-desc';
   const currentSort = searchParams.get('sort') ?? sortDefault;
   const sortOptions = kind === 'person' ? PERSON_SORTS : COMPANY_SORTS;
 
-  const hasFilters = currentPeriod !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentSort !== sortDefault;
+  const hasFilters = currentPeriod !== 'all' || currentStatusId !== '' || currentCanal !== '' || currentPagina !== '' || currentOwner !== '' || currentSort !== sortDefault;
 
   const selectStyle: React.CSSProperties = {
     padding: '8px 10px',
@@ -130,6 +132,16 @@ export function CrmFilters({ kind, statuses, channels = [], pages = [] }: Props)
           <select value={currentCanal} onChange={(e) => updateParam('canal', e.target.value)} disabled={pending} style={selectStyle}>
             <option value="">Todos</option>
             {channels.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      ) : null}
+
+      {kind === 'person' && owners.length > 0 ? (
+        <div>
+          <label style={labelStyle}>Responsável</label>
+          <select value={currentOwner} onChange={(e) => updateParam('owner', e.target.value)} disabled={pending} style={selectStyle}>
+            <option value="">Todos</option>
+            {owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </div>
       ) : null}

@@ -36,16 +36,18 @@ type SearchParams = Promise<{
   statusId?: string;
   canal?: string;
   pagina?: string;
+  owner?: string;
   sort?: string;
 }>;
 
-function parseFilters(sp: { period?: string; statusId?: string; canal?: string; pagina?: string; sort?: string }): CrmFilters {
+function parseFilters(sp: { period?: string; statusId?: string; canal?: string; pagina?: string; owner?: string; sort?: string }): CrmFilters {
   const period = ['7d', '30d', '90d'].includes(sp.period ?? '') ? (sp.period as CrmFilters['period']) : 'all';
   return {
     period,
     statusId: sp.statusId || null,
     canal: sp.canal || null,
     pagina: sp.pagina || null,
+    owner: sp.owner || null,
     sort: sp.sort || null,
   };
 }
@@ -118,7 +120,7 @@ export default async function CrmPeoplePage({ searchParams }: { searchParams: Se
       </div>
 
       <Suspense fallback={<div style={{ height: 50, marginBottom: 14, background: '#FAF7FF', borderRadius: 10 }} />}>
-        <CrmFiltersBar kind="person" statuses={personStatuses} channels={filterOptions.channels} pages={filterOptions.pages} />
+        <CrmFiltersBar kind="person" statuses={personStatuses} channels={filterOptions.channels} pages={filterOptions.pages} owners={crmUsers} />
       </Suspense>
 
       {dbError ? (

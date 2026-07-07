@@ -22,6 +22,8 @@ export type CrmFilters = {
   statusId?: string | null;
   canal?: string | null;
   pagina?: string | null;
+  /** Filtra por dono/responsável (users.id). */
+  owner?: string | null;
   /** Default false. Quando true, traz unsubscribed também. */
   includeUnsubscribed?: boolean;
   /** Quando true, traz APENAS unsubscribed (aba "Leads inativos"). */
@@ -131,6 +133,7 @@ export async function getPeopleByStatus(perColumn = 100, filters: CrmFilters = {
     filterClauses.push(eq(people.sourceChannel, filters.canal as 'linkedin' | 'organic' | 'direct' | 'email' | 'indicacao' | 'pr' | 'manual' | 'unknown'));
   }
   if (filters.pagina) filterClauses.push(eq(people.sourcePage, filters.pagina));
+  if (filters.owner) filterClauses.push(eq(people.ownerId, filters.owner));
 
   const [allStatuses, rows] = await Promise.all([
     getStatuses('person'),

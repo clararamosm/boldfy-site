@@ -456,6 +456,88 @@
   font-weight: 700;
 }
 
+/* ============== MODAL DE MOTIVO DA PERDA ============== */
+.crm-loss-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 27, 62, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+.crm-loss-modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(45, 27, 62, 0.3);
+  padding: 22px;
+  width: 100%;
+  max-width: 380px;
+}
+.crm-loss-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #45336B;
+}
+.crm-loss-sub {
+  font-size: 12px;
+  color: #9D85B3;
+  margin: 4px 0 16px;
+}
+.crm-loss-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crm-loss-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid #E7DBF0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #45336B;
+  font-weight: 500;
+}
+.crm-loss-option.active {
+  border-color: #CD50F1;
+  background: rgba(205, 80, 241, 0.06);
+}
+.crm-loss-option input {
+  accent-color: #CD50F1;
+}
+.crm-loss-input {
+  margin-top: 2px;
+  padding: 9px 11px;
+  border: 1px solid #E7DBF0;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #45336B;
+}
+.crm-loss-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* Chip do motivo da perda no perfil do lead. */
+.crm-loss-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(192, 57, 43, 0.1);
+  color: #C0392B;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 /* ============== COMPANY CARD ============== */
 .crm-company-card {
   background: #FFFFFF;

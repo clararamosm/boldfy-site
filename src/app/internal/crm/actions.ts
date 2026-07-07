@@ -13,6 +13,7 @@
 
 import { db, people, companies, statuses, users } from '@/db';
 import { logActivity } from '@/lib/crm';
+import { isLostStatusLabel } from '@/lib/crm-format';
 import { invalidateStatusCache } from '@/lib/statuses';
 import { syncPersonStatusToAC, syncCompanyStatusToAC } from '@/lib/ac-sync';
 import { syncCompanyFromPeople, propagateTerminalToCompanyPeople, propagateNonTerminalToCompanyPeople } from '@/lib/crm-sync';
@@ -29,7 +30,7 @@ const UuidSchema = z.string().uuid();
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function movePerson(personId: string, newStatusId: string): Promise<ActionResult> {
+export async function movePerson(personId: string, newStatusId: string, lossReason?: string): Promise<ActionResult> {
   if (!UuidSchema.safeParse(personId).success) return { ok: false, error: 'ID inválido.' };
   if (!UuidSchema.safeParse(newStatusId).success) return { ok: false, error: 'Status inválido.' };
 
@@ -60,9 +61,19 @@ export async function movePerson(personId: string, newStatusId: string): Promise
       fromLabel = fromRow?.label ?? null;
     }
 
+    // Coluna terminal de perda ("Perdido") → grava motivo. Qualquer outro
+    // destino limpa o motivo (reativação não deve carregar motivo antigo).
+    const isLost = statusRow.isTerminal && isLostStatusLabel(statusRow.label);
+    const cleanReason = isLost ? (lossReason?.trim() || null) : null;
+
     await db
       .update(people)
-      .set({ statusId: newStatusId, updatedAt: new Date() })
+      .set({
+        statusId: newStatusId,
+        lossReason: cleanReason,
+        lossReasonAt: isLost ? new Date() : null,
+        updatedAt: new Date(),
+      })
       .where(eq(people.id, personId));
 
     await logActivity({
@@ -70,7 +81,7 @@ export async function movePerson(personId: string, newStatusId: string): Promise
       type: 'status_change',
       weight: 0,
       source: 'manual',
-      data: { fromId: prev.statusId, toId: newStatusId, fromLabel, toLabel: statusRow.label, reason: 'manual' },
+      data: { fromId: prev.statusId, toId: newStatusId, fromLabel, toLabel: statusRow.label, reason: 'manual', ...(isLost ? { loss_reason: cleanReason } : {}) },
     });
 
     // Sync AC (non-blocking — falha não bloqueia o user)

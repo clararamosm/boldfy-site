@@ -302,6 +302,14 @@ export const people = pgTable(
     lastTouchCampaign: text('last_touch_campaign'),
     archived: boolean('archived').notNull().default(false),
     mergedIntoId: uuid('merged_into_id'),
+    /**
+     * Motivo da perda (jul/2026). Preenchido quando o lead é movido pra coluna
+     * terminal de perda ("Perdido"). Texto livre — presets em LOSS_REASONS
+     * (crm-format.ts) + opção "Outro". Limpo quando o lead volta pra um status
+     * não-perdido (reativação).
+     */
+    lossReason: text('loss_reason'),
+    lossReasonAt: timestamp('loss_reason_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

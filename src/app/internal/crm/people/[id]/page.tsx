@@ -244,6 +244,14 @@ export default async function LeadDetailPage({ params }: Props) {
                   <span className={`crm-score-pill ${scoreClass}`}>
                     ⚡ {person.status?.label ?? 'sem status'} · {person.leadScore} pts
                   </span>
+                  {person.lossReason ? (
+                    <span
+                      className="crm-loss-chip"
+                      title={person.lossReasonAt ? `Perdido em ${new Date(person.lossReasonAt).toLocaleDateString('pt-BR')}` : undefined}
+                    >
+                      🚫 Motivo da perda: {person.lossReason}
+                    </span>
+                  ) : null}
                   {/* 3 chips compostos de origem — substitui chip único "Via Form Report".
                       Spec §8 tabela: Via | Canal | Form. Segment badge fica na
                       sidebar "Contexto" (não no header). */}
